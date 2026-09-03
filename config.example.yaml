@@ -32,6 +32,31 @@ remote-management:
   # GitHub repository for the management control panel. Accepts a repository URL or releases API URL.
   panel-github-repository: "https://github.com/icaruszezen/Cli-Proxy-API-Management-Center-x"
 
+# Optional master/slave config sync. Independent of Home mode (Home ignores this block).
+# Sync copies provider blocks (including upstream API keys), inbound api-keys, and
+# operational parameters. It does not copy auth-dir files (OAuth accounts).
+# Local identity is never overwritten: host, port, tls, auth-dir, remote-management,
+# cluster, pprof, and plugins.dir stay on each node.
+# Protocol endpoints (/v0/management/cluster/register|heartbeat|export|apply) authenticate
+# with cluster.token (or CLUSTER_TOKEN) and do not require allow-remote.
+# The master must be able to reach advertise-url to push; leave it empty to rely on slave pull.
+cluster:
+  # standalone (default) | master | slave
+  role: standalone
+  # Shared cluster protocol secret. Keep this out of logs and docs. Override with CLUSTER_TOKEN.
+  # Must be at least 32 characters; a shorter value is ignored and cluster sync stays disabled.
+  # Repeated bad tokens ban the client IP, the same way a bad management key does.
+  token: ""
+  # Optional stable id. Generated locally on first master/slave start and written back here.
+  # node-id: ""
+  # Slave only: master root URL, e.g. http://192.168.1.10:8317
+  # master-url: ""
+  # Slave only: URL the master uses to push, e.g. http://192.168.1.20:8317
+  # advertise-url: ""
+  # Intervals below 5 seconds are raised to 5.
+  # sync-interval-seconds: 30
+  # heartbeat-interval-seconds: 15
+
 # Authentication directory (supports ~ for home directory)
 auth-dir: "~/.cli-proxy-api"
 
@@ -151,6 +176,13 @@ passthrough-headers: false
 # Additional rounds apply to HTTP 403, 408, 429, 500, 502, 503, and 504 failures.
 # Individual credential/provider overrides take precedence; 0 disables additional
 # rounds, while an omitted or negative override inherits this global setting.
+# Same-credential retries before failover are configured per provider via
+# provider-retry-count / provider-retry-status-codes and are independent of this value.
+# Those retries are sent immediately: there is no backoff and the upstream's
+# Retry-After header is not honored for them. They therefore only help when an
+# instant resend on the same credential can succeed, such as a transient upstream
+# fault. Against an upstream that is genuinely rate limiting, raising the count
+# only burns quota faster; rely on failover to another credential instead.
 request-retry: 3
 
 # Maximum number of different credentials to try in each credential retry round
@@ -321,6 +353,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "test" # optional: require calls like "test/gemini-3-pro-preview" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400        # HTTP status code to match
 #         match:             # optional: string contains matching
@@ -363,6 +397,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "native" # optional: require calls like "native/gemini-3-pro-preview" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400
 #         match:
@@ -393,6 +429,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "test" # optional: require calls like "test/gpt-5-codex" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400
 #         match:
@@ -435,6 +473,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "xai" # optional: require calls like "xai/grok-4.5" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400
 #         match:
@@ -470,6 +510,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "test" # optional: require calls like "test/claude-sonnet-latest" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400
 #         match:
@@ -616,6 +658,8 @@ nonstream-keepalive-interval: 0
 #     support-prompt-cache-key: false # optional: derive prompt_cache_key for requests from all input protocols
 #     disable-cooling: false # optional provider override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-provider override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
 #       - status: 400
 #         match:
@@ -666,6 +710,8 @@ nonstream-keepalive-interval: 0
 #     prefix: "test"                              # optional: require calls like "test/vertex-pro" to target this credential
 #     disable-cooling: false                       # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3                             # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     provider-retry-count: 3                       # optional same-credential retries before failover; 0/omit disables; max 10
+#     provider-retry-status-codes: [401, 403, 429]  # optional; omit uses 401/403/429 when count > 0; [] disables
 #     base-url: "https://example.com/api"         # optional, e.g. https://zenmux.ai/api; falls back to Google Vertex when omitted
 #     proxy-url: "socks5://proxy.example.com:1080" # optional per-key proxy override
 #     # proxy-url: "direct" # optional: explicit direct connect for this credential

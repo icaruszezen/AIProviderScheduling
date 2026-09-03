@@ -22,6 +22,10 @@ func CanonicalCredentialMetadataKey(key string) string {
 		return "request_retry"
 	case "request-scoped-errors":
 		return "request_scoped_errors"
+	case "provider-retry-count":
+		return "provider_retry_count"
+	case "provider-retry-status-codes":
+		return "provider_retry_status_codes"
 	case "tool-prefix-disabled":
 		return "tool_prefix_disabled"
 	default:

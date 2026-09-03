@@ -397,3 +397,11 @@ func (s *Server) Stop(ctx context.Context) error {
 	log.Debug("API server stopped")
 	return nil
 }
+
+// SetClusterController attaches the master/slave sync runtime to management handlers.
+func (s *Server) SetClusterController(ctrl managementHandlers.ClusterController) {
+	if s == nil || s.mgmt == nil {
+		return
+	}
+	s.mgmt.SetClusterController(ctrl)
+}

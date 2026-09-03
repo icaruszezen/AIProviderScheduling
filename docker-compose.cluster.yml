@@ -1,3 +1,6 @@
+# Home mode cluster (HOME_JWT). This is NOT the master/slave config sync
+# described in docs/cluster.md, and the two cannot be combined: the cluster
+# protocol endpoints are disabled whenever Home mode is enabled.
 services:
   cli-proxy-api:
     image: ${CLI_PROXY_IMAGE:-ghcr.io/icaruszezen/cliproxyapi-x:latest}

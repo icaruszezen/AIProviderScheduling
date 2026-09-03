@@ -164,6 +164,7 @@ func (cfg *Config) SanitizeOpenAICompatibility() {
 		e.Prefix = normalizeModelPrefix(e.Prefix)
 		e.BaseURL = strings.TrimSpace(e.BaseURL)
 		e.Headers = NormalizeHeaders(e.Headers)
+		sanitizeProviderRetryFields(&e.ProviderRetryCount, &e.ProviderRetryStatusCodes)
 		if e.BaseURL == "" {
 			// Skip providers with no base-url; treated as removed
 			continue
@@ -205,6 +206,7 @@ func sanitizeCodexKeyEntries(entries []CodexKey) []CodexKey {
 		e.BaseURL = strings.TrimSpace(e.BaseURL)
 		e.Headers = NormalizeHeaders(e.Headers)
 		e.ExcludedModels = NormalizeExcludedModels(e.ExcludedModels)
+		sanitizeProviderRetryFields(&e.ProviderRetryCount, &e.ProviderRetryStatusCodes)
 		if e.BaseURL == "" {
 			continue
 		}
@@ -223,6 +225,7 @@ func (cfg *Config) SanitizeClaudeKeys() {
 		entry.Prefix = normalizeModelPrefix(entry.Prefix)
 		entry.Headers = NormalizeHeaders(entry.Headers)
 		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
+		sanitizeProviderRetryFields(&entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes)
 		// Only a recognized value is rewritten. An unrecognized one is preserved as
 		// written so sanitizing a config file never destroys operator input; the
 		// request path falls back to the default profile and reports it once.
@@ -248,6 +251,7 @@ func sanitizeGeminiKeyEntries(entries []GeminiKey) []GeminiKey {
 		entry.ProxyURL = strings.TrimSpace(entry.ProxyURL)
 		entry.Headers = NormalizeHeaders(entry.Headers)
 		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
+		sanitizeProviderRetryFields(&entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes)
 		uniqueKey := formatGeminiKeyDedupID(entry)
 		if _, exists := seen[uniqueKey]; exists {
 			continue

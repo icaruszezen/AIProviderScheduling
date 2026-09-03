@@ -28,6 +28,9 @@ type Config struct {
 	// RemoteManagement nests management-related options under 'remote-management'.
 	RemoteManagement RemoteManagement `yaml:"remote-management" json:"-"`
 
+	// Cluster configures optional master/slave config sync. Local to each node.
+	Cluster ClusterConfig `yaml:"cluster" json:"cluster"`
+
 	// Plugins configures dynamic plugin discovery and per-plugin settings.
 	Plugins PluginsConfig `yaml:"plugins" json:"plugins"`
 

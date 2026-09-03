@@ -53,6 +53,15 @@ type VertexCompatKey struct {
 	// RequestRetry optionally overrides the global request-retry for this credential.
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
+
+	// ProviderRetryCount is the number of same-credential retries before failover.
+	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
+	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+
+	// ProviderRetryStatusCodes lists HTTP statuses that trigger same-credential retry.
+	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
+	// A non-nil empty slice disables status-code-triggered same-credential retry.
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
 }
 
 func (k VertexCompatKey) GetAPIKey() string   { return k.APIKey }
@@ -106,6 +115,7 @@ func (cfg *Config) SanitizeVertexCompatKeys() {
 		entry.ProxyURL = strings.TrimSpace(entry.ProxyURL)
 		entry.Headers = NormalizeHeaders(entry.Headers)
 		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
+		sanitizeProviderRetryFields(&entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes)
 
 		// Sanitize models: remove entries without valid alias
 		sanitizedModels := make([]VertexCompatModel, 0, len(entry.Models))

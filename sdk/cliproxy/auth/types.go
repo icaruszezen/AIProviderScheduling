@@ -521,6 +521,103 @@ func (a *Auth) RequestRetryOverride() (int, bool) {
 	return 0, false
 }
 
+// ProviderRetryCount returns the same-credential retry budget for this auth.
+// Unset or negative values disable same-credential retry. Values above 10 are clamped.
+func (a *Auth) ProviderRetryCount() int {
+	if a == nil || a.Metadata == nil {
+		return 0
+	}
+	for _, key := range []string{"provider_retry_count", "provider-retry-count"} {
+		if val, ok := a.Metadata[key]; ok {
+			if parsed, okParse := parseIntAny(val); okParse {
+				if parsed < 0 {
+					return 0
+				}
+				if parsed > 10 {
+					return 10
+				}
+				return parsed
+			}
+		}
+	}
+	return 0
+}
+
+// ProviderRetryStatusCodes returns the configured same-credential retry statuses.
+// ok is false when the field is omitted so callers can apply the default list.
+func (a *Auth) ProviderRetryStatusCodes() (codes []int, ok bool) {
+	if a == nil || a.Metadata == nil {
+		return nil, false
+	}
+	for _, key := range []string{"provider_retry_status_codes", "provider-retry-status-codes"} {
+		val, exists := a.Metadata[key]
+		if !exists {
+			continue
+		}
+		parsed, parsedOK := parseIntSliceAny(val)
+		if !parsedOK {
+			return nil, true
+		}
+		return parsed, true
+	}
+	return nil, false
+}
+
+// IsProviderRetryableStatus reports whether status should trigger same-credential retry.
+// When no status list is configured, the default is 401, 403, and 429.
+func (a *Auth) IsProviderRetryableStatus(status int) bool {
+	if a == nil || a.ProviderRetryCount() <= 0 {
+		return false
+	}
+	codes, configured := a.ProviderRetryStatusCodes()
+	if !configured {
+		codes = []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusTooManyRequests}
+	}
+	for _, code := range codes {
+		if code == status {
+			return true
+		}
+	}
+	return false
+}
+
+func parseIntSliceAny(val any) ([]int, bool) {
+	switch typed := val.(type) {
+	case []int:
+		return append([]int(nil), typed...), true
+	case []int32:
+		out := make([]int, len(typed))
+		for i, item := range typed {
+			out[i] = int(item)
+		}
+		return out, true
+	case []int64:
+		out := make([]int, len(typed))
+		for i, item := range typed {
+			out[i] = int(item)
+		}
+		return out, true
+	case []float64:
+		out := make([]int, 0, len(typed))
+		for _, item := range typed {
+			out = append(out, int(item))
+		}
+		return out, true
+	case []any:
+		out := make([]int, 0, len(typed))
+		for _, item := range typed {
+			parsed, okParse := parseIntAny(item)
+			if !okParse {
+				continue
+			}
+			out = append(out, parsed)
+		}
+		return out, true
+	default:
+		return nil, false
+	}
+}
+
 func parseBoolAny(val any) (bool, bool) {
 	switch typed := val.(type) {
 	case bool:

@@ -1,6 +1,7 @@
 package management
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -116,6 +117,13 @@ func WriteConfig(path string, data []byte) error {
 }
 
 func (h *Handler) PutConfigYAML(c *gin.Context) {
+	if h.isSlaveConfigReadonly() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "slave_node_readonly",
+			"message": "slave node: config is synced from master",
+		})
+		return
+	}
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_yaml", "message": "cannot read request body"})
@@ -166,7 +174,13 @@ func (h *Handler) PutConfigYAML(c *gin.Context) {
 		return
 	}
 	h.cfg = newCfg
+	snapshot := h.reloadSnapshotConfigLocked()
 	c.JSON(http.StatusOK, gin.H{"ok": true, "changed": []string{"config"}})
+	var reqCtx context.Context
+	if c != nil && c.Request != nil {
+		reqCtx = c.Request.Context()
+	}
+	h.reloadConfigAfterManagementSaveAsync(reqCtx, snapshot)
 }
 
 // GetConfigYAML returns the raw config.yaml file bytes without re-encoding.

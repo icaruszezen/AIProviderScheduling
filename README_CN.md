@@ -130,6 +130,10 @@ CLIProxyAPI 用户手册： [https://help.router-for.me/](https://help.router-fo
 
 请参见 [MANAGEMENT_API_CN.md](https://help.router-for.me/cn/management/api)
 
+## 集群
+
+多节点 master/slave 配置同步：[docs/cluster_CN.md](docs/cluster_CN.md)
+
 ## 使用量统计
 
 自v6.10.0版本以后，CLIProxyAPI及 [CPAMC](https://github.com/icaruszezen/Cli-Proxy-API-Management-Center-x) 项目不再预置数据统计功能，如果有数据统计需求的请使用以下项目：

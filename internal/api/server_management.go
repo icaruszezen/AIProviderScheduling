@@ -24,9 +24,17 @@ func (s *Server) registerManagementRoutes() {
 	s.engine.POST("/v0/management/oauth-callback", s.managementAvailabilityMiddleware(), s.mgmt.PostOAuthCallback)
 	s.engine.GET("/v0/management/oauth-callback", s.managementAvailabilityMiddleware(), s.mgmt.GetOAuthCallback)
 
+	s.registerClusterProtocolRoutes()
+
 	mgmt := s.engine.Group("/v0/management")
-	mgmt.Use(s.managementAvailabilityMiddleware(), s.mgmt.Middleware())
+	mgmt.Use(s.managementAvailabilityMiddleware(), s.mgmt.Middleware(), s.mgmt.SlaveConfigWriteGuard())
 	{
+		mgmt.GET("/cluster", s.mgmt.GetCluster)
+		mgmt.GET("/cluster/nodes", s.mgmt.GetClusterNodes)
+		mgmt.POST("/cluster/sync", s.mgmt.PostClusterSync)
+		mgmt.PATCH("/cluster", s.mgmt.PatchCluster)
+		mgmt.DELETE("/cluster/nodes/:id", s.mgmt.DeleteClusterNode)
+
 		mgmt.GET("/config", s.mgmt.GetConfig)
 		mgmt.GET("/config.yaml", s.mgmt.GetConfigYAML)
 		mgmt.PUT("/config.yaml", s.mgmt.PutConfigYAML)
@@ -180,6 +188,35 @@ func (s *Server) registerManagementRoutes() {
 		mgmt.GET("/xai-auth-url", s.mgmt.RequestXAIToken)
 		mgmt.GET("/get-auth-status", s.mgmt.GetAuthStatus)
 		mgmt.DELETE("/oauth-session", s.mgmt.CancelAuthSession)
+	}
+}
+
+func (s *Server) registerClusterProtocolRoutes() {
+	if s == nil || s.engine == nil || s.mgmt == nil {
+		return
+	}
+	proto := s.engine.Group("/v0/management/cluster")
+	proto.Use(s.clusterProtocolAvailabilityMiddleware(), s.mgmt.ClusterTokenMiddleware())
+	{
+		proto.POST("/register", s.mgmt.PostClusterRegister)
+		proto.POST("/heartbeat", s.mgmt.PostClusterHeartbeat)
+		proto.POST("/unregister", s.mgmt.PostClusterUnregister)
+		proto.GET("/export", s.mgmt.GetClusterExport)
+		proto.PUT("/apply", s.mgmt.PutClusterApply)
+	}
+}
+
+func (s *Server) clusterProtocolAvailabilityMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if s == nil || s.cfg == nil || s.mgmt == nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		if s.cfg.Home.Enabled {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Next()
 	}
 }
 

@@ -115,8 +115,13 @@ func (s *Service) Run(ctx context.Context) error {
 		redisqueue.SetEnabled(true)
 	}
 
+	s.ensureClusterService()
+
 	// handlers no longer depend on legacy clients; pass nil slice initially
 	s.server = api.NewServer(s.cfg, s.coreManager, s.accessManager, s.configPath, s.serverOptions...)
+	if s.server != nil && s.clusterService != nil {
+		s.server.SetClusterController(s.clusterService)
+	}
 	s.syncPluginRuntimeConfig(ctx)
 	if homeEnabled {
 		s.syncPluginModelRuntime(ctx)
@@ -165,6 +170,10 @@ func (s *Service) Run(ctx context.Context) error {
 
 	time.Sleep(100 * time.Millisecond)
 	fmt.Printf("API server started successfully on: %s:%d\n", s.cfg.Host, s.cfg.Port)
+
+	if s.clusterService != nil && !homeEnabled {
+		s.clusterService.Start(ctx)
+	}
 
 	s.applyPprofConfig(s.cfg)
 
@@ -312,6 +321,10 @@ func (s *Service) Shutdown(ctx context.Context) error {
 			if shutdownErr == nil {
 				shutdownErr = errShutdownPprof
 			}
+		}
+
+		if s.clusterService != nil {
+			s.clusterService.Stop()
 		}
 
 		// no legacy clients to persist

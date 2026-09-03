@@ -142,6 +142,10 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 		cfg.MaxRetryCredentials = 0
 	}
 
+	if cfg.NormalizeCluster() && strings.TrimSpace(configFile) != "" {
+		_ = SaveConfigPreserveCommentsUpdateNestedScalar(configFile, []string{"cluster", "node-id"}, cfg.Cluster.NodeID)
+	}
+
 	cfg.NormalizePluginsConfig()
 	if errResolvePluginsDir := cfg.ResolvePluginsDir(); errResolvePluginsDir != nil && cfg.Plugins.Enabled {
 		return nil, errResolvePluginsDir

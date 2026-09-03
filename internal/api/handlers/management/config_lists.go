@@ -190,16 +190,18 @@ func (h *Handler) PutGeminiKeys(c *gin.Context) {
 }
 func (h *Handler) PatchGeminiKey(c *gin.Context) {
 	type geminiKeyPatch struct {
-		APIKey              *string                          `json:"api-key"`
-		Weight              json.RawMessage                  `json:"weight"`
-		Prefix              *string                          `json:"prefix"`
-		BaseURL             *string                          `json:"base-url"`
-		ProxyURL            *string                          `json:"proxy-url"`
-		Headers             *map[string]string               `json:"headers"`
-		ExcludedModels      *[]string                        `json:"excluded-models"`
-		DisableCooling      json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry        *int                             `json:"request-retry"`
-		RequestScopedErrors *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		APIKey                   *string                          `json:"api-key"`
+		Weight                   json.RawMessage                  `json:"weight"`
+		Prefix                   *string                          `json:"prefix"`
+		BaseURL                  *string                          `json:"base-url"`
+		ProxyURL                 *string                          `json:"proxy-url"`
+		Headers                  *map[string]string               `json:"headers"`
+		ExcludedModels           *[]string                        `json:"excluded-models"`
+		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry             *int                             `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -278,6 +280,9 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
@@ -392,16 +397,18 @@ func (h *Handler) PutInteractionsKeys(c *gin.Context) {
 }
 func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 	type geminiKeyPatch struct {
-		APIKey              *string                          `json:"api-key"`
-		Weight              json.RawMessage                  `json:"weight"`
-		Prefix              *string                          `json:"prefix"`
-		BaseURL             *string                          `json:"base-url"`
-		ProxyURL            *string                          `json:"proxy-url"`
-		Headers             *map[string]string               `json:"headers"`
-		ExcludedModels      *[]string                        `json:"excluded-models"`
-		DisableCooling      json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry        *int                             `json:"request-retry"`
-		RequestScopedErrors *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		APIKey                   *string                          `json:"api-key"`
+		Weight                   json.RawMessage                  `json:"weight"`
+		Prefix                   *string                          `json:"prefix"`
+		BaseURL                  *string                          `json:"base-url"`
+		ProxyURL                 *string                          `json:"proxy-url"`
+		Headers                  *map[string]string               `json:"headers"`
+		ExcludedModels           *[]string                        `json:"excluded-models"`
+		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry             *int                             `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -481,6 +488,9 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
@@ -598,19 +608,21 @@ func (h *Handler) PutClaudeKeys(c *gin.Context) {
 }
 func (h *Handler) PatchClaudeKey(c *gin.Context) {
 	type claudeKeyPatch struct {
-		APIKey                  *string                          `json:"api-key"`
-		FingerprintProfile      *string                          `json:"fingerprint-profile"`
-		Weight                  json.RawMessage                  `json:"weight"`
-		Prefix                  *string                          `json:"prefix"`
-		BaseURL                 *string                          `json:"base-url"`
-		ProxyURL                *string                          `json:"proxy-url"`
-		Models                  *[]config.ClaudeModel            `json:"models"`
-		Headers                 *map[string]string               `json:"headers"`
-		ExcludedModels          *[]string                        `json:"excluded-models"`
-		RebuildMidSystemMessage *bool                            `json:"rebuild-mid-system-message"`
-		DisableCooling          json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry            *int                             `json:"request-retry"`
-		RequestScopedErrors     *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		APIKey                   *string                          `json:"api-key"`
+		FingerprintProfile       *string                          `json:"fingerprint-profile"`
+		Weight                   json.RawMessage                  `json:"weight"`
+		Prefix                   *string                          `json:"prefix"`
+		BaseURL                  *string                          `json:"base-url"`
+		ProxyURL                 *string                          `json:"proxy-url"`
+		Models                   *[]config.ClaudeModel            `json:"models"`
+		Headers                  *map[string]string               `json:"headers"`
+		ExcludedModels           *[]string                        `json:"excluded-models"`
+		RebuildMidSystemMessage  *bool                            `json:"rebuild-mid-system-message"`
+		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry             *int                             `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -686,6 +698,9 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
@@ -792,17 +807,19 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 }
 func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 	type openAICompatPatch struct {
-		Name                  *string                             `json:"name"`
-		Prefix                *string                             `json:"prefix"`
-		Disabled              *bool                               `json:"disabled"`
-		DisableCooling        json.RawMessage                     `json:"disable-cooling"`
-		BaseURL               *string                             `json:"base-url"`
-		APIKeyEntries         *[]config.OpenAICompatibilityAPIKey `json:"api-key-entries"`
-		Models                *[]config.OpenAICompatibilityModel  `json:"models"`
-		Headers               *map[string]string                  `json:"headers"`
-		SupportPromptCacheKey *bool                               `json:"support-prompt-cache-key"`
-		RequestRetry          *int                                `json:"request-retry"`
-		RequestScopedErrors   *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
+		Name                     *string                             `json:"name"`
+		Prefix                   *string                             `json:"prefix"`
+		Disabled                 *bool                               `json:"disabled"`
+		DisableCooling           json.RawMessage                     `json:"disable-cooling"`
+		BaseURL                  *string                             `json:"base-url"`
+		APIKeyEntries            *[]config.OpenAICompatibilityAPIKey `json:"api-key-entries"`
+		Models                   *[]config.OpenAICompatibilityModel  `json:"models"`
+		Headers                  *map[string]string                  `json:"headers"`
+		SupportPromptCacheKey    *bool                               `json:"support-prompt-cache-key"`
+		RequestRetry             *int                                `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                     `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                     `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Name  *string            `json:"name"`
@@ -849,6 +866,9 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	if body.Value.BaseURL != nil {
 		trimmed := strings.TrimSpace(*body.Value.BaseURL)
@@ -954,16 +974,18 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 }
 func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	type vertexCompatPatch struct {
-		APIKey         *string                     `json:"api-key"`
-		Weight         json.RawMessage             `json:"weight"`
-		Prefix         *string                     `json:"prefix"`
-		BaseURL        *string                     `json:"base-url"`
-		ProxyURL       *string                     `json:"proxy-url"`
-		Headers        *map[string]string          `json:"headers"`
-		Models         *[]config.VertexCompatModel `json:"models"`
-		ExcludedModels *[]string                   `json:"excluded-models"`
-		DisableCooling json.RawMessage             `json:"disable-cooling"`
-		RequestRetry   *int                        `json:"request-retry"`
+		APIKey                   *string                     `json:"api-key"`
+		Weight                   json.RawMessage             `json:"weight"`
+		Prefix                   *string                     `json:"prefix"`
+		BaseURL                  *string                     `json:"base-url"`
+		ProxyURL                 *string                     `json:"proxy-url"`
+		Headers                  *map[string]string          `json:"headers"`
+		Models                   *[]config.VertexCompatModel `json:"models"`
+		ExcludedModels           *[]string                   `json:"excluded-models"`
+		DisableCooling           json.RawMessage             `json:"disable-cooling"`
+		RequestRetry             *int                        `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage             `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage             `json:"provider-retry-status-codes"`
 	}
 	var body struct {
 		Index *int               `json:"index"`
@@ -1039,6 +1061,9 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	normalizeVertexCompatKey(&entry)
 	h.cfg.VertexCompatAPIKey[targetIndex] = entry
@@ -1420,18 +1445,20 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 }
 func (h *Handler) PatchCodexKey(c *gin.Context) {
 	type codexKeyPatch struct {
-		APIKey              *string                          `json:"api-key"`
-		Weight              json.RawMessage                  `json:"weight"`
-		Prefix              *string                          `json:"prefix"`
-		BaseURL             *string                          `json:"base-url"`
-		ProxyURL            *string                          `json:"proxy-url"`
-		AlphaSearch         *bool                            `json:"alpha-search"`
-		Models              *[]config.CodexModel             `json:"models"`
-		Headers             *map[string]string               `json:"headers"`
-		ExcludedModels      *[]string                        `json:"excluded-models"`
-		DisableCooling      json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry        *int                             `json:"request-retry"`
-		RequestScopedErrors *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		APIKey                   *string                          `json:"api-key"`
+		Weight                   json.RawMessage                  `json:"weight"`
+		Prefix                   *string                          `json:"prefix"`
+		BaseURL                  *string                          `json:"base-url"`
+		ProxyURL                 *string                          `json:"proxy-url"`
+		AlphaSearch              *bool                            `json:"alpha-search"`
+		Models                   *[]config.CodexModel             `json:"models"`
+		Headers                  *map[string]string               `json:"headers"`
+		ExcludedModels           *[]string                        `json:"excluded-models"`
+		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry             *int                             `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Index *int           `json:"index"`
@@ -1508,6 +1535,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
@@ -1614,19 +1644,21 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 
 func (h *Handler) PatchXAIKey(c *gin.Context) {
 	type xaiKeyPatch struct {
-		APIKey              *string                          `json:"api-key"`
-		Priority            *int                             `json:"priority"`
-		Weight              json.RawMessage                  `json:"weight"`
-		Prefix              *string                          `json:"prefix"`
-		BaseURL             *string                          `json:"base-url"`
-		Websockets          *bool                            `json:"websockets"`
-		ProxyURL            *string                          `json:"proxy-url"`
-		Models              *[]config.XAIModel               `json:"models"`
-		Headers             *map[string]string               `json:"headers"`
-		ExcludedModels      *[]string                        `json:"excluded-models"`
-		DisableCooling      json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry        *int                             `json:"request-retry"`
-		RequestScopedErrors *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		APIKey                   *string                          `json:"api-key"`
+		Priority                 *int                             `json:"priority"`
+		Weight                   json.RawMessage                  `json:"weight"`
+		Prefix                   *string                          `json:"prefix"`
+		BaseURL                  *string                          `json:"base-url"`
+		Websockets               *bool                            `json:"websockets"`
+		ProxyURL                 *string                          `json:"proxy-url"`
+		Models                   *[]config.XAIModel               `json:"models"`
+		Headers                  *map[string]string               `json:"headers"`
+		ExcludedModels           *[]string                        `json:"excluded-models"`
+		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry             *int                             `json:"request-retry"`
+		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 	}
 	var body struct {
 		Index *int         `json:"index"`
@@ -1707,6 +1739,9 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
+	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
+		return
+	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
 	}
@@ -1767,6 +1802,41 @@ func (h *Handler) DeleteXAIKey(c *gin.Context) {
 		}
 	}
 	c.JSON(400, gin.H{"error": "missing api-key or index"})
+}
+
+// applyProviderRetryPatch applies the same-credential retry fields from a PATCH body.
+// An absent field leaves the credential untouched; an explicit JSON null clears it so
+// operators can return to the inherited default. An empty status-code array is kept as
+// an empty list, which disables status-code triggered retries.
+func applyProviderRetryPatch(c *gin.Context, countRaw, codesRaw json.RawMessage, count **int, codes **[]int) bool {
+	if len(countRaw) > 0 {
+		if strings.TrimSpace(string(countRaw)) == "null" {
+			*count = nil
+		} else {
+			var value int
+			if errUnmarshal := json.Unmarshal(countRaw, &value); errUnmarshal != nil {
+				c.JSON(400, gin.H{"error": "provider-retry-count must be an integer or null"})
+				return false
+			}
+			*count = &value
+		}
+	}
+	if len(codesRaw) > 0 {
+		if strings.TrimSpace(string(codesRaw)) == "null" {
+			*codes = nil
+		} else {
+			var value []int
+			if errUnmarshal := json.Unmarshal(codesRaw, &value); errUnmarshal != nil {
+				c.JSON(400, gin.H{"error": "provider-retry-status-codes must be an array of integers or null"})
+				return false
+			}
+			if value == nil {
+				value = []int{}
+			}
+			*codes = &value
+		}
+	}
+	return true
 }
 
 func applyDisableCoolingPatch(c *gin.Context, raw json.RawMessage, target **bool) bool {

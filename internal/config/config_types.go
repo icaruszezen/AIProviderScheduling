@@ -381,6 +381,15 @@ type ClaudeKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// ProviderRetryCount is the number of same-credential retries before failover.
+	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
+	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+
+	// ProviderRetryStatusCodes lists HTTP statuses that trigger same-credential retry.
+	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
+	// A non-nil empty slice disables status-code-triggered same-credential retry.
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
 
@@ -499,6 +508,15 @@ type CodexKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// ProviderRetryCount is the number of same-credential retries before failover.
+	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
+	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+
+	// ProviderRetryStatusCodes lists HTTP statuses that trigger same-credential retry.
+	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
+	// A non-nil empty slice disables status-code-triggered same-credential retry.
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
 }
@@ -596,6 +614,15 @@ type GeminiKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// ProviderRetryCount is the number of same-credential retries before failover.
+	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
+	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+
+	// ProviderRetryStatusCodes lists HTTP statuses that trigger same-credential retry.
+	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
+	// A non-nil empty slice disables status-code-triggered same-credential retry.
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
 }
@@ -682,6 +709,15 @@ type OpenAICompatibility struct {
 	// RequestRetry optionally overrides the global request-retry for this provider.
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
+
+	// ProviderRetryCount is the number of same-credential retries before failover.
+	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
+	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+
+	// ProviderRetryStatusCodes lists HTTP statuses that trigger same-credential retry.
+	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
+	// A non-nil empty slice disables status-code-triggered same-credential retry.
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
 
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`

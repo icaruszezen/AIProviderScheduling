@@ -503,41 +503,61 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 			if !restoreExecutionModel {
 				execReq = attachResolvedAPIKeyModelInfo(routing, execReq, auth, routeModel, upstreamModel)
 			}
-			startExec := time.Now()
-			resp, errExec := executor.Execute(execCtx, auth, execReq, execOpts)
-			errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
-			durationExec := time.Since(startExec)
-			if errExec != nil {
-				if hasUpstreamExecutionAttempt(errExec) {
-					upstreamErr = errExec
-				}
-				if errCtx := execCtx.Err(); errCtx != nil {
-					return cliproxyexecutor.Response{}, errCtx
-				}
-				refreshCtx := newUpstreamAttemptContext(execCtx)
-				if refreshed, okRefresh := m.tryRefreshAfterUnauthorized(refreshCtx, auth, errExec, didRefreshOnUnauthorized); okRefresh {
-					auth = refreshed
-					didRefreshOnUnauthorized = true
-					execCtx = newUpstreamAttemptContext(execCtx)
-					startRetry := time.Now()
-					resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
-					errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
-					durationRetry := time.Since(startRetry)
-					if errExec != nil {
-						if hasUpstreamExecutionAttempt(errExec) {
-							upstreamErr = errExec
-						}
-						warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationRetry, errExec)
-						if errCtx := execCtx.Err(); errCtx != nil {
-							return cliproxyexecutor.Response{}, errCtx
-						}
+			sameRetryUsed := 0
+			var resp cliproxyexecutor.Response
+			var errExec error
+			for {
+				startExec := time.Now()
+				resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
+				errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+				durationExec := time.Since(startExec)
+				if errExec != nil {
+					if hasUpstreamExecutionAttempt(errExec) {
+						upstreamErr = errExec
 					}
-				} else {
-					warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationExec, errExec)
+					if errCtx := execCtx.Err(); errCtx != nil {
+						return cliproxyexecutor.Response{}, errCtx
+					}
+					refreshCtx := newUpstreamAttemptContext(execCtx)
+					if refreshed, okRefresh := m.tryRefreshAfterUnauthorized(refreshCtx, auth, errExec, didRefreshOnUnauthorized); okRefresh {
+						auth = refreshed
+						didRefreshOnUnauthorized = true
+						execCtx = newUpstreamAttemptContext(execCtx)
+						startRetry := time.Now()
+						resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
+						errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+						durationRetry := time.Since(startRetry)
+						if errExec != nil {
+							if hasUpstreamExecutionAttempt(errExec) {
+								upstreamErr = errExec
+							}
+							warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationRetry, errExec)
+							if errCtx := execCtx.Err(); errCtx != nil {
+								return cliproxyexecutor.Response{}, errCtx
+							}
+						}
+					} else {
+						warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationExec, errExec)
+					}
 				}
-			}
-			if errCancel := claudeOAuthRequestCancellation(execCtx, auth, errExec); errCancel != nil {
-				return cliproxyexecutor.Response{}, errCancel
+				if errCancel := claudeOAuthRequestCancellation(execCtx, auth, errExec); errCancel != nil {
+					return cliproxyexecutor.Response{}, errCancel
+				}
+				if errExec != nil {
+					action, okAction := matchRequestScopedErrorAction(auth, errExec, m.runtimeConfigSnapshot())
+					if okAction && isRequestScopedStop(action, okAction) {
+						break
+					}
+				}
+				if errExec == nil || !shouldRetrySameCredential(auth, errExec, sameRetryUsed) {
+					break
+				}
+				sameRetryUsed++
+				neutral := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: false, Error: resultErrorFromError(errExec), Options: execOpts}
+				if ra := retryAfterFromError(errExec); ra != nil {
+					neutral.RetryAfter = ra
+				}
+				m.recordAvailabilityNeutralResult(execCtx, neutral)
 			}
 			result := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: errExec == nil, Options: execOpts}
 			if errExec != nil {
@@ -694,41 +714,61 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 			if !restoreExecutionModel {
 				execReq = attachResolvedAPIKeyModelInfo(routing, execReq, auth, routeModel, upstreamModel)
 			}
-			startExec := time.Now()
-			resp, errExec := executor.CountTokens(execCtx, auth, execReq, execOpts)
-			errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
-			durationExec := time.Since(startExec)
-			if errExec != nil {
-				if hasUpstreamExecutionAttempt(errExec) {
-					upstreamErr = errExec
-				}
-				if errCtx := execCtx.Err(); errCtx != nil {
-					return cliproxyexecutor.Response{}, errCtx
-				}
-				refreshCtx := newUpstreamAttemptContext(execCtx)
-				if refreshed, okRefresh := m.tryRefreshAfterUnauthorized(refreshCtx, auth, errExec, didRefreshOnUnauthorized); okRefresh {
-					auth = refreshed
-					didRefreshOnUnauthorized = true
-					execCtx = newUpstreamAttemptContext(execCtx)
-					startRetry := time.Now()
-					resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
-					errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
-					durationRetry := time.Since(startRetry)
-					if errExec != nil {
-						if hasUpstreamExecutionAttempt(errExec) {
-							upstreamErr = errExec
-						}
-						warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationRetry, errExec)
-						if errCtx := execCtx.Err(); errCtx != nil {
-							return cliproxyexecutor.Response{}, errCtx
-						}
+			sameRetryUsed := 0
+			var resp cliproxyexecutor.Response
+			var errExec error
+			for {
+				startExec := time.Now()
+				resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
+				errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+				durationExec := time.Since(startExec)
+				if errExec != nil {
+					if hasUpstreamExecutionAttempt(errExec) {
+						upstreamErr = errExec
 					}
-				} else {
-					warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationExec, errExec)
+					if errCtx := execCtx.Err(); errCtx != nil {
+						return cliproxyexecutor.Response{}, errCtx
+					}
+					refreshCtx := newUpstreamAttemptContext(execCtx)
+					if refreshed, okRefresh := m.tryRefreshAfterUnauthorized(refreshCtx, auth, errExec, didRefreshOnUnauthorized); okRefresh {
+						auth = refreshed
+						didRefreshOnUnauthorized = true
+						execCtx = newUpstreamAttemptContext(execCtx)
+						startRetry := time.Now()
+						resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
+						errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+						durationRetry := time.Since(startRetry)
+						if errExec != nil {
+							if hasUpstreamExecutionAttempt(errExec) {
+								upstreamErr = errExec
+							}
+							warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationRetry, errExec)
+							if errCtx := execCtx.Err(); errCtx != nil {
+								return cliproxyexecutor.Response{}, errCtx
+							}
+						}
+					} else {
+						warnLogUpstreamFailure(execCtx, entry, provider, upstreamModel, auth, durationExec, errExec)
+					}
 				}
-			}
-			if errCancel := claudeOAuthRequestCancellation(execCtx, auth, errExec); errCancel != nil {
-				return cliproxyexecutor.Response{}, errCancel
+				if errCancel := claudeOAuthRequestCancellation(execCtx, auth, errExec); errCancel != nil {
+					return cliproxyexecutor.Response{}, errCancel
+				}
+				if errExec != nil {
+					action, okAction := matchRequestScopedErrorAction(auth, errExec, m.runtimeConfigSnapshot())
+					if okAction && isRequestScopedStop(action, okAction) {
+						break
+					}
+				}
+				if errExec == nil || !shouldRetrySameCredential(auth, errExec, sameRetryUsed) {
+					break
+				}
+				sameRetryUsed++
+				neutral := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: false, Error: resultErrorFromError(errExec), Options: execOpts, SkipQuotaObservation: true}
+				if ra := retryAfterFromError(errExec); ra != nil {
+					neutral.RetryAfter = ra
+				}
+				m.recordAvailabilityNeutralResult(execCtx, neutral)
 			}
 			result := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: errExec == nil, Options: execOpts, SkipQuotaObservation: true}
 			if errExec != nil {

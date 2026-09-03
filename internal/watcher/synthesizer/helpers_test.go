@@ -319,3 +319,45 @@ func TestAddRequestRetryToMetadata(t *testing.T) {
 
 	addRequestRetryToMetadata(&positive, nil)
 }
+
+func TestAddProviderRetryToMetadata(t *testing.T) {
+	zero := 0
+	positive := 3
+	negative := -1
+	codes := []int{401, 429}
+	empty := []int{}
+
+	metadata := map[string]any{}
+	addProviderRetryToMetadata(&zero, nil, metadata)
+	if got, ok := metadata["provider_retry_count"].(int); !ok || got != 0 {
+		t.Fatalf("zero count = %v, want 0", metadata["provider_retry_count"])
+	}
+	if _, exists := metadata["provider_retry_status_codes"]; exists {
+		t.Fatalf("nil codes should be omitted")
+	}
+
+	metadata = map[string]any{}
+	addProviderRetryToMetadata(&positive, &codes, metadata)
+	if got, ok := metadata["provider_retry_count"].(int); !ok || got != 3 {
+		t.Fatalf("positive count = %v, want 3", metadata["provider_retry_count"])
+	}
+	gotCodes, ok := metadata["provider_retry_status_codes"].([]int)
+	if !ok || !reflect.DeepEqual(gotCodes, []int{401, 429}) {
+		t.Fatalf("codes = %v, want [401 429]", metadata["provider_retry_status_codes"])
+	}
+
+	metadata = map[string]any{}
+	addProviderRetryToMetadata(&positive, &empty, metadata)
+	gotCodes, ok = metadata["provider_retry_status_codes"].([]int)
+	if !ok || len(gotCodes) != 0 {
+		t.Fatalf("empty codes = %v, want empty slice", metadata["provider_retry_status_codes"])
+	}
+
+	metadata = map[string]any{}
+	addProviderRetryToMetadata(&negative, &codes, metadata)
+	if _, exists := metadata["provider_retry_count"]; exists {
+		t.Fatalf("negative count should be omitted")
+	}
+
+	addProviderRetryToMetadata(&positive, &codes, nil)
+}

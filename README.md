@@ -134,6 +134,10 @@ CLIProxyAPI Guides: [https://help.router-for.me/](https://help.router-for.me/)
 
 see [MANAGEMENT_API.md](https://help.router-for.me/management/api)
 
+## Cluster
+
+Master/slave config sync across nodes: [docs/cluster.md](docs/cluster.md)
+
 ## Usage Statistics
 
 Since v6.10.0, CLIProxyAPI and [CPAMC](https://github.com/icaruszezen/Cli-Proxy-API-Management-Center-x) no longer ship built-in usage statistics. If you need usage statistics, use:

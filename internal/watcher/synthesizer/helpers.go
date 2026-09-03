@@ -112,6 +112,21 @@ func addRequestRetryToMetadata(requestRetry *int, metadata map[string]any) {
 	metadata["request_retry"] = *requestRetry
 }
 
+// addProviderRetryToMetadata copies same-credential retry settings into metadata.
+// A nil count is omitted. A non-nil status-code slice is always written, including
+// an empty list that disables status-code-triggered retries.
+func addProviderRetryToMetadata(count *int, codes *[]int, metadata map[string]any) {
+	if metadata == nil {
+		return
+	}
+	if count != nil && *count >= 0 {
+		metadata["provider_retry_count"] = *count
+	}
+	if codes != nil {
+		metadata["provider_retry_status_codes"] = append([]int(nil), *codes...)
+	}
+}
+
 // addRequestScopedErrorsToMetadata copies per-credential request-scoped error rules into metadata.
 func addRequestScopedErrorsToMetadata(rules []config.RequestScopedErrorRule, metadata map[string]any) {
 	if len(rules) == 0 || metadata == nil {

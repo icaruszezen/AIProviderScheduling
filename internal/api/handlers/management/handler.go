@@ -36,6 +36,12 @@ const attemptCleanupInterval = 1 * time.Hour
 // attemptMaxIdleTime controls how long an IP can be idle before cleanup
 const attemptMaxIdleTime = 2 * time.Hour
 
+// attemptMaxFailures is the number of rejected credentials that triggers a ban.
+const attemptMaxFailures = 5
+
+// attemptBanDuration is how long a banned client IP stays rejected.
+const attemptBanDuration = 30 * time.Minute
+
 // Handler aggregates config reference, persistence path and helpers.
 type Handler struct {
 	cfg                     *config.Config
@@ -60,6 +66,7 @@ type Handler struct {
 	pluginStoreHTTPClient   pluginstore.HTTPDoer
 	pluginReleaseCacheMu    sync.Mutex
 	pluginReleaseCache      map[string]pluginReleaseCacheEntry
+	cluster                 ClusterController
 }
 
 type configReloadSnapshot struct {
@@ -95,6 +102,64 @@ func (h *Handler) startAttemptCleanup() {
 			h.purgeStaleAttempts()
 		}
 	}()
+}
+
+// banRemaining reports how long clientIP stays banned. An expired ban is cleared
+// so the caller can proceed with a fresh attempt budget.
+func (h *Handler) banRemaining(clientIP string, now time.Time) time.Duration {
+	if h == nil {
+		return 0
+	}
+	h.attemptsMu.Lock()
+	defer h.attemptsMu.Unlock()
+	ai := h.failedAttempts[clientIP]
+	if ai == nil || ai.blockedUntil.IsZero() {
+		return 0
+	}
+	if now.Before(ai.blockedUntil) {
+		return ai.blockedUntil.Sub(now).Round(time.Second)
+	}
+	ai.blockedUntil = time.Time{}
+	ai.count = 0
+	return 0
+}
+
+// recordAuthFailure counts a rejected credential for clientIP and bans it once
+// attemptMaxFailures is reached.
+func (h *Handler) recordAuthFailure(clientIP string) {
+	if h == nil {
+		return
+	}
+	h.attemptsMu.Lock()
+	defer h.attemptsMu.Unlock()
+	if h.failedAttempts == nil {
+		h.failedAttempts = make(map[string]*attemptInfo)
+	}
+	ai := h.failedAttempts[clientIP]
+	if ai == nil {
+		ai = &attemptInfo{}
+		h.failedAttempts[clientIP] = ai
+	}
+	ai.count++
+	ai.lastActivity = time.Now()
+	if ai.count >= attemptMaxFailures {
+		ai.blockedUntil = time.Now().Add(attemptBanDuration)
+		ai.count = 0
+	}
+}
+
+// resetAuthFailures clears the failure budget for clientIP after a valid credential.
+func (h *Handler) resetAuthFailures(clientIP string) {
+	if h == nil {
+		return
+	}
+	h.attemptsMu.Lock()
+	defer h.attemptsMu.Unlock()
+	if ai := h.failedAttempts[clientIP]; ai != nil {
+		ai.count = 0
+		ai.blockedUntil = time.Time{}
+		ai.lastActivity = time.Now()
+	}
 }
 
 // purgeStaleAttempts removes IP entries that have been idle beyond attemptMaxIdleTime
@@ -298,9 +363,6 @@ func (h *Handler) Middleware() gin.HandlerFunc {
 // AuthenticateManagementKey verifies the provided management key for the given client.
 // It mirrors the behaviour of Middleware() so non-HTTP callers can reuse the same logic.
 func (h *Handler) AuthenticateManagementKey(clientIP string, localClient bool, provided string) (bool, int, string) {
-	const maxFailures = 5
-	const banDuration = 30 * time.Minute
-
 	if h == nil {
 		return false, http.StatusForbidden, "remote management disabled"
 	}
@@ -319,49 +381,16 @@ func (h *Handler) AuthenticateManagementKey(clientIP string, localClient bool, p
 	}
 	envSecret := h.envSecret
 
-	now := time.Now()
-	h.attemptsMu.Lock()
-	ai := h.failedAttempts[clientIP]
-	if ai != nil && !ai.blockedUntil.IsZero() {
-		if now.Before(ai.blockedUntil) {
-			remaining := ai.blockedUntil.Sub(now).Round(time.Second)
-			h.attemptsMu.Unlock()
-			return false, http.StatusForbidden, fmt.Sprintf("IP banned due to too many failed attempts. Try again in %s", remaining)
-		}
-		// Ban expired, reset state
-		ai.blockedUntil = time.Time{}
-		ai.count = 0
+	if remaining := h.banRemaining(clientIP, time.Now()); remaining > 0 {
+		return false, http.StatusForbidden, fmt.Sprintf("IP banned due to too many failed attempts. Try again in %s", remaining)
 	}
-	h.attemptsMu.Unlock()
 
 	if !localClient && !allowRemote {
 		return false, http.StatusForbidden, "remote management disabled"
 	}
 
-	fail := func() {
-		h.attemptsMu.Lock()
-		aip := h.failedAttempts[clientIP]
-		if aip == nil {
-			aip = &attemptInfo{}
-			h.failedAttempts[clientIP] = aip
-		}
-		aip.count++
-		aip.lastActivity = time.Now()
-		if aip.count >= maxFailures {
-			aip.blockedUntil = time.Now().Add(banDuration)
-			aip.count = 0
-		}
-		h.attemptsMu.Unlock()
-	}
-
-	reset := func() {
-		h.attemptsMu.Lock()
-		if ai := h.failedAttempts[clientIP]; ai != nil {
-			ai.count = 0
-			ai.blockedUntil = time.Time{}
-		}
-		h.attemptsMu.Unlock()
-	}
+	fail := func() { h.recordAuthFailure(clientIP) }
+	reset := func() { h.resetAuthFailures(clientIP) }
 
 	if secretHash == "" && envSecret == "" {
 		return false, http.StatusForbidden, "remote management key not set"
@@ -406,6 +435,21 @@ func (h *Handler) persist(c *gin.Context) bool {
 // persistLocked saves the current in-memory config to disk.
 // It expects the caller to hold h.mu.
 func (h *Handler) persistLocked(c *gin.Context) bool {
+	if h.slaveReadonlyLocked() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "slave_node_readonly",
+			"message": "slave node: config is synced from master",
+		})
+		return false
+	}
+	return h.saveAndReloadLocked(c)
+}
+
+func (h *Handler) persistClusterLocalLocked(c *gin.Context) bool {
+	return h.saveAndReloadLocked(c)
+}
+
+func (h *Handler) saveAndReloadLocked(c *gin.Context) bool {
 	// Preserve comments when writing
 	if err := config.SaveConfigPreserveComments(h.configFilePath, h.cfg); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to save config: %v", err)})
