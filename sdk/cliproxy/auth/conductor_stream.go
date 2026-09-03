@@ -294,7 +294,7 @@ modelLoop:
 					m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 					return nil, wrapRequestStopError(errStream)
 				}
-				if isRequestInvalidError(errStream) {
+				if shouldStopOnRequestInvalid(auth, errStream) {
 					applyRequestScopedActionToResult(action, okAction, &result)
 					m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 					return nil, errStream
@@ -377,7 +377,7 @@ modelLoop:
 			}
 			if bootstrapErr != nil {
 				action, okAction := matchRequestScopedErrorAction(auth, bootstrapErr, m.runtimeConfigSnapshot())
-				if !(okAction && isRequestScopedStop(action, okAction)) && !isRequestInvalidError(bootstrapErr) &&
+				if !(okAction && isRequestScopedStop(action, okAction)) &&
 					allowRetry && !ephemeralResult && shouldRetrySameCredential(auth, bootstrapErr, sameRetryUsed) {
 					sameRetryUsed++
 					rerr := resultErrorFromError(bootstrapErr)
@@ -407,7 +407,7 @@ modelLoop:
 					}
 					continue modelLoop
 				}
-				if isRequestInvalidError(bootstrapErr) {
+				if shouldStopOnRequestInvalid(auth, bootstrapErr) {
 					rerr := resultErrorFromError(bootstrapErr)
 					result := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: false, Error: rerr, Options: execOpts}
 					result.RetryAfter = retryAfterFromError(bootstrapErr)

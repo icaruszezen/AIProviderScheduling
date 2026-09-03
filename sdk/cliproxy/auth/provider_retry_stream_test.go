@@ -175,6 +175,46 @@ func TestExecuteStreamSameCredentialRetryThenNextAuth(t *testing.T) {
 	}
 }
 
+func TestExecuteStreamRetriesSameCredentialOnConfigured422(t *testing.T) {
+	for _, failAtBootstrap := range []bool{false, true} {
+		name := "connect failure"
+		if failAtBootstrap {
+			name = "first chunk failure"
+		}
+		t.Run(name, func(t *testing.T) {
+			manager := NewManager(nil, providerRetrySelector{}, nil)
+			executor := &providerRetryStreamExecutor{
+				failFor:         map[string]int{"auth-a": 2},
+				status:          http.StatusUnprocessableEntity,
+				failAtBootstrap: failAtBootstrap,
+			}
+			manager.RegisterExecutor(executor)
+			model := "gpt-provider-retry-stream-422-" + name
+			registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
+				"provider_retry_count":        2,
+				"provider_retry_status_codes": []int{http.StatusUnprocessableEntity},
+			}, model)
+			registerProviderRetryAuth(t, manager, "auth-b", nil, model)
+
+			chunks, errStream := manager.ExecuteStream(
+				context.Background(),
+				[]string{"codex"},
+				cliproxyexecutor.Request{Model: model},
+				cliproxyexecutor.Options{Stream: true},
+			)
+			if errStream != nil {
+				t.Fatalf("ExecuteStream() error = %v", errStream)
+			}
+			if errDrain := drainStream(t, chunks); errDrain != nil {
+				t.Fatalf("stream error = %v, want a clean stream after the retries", errDrain)
+			}
+			if got := executor.calls.Load(); got != 3 {
+				t.Fatalf("upstream calls = %d, want 3 (2 retries on auth-a then success)", got)
+			}
+		})
+	}
+}
+
 func TestExecuteStreamRequestScopedStopSkipsSameCredentialRetry(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryStreamExecutor{
