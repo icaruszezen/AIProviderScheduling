@@ -504,6 +504,12 @@ type CodexKey struct {
 	// True disables auth/model cooldowns; false explicitly enables them.
 	DisableCooling *bool `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
 
+	// LocalCompact overrides the global local-compact setting for this credential when set.
+	// True handles /v1/responses/compact as a local summarization turn against the upstream
+	// /responses endpoint; false forwards compact requests to the upstream /responses/compact
+	// endpoint. Nil inherits the global local-compact value.
+	LocalCompact *bool `yaml:"local-compact,omitempty" json:"local-compact,omitempty"`
+
 	// RequestRetry optionally overrides the global request-retry for this credential.
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`

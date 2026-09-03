@@ -200,6 +200,13 @@ max-retry-interval: 30
 # A credential/provider disable-cooling value, when present, overrides this global value.
 disable-cooling: false
 
+# When true, handle /v1/responses/compact locally instead of forwarding it upstream.
+# Local handling issues a normal /responses turn that asks the model to summarize the
+# conversation, then assembles the reply into a compaction response. Enable this for
+# upstreams that do not implement /responses/compact (they answer 404).
+# A credential local-compact value, when present, overrides this global value.
+local-compact: false
+
 # When true, persist per-auth cooldown status as .cds files next to auth files.
 # Default is false; when false, cooldown status is kept in memory only.
 save-cooldown-status: false
@@ -428,6 +435,7 @@ nonstream-keepalive-interval: 0
 #     weight: 5 # optional: weighted-round-robin share; omitted defaults to 1; maximum 1,000,000
 #     prefix: "test" # optional: require calls like "test/gpt-5-codex" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
+#     local-compact: true # optional override: true handles /v1/responses/compact locally, false forwards it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables

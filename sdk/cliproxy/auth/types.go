@@ -478,6 +478,23 @@ func (a *Auth) DisableCoolingOverride() (bool, bool) {
 	return false, false
 }
 
+// LocalCompactOverride returns the auth-scoped local_compact override when present.
+// The value is read from metadata key "local_compact" (or legacy "local-compact").
+// The second return value distinguishes explicit false from an absent override.
+func (a *Auth) LocalCompactOverride() (bool, bool) {
+	if a == nil || a.Metadata == nil {
+		return false, false
+	}
+	for _, key := range []string{"local_compact", "local-compact"} {
+		if val, ok := a.Metadata[key]; ok {
+			if parsed, okParse := parseBoolAny(val); okParse {
+				return parsed, true
+			}
+		}
+	}
+	return false, false
+}
+
 // ToolPrefixDisabled returns whether the proxy_ tool name prefix should be
 // skipped for this auth. When true, tool names are sent to Anthropic unchanged.
 // The value is read from metadata key "tool_prefix_disabled" (or "tool-prefix-disabled").

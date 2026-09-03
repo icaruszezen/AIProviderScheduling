@@ -238,6 +238,9 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 		if entry.DisableCooling != nil {
 			metadata["disable_cooling"] = *entry.DisableCooling
 		}
+		if entry.LocalCompact != nil {
+			metadata["local_compact"] = *entry.LocalCompact
+		}
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)

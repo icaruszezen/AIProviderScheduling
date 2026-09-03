@@ -46,6 +46,9 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 	if oldCfg.DisableCooling != newCfg.DisableCooling {
 		changes = append(changes, fmt.Sprintf("disable-cooling: %t -> %t", oldCfg.DisableCooling, newCfg.DisableCooling))
 	}
+	if oldCfg.LocalCompact != newCfg.LocalCompact {
+		changes = append(changes, fmt.Sprintf("local-compact: %t -> %t", oldCfg.LocalCompact, newCfg.LocalCompact))
+	}
 	if oldCfg.SaveCooldownStatus != newCfg.SaveCooldownStatus {
 		changes = append(changes, fmt.Sprintf("save-cooldown-status: %t -> %t", oldCfg.SaveCooldownStatus, newCfg.SaveCooldownStatus))
 	}
@@ -309,6 +312,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 				changes = append(changes, fmt.Sprintf("codex[%d].alpha-search: %t -> %t", i, o.AlphaSearch, n.AlphaSearch))
 			}
 			changes = appendOptionalBoolChange(changes, fmt.Sprintf("codex[%d].disable-cooling", i), o.DisableCooling, n.DisableCooling)
+			changes = appendOptionalBoolChange(changes, fmt.Sprintf("codex[%d].local-compact", i), o.LocalCompact, n.LocalCompact)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
 				changes = append(changes, fmt.Sprintf("codex[%d].api-key: updated", i))
 			}

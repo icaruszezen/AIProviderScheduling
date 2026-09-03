@@ -1455,6 +1455,7 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		Headers                  *map[string]string               `json:"headers"`
 		ExcludedModels           *[]string                        `json:"excluded-models"`
 		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
+		LocalCompact             json.RawMessage                  `json:"local-compact"`
 		RequestRetry             *int                             `json:"request-retry"`
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
@@ -1531,6 +1532,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		entry.ExcludedModels = config.NormalizeExcludedModels(*body.Value.ExcludedModels)
 	}
 	if !applyDisableCoolingPatch(c, body.Value.DisableCooling, &entry.DisableCooling) {
+		return
+	}
+	if !applyOptionalBoolPatch(c, body.Value.LocalCompact, &entry.LocalCompact, "local-compact") {
 		return
 	}
 	if body.Value.RequestRetry != nil {
@@ -1840,6 +1844,12 @@ func applyProviderRetryPatch(c *gin.Context, countRaw, codesRaw json.RawMessage,
 }
 
 func applyDisableCoolingPatch(c *gin.Context, raw json.RawMessage, target **bool) bool {
+	return applyOptionalBoolPatch(c, raw, target, "disable-cooling")
+}
+
+// applyOptionalBoolPatch applies a tri-state boolean patch: an absent field keeps
+// the current value, an explicit null clears the override, and a boolean sets it.
+func applyOptionalBoolPatch(c *gin.Context, raw json.RawMessage, target **bool, field string) bool {
 	if len(raw) == 0 {
 		return true
 	}
@@ -1849,7 +1859,7 @@ func applyDisableCoolingPatch(c *gin.Context, raw json.RawMessage, target **bool
 	}
 	var value bool
 	if errUnmarshal := json.Unmarshal(raw, &value); errUnmarshal != nil {
-		c.JSON(400, gin.H{"error": "disable-cooling must be a boolean or null"})
+		c.JSON(400, gin.H{"error": field + " must be a boolean or null"})
 		return false
 	}
 	*target = &value

@@ -39,6 +39,17 @@ type SDKConfig struct {
 	// credentials as well.
 	ForceModelPrefix bool `yaml:"force-model-prefix" json:"force-model-prefix"`
 
+	// LocalCompact is the provider-wide default for handling /v1/responses/compact locally.
+	//
+	// When false (default), compact requests are forwarded to the upstream
+	// /responses/compact endpoint unchanged. When true, the proxy instead issues a
+	// normal /responses turn that asks the model to summarize the conversation, then
+	// assembles the reply into a compaction response. Enable this for upstreams that
+	// do not implement /responses/compact (they answer 404).
+	//
+	// Individual credentials may override this via their own local-compact setting.
+	LocalCompact bool `yaml:"local-compact" json:"local-compact"`
+
 	// RequestLog enables or disables detailed request logging functionality.
 	RequestLog bool `yaml:"request-log" json:"request-log"`
 

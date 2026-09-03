@@ -56,6 +56,9 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 	body = helps.ApplyPayloadConfigWithRequest(e.cfg, baseModel, to.String(), from.String(), "", body, originalTranslated, requestedModel, requestPath, opts.Headers)
 	body = helps.SetStringIfDifferent(body, "model", baseModel)
 	body = normalizeCodexInstructions(body)
+	if localCompactEnabled(e.cfg, auth) {
+		body = restoreCodexCompactionInputItems(body)
+	}
 	if e.cfg == nil || e.cfg.DisableImageGeneration == config.DisableImageGenerationOff {
 		body = ensureImageGenerationTool(body, baseModel, auth, opts.Headers)
 	}

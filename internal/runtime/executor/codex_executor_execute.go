@@ -20,6 +20,9 @@ import (
 
 func (e *CodexExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
 	if opts.Alt == "responses/compact" {
+		if localCompactEnabled(e.cfg, auth) {
+			return e.executeLocalCompact(ctx, auth, req, opts)
+		}
 		return e.executeCompact(ctx, auth, req, opts)
 	}
 	if isCodexOpenAIImageRequest(opts) {
@@ -61,7 +64,10 @@ func (e *CodexExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, re
 	body, _ = sjson.DeleteBytes(body, "safety_identifier")
 	body, _ = sjson.DeleteBytes(body, "stream_options")
 	body = normalizeCodexInstructions(body)
-	if e.cfg == nil || e.cfg.DisableImageGeneration == config.DisableImageGenerationOff {
+	if localCompactEnabled(e.cfg, auth) {
+		body = restoreCodexCompactionInputItems(body)
+	}
+	if !codexLocalCompactActive(opts) && (e.cfg == nil || e.cfg.DisableImageGeneration == config.DisableImageGenerationOff) {
 		body = ensureImageGenerationTool(body, baseModel, auth, opts.Headers)
 	}
 	body = sanitizeOpenAIResponsesReasoningEncryptedContent(ctx, "codex executor", body)
