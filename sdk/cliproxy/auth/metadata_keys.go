@@ -24,6 +24,8 @@ func CanonicalCredentialMetadataKey(key string) string {
 		return "request_retry"
 	case "request-scoped-errors":
 		return "request_scoped_errors"
+	case "hide-no-available-channel":
+		return "hide_no_available_channel"
 	case "provider-retry-count":
 		return "provider_retry_count"
 	case "provider-retry-status-codes":

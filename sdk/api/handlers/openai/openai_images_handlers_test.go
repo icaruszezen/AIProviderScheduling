@@ -382,6 +382,49 @@ func TestWriteImagesStreamErrorEventSanitizesPayload(t *testing.T) {
 	}
 }
 
+func TestWriteImagesStreamErrorEvent_HidesNoAvailableChannelWithoutMutating(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	upstream := `{"error":{"message":"No available channel for model gpt-5.6-sol under group promo"}}`
+	msg := &interfaces.ErrorMessage{
+		StatusCode:             http.StatusServiceUnavailable,
+		Error:                  errors.New(upstream),
+		DirectResponse:         true,
+		Body:                   []byte(upstream),
+		HideNoAvailableChannel: true,
+	}
+
+	returned := writeImagesStreamErrorEvent(c, msg)
+	if returned == msg {
+		t.Fatal("writeImagesStreamErrorEvent mutated the caller's ErrorMessage pointer")
+	}
+	if msg.Error == nil || msg.Error.Error() != upstream {
+		t.Fatalf("original Error() = %v, want unchanged upstream body", msg.Error)
+	}
+	if !bytes.Equal(msg.Body, []byte(upstream)) {
+		t.Fatalf("original Body was rewritten: %s", msg.Body)
+	}
+	body := recorder.Body.String()
+	if strings.Contains(body, "No available channel") {
+		t.Fatalf("downstream stream leaked channel details: %s", body)
+	}
+	if !strings.Contains(body, "Service Unavailable") {
+		t.Fatalf("downstream stream = %s, want Service Unavailable", body)
+	}
+	logged, ok := c.Get("API_RESPONSE")
+	if !ok {
+		t.Fatal("API_RESPONSE was not captured")
+	}
+	loggedBytes, ok := logged.([]byte)
+	if !ok {
+		t.Fatalf("API_RESPONSE type = %T", logged)
+	}
+	if !bytes.Contains(loggedBytes, []byte("No available channel for model")) {
+		t.Fatalf("request log lost original error: %s", loggedBytes)
+	}
+}
+
 func TestCollectImagesRejectsPayloadErrorBeforeCompleted(t *testing.T) {
 	data := make(chan []byte, 1)
 	data <- []byte("event: error\ndata: {\"type\":\"provider.error\",\"error\":{\"code\":\"failed\",\"message\":\"token=image-secret\"}}\n\n" +

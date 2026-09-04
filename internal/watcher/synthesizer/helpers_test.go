@@ -361,3 +361,16 @@ func TestAddProviderRetryToMetadata(t *testing.T) {
 
 	addProviderRetryToMetadata(&positive, &codes, nil)
 }
+
+func TestAddHideNoAvailableChannelToMetadata(t *testing.T) {
+	metadata := map[string]any{}
+	addHideNoAvailableChannelToMetadata(false, metadata)
+	if _, exists := metadata["hide_no_available_channel"]; exists {
+		t.Fatal("false hide switch should be omitted")
+	}
+	addHideNoAvailableChannelToMetadata(true, metadata)
+	if got, ok := metadata["hide_no_available_channel"].(bool); !ok || !got {
+		t.Fatalf("hide_no_available_channel = %#v, want true", metadata["hide_no_available_channel"])
+	}
+	addHideNoAvailableChannelToMetadata(true, nil)
+}

@@ -226,6 +226,7 @@ func (m *Manager) executeHomeOnce(ctx context.Context, providers []string, req c
 			startHomeExec := time.Now()
 			response, errExecute = execute()
 			errExecute = markUpstreamExecutionAttemptFromContext(execCtx, errExecute)
+			errExecute = maybeMarkHideNoAvailableChannel(preparedAuth, errExecute)
 			durationHomeExec := time.Since(startHomeExec)
 			if countTokens {
 				if _, fingerprint := getEffectiveAuth(); isUnauthorizedError(errExecute) {

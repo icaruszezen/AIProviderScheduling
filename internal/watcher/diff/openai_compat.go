@@ -86,6 +86,9 @@ func describeOpenAICompatibilityUpdate(oldEntry, newEntry config.OpenAICompatibi
 	if !optionalBoolEqual(oldEntry.DisableCooling, newEntry.DisableCooling) {
 		details = append(details, fmt.Sprintf("disable-cooling %s -> %s", formatOptionalBool(oldEntry.DisableCooling), formatOptionalBool(newEntry.DisableCooling)))
 	}
+	if oldEntry.HideNoAvailableChannel != newEntry.HideNoAvailableChannel {
+		details = append(details, fmt.Sprintf("hide-no-available-channel %t -> %t", oldEntry.HideNoAvailableChannel, newEntry.HideNoAvailableChannel))
+	}
 	if !optionalIntEqual(oldEntry.RequestRetry, newEntry.RequestRetry) {
 		details = append(details, fmt.Sprintf("request-retry %s -> %s", formatOptionalInt(oldEntry.RequestRetry), formatOptionalInt(newEntry.RequestRetry)))
 	}

@@ -393,6 +393,11 @@ type ClaudeKey struct {
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
 
+	// HideNoAvailableChannel replaces downstream 503 "No available channel for model"
+	// payloads with a generic Service Unavailable envelope. Management connectivity
+	// tests still see the original upstream body.
+	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
+
 	// Cloak configures request cloaking for non-Claude-Code clients.
 	Cloak *CloakConfig `yaml:"cloak,omitempty" json:"cloak,omitempty"`
 
@@ -525,6 +530,11 @@ type CodexKey struct {
 
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
+
+	// HideNoAvailableChannel replaces downstream 503 "No available channel for model"
+	// payloads with a generic Service Unavailable envelope. Management connectivity
+	// tests still see the original upstream body.
+	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k CodexKey) GetAPIKey() string { return k.APIKey }
@@ -631,6 +641,11 @@ type GeminiKey struct {
 
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
+
+	// HideNoAvailableChannel replaces downstream 503 "No available channel for model"
+	// payloads with a generic Service Unavailable envelope. Management connectivity
+	// tests still see the original upstream body.
+	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k GeminiKey) GetAPIKey() string { return k.APIKey }
@@ -727,6 +742,11 @@ type OpenAICompatibility struct {
 
 	// RequestScopedErrors configures custom classification rules for upstream errors.
 	RequestScopedErrors []RequestScopedErrorRule `yaml:"request-scoped-errors,omitempty" json:"request-scoped-errors,omitempty"`
+
+	// HideNoAvailableChannel replaces downstream 503 "No available channel for model"
+	// payloads with a generic Service Unavailable envelope. Management connectivity
+	// tests still see the original upstream body.
+	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 // OpenAICompatibilityAPIKey represents an API key configuration with optional proxy setting.

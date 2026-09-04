@@ -135,6 +135,14 @@ func addRequestScopedErrorsToMetadata(rules []config.RequestScopedErrorRule, met
 	metadata["request_scoped_errors"] = rules
 }
 
+// addHideNoAvailableChannelToMetadata copies the provider switch into metadata when enabled.
+func addHideNoAvailableChannelToMetadata(hide bool, metadata map[string]any) {
+	if !hide || metadata == nil {
+		return
+	}
+	metadata["hide_no_available_channel"] = true
+}
+
 func fingerprintProfileFromMetadata(metadata map[string]any) string {
 	if metadata == nil {
 		return ""

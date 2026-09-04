@@ -100,6 +100,7 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)
+		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
 		if entry.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(entry.Priority)
 		}
@@ -163,6 +164,7 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 		addRequestRetryToMetadata(ck.RequestRetry, metadata)
 		addProviderRetryToMetadata(ck.ProviderRetryCount, ck.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(ck.RequestScopedErrors, metadata)
+		addHideNoAvailableChannelToMetadata(ck.HideNoAvailableChannel, metadata)
 		if ck.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(ck.Priority)
 		}
@@ -244,6 +246,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)
+		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
 		if entry.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(entry.Priority)
 		}
@@ -325,6 +328,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 			addRequestRetryToMetadata(compat.RequestRetry, metadata)
 			addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
 			addRequestScopedErrorsToMetadata(compat.RequestScopedErrors, metadata)
+			addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
 			if compat.Priority != 0 {
 				attrs["priority"] = strconv.Itoa(compat.Priority)
 			}
@@ -372,6 +376,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 			addRequestRetryToMetadata(compat.RequestRetry, metadata)
 			addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
 			addRequestScopedErrorsToMetadata(compat.RequestScopedErrors, metadata)
+			addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
 			if compat.Priority != 0 {
 				attrs["priority"] = strconv.Itoa(compat.Priority)
 			}
@@ -439,6 +444,7 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 		}
 		addRequestRetryToMetadata(compat.RequestRetry, metadata)
 		addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
+		addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
 		a := &coreauth.Auth{
 			ID:         id,
 			Provider:   providerName,

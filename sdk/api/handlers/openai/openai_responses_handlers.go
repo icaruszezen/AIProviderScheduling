@@ -918,12 +918,17 @@ func (h *OpenAIResponsesAPIHandler) forwardResponsesStream(c *gin.Context, flush
 		if errMsg == nil {
 			return
 		}
+		logMsg := errMsg
+		if handlers.ShouldHideNoAvailableChannel(errMsg) {
+			handlers.PreserveOriginalErrorLog(c, errMsg)
+			errMsg = handlers.SanitizeHiddenNoAvailableChannelMessage(errMsg)
+		}
 		status := http.StatusInternalServerError
 		if errMsg.StatusCode > 0 {
 			status = errMsg.StatusCode
 		}
 		errText := responsesStreamErrorText(errMsg, status)
-		h.logResponsesStreamError(c, framer, errMsg)
+		h.logResponsesStreamError(c, framer, logMsg)
 		if framer.terminalEvent != "" {
 			return
 		}

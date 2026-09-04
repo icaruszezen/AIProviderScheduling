@@ -90,14 +90,13 @@ func writeImagesStreamKeepAlive(c *gin.Context, flusher http.Flusher) {
 }
 
 func writeImagesStreamErrorEvent(c *gin.Context, errMsg *interfaces.ErrorMessage) *interfaces.ErrorMessage {
-	original := errMsg
+	if handlers.ShouldHideNoAvailableChannel(errMsg) {
+		handlers.PreserveOriginalErrorLog(c, errMsg)
+		errMsg = handlers.SanitizeHiddenNoAvailableChannelMessage(errMsg)
+	}
 	errMsg = sanitizeResponsesStreamErrorMessage(errMsg)
 	if errMsg == nil {
 		return nil
-	}
-	if original != nil {
-		*original = *errMsg
-		errMsg = original
 	}
 	status := errMsg.StatusCode
 	errText := responsesStreamErrorText(errMsg, status)

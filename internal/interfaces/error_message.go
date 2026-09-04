@@ -26,4 +26,8 @@ type ErrorMessage struct {
 
 	// Headers contains downstream response headers when DirectResponse is true.
 	Headers http.Header
+
+	// HideNoAvailableChannel replaces a 503 "No available channel for model"
+	// payload with a generic Service Unavailable envelope for downstream clients.
+	HideNoAvailableChannel bool
 }

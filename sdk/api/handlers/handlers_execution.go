@@ -9,6 +9,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
+	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
 	coreusage "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
@@ -317,50 +318,57 @@ func ExecutionErrorMessage(err error) *interfaces.ErrorMessage {
 }
 
 func executionErrorMessage(err error) *interfaces.ErrorMessage {
+	var msg *interfaces.ErrorMessage
 	var terminated *coreexecutor.RequestTerminatedError
 	if errors.As(err, &terminated) && terminated != nil {
-		return &interfaces.ErrorMessage{
+		msg = &interfaces.ErrorMessage{
 			StatusCode:     normalizedTerminationStatus(terminated.StatusCode()),
 			Error:          err,
 			DirectResponse: true,
 			Body:           terminated.ResponseBody(),
 			Headers:        terminated.ResponseHeaders(),
 		}
-	}
-	status := http.StatusInternalServerError
-	if code := clienterror.HTTPStatusFromError(err); code > 0 {
-		status = code
-	}
-	type directResponseError interface {
-		DirectResponse() bool
-		ResponseBody() []byte
-	}
-	var direct directResponseError
-	if errors.As(err, &direct) && direct != nil && direct.DirectResponse() {
-		body := direct.ResponseBody()
-		var headers http.Header
-		if len(body) > 0 {
-			contentType := http.DetectContentType(body)
-			if json.Valid(body) {
-				contentType = "application/json"
+	} else {
+		status := http.StatusInternalServerError
+		if code := clienterror.HTTPStatusFromError(err); code > 0 {
+			status = code
+		}
+		type directResponseError interface {
+			DirectResponse() bool
+			ResponseBody() []byte
+		}
+		var direct directResponseError
+		if errors.As(err, &direct) && direct != nil && direct.DirectResponse() {
+			body := direct.ResponseBody()
+			var headers http.Header
+			if len(body) > 0 {
+				contentType := http.DetectContentType(body)
+				if json.Valid(body) {
+					contentType = "application/json"
+				}
+				headers = http.Header{"Content-Type": []string{contentType}}
 			}
-			headers = http.Header{"Content-Type": []string{contentType}}
-		}
-		return &interfaces.ErrorMessage{
-			StatusCode:     status,
-			Error:          err,
-			DirectResponse: true,
-			Body:           body,
-			Headers:        headers,
+			msg = &interfaces.ErrorMessage{
+				StatusCode:     status,
+				Error:          err,
+				DirectResponse: true,
+				Body:           body,
+				Headers:        headers,
+			}
+		} else {
+			var addon http.Header
+			if he, ok := err.(interface{ Headers() http.Header }); ok && he != nil {
+				if hdr := he.Headers(); hdr != nil {
+					addon = hdr.Clone()
+				}
+			}
+			msg = &interfaces.ErrorMessage{StatusCode: status, Error: err, Addon: addon}
 		}
 	}
-	var addon http.Header
-	if he, ok := err.(interface{ Headers() http.Header }); ok && he != nil {
-		if hdr := he.Headers(); hdr != nil {
-			addon = hdr.Clone()
-		}
+	if msg != nil && coreauth.HidesNoAvailableChannel(err) {
+		msg.HideNoAvailableChannel = true
 	}
-	return &interfaces.ErrorMessage{StatusCode: status, Error: err, Addon: addon}
+	return msg
 }
 
 func (h *BaseAPIHandler) pluginExecutorHost() PluginExecutorHost {

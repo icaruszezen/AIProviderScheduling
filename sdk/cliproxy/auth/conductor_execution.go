@@ -510,6 +510,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 				startExec := time.Now()
 				resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
 				errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+				errExec = maybeMarkHideNoAvailableChannel(auth, errExec)
 				durationExec := time.Since(startExec)
 				if errExec != nil {
 					if hasUpstreamExecutionAttempt(errExec) {
@@ -526,6 +527,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 						startRetry := time.Now()
 						resp, errExec = executor.Execute(execCtx, auth, execReq, execOpts)
 						errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+						errExec = maybeMarkHideNoAvailableChannel(auth, errExec)
 						durationRetry := time.Since(startRetry)
 						if errExec != nil {
 							if hasUpstreamExecutionAttempt(errExec) {
@@ -721,6 +723,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 				startExec := time.Now()
 				resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
 				errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+				errExec = maybeMarkHideNoAvailableChannel(auth, errExec)
 				durationExec := time.Since(startExec)
 				if errExec != nil {
 					if hasUpstreamExecutionAttempt(errExec) {
@@ -737,6 +740,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 						startRetry := time.Now()
 						resp, errExec = executor.CountTokens(execCtx, auth, execReq, execOpts)
 						errExec = markUpstreamExecutionAttemptFromContext(execCtx, errExec)
+						errExec = maybeMarkHideNoAvailableChannel(auth, errExec)
 						durationRetry := time.Since(startRetry)
 						if errExec != nil {
 							if hasUpstreamExecutionAttempt(errExec) {

@@ -202,6 +202,7 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -286,6 +287,9 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	if entry.APIKey == "" && entry.BaseURL == "" {
 		h.cfg.GeminiKey = append(h.cfg.GeminiKey[:targetIndex], h.cfg.GeminiKey[targetIndex+1:]...)
@@ -409,6 +413,7 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -494,6 +499,9 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	if entry.APIKey == "" && entry.BaseURL == "" {
 		h.cfg.InteractionsKey = append(h.cfg.InteractionsKey[:targetIndex], h.cfg.InteractionsKey[targetIndex+1:]...)
@@ -623,6 +631,7 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -704,6 +713,9 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeClaudeKey(&entry)
 	h.cfg.ClaudeKey[targetIndex] = entry
@@ -820,6 +832,7 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                     `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                     `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                               `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Name  *string            `json:"name"`
@@ -900,6 +913,9 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeOpenAICompatibilityEntry(&entry)
 	h.cfg.OpenAICompatibility[targetIndex] = entry
@@ -986,6 +1002,7 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 		RequestRetry             *int                        `json:"request-retry"`
 		ProviderRetryCount       json.RawMessage             `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage             `json:"provider-retry-status-codes"`
+		HideNoAvailableChannel   *bool                       `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int               `json:"index"`
@@ -1064,6 +1081,9 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeVertexCompatKey(&entry)
 	h.cfg.VertexCompatAPIKey[targetIndex] = entry
@@ -1460,6 +1480,7 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int           `json:"index"`
@@ -1545,6 +1566,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeCodexKey(&entry)
 	h.cfg.CodexKey[targetIndex] = entry
@@ -1663,6 +1687,7 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int         `json:"index"`
@@ -1748,6 +1773,9 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 	}
 	if body.Value.RequestScopedErrors != nil {
 		entry.RequestScopedErrors = append([]config.RequestScopedErrorRule(nil), *body.Value.RequestScopedErrors...)
+	}
+	if body.Value.HideNoAvailableChannel != nil {
+		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeCodexKey(&entry)
 	h.cfg.XAIKey[targetIndex] = entry

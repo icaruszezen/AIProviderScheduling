@@ -1,9 +1,11 @@
 package claude
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -99,6 +101,93 @@ func TestWriteClaudeErrorResponse_IncludesRetryAfterForModelCooldownDefaultSetti
 	}
 	if got := recorder.Header().Get("Retry-After"); got != "20" {
 		t.Fatalf("Retry-After = %q, want 20", got)
+	}
+}
+
+func TestWriteClaudeErrorResponse_HidesNoAvailableChannel(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	handler := &ClaudeCodeAPIHandler{}
+
+	upstream := `{"error":{"message":"No available channel for model gpt-5.6-sol under group promo"}}`
+	msg := &interfaces.ErrorMessage{
+		StatusCode:             http.StatusServiceUnavailable,
+		Error:                  errors.New(upstream),
+		DirectResponse:         true,
+		Body:                   []byte(upstream),
+		HideNoAvailableChannel: true,
+	}
+
+	handler.WriteErrorResponse(c, msg)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	body := recorder.Body.Bytes()
+	if gjson.GetBytes(body, "type").String() != "error" {
+		t.Fatalf("type = %q, want error; body=%s", gjson.GetBytes(body, "type").String(), body)
+	}
+	if msg := gjson.GetBytes(body, "error.message").String(); msg != "Service Unavailable" {
+		t.Fatalf("error.message = %q, want Service Unavailable; body=%s", msg, body)
+	}
+	if strings.Contains(string(body), "No available channel") {
+		t.Fatalf("downstream body leaked channel details: %s", body)
+	}
+
+	logged, ok := c.Get("API_RESPONSE")
+	if !ok {
+		t.Fatal("API_RESPONSE was not captured")
+	}
+	loggedBytes, ok := logged.([]byte)
+	if !ok {
+		t.Fatalf("API_RESPONSE type = %T", logged)
+	}
+	if !bytes.Contains(loggedBytes, []byte("No available channel for model")) {
+		t.Fatalf("request log lost original error: %s", loggedBytes)
+	}
+}
+
+func TestForwardClaudeStream_HidesNoAvailableChannelKeepsLog(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/messages", nil)
+	handler := &ClaudeCodeAPIHandler{BaseAPIHandler: handlers.NewBaseAPIHandlers(nil, nil)}
+
+	upstream := `{"error":{"message":"No available channel for model gpt-5.6-sol under group promo"}}`
+	data := make(chan []byte)
+	close(data)
+	errs := make(chan *interfaces.ErrorMessage, 1)
+	errs <- &interfaces.ErrorMessage{
+		StatusCode:             http.StatusServiceUnavailable,
+		Error:                  errors.New(upstream),
+		DirectResponse:         true,
+		Body:                   []byte(upstream),
+		HideNoAvailableChannel: true,
+	}
+	close(errs)
+
+	handler.forwardClaudeStream(c, recorder, func(error) {}, data, errs)
+
+	body := recorder.Body.String()
+	if strings.Contains(body, "No available channel") {
+		t.Fatalf("downstream stream leaked channel details: %s", body)
+	}
+	if !strings.Contains(body, "Service Unavailable") {
+		t.Fatalf("downstream stream = %s, want Service Unavailable", body)
+	}
+
+	logged, ok := c.Get("API_RESPONSE")
+	if !ok {
+		t.Fatal("API_RESPONSE was not captured")
+	}
+	loggedBytes, ok := logged.([]byte)
+	if !ok {
+		t.Fatalf("API_RESPONSE type = %T", logged)
+	}
+	if !bytes.Contains(loggedBytes, []byte("No available channel for model")) {
+		t.Fatalf("request log lost original error: %s", loggedBytes)
 	}
 }
 

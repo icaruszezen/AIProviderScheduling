@@ -62,6 +62,11 @@ type VertexCompatKey struct {
 	// Nil uses the default list (401, 403, 429) when ProviderRetryCount is positive.
 	// A non-nil empty slice disables status-code-triggered same-credential retry.
 	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+
+	// HideNoAvailableChannel replaces downstream 503 "No available channel for model"
+	// payloads with a generic Service Unavailable envelope. Management connectivity
+	// tests still see the original upstream body.
+	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k VertexCompatKey) GetAPIKey() string   { return k.APIKey }

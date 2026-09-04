@@ -313,6 +313,9 @@ func (h *ClaudeCodeAPIHandler) forwardClaudeStream(c *gin.Context, flusher http.
 			if errMsg == nil {
 				return
 			}
+			if handlers.ShouldHideNoAvailableChannel(errMsg) {
+				handlers.PreserveOriginalErrorLog(c, errMsg)
+			}
 			status := http.StatusInternalServerError
 			if errMsg.StatusCode > 0 {
 				status = errMsg.StatusCode
@@ -336,6 +339,9 @@ type claudeErrorResponse struct {
 }
 
 func (h *ClaudeCodeAPIHandler) toClaudeError(msg *interfaces.ErrorMessage) claudeErrorResponse {
+	if handlers.ShouldHideNoAvailableChannel(msg) {
+		msg = handlers.SanitizeHiddenNoAvailableChannelMessage(msg)
+	}
 	status := http.StatusInternalServerError
 	errText := http.StatusText(status)
 	if msg != nil {
@@ -360,6 +366,12 @@ func (h *ClaudeCodeAPIHandler) toClaudeError(msg *interfaces.ErrorMessage) claud
 }
 
 func (h *ClaudeCodeAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.ErrorMessage) {
+	if handlers.ShouldHideNoAvailableChannel(msg) {
+		handlers.PreserveOriginalErrorLog(c, msg)
+		saved, existed := handlers.SnapshotAPIResponse(c)
+		msg = handlers.SanitizeHiddenNoAvailableChannelMessage(msg)
+		defer handlers.RestoreAPIResponse(c, saved, existed)
+	}
 	status := http.StatusInternalServerError
 	if msg != nil && msg.StatusCode > 0 {
 		status = msg.StatusCode

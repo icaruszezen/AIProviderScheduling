@@ -830,6 +830,71 @@ func TestStatusFromErrorMapsContextStatuses(t *testing.T) {
 	}
 }
 
+func TestWriteErrorResponse_HidesNoAvailableChannel(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	upstream := `{"error":{"message":"No available channel for model gpt-5.6-sol under group promo"}}`
+	errUpstream := coreauth.MarkHideNoAvailableChannel(directResponseTestError{
+		status: http.StatusServiceUnavailable,
+		body:   []byte(upstream),
+		direct: true,
+	})
+	msg := executionErrorMessage(errUpstream)
+	if msg == nil || !msg.HideNoAvailableChannel {
+		t.Fatalf("executionErrorMessage() = %#v, want HideNoAvailableChannel", msg)
+	}
+
+	NewBaseAPIHandlers(nil, nil).WriteErrorResponse(c, msg)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusServiceUnavailable)
+	}
+	body := recorder.Body.String()
+	if strings.Contains(body, "No available channel") {
+		t.Fatalf("downstream body leaked channel details: %s", body)
+	}
+	if !strings.Contains(body, `"message":"Service Unavailable"`) {
+		t.Fatalf("downstream body = %s, want standard Service Unavailable", body)
+	}
+
+	logged, ok := c.Get("API_RESPONSE")
+	if !ok {
+		t.Fatal("API_RESPONSE was not captured")
+	}
+	loggedBytes, ok := logged.([]byte)
+	if !ok {
+		t.Fatalf("API_RESPONSE type = %T", logged)
+	}
+	if !bytes.Contains(loggedBytes, []byte("No available channel for model")) {
+		t.Fatalf("request log lost original error: %s", loggedBytes)
+	}
+}
+
+func TestWriteErrorResponse_KeepsNoAvailableChannelWhenUnmarked(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	upstream := `{"error":{"message":"No available channel for model gpt-5.6-sol"}}`
+	msg := executionErrorMessage(directResponseTestError{
+		status: http.StatusServiceUnavailable,
+		body:   []byte(upstream),
+		direct: true,
+	})
+	if msg != nil && msg.HideNoAvailableChannel {
+		t.Fatal("unmarked error should not hide channel details")
+	}
+
+	NewBaseAPIHandlers(nil, nil).WriteErrorResponse(c, msg)
+	if got := recorder.Body.String(); got != upstream {
+		t.Fatalf("body = %q, want original upstream JSON", got)
+	}
+}
+
 func TestWriteErrorResponse_ContextCanceledUses499(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()

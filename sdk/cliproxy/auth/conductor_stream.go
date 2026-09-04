@@ -132,6 +132,9 @@ func (m *Manager) wrapStreamResult(ctx context.Context, auth *Auth, provider, re
 			rewriter = NewStreamRewriter(StreamRewriteOptions{RewriteModel: aliasResult.OriginalAlias})
 		}
 		emit := func(chunk cliproxyexecutor.StreamChunk) bool {
+			if chunk.Err != nil {
+				chunk.Err = maybeMarkHideNoAvailableChannel(auth, chunk.Err)
+			}
 			if chunk.Err != nil && !failed {
 				failed = true
 				entry := logEntryWithRequestID(ctx)
@@ -238,6 +241,7 @@ modelLoop:
 			startStream := time.Now()
 			streamResult, errStream := executor.ExecuteStream(ctx, auth, execReq, execOpts)
 			errStream = markUpstreamExecutionAttemptFromContext(ctx, errStream)
+			errStream = maybeMarkHideNoAvailableChannel(auth, errStream)
 			if hasUpstreamExecutionAttempt(errStream) {
 				upstreamErr = errStream
 			}
@@ -257,6 +261,7 @@ modelLoop:
 						startRetry := time.Now()
 						streamResult, errStream = executor.ExecuteStream(ctx, auth, execReq, execOpts)
 						errStream = markUpstreamExecutionAttemptFromContext(ctx, errStream)
+						errStream = maybeMarkHideNoAvailableChannel(auth, errStream)
 						if hasUpstreamExecutionAttempt(errStream) {
 							upstreamErr = errStream
 						}
@@ -281,6 +286,7 @@ modelLoop:
 			}
 			streamResult, errStream = validateStreamResult(streamResult, errStream)
 			errStream = markUpstreamExecutionAttemptFromContext(ctx, errStream)
+			errStream = maybeMarkHideNoAvailableChannel(auth, errStream)
 			if errStream != nil {
 				rerr := resultErrorFromError(errStream)
 				action, okAction := matchRequestScopedErrorAction(auth, errStream, m.runtimeConfigSnapshot())
@@ -322,6 +328,7 @@ modelLoop:
 
 			buffered, closed, bootstrapErr := readStreamBootstrap(ctx, streamResult.Chunks)
 			bootstrapErr = markUpstreamExecutionAttemptFromContext(ctx, bootstrapErr)
+			bootstrapErr = maybeMarkHideNoAvailableChannel(auth, bootstrapErr)
 			if hasUpstreamExecutionAttempt(bootstrapErr) {
 				upstreamErr = newStreamBootstrapError(bootstrapErr, streamResult.Headers)
 			}
@@ -342,8 +349,10 @@ modelLoop:
 						startRetry := time.Now()
 						retryStream, retryErr := executor.ExecuteStream(ctx, auth, execReq, execOpts)
 						retryErr = markUpstreamExecutionAttemptFromContext(ctx, retryErr)
+						retryErr = maybeMarkHideNoAvailableChannel(auth, retryErr)
 						retryStream, retryErr = validateStreamResult(retryStream, retryErr)
 						retryErr = markUpstreamExecutionAttemptFromContext(ctx, retryErr)
+						retryErr = maybeMarkHideNoAvailableChannel(auth, retryErr)
 						if retryErr != nil {
 							if errCtx := ctx.Err(); errCtx != nil {
 								return nil, errCtx
@@ -355,6 +364,7 @@ modelLoop:
 							streamResult = retryStream
 							buffered, closed, bootstrapErr = readStreamBootstrap(ctx, streamResult.Chunks)
 							bootstrapErr = markUpstreamExecutionAttemptFromContext(ctx, bootstrapErr)
+							bootstrapErr = maybeMarkHideNoAvailableChannel(auth, bootstrapErr)
 							if bootstrapErr != nil {
 								warnLogUpstreamFailure(ctx, entry, provider, execModel, auth, time.Since(startRetry), bootstrapErr)
 							}

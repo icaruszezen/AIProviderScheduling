@@ -100,14 +100,26 @@ func enrichAuthSelectionError(err error, providers []string, model string) error
 		Retryable:  authErr.Retryable,
 		HTTPStatus: status,
 	}
+	var result error
 	if cause != nil {
-		return coreauth.WithCause(enriched, cause)
+		result = coreauth.WithCause(enriched, cause)
+	} else {
+		result = enriched
 	}
-	return enriched
+	if coreauth.HidesNoAvailableChannel(err) {
+		return coreauth.MarkHideNoAvailableChannel(result)
+	}
+	return result
 }
 
 // WriteErrorResponse writes an error message to the response writer using the HTTP status embedded in the message.
 func (h *BaseAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.ErrorMessage) {
+	if ShouldHideNoAvailableChannel(msg) {
+		PreserveOriginalErrorLog(c, msg)
+		saved, existed := SnapshotAPIResponse(c)
+		msg = SanitizeHiddenNoAvailableChannelMessage(msg)
+		defer RestoreAPIResponse(c, saved, existed)
+	}
 	status := http.StatusInternalServerError
 	if msg != nil && msg.StatusCode > 0 {
 		status = msg.StatusCode

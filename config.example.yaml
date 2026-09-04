@@ -665,6 +665,7 @@ nonstream-keepalive-interval: 0
 #     base-url: "https://openrouter.ai/api/v1" # The base URL of the provider.
 #     support-prompt-cache-key: false # optional: derive prompt_cache_key for requests from all input protocols
 #     disable-cooling: false # optional provider override: true disables cooling, false enables it; omit to inherit global
+#     hide-no-available-channel: false # optional on any provider entry: replace downstream 503 "No available channel for model" with a generic 503; panel tests still show the original
 #     request-retry: 3 # optional per-provider override; 0 disables additional rounds; omit or set < 0 to inherit global
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
