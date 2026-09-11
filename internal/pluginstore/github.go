@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const userAgent = "CLIProxyAPI"
+const userAgent = "AIProviderScheduling"
 const maxPluginStoreRedirects = 10
 
 // HTTPDoer abstracts the HTTP client used to execute requests.

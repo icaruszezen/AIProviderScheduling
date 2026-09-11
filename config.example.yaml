@@ -30,7 +30,7 @@ remote-management:
   # disable-auto-update-panel: false
 
   # GitHub repository for the management control panel. Accepts a repository URL or releases API URL.
-  panel-github-repository: "https://github.com/icaruszezen/Cli-Proxy-API-Management-Center-x"
+  panel-github-repository: "https://github.com/icaruszezen/AI-Provider-Scheduling-Management-Center"
 
 # Optional master/slave config sync. Independent of Home mode (Home ignores this block).
 # Sync copies provider blocks (including upstream API keys), inbound api-keys, and

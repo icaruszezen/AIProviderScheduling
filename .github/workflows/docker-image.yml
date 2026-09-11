@@ -10,8 +10,8 @@ permissions:
   packages: write
 
 env:
-  APP_NAME: CLIProxyAPI
-  DOCKER_IMAGE: ghcr.io/icaruszezen/cliproxyapi-x
+  APP_NAME: AIProviderScheduling
+  DOCKER_IMAGE: ghcr.io/icaruszezen/aiproviderscheduling
 
 jobs:
   docker_amd64:

@@ -1,6 +1,6 @@
 services:
-  cli-proxy-api:
-    image: ${CLI_PROXY_IMAGE:-ghcr.io/icaruszezen/cliproxyapi-x:latest}
+  aiproviderscheduling:
+    image: ${CLI_PROXY_IMAGE:-ghcr.io/icaruszezen/aiproviderscheduling:latest}
     pull_policy: always
     build:
       context: .
@@ -9,7 +9,7 @@ services:
         VERSION: ${VERSION:-dev}
         COMMIT: ${COMMIT:-none}
         BUILD_DATE: ${BUILD_DATE:-unknown}
-    container_name: cli-proxy-api
+    container_name: aiproviderscheduling
     # env_file:
     #   - .env
     environment:
@@ -22,8 +22,8 @@ services:
       - "51121:51121"
       - "11451:11451"
     volumes:
-      - ${CLI_PROXY_CONFIG_PATH:-./config.yaml}:/CLIProxyAPI/config.yaml
+      - ${CLI_PROXY_CONFIG_PATH:-./config.yaml}:/AIProviderScheduling/config.yaml
       - ${CLI_PROXY_AUTH_PATH:-./auths}:/root/.cli-proxy-api
-      - ${CLI_PROXY_LOG_PATH:-./logs}:/CLIProxyAPI/logs
-      - ${CLI_PROXY_PLUGIN_PATH:-./plugins}:/CLIProxyAPI/plugins
+      - ${CLI_PROXY_LOG_PATH:-./logs}:/AIProviderScheduling/logs
+      - ${CLI_PROXY_PLUGIN_PATH:-./plugins}:/AIProviderScheduling/plugins
     restart: unless-stopped

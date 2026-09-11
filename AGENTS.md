@@ -3,12 +3,12 @@
 Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with OAuth and round-robin load balancing.
 
 ## Repository
-- GitHub: https://github.com/router-for-me/CLIProxyAPI
+- GitHub: https://github.com/icaruszezen/AIProviderScheduling
 
 ## Commands
 ```bash
 gofmt -w . # Format (required after Go changes)
-go build -o cli-proxy-api ./cmd/server # Build
+go build -o AIProviderScheduling ./cmd/server # Build
 go run ./cmd/server # Run dev server
 go test ./... # Run all tests
 go test -v -run TestName ./path/to/pkg # Run single test
