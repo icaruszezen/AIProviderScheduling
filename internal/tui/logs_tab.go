@@ -39,8 +39,7 @@ func newLogsTabModel(client *Client, hook *LogHook) logsTabModel {
 		client:     client,
 		hook:       hook,
 		maxLines:   5000,
-		autoScroll: true,
-	}
+		autoScroll: true}
 }
 
 func (m logsTabModel) Init() tea.Cmd {
@@ -55,8 +54,7 @@ func (m logsTabModel) fetchLogs() tea.Msg {
 	return logsPollMsg{
 		lines:  lines,
 		latest: latest,
-		err:    err,
-	}
+		err:    err}
 }
 
 func (m logsTabModel) waitForNextPoll() tea.Cmd {

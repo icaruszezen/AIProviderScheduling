@@ -147,8 +147,7 @@ func buildHTTPSProxyDialTLSContext(
 	if dialContext == nil {
 		dialContext = (&net.Dialer{
 			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext
+			KeepAlive: 30 * time.Second}).DialContext
 	}
 	return func(ctx context.Context, network, addr string) (net.Conn, error) {
 		rawConn, errDial := dialContext(ctx, network, addr)
@@ -269,8 +268,7 @@ func (d *httpConnectDialer) DialContext(ctx context.Context, network, addr strin
 		Method: http.MethodConnect,
 		URL:    &url.URL{Host: addr},
 		Host:   addr,
-		Header: make(http.Header),
-	}).WithContext(ctx)
+		Header: make(http.Header)}).WithContext(ctx)
 	if d.proxyURL.User != nil {
 		req.Header.Set("Proxy-Authorization", proxyAuthorization(d.proxyURL.User))
 	}
@@ -343,8 +341,7 @@ func Redact(raw string) string {
 
 	redacted := &url.URL{
 		Scheme: parsedURL.Scheme,
-		Host:   parsedURL.Host,
-	}
+		Host:   parsedURL.Host}
 	if parsedURL.User != nil {
 		redacted.User = url.User("redacted")
 	}

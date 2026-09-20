@@ -21,22 +21,19 @@ type dashboardModel struct {
 	ready    bool
 
 	// Cached data for re-rendering on locale change
-	lastConfig    map[string]any
-	lastAuthFiles []map[string]any
-	lastAPIKeys   []string
+	lastConfig  map[string]any
+	lastAPIKeys []string
 }
 
 type dashboardDataMsg struct {
-	config    map[string]any
-	authFiles []map[string]any
-	apiKeys   []string
-	err       error
+	config  map[string]any
+	apiKeys []string
+	err     error
 }
 
 func newDashboardModel(client *Client) dashboardModel {
 	return dashboardModel{
-		client: client,
-	}
+		client: client}
 }
 
 func (m dashboardModel) Init() tea.Cmd {
@@ -45,24 +42,23 @@ func (m dashboardModel) Init() tea.Cmd {
 
 func (m dashboardModel) fetchData() tea.Msg {
 	cfg, cfgErr := m.client.GetConfig()
-	authFiles, authErr := m.client.GetAuthFiles()
 	apiKeys, keysErr := m.client.GetAPIKeys()
 
 	var err error
-	for _, e := range []error{cfgErr, authErr, keysErr} {
+	for _, e := range []error{cfgErr, keysErr} {
 		if e != nil {
 			err = e
 			break
 		}
 	}
-	return dashboardDataMsg{config: cfg, authFiles: authFiles, apiKeys: apiKeys, err: err}
+	return dashboardDataMsg{config: cfg, apiKeys: apiKeys, err: err}
 }
 
 func (m dashboardModel) Update(msg tea.Msg) (dashboardModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case localeChangedMsg:
 		// Re-render immediately with cached data using new locale
-		m.content = m.renderDashboard(m.lastConfig, m.lastAuthFiles, m.lastAPIKeys)
+		m.content = m.renderDashboard(m.lastConfig, m.lastAPIKeys)
 		m.viewport.SetContent(m.content)
 		// Also fetch fresh data in background
 		return m, m.fetchData
@@ -75,10 +71,9 @@ func (m dashboardModel) Update(msg tea.Msg) (dashboardModel, tea.Cmd) {
 			m.err = nil
 			// Cache data for locale switching
 			m.lastConfig = msg.config
-			m.lastAuthFiles = msg.authFiles
 			m.lastAPIKeys = msg.apiKeys
 
-			m.content = m.renderDashboard(msg.config, msg.authFiles, msg.apiKeys)
+			m.content = m.renderDashboard(msg.config, msg.apiKeys)
 		}
 		m.viewport.SetContent(m.content)
 		return m, nil
@@ -117,7 +112,7 @@ func (m dashboardModel) View() string {
 	return m.viewport.View()
 }
 
-func (m dashboardModel) renderDashboard(cfg map[string]any, authFiles []map[string]any, apiKeys []string) string {
+func (m dashboardModel) renderDashboard(cfg map[string]any, apiKeys []string) string {
 	var sb strings.Builder
 
 	sb.WriteString(titleStyle.Render(T("dashboard_title")))
@@ -155,21 +150,7 @@ func (m dashboardModel) renderDashboard(cfg map[string]any, authFiles []map[stri
 		lipgloss.NewStyle().Foreground(colorMuted).Render(T("mgmt_keys")),
 	))
 
-	// Card 2: Auth Files
-	authCount := len(authFiles)
-	activeAuth := 0
-	for _, f := range authFiles {
-		if !getBool(f, "disabled") {
-			activeAuth++
-		}
-	}
-	card2 := cardStyle.Render(fmt.Sprintf(
-		"%s\n%s",
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("76")).Render(fmt.Sprintf("📄 %d", authCount)),
-		lipgloss.NewStyle().Foreground(colorMuted).Render(fmt.Sprintf("%s (%d %s)", T("auth_files_label"), activeAuth, T("active_suffix"))),
-	))
-
-	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, card1, " ", card2))
+	sb.WriteString(card1)
 	sb.WriteString("\n\n")
 
 	// ━━━ Current Config ━━━
@@ -197,8 +178,7 @@ func (m dashboardModel) renderDashboard(cfg map[string]any, authFiles []map[stri
 			{T("debug_mode"), boolEmoji(debug)},
 			{T("usage_stats"), boolEmoji(usageEnabled)},
 			{T("log_to_file"), boolEmoji(loggingToFile)},
-			{T("retry_count"), fmt.Sprintf("%.0f", retry)},
-		}
+			{T("retry_count"), fmt.Sprintf("%.0f", retry)}}
 		if proxyURL != "" {
 			configItems = append(configItems, struct {
 				label string

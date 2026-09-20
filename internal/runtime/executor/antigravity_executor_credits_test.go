@@ -271,6 +271,7 @@ func TestAntigravityExecute_DoesNotUseRequestRetryForInternalRetries(t *testing.
 	auth := &cliproxyauth.Auth{
 		ID: "auth-transient-429",
 		Attributes: map[string]string{
+			"api_key":  "token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{
@@ -326,6 +327,7 @@ func TestAntigravityExecute_CreditsInjectedWhenConductorRequests(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		ID: fmt.Sprintf("auth-credits-conductor-%d", time.Now().UnixNano()),
 		Attributes: map[string]string{
+			"api_key":  "token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{
@@ -390,6 +392,7 @@ func TestAntigravityExecute_NoCreditsWithoutConductorFlag(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		ID: "auth-no-conductor-flag",
 		Attributes: map[string]string{
+			"api_key":  "token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{
@@ -620,7 +623,8 @@ func TestEnsureAccessToken_WarmTokenLoadsCreditsHint(t *testing.T) {
 		QuotaExceeded: config.QuotaExceeded{AntigravityCredits: true},
 	})
 	auth := &cliproxyauth.Auth{
-		ID: fmt.Sprintf("auth-warm-token-credits-%d", time.Now().UnixNano()),
+		Attributes: map[string]string{"api_key": "token"},
+		ID:         fmt.Sprintf("auth-warm-token-credits-%d", time.Now().UnixNano()),
 		Metadata: map[string]any{
 			"access_token": "token",
 			"expired":      time.Now().Add(1 * time.Hour).Format(time.RFC3339),

@@ -33,8 +33,7 @@ func TestConfigSynthesizer_Synthesize_NilConfig(t *testing.T) {
 	ctx := &SynthesisContext{
 		Config:      nil,
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -54,8 +53,7 @@ func TestConfigSynthesizer_GeminiKeys(t *testing.T) {
 		{
 			name: "single gemini key",
 			geminiKeys: []config.GeminiKey{
-				{APIKey: "test-key-123", Prefix: "team-a"},
-			},
+				{APIKey: "test-key-123", Prefix: "team-a"}},
 			wantLen: 1,
 			validate: func(t *testing.T, auths []*coreauth.Auth) {
 				if auths[0].Provider != "gemini" {
@@ -76,20 +74,17 @@ func TestConfigSynthesizer_GeminiKeys(t *testing.T) {
 				if auths[0].Status != coreauth.StatusActive {
 					t.Errorf("expected status active, got %s", auths[0].Status)
 				}
-			},
-		},
+			}},
 		{
 			name: "gemini key disable cooling",
 			geminiKeys: []config.GeminiKey{
-				{APIKey: "test-key-123", Prefix: "team-a", DisableCooling: boolPointer(true)},
-			},
+				{APIKey: "test-key-123", Prefix: "team-a", DisableCooling: boolPointer(true)}},
 			wantLen: 1,
 			validate: func(t *testing.T, auths []*coreauth.Auth) {
 				if v, ok := auths[0].Metadata["disable_cooling"].(bool); !ok || !v {
 					t.Errorf("expected disable_cooling=true, got %v", auths[0].Metadata["disable_cooling"])
 				}
-			},
-		},
+			}},
 		{
 			name: "gemini key with base url and proxy",
 			geminiKeys: []config.GeminiKey{
@@ -97,9 +92,7 @@ func TestConfigSynthesizer_GeminiKeys(t *testing.T) {
 					APIKey:   "api-key",
 					BaseURL:  "https://custom.api.com",
 					ProxyURL: "http://proxy.local:8080",
-					Prefix:   "custom",
-				},
-			},
+					Prefix:   "custom"}},
 			wantLen: 1,
 			validate: func(t *testing.T, auths []*coreauth.Auth) {
 				if auths[0].Attributes["base_url"] != "https://custom.api.com" {
@@ -108,53 +101,42 @@ func TestConfigSynthesizer_GeminiKeys(t *testing.T) {
 				if auths[0].ProxyURL != "http://proxy.local:8080" {
 					t.Errorf("expected proxy_url http://proxy.local:8080, got %s", auths[0].ProxyURL)
 				}
-			},
-		},
+			}},
 		{
 			name: "gemini key with headers",
 			geminiKeys: []config.GeminiKey{
 				{
 					APIKey:  "api-key",
-					Headers: map[string]string{"X-Custom": "value"},
-				},
-			},
+					Headers: map[string]string{"X-Custom": "value"}}},
 			wantLen: 1,
 			validate: func(t *testing.T, auths []*coreauth.Auth) {
 				if auths[0].Attributes["header:X-Custom"] != "value" {
 					t.Errorf("expected header:X-Custom=value, got %s", auths[0].Attributes["header:X-Custom"])
 				}
-			},
-		},
+			}},
 		{
 			name: "empty api key skipped",
 			geminiKeys: []config.GeminiKey{
 				{APIKey: ""},
 				{APIKey: "  "},
-				{APIKey: "valid-key"},
-			},
-			wantLen: 1,
-		},
+				{APIKey: "valid-key"}},
+			wantLen: 1},
 		{
 			name: "multiple gemini keys",
 			geminiKeys: []config.GeminiKey{
 				{APIKey: "key-1", Prefix: "a"},
 				{APIKey: "key-2", Prefix: "b"},
-				{APIKey: "key-3", Prefix: "c"},
-			},
-			wantLen: 3,
-		},
-	}
+				{APIKey: "key-3", Prefix: "c"}},
+			wantLen: 3}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			synth := NewConfigSynthesizer()
 			ctx := &SynthesisContext{
 				Config: &config.Config{
-					GeminiKey: tt.geminiKeys,
-				},
+					GeminiKey: tt.geminiKeys},
 				Now:         time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
-				IDGenerator: NewStableIDGenerator(),
-			}
+				IDGenerator: NewStableIDGenerator()}
 
 			auths, err := synth.Synthesize(ctx)
 			if err != nil {
@@ -180,12 +162,9 @@ func TestConfigSynthesizer_InteractionsKeys(t *testing.T) {
 				BaseURL:  "https://interactions.example.com",
 				ProxyURL: "http://proxy.local:8080",
 				Prefix:   "native",
-				Headers:  map[string]string{"X-Custom": "value"},
-			}},
-		},
+				Headers:  map[string]string{"X-Custom": "value"}}}},
 		Now:         time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, errSynthesize := synth.Synthesize(ctx)
 	if errSynthesize != nil {
@@ -232,14 +211,9 @@ func TestConfigSynthesizer_ClaudeKeys(t *testing.T) {
 					FingerprintProfile:      "claude-code-cli",
 					Models: []config.ClaudeModel{
 						{Name: "claude-3-opus"},
-						{Name: "claude-3-sonnet"},
-					},
-				},
-			},
-		},
+						{Name: "claude-3-sonnet"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -285,12 +259,9 @@ func TestConfigSynthesizer_ClaudeKeys_SkipsEmptyAndHeaders(t *testing.T) {
 			ClaudeKey: []config.ClaudeKey{
 				{APIKey: ""},    // empty, should be skipped
 				{APIKey: "   "}, // whitespace, should be skipped
-				{APIKey: "valid-key", Headers: map[string]string{"X-Custom": "value"}},
-			},
-		},
+				{APIKey: "valid-key", Headers: map[string]string{"X-Custom": "value"}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -316,13 +287,9 @@ func TestConfigSynthesizer_CodexKeys(t *testing.T) {
 					ProxyURL:       "http://proxy.local",
 					Websockets:     true,
 					AlphaSearch:    true,
-					DisableCooling: boolPointer(true),
-				},
-			},
-		},
+					DisableCooling: boolPointer(true)}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -365,12 +332,9 @@ func TestConfigSynthesizer_XAIKeys(t *testing.T) {
 				AlphaSearch:    true,
 				DisableCooling: boolPointer(true),
 				Headers:        map[string]string{"X-Custom": "value"},
-				Models:         []config.XAIModel{{Name: "grok-4.5", Alias: "grok-latest"}},
-			}},
-		},
+				Models:         []config.XAIModel{{Name: "grok-4.5", Alias: "grok-latest"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, errSynthesize := synth.Synthesize(ctx)
 	if errSynthesize != nil {
@@ -417,17 +381,12 @@ func TestConfigSynthesizer_XAIKeys_AllowsEmptyAPIKeyWithBaseURL(t *testing.T) {
 				{
 					APIKey:  "",
 					BaseURL: "https://custom-xai.example.com",
-					Headers: map[string]string{"Custom-Auth": "secret"},
-				},
+					Headers: map[string]string{"Custom-Auth": "secret"}},
 				{
 					APIKey:  "   ",
-					BaseURL: "https://custom-xai-2.example.com",
-				},
-			},
-		},
+					BaseURL: "https://custom-xai-2.example.com"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -458,17 +417,12 @@ func TestConfigSynthesizer_ClaudeKeys_AllowsEmptyAPIKeyWithBaseURL(t *testing.T)
 				{
 					APIKey:  "",
 					BaseURL: "https://custom-claude.example.com",
-					Headers: map[string]string{"Custom-Auth": "secret"},
-				},
+					Headers: map[string]string{"Custom-Auth": "secret"}},
 				{
 					APIKey:  "   ",
-					BaseURL: "https://custom-claude-2.example.com",
-				},
-			},
-		},
+					BaseURL: "https://custom-claude-2.example.com"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -499,19 +453,13 @@ func TestConfigSynthesizer_GeminiKeys_AllowsEmptyAPIKeyWithBaseURL(t *testing.T)
 				{
 					APIKey:  "",
 					BaseURL: "https://custom-gemini.example.com",
-					Headers: map[string]string{"Custom-Auth": "secret"},
-				},
-			},
+					Headers: map[string]string{"Custom-Auth": "secret"}}},
 			InteractionsKey: []config.GeminiKey{
 				{
 					APIKey:  "",
-					BaseURL: "https://custom-interactions.example.com",
-				},
-			},
-		},
+					BaseURL: "https://custom-interactions.example.com"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -544,12 +492,9 @@ func TestConfigSynthesizer_CodexKeys_SkipsEmptyAndHeaders(t *testing.T) {
 			CodexKey: []config.CodexKey{
 				{APIKey: ""},   // empty key without base URL, should be skipped
 				{APIKey: "  "}, // whitespace key without base URL, should be skipped
-				{APIKey: "valid-key", Headers: map[string]string{"Authorization": "Bearer xyz"}},
-			},
-		},
+				{APIKey: "valid-key", Headers: map[string]string{"Authorization": "Bearer xyz"}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -574,17 +519,12 @@ func TestConfigSynthesizer_CodexKeys_AllowsEmptyAPIKeyWithBaseURL(t *testing.T) 
 				{
 					APIKey:  "",
 					BaseURL: "https://custom-codex.example.com",
-					Headers: map[string]string{"Custom-Auth": "secret"},
-				},
+					Headers: map[string]string{"Custom-Auth": "secret"}},
 				{
 					APIKey:  "   ",
-					BaseURL: "https://custom-codex-2.example.com",
-				},
-			},
-		},
+					BaseURL: "https://custom-codex-2.example.com"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -622,12 +562,8 @@ func TestConfigSynthesizer_OpenAICompat(t *testing.T) {
 					DisableCooling: boolPointer(true),
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
 						{APIKey: "key-1"},
-						{APIKey: "key-2"},
-					},
-				},
-			},
-			wantLen: 2,
-		},
+						{APIKey: "key-2"}}}},
+			wantLen: 2},
 		{
 			name: "empty APIKeyEntries included (legacy)",
 			compat: []config.OpenAICompatibility{
@@ -636,44 +572,31 @@ func TestConfigSynthesizer_OpenAICompat(t *testing.T) {
 					BaseURL: "https://empty.api.com",
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
 						{APIKey: ""},
-						{APIKey: "   "},
-					},
-				},
-			},
-			wantLen: 2,
-		},
+						{APIKey: "   "}}}},
+			wantLen: 2},
 		{
 			name: "without APIKeyEntries (fallback)",
 			compat: []config.OpenAICompatibility{
 				{
 					Name:    "NoKeyProvider",
-					BaseURL: "https://no-key.api.com",
-				},
-			},
-			wantLen: 1,
-		},
+					BaseURL: "https://no-key.api.com"}},
+			wantLen: 1},
 		{
 			name: "empty name defaults",
 			compat: []config.OpenAICompatibility{
 				{
 					Name:    "",
-					BaseURL: "https://default.api.com",
-				},
-			},
-			wantLen: 1,
-		},
-	}
+					BaseURL: "https://default.api.com"}},
+			wantLen: 1}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			synth := NewConfigSynthesizer()
 			ctx := &SynthesisContext{
 				Config: &config.Config{
-					OpenAICompatibility: tt.compat,
-				},
+					OpenAICompatibility: tt.compat},
 				Now:         time.Now(),
-				IDGenerator: NewStableIDGenerator(),
-			}
+				IDGenerator: NewStableIDGenerator()}
 
 			auths, err := synth.Synthesize(ctx)
 			if err != nil {
@@ -702,14 +625,9 @@ func TestConfigSynthesizer_OpenAICompat_UsesNamespacedProviderKey(t *testing.T) 
 					Name:    "kimi",
 					BaseURL: "https://kimi-compatible.example.com/v1",
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-						{APIKey: "test-key"},
-					},
-				},
-			},
-		},
+						{APIKey: "test-key"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -741,13 +659,9 @@ func TestConfigSynthesizer_VertexCompat(t *testing.T) {
 				{
 					APIKey:  "vertex-key-123",
 					BaseURL: "https://vertex.googleapis.com",
-					Prefix:  "vertex-prod",
-				},
-			},
-		},
+					Prefix:  "vertex-prod"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -768,6 +682,65 @@ func TestConfigSynthesizer_VertexCompat(t *testing.T) {
 	}
 }
 
+func TestConfigSynthesizer_VertexServiceAccount(t *testing.T) {
+	synth := NewConfigSynthesizer()
+	ctx := &SynthesisContext{
+		Config: &config.Config{
+			VertexCompatAPIKey: []config.VertexCompatKey{
+				{
+					ServiceAccount: map[string]any{
+						"client_email": "sa@example.iam.gserviceaccount.com",
+						"project_id":   "proj-1",
+						"private_key":  "k"},
+					Location: "us-central1"}}},
+		Now:         time.Now(),
+		IDGenerator: NewStableIDGenerator()}
+
+	auths, err := synth.Synthesize(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(auths) != 1 {
+		t.Fatalf("expected 1 auth, got %d", len(auths))
+	}
+	if auths[0].AuthKind() != coreauth.AuthKindAPIKey {
+		t.Fatalf("AuthKind() = %q, want %s", auths[0].AuthKind(), coreauth.AuthKindAPIKey)
+	}
+	if got, _ := auths[0].Metadata["project_id"].(string); got != "proj-1" {
+		t.Fatalf("project_id = %q, want proj-1", got)
+	}
+	if _, ok := auths[0].Metadata["service_account"].(map[string]any); !ok {
+		t.Fatal("expected service_account metadata")
+	}
+}
+
+func TestConfigSynthesizer_AntigravityKeys(t *testing.T) {
+	synth := NewConfigSynthesizer()
+	ctx := &SynthesisContext{
+		Config: &config.Config{
+			AntigravityKey: []config.AntigravityKey{
+				{APIKey: "ag-key", ProjectID: "proj-ag"}}},
+		Now:         time.Now(),
+		IDGenerator: NewStableIDGenerator()}
+
+	auths, err := synth.Synthesize(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(auths) != 1 {
+		t.Fatalf("expected 1 auth, got %d", len(auths))
+	}
+	if auths[0].Provider != "antigravity" {
+		t.Fatalf("provider = %q, want antigravity", auths[0].Provider)
+	}
+	if auths[0].Attributes["api_key"] != "ag-key" {
+		t.Fatalf("api_key = %q, want ag-key", auths[0].Attributes["api_key"])
+	}
+	if got, _ := auths[0].Metadata["project_id"].(string); got != "proj-ag" {
+		t.Fatalf("project_id = %q, want proj-ag", got)
+	}
+}
+
 func TestConfigSynthesizer_VertexCompat_SkipsEmptyAndHeaders(t *testing.T) {
 	synth := NewConfigSynthesizer()
 	ctx := &SynthesisContext{
@@ -775,12 +748,9 @@ func TestConfigSynthesizer_VertexCompat_SkipsEmptyAndHeaders(t *testing.T) {
 			VertexCompatAPIKey: []config.VertexCompatKey{
 				{APIKey: "", BaseURL: "https://vertex.api"},   // empty key creates auth without api_key attr
 				{APIKey: "  ", BaseURL: "https://vertex.api"}, // whitespace key creates auth without api_key attr
-				{APIKey: "valid-key", BaseURL: "https://vertex.api", Headers: map[string]string{"X-Vertex": "test"}},
-			},
-		},
+				{APIKey: "valid-key", BaseURL: "https://vertex.api", Headers: map[string]string{"X-Vertex": "test"}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -813,17 +783,11 @@ func TestConfigSynthesizer_OpenAICompat_WithModelsHash(t *testing.T) {
 					BaseURL: "https://test.api.com",
 					Models: []config.OpenAICompatibilityModel{
 						{Name: "model-a"},
-						{Name: "model-b"},
-					},
+						{Name: "model-b"}},
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-						{APIKey: "key-with-models"},
-					},
-				},
-			},
-		},
+						{APIKey: "key-with-models"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -849,16 +813,12 @@ func TestConfigSynthesizer_OpenAICompat_FallbackWithModels(t *testing.T) {
 					Name:    "NoKeyWithModels",
 					BaseURL: "https://nokey.api.com",
 					Models: []config.OpenAICompatibilityModel{
-						{Name: "model-x"},
-					},
+						{Name: "model-x"}},
 					Headers: map[string]string{"X-API": "header-value"},
 					// No APIKeyEntries - should use fallback path
-				},
-			},
-		},
+				}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -885,14 +845,9 @@ func TestConfigSynthesizer_VertexCompat_WithModels(t *testing.T) {
 					BaseURL: "https://vertex.api",
 					Models: []config.VertexCompatModel{
 						{Name: "gemini-pro", Alias: "pro"},
-						{Name: "gemini-ultra", Alias: "ultra"},
-					},
-				},
-			},
-		},
+						{Name: "gemini-ultra", Alias: "ultra"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -909,25 +864,21 @@ func TestConfigSynthesizer_VertexCompat_WithModels(t *testing.T) {
 func TestConfigSynthesizer_IDStability(t *testing.T) {
 	cfg := &config.Config{
 		GeminiKey: []config.GeminiKey{
-			{APIKey: "stable-key", Prefix: "test"},
-		},
-	}
+			{APIKey: "stable-key", Prefix: "test"}}}
 
 	// Generate IDs twice with fresh generators
 	synth1 := NewConfigSynthesizer()
 	ctx1 := &SynthesisContext{
 		Config:      cfg,
 		Now:         time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 	auths1, _ := synth1.Synthesize(ctx1)
 
 	synth2 := NewConfigSynthesizer()
 	ctx2 := &SynthesisContext{
 		Config:      cfg,
 		Now:         time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 	auths2, _ := synth2.Synthesize(ctx2)
 
 	if auths1[0].ID != auths2[0].ID {
@@ -945,49 +896,39 @@ func TestConfigSynthesizer_RejectsInvalidWeightsForAllAPIKeyTypes(t *testing.T) 
 		{
 			name:     "gemini",
 			cfg:      &config.Config{GeminiKey: []config.GeminiKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "gemini-api-key[0].weight",
-		},
+			wantPath: "gemini-api-key[0].weight"},
 		{
 			name:     "interactions",
 			cfg:      &config.Config{InteractionsKey: []config.GeminiKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "interactions-api-key[0].weight",
-		},
+			wantPath: "interactions-api-key[0].weight"},
 		{
 			name:     "claude",
 			cfg:      &config.Config{ClaudeKey: []config.ClaudeKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "claude-api-key[0].weight",
-		},
+			wantPath: "claude-api-key[0].weight"},
 		{
 			name:     "codex",
 			cfg:      &config.Config{CodexKey: []config.CodexKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "codex-api-key[0].weight",
-		},
+			wantPath: "codex-api-key[0].weight"},
 		{
 			name:     "xai",
 			cfg:      &config.Config{XAIKey: []config.XAIKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "xai-api-key[0].weight",
-		},
+			wantPath: "xai-api-key[0].weight"},
 		{
 			name: "openai compatibility",
 			cfg: &config.Config{OpenAICompatibility: []config.OpenAICompatibility{{
-				APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key", Weight: &invalidWeight}},
-			}}},
-			wantPath: "openai-compatibility[0].api-key-entries[0].weight",
-		},
+				APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key", Weight: &invalidWeight}}}}},
+			wantPath: "openai-compatibility[0].api-key-entries[0].weight"},
 		{
 			name:     "vertex",
 			cfg:      &config.Config{VertexCompatAPIKey: []config.VertexCompatKey{{APIKey: "key", Weight: &invalidWeight}}},
-			wantPath: "vertex-api-key[0].weight",
-		},
-	}
+			wantPath: "vertex-api-key[0].weight"}}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			auths, errSynthesize := NewConfigSynthesizer().Synthesize(&SynthesisContext{
 				Config:      testCase.cfg,
 				Now:         time.Now(),
-				IDGenerator: NewStableIDGenerator(),
-			})
+				IDGenerator: NewStableIDGenerator()})
 			if errSynthesize == nil {
 				t.Fatal("Synthesize() accepted an invalid credential weight")
 			}
@@ -1005,8 +946,7 @@ func TestConfigSynthesizer_OmittedWeightRemainsUnset(t *testing.T) {
 	auths, errSynthesize := NewConfigSynthesizer().Synthesize(&SynthesisContext{
 		Config:      &config.Config{GeminiKey: []config.GeminiKey{{APIKey: "key"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	})
+		IDGenerator: NewStableIDGenerator()})
 	if errSynthesize != nil {
 		t.Fatalf("Synthesize() error = %v", errSynthesize)
 	}
@@ -1023,8 +963,7 @@ func TestConfigSynthesizer_NormalizesNonPositiveWeightToZero(t *testing.T) {
 	auths, errSynthesize := NewConfigSynthesizer().Synthesize(&SynthesisContext{
 		Config:      &config.Config{GeminiKey: []config.GeminiKey{{APIKey: "key", Weight: &weight}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	})
+		IDGenerator: NewStableIDGenerator()})
 	if errSynthesize != nil {
 		t.Fatalf("Synthesize() error = %v", errSynthesize)
 	}
@@ -1051,14 +990,10 @@ func TestConfigSynthesizer_PropagatesWeightsForAllAPIKeyTypes(t *testing.T) {
 				BaseURL: "https://compat.example.com",
 				APIKeyEntries: []config.OpenAICompatibilityAPIKey{{
 					APIKey: "compat",
-					Weight: weight(6),
-				}},
-			}},
-			VertexCompatAPIKey: []config.VertexCompatKey{{APIKey: "vertex", Weight: weight(7)}},
-		},
+					Weight: weight(6)}}}},
+			VertexCompatAPIKey: []config.VertexCompatKey{{APIKey: "vertex", Weight: weight(7)}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, errSynthesize := synth.Synthesize(ctx)
 	if errSynthesize != nil {
@@ -1080,27 +1015,19 @@ func TestConfigSynthesizer_AllProviders(t *testing.T) {
 	ctx := &SynthesisContext{
 		Config: &config.Config{
 			GeminiKey: []config.GeminiKey{
-				{APIKey: "gemini-key"},
-			},
+				{APIKey: "gemini-key"}},
 			ClaudeKey: []config.ClaudeKey{
-				{APIKey: "claude-key"},
-			},
+				{APIKey: "claude-key"}},
 			CodexKey: []config.CodexKey{
-				{APIKey: "codex-key"},
-			},
+				{APIKey: "codex-key"}},
 			XAIKey: []config.XAIKey{
-				{APIKey: "xai-key"},
-			},
+				{APIKey: "xai-key"}},
 			OpenAICompatibility: []config.OpenAICompatibility{
-				{Name: "compat", BaseURL: "https://compat.api"},
-			},
+				{Name: "compat", BaseURL: "https://compat.api"}},
 			VertexCompatAPIKey: []config.VertexCompatKey{
-				{APIKey: "vertex-key", BaseURL: "https://vertex.api"},
-			},
-		},
+				{APIKey: "vertex-key", BaseURL: "https://vertex.api"}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, err := synth.Synthesize(ctx)
 	if err != nil {
@@ -1134,37 +1061,26 @@ func TestConfigSynthesizer_RequestRetry(t *testing.T) {
 				{APIKey: "gemini-zero", RequestRetry: &zero},
 				{APIKey: "gemini-positive", RequestRetry: &positive},
 				{APIKey: "gemini-negative", RequestRetry: &negative},
-				{APIKey: "gemini-unset"},
-			},
+				{APIKey: "gemini-unset"}},
 			InteractionsKey: []config.GeminiKey{
-				{APIKey: "interactions-zero", RequestRetry: &zero},
-			},
+				{APIKey: "interactions-zero", RequestRetry: &zero}},
 			ClaudeKey: []config.ClaudeKey{
-				{APIKey: "claude-positive", RequestRetry: &positive},
-			},
+				{APIKey: "claude-positive", RequestRetry: &positive}},
 			CodexKey: []config.CodexKey{
-				{APIKey: "codex-zero", RequestRetry: &zero},
-			},
+				{APIKey: "codex-zero", RequestRetry: &zero}},
 			XAIKey: []config.XAIKey{
-				{APIKey: "xai-positive", RequestRetry: &positive},
-			},
+				{APIKey: "xai-positive", RequestRetry: &positive}},
 			OpenAICompatibility: []config.OpenAICompatibility{
 				{
 					Name:         "compat",
 					BaseURL:      "https://compat.api",
 					RequestRetry: &zero,
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-						{APIKey: "compat-key"},
-					},
-				},
-			},
+						{APIKey: "compat-key"}}}},
 			VertexCompatAPIKey: []config.VertexCompatKey{
-				{APIKey: "vertex-positive", BaseURL: "https://vertex.api", RequestRetry: &positive},
-			},
-		},
+				{APIKey: "vertex-positive", BaseURL: "https://vertex.api", RequestRetry: &positive}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, errSynthesize := synth.Synthesize(ctx)
 	if errSynthesize != nil {
@@ -1181,8 +1097,7 @@ func TestConfigSynthesizer_RequestRetry(t *testing.T) {
 		"codex-zero":        0,
 		"xai-positive":      2,
 		"compat-key":        0,
-		"vertex-positive":   2,
-	}
+		"vertex-positive":   2}
 	got := make(map[string]any, len(auths))
 	for _, auth := range auths {
 		key := auth.Attributes["api_key"]
@@ -1213,41 +1128,29 @@ func TestConfigSynthesizer_RequestScopedErrors(t *testing.T) {
 		{
 			Status: 400,
 			Match:  []string{"maximum_context_length"},
-			Action: "stop",
-		},
-	}
+			Action: "stop"}}
 
 	ctx := &SynthesisContext{
 		Config: &config.Config{
 			GeminiKey: []config.GeminiKey{
-				{APIKey: "gemini-key", RequestScopedErrors: rules},
-			},
+				{APIKey: "gemini-key", RequestScopedErrors: rules}},
 			InteractionsKey: []config.GeminiKey{
-				{APIKey: "interactions-key", RequestScopedErrors: rules},
-			},
+				{APIKey: "interactions-key", RequestScopedErrors: rules}},
 			ClaudeKey: []config.ClaudeKey{
-				{APIKey: "claude-key", RequestScopedErrors: rules},
-			},
+				{APIKey: "claude-key", RequestScopedErrors: rules}},
 			CodexKey: []config.CodexKey{
-				{APIKey: "codex-key", BaseURL: "https://codex.api", RequestScopedErrors: rules},
-			},
+				{APIKey: "codex-key", BaseURL: "https://codex.api", RequestScopedErrors: rules}},
 			XAIKey: []config.CodexKey{
-				{APIKey: "xai-key", BaseURL: "https://xai.api", RequestScopedErrors: rules},
-			},
+				{APIKey: "xai-key", BaseURL: "https://xai.api", RequestScopedErrors: rules}},
 			OpenAICompatibility: []config.OpenAICompatibility{
 				{
 					Name:                "compat",
 					BaseURL:             "https://compat.api",
 					RequestScopedErrors: rules,
 					APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-						{APIKey: "compat-key"},
-					},
-				},
-			},
-		},
+						{APIKey: "compat-key"}}}}},
 		Now:         time.Now(),
-		IDGenerator: NewStableIDGenerator(),
-	}
+		IDGenerator: NewStableIDGenerator()}
 
 	auths, errSynthesize := synth.Synthesize(ctx)
 	if errSynthesize != nil {

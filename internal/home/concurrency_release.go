@@ -40,8 +40,7 @@ func newReleaseFlusher(flushInterval, maxBackoff time.Duration, send func(contex
 		maxBackoff:    maxBackoff,
 		send:          send,
 		wake:          make(chan struct{}, 1),
-		force:         make(chan context.Context, 1),
-	}
+		force:         make(chan context.Context, 1)}
 }
 
 // NewReleaseFlusher creates a flusher that reads timing updates from the current limiter configuration.
@@ -207,8 +206,7 @@ func (f *releaseFlusher) flush(ctx context.Context) bool {
 		errSend := send(ctx, ConcurrencyReleaseFrame{
 			CredentialID: group.CredentialID,
 			Model:        group.Model,
-			ReleaseSeq:   sequence,
-		})
+			ReleaseSeq:   sequence})
 		if errSend != nil {
 			failed = true
 			continue

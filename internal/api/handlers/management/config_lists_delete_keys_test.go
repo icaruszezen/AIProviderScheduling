@@ -30,11 +30,8 @@ func TestDeleteGeminiKey_RequiresBaseURLWhenAPIKeyDuplicated(t *testing.T) {
 		cfg: &config.Config{
 			GeminiKey: []config.GeminiKey{
 				{APIKey: "shared-key", BaseURL: "https://a.example.com"},
-				{APIKey: "shared-key", BaseURL: "https://b.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://b.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -57,11 +54,8 @@ func TestDeleteGeminiKey_DeletesOnlyMatchingBaseURL(t *testing.T) {
 		cfg: &config.Config{
 			GeminiKey: []config.GeminiKey{
 				{APIKey: "shared-key", BaseURL: "https://a.example.com"},
-				{APIKey: "shared-key", BaseURL: "https://b.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://b.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -86,15 +80,13 @@ func TestDeleteGeminiStyleKeyRejectsAmbiguousRoutingIdentity(t *testing.T) {
 		interactions bool
 	}{
 		{name: "Gemini"},
-		{name: "Interactions", interactions: true},
-	}
+		{name: "Interactions", interactions: true}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			entries := []config.GeminiKey{
 				{APIKey: "shared-key", BaseURL: "https://shared.example.com", Prefix: "team-a"},
-				{APIKey: "shared-key", BaseURL: "https://shared.example.com", Prefix: "team-b"},
-			}
+				{APIKey: "shared-key", BaseURL: "https://shared.example.com", Prefix: "team-b"}}
 			cfg := &config.Config{}
 			path := "/v0/management/gemini-api-key?api-key=shared-key&base-url=https://shared.example.com"
 			if tc.interactions {
@@ -138,15 +130,13 @@ func TestPatchGeminiStyleKeyRoutingIdentity(t *testing.T) {
 		{name: "Gemini unique base URL", firstBase: "https://first.example.com", wantStatus: http.StatusOK},
 		{name: "Gemini ambiguous base URL", firstBase: "https://shared.example.com", wantStatus: http.StatusBadRequest},
 		{name: "Interactions unique base URL", interactions: true, firstBase: "https://first.example.com", wantStatus: http.StatusOK},
-		{name: "Interactions ambiguous base URL", interactions: true, firstBase: "https://shared.example.com", wantStatus: http.StatusBadRequest},
-	}
+		{name: "Interactions ambiguous base URL", interactions: true, firstBase: "https://shared.example.com", wantStatus: http.StatusBadRequest}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			entries := []config.GeminiKey{
 				{APIKey: "shared-key", BaseURL: tc.firstBase, Prefix: "team-a"},
-				{APIKey: "shared-key", BaseURL: "https://shared.example.com", Prefix: "team-b"},
-			}
+				{APIKey: "shared-key", BaseURL: "https://shared.example.com", Prefix: "team-b"}}
 			cfg := &config.Config{}
 			path := "/v0/management/gemini-api-key?base-url=https://shared.example.com"
 			if tc.interactions {
@@ -191,11 +181,8 @@ func TestDeleteClaudeKey_DeletesEmptyBaseURLWhenExplicitlyProvided(t *testing.T)
 		cfg: &config.Config{
 			ClaudeKey: []config.ClaudeKey{
 				{APIKey: "shared-key", BaseURL: ""},
-				{APIKey: "shared-key", BaseURL: "https://claude.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://claude.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -221,11 +208,8 @@ func TestDeleteVertexCompatKey_DeletesOnlyMatchingBaseURL(t *testing.T) {
 		cfg: &config.Config{
 			VertexCompatAPIKey: []config.VertexCompatKey{
 				{APIKey: "shared-key", BaseURL: "https://a.example.com"},
-				{APIKey: "shared-key", BaseURL: "https://b.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://b.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -251,11 +235,8 @@ func TestDeleteXAIKey_RequiresBaseURLWhenAPIKeyDuplicated(t *testing.T) {
 		cfg: &config.Config{
 			XAIKey: []config.XAIKey{
 				{APIKey: "shared-key", BaseURL: "https://a.example.com"},
-				{APIKey: "shared-key", BaseURL: "https://b.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://b.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -278,11 +259,8 @@ func TestDeleteCodexKey_RequiresBaseURLWhenAPIKeyDuplicated(t *testing.T) {
 		cfg: &config.Config{
 			CodexKey: []config.CodexKey{
 				{APIKey: "shared-key", BaseURL: "https://a.example.com"},
-				{APIKey: "shared-key", BaseURL: "https://b.example.com"},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				{APIKey: "shared-key", BaseURL: "https://b.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)

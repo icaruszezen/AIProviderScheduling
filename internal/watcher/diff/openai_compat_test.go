@@ -12,31 +12,22 @@ func TestDiffOpenAICompatibility(t *testing.T) {
 		{
 			Name: "provider-a",
 			APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-				{APIKey: "key-a"},
-			},
+				{APIKey: "key-a"}},
 			Models: []config.OpenAICompatibilityModel{
-				{Name: "m1"},
-			},
-		},
-	}
+				{Name: "m1"}}}}
 	newList := []config.OpenAICompatibility{
 		{
 			Name: "provider-a",
 			APIKeyEntries: []config.OpenAICompatibilityAPIKey{
 				{APIKey: "key-a"},
-				{APIKey: "key-b"},
-			},
+				{APIKey: "key-b"}},
 			Models: []config.OpenAICompatibilityModel{
 				{Name: "m1"},
-				{Name: "m2"},
-			},
-			Headers: map[string]string{"X-Test": "1"},
-		},
+				{Name: "m2"}},
+			Headers: map[string]string{"X-Test": "1"}},
 		{
 			Name:          "provider-b",
-			APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key-b"}},
-		},
-	}
+			APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key-b"}}}}
 
 	changes := DiffOpenAICompatibility(oldList, newList)
 	expectContains(t, changes, "provider added: provider-b (api-keys=1, models=0)")
@@ -54,12 +45,10 @@ func TestDiffOpenAICompatibilityPromptCacheKey(t *testing.T) {
 func TestDiffOpenAICompatibilityDuplicateNames(t *testing.T) {
 	oldList := []config.OpenAICompatibility{
 		{Name: "duplicate", SupportPromptCacheKey: false},
-		{Name: "duplicate", SupportPromptCacheKey: false},
-	}
+		{Name: "duplicate", SupportPromptCacheKey: false}}
 	newList := []config.OpenAICompatibility{
 		{Name: "duplicate", SupportPromptCacheKey: true},
-		{Name: "duplicate", SupportPromptCacheKey: false},
-	}
+		{Name: "duplicate", SupportPromptCacheKey: false}}
 
 	changes := DiffOpenAICompatibility(oldList, newList)
 	expectContains(t, changes, "provider updated: duplicate (support-prompt-cache-key false -> true)")
@@ -68,13 +57,11 @@ func TestDiffOpenAICompatibilityDuplicateNames(t *testing.T) {
 func TestDiffOpenAICompatibilityDuplicateKeyDoesNotCollide(t *testing.T) {
 	oldList := []config.OpenAICompatibility{
 		{Name: "foo"},
-		{Name: "foo#1"},
-	}
+		{Name: "foo#1"}}
 	newList := []config.OpenAICompatibility{
 		{Name: "foo"},
 		{Name: "foo"},
-		{Name: "foo#1"},
-	}
+		{Name: "foo#1"}}
 
 	changes := DiffOpenAICompatibility(oldList, newList)
 	expectContains(t, changes, "provider added: foo (api-keys=0, models=0)")
@@ -85,16 +72,12 @@ func TestDiffOpenAICompatibility_RemovedAndUnchanged(t *testing.T) {
 		{
 			Name:          "provider-a",
 			APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key-a"}},
-			Models:        []config.OpenAICompatibilityModel{{Name: "m1"}},
-		},
-	}
+			Models:        []config.OpenAICompatibilityModel{{Name: "m1"}}}}
 	newList := []config.OpenAICompatibility{
 		{
 			Name:          "provider-a",
 			APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "key-a"}},
-			Models:        []config.OpenAICompatibilityModel{{Name: "m1"}},
-		},
-	}
+			Models:        []config.OpenAICompatibilityModel{{Name: "m1"}}}}
 	if changes := DiffOpenAICompatibility(oldList, newList); len(changes) != 0 {
 		t.Fatalf("expected no changes, got %v", changes)
 	}
@@ -107,8 +90,7 @@ func TestDiffOpenAICompatibility_RemovedAndUnchanged(t *testing.T) {
 func TestOpenAICompatKeyFallbacks(t *testing.T) {
 	entry := config.OpenAICompatibility{
 		BaseURL: "http://base",
-		Models:  []config.OpenAICompatibilityModel{{Alias: "alias-only"}},
-	}
+		Models:  []config.OpenAICompatibilityModel{{Alias: "alias-only"}}}
 	key, label := openAICompatKey(entry, 0)
 	if key != "base:http://base" || label != "http://base" {
 		t.Fatalf("expected base key, got %s/%s", key, label)
@@ -137,8 +119,7 @@ func TestOpenAICompatKey_UsesName(t *testing.T) {
 
 func TestOpenAICompatKey_SignatureFallbackWhenOnlyAPIKeys(t *testing.T) {
 	entry := config.OpenAICompatibility{
-		APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "k1"}, {APIKey: "k2"}},
-	}
+		APIKeyEntries: []config.OpenAICompatibilityAPIKey{{APIKey: "k1"}, {APIKey: "k2"}}}
 	key, label := openAICompatKey(entry, 0)
 	if !strings.HasPrefix(key, "sig:") || !strings.HasPrefix(label, "compat-") {
 		t.Fatalf("expected signature key, got %s/%s", key, label)
@@ -158,31 +139,23 @@ func TestOpenAICompatSignature_StableAndNormalized(t *testing.T) {
 		Models: []config.OpenAICompatibilityModel{
 			{Name: "m1"},
 			{Name: "  "},
-			{Alias: "A1"},
-		},
+			{Alias: "A1"}},
 		Headers: map[string]string{
 			"X-Test": "1",
-			"  ":     "ignored",
-		},
+			"  ":     "ignored"},
 		APIKeyEntries: []config.OpenAICompatibilityAPIKey{
 			{APIKey: "k1"},
-			{APIKey: " "},
-		},
-	}
+			{APIKey: " "}}}
 	b := config.OpenAICompatibility{
 		Name:    "provider",
 		BaseURL: "http://base",
 		Models: []config.OpenAICompatibilityModel{
 			{Alias: "a1"},
-			{Name: "m1"},
-		},
+			{Name: "m1"}},
 		Headers: map[string]string{
-			"x-test": "2",
-		},
+			"x-test": "2"},
 		APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-			{APIKey: "k2"},
-		},
-	}
+			{APIKey: "k2"}}}
 
 	sigA := openAICompatSignature(a)
 	sigB := openAICompatSignature(b)
@@ -206,8 +179,7 @@ func TestCountOpenAIModelsSkipsBlanks(t *testing.T) {
 		{Name: ""},
 		{Alias: ""},
 		{Name: " "},
-		{Alias: "a1"},
-	}
+		{Alias: "a1"}}
 	if got := countOpenAIModels(models); got != 2 {
 		t.Fatalf("expected 2 counted models, got %d", got)
 	}
@@ -215,8 +187,7 @@ func TestCountOpenAIModelsSkipsBlanks(t *testing.T) {
 
 func TestOpenAICompatKeyUsesModelNameWhenAliasEmpty(t *testing.T) {
 	entry := config.OpenAICompatibility{
-		Models: []config.OpenAICompatibilityModel{{Name: "model-name"}},
-	}
+		Models: []config.OpenAICompatibilityModel{{Name: "model-name"}}}
 	key, label := openAICompatKey(entry, 5)
 	if key != "alias:model-name" || label != "model-name" {
 		t.Fatalf("expected model-name fallback, got %s/%s", key, label)

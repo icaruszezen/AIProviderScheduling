@@ -66,8 +66,7 @@ func TestUnwrapExecutionBoundaryErrorRemovesInternalMarkers(t *testing.T) {
 		err  error
 	}{
 		{name: "attempt inside stop", err: wrapRequestStopError(markUpstreamExecutionAttempt(base))},
-		{name: "stop inside attempt", err: markUpstreamExecutionAttempt(wrapRequestStopError(base))},
-	} {
+		{name: "stop inside attempt", err: markUpstreamExecutionAttempt(wrapRequestStopError(base))}} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := unwrapExecutionBoundaryError(test.err); got != base {
 				t.Fatalf("unwrapExecutionBoundaryError() = %T/%v, want original %T/%v", got, got, base, base)
@@ -106,22 +105,15 @@ func TestRequestScopedErrors_ActionStop(t *testing.T) {
 					Status: 400,
 					Match: []string{
 						"maximum_context_length",
-						"context_length_exceeded",
-					},
+						"context_length_exceeded"},
 					MatchRegexr: []string{
 						"maximum_context_length$",
-						"^context_length_exceeded",
-					},
-					Action: "stop",
-				},
-			},
-		},
-	}
+						"^context_length_exceeded"},
+					Action: "stop"}}}}
 	auth2 := &Auth{
 		ID:       "auth-claude-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -145,10 +137,8 @@ func TestRequestScopedErrors_ActionStop(t *testing.T) {
 			cliproxyexecutor.MarkUpstreamAttempt(ctx)
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 400,
-				msg:  `{"error": {"message": "maximum_context_length exceeded"}}`,
-			}
-		},
-	}
+				msg:  `{"error": {"message": "maximum_context_length exceeded"}}`}
+		}}
 	m.RegisterExecutor(exec)
 
 	resp, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -187,18 +177,12 @@ func TestRequestScopedErrors_ActionStopAndCooldown(t *testing.T) {
 				{
 					Status: 400,
 					Match: []string{
-						"context_window_exceeded",
-					},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+						"context_window_exceeded"},
+					Action: "stop-and-cooldown"}}}}
 	auth2 := &Auth{
 		ID:       "auth-claude-second",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -221,10 +205,8 @@ func TestRequestScopedErrors_ActionStopAndCooldown(t *testing.T) {
 			execCount++
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 400,
-				msg:  `{"error": {"message": "context_window_exceeded"}}`,
-			}
-		},
-	}
+				msg:  `{"error": {"message": "context_window_exceeded"}}`}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -260,18 +242,12 @@ func TestRequestScopedErrors_ActionContinue(t *testing.T) {
 				{
 					Status: 400,
 					Match: []string{
-						"try_another_key",
-					},
-					Action: "continue",
-				},
-			},
-		},
-	}
+						"try_another_key"},
+					Action: "continue"}}}}
 	auth2 := &Auth{
 		ID:       "auth-claude-continue-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -295,12 +271,10 @@ func TestRequestScopedErrors_ActionContinue(t *testing.T) {
 			if auth.ID == "auth-claude-continue-1" {
 				return cliproxyexecutor.Response{}, customStatusError{
 					code: 400,
-					msg:  `{"error": {"message": "try_another_key"}}`,
-				}
+					msg:  `{"error": {"message": "try_another_key"}}`}
 			}
 			return cliproxyexecutor.Response{Payload: []byte(`{"result":"success"}`)}, nil
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	resp, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -339,18 +313,12 @@ func TestRequestScopedErrors_ActionContinueAndCooldown(t *testing.T) {
 				{
 					Status: 400,
 					Match: []string{
-						"balance_insufficient",
-					},
-					Action: "continue-and-cooldown",
-				},
-			},
-		},
-	}
+						"balance_insufficient"},
+					Action: "continue-and-cooldown"}}}}
 	auth2 := &Auth{
 		ID:       "auth-claude-continue-cool-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -374,12 +342,10 @@ func TestRequestScopedErrors_ActionContinueAndCooldown(t *testing.T) {
 			if auth.ID == "auth-claude-continue-cool-1" {
 				return cliproxyexecutor.Response{}, customStatusError{
 					code: 400,
-					msg:  `{"error": {"message": "balance_insufficient"}}`,
-				}
+					msg:  `{"error": {"message": "balance_insufficient"}}`}
 			}
 			return cliproxyexecutor.Response{Payload: []byte(`{"result":"success"}`)}, nil
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	resp, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -418,18 +384,12 @@ func TestRequestScopedErrors_MatchRegexr(t *testing.T) {
 				{
 					Status: 400,
 					MatchRegexr: []string{
-						`context_length_exceeded:\s*\d+`,
-					},
-					Action: "stop",
-				},
-			},
-		},
-	}
+						`context_length_exceeded:\s*\d+`},
+					Action: "stop"}}}}
 	auth2 := &Auth{
 		ID:       "auth-regex-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -452,10 +412,8 @@ func TestRequestScopedErrors_MatchRegexr(t *testing.T) {
 			execCount++
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 400,
-				msg:  `{"error": {"message": "context_length_exceeded: 128000"}}`,
-			}
-		},
-	}
+				msg:  `{"error": {"message": "context_length_exceeded: 128000"}}`}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -508,16 +466,11 @@ func TestRequestScopedErrors_Stream_ActionStop(t *testing.T) {
 				{
 					Status: 400,
 					Match:  []string{"stream_context_overflow"},
-					Action: "stop",
-				},
-			},
-		},
-	}
+					Action: "stop"}}}}
 	auth2 := &Auth{
 		ID:       "auth-stream-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -540,8 +493,7 @@ func TestRequestScopedErrors_Stream_ActionStop(t *testing.T) {
 			execCount++
 			cliproxyexecutor.MarkUpstreamAttempt(ctx)
 			return nil, customStatusError{code: 400, msg: "stream_context_overflow"}
-		},
-	}
+		}}
 	m.RegisterExecutor(streamExecutor)
 
 	_, errStream := m.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -578,16 +530,11 @@ func TestRequestScopedErrors_StreamBootstrap_StopAndCooldown(t *testing.T) {
 				{
 					Status: 400,
 					Match:  []string{"bootstrap_chunk_error"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	auth2 := &Auth{
 		ID:       "auth-stream-boot-2",
 		Provider: "claude",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	reg.RegisterClient(auth2.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -613,10 +560,8 @@ func TestRequestScopedErrors_StreamBootstrap_StopAndCooldown(t *testing.T) {
 			close(ch)
 			return &cliproxyexecutor.StreamResult{
 				Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-				Chunks:  ch,
-			}, nil
-		},
-	}
+				Chunks:  ch}, nil
+		}}
 	m.RegisterExecutor(streamExecutor)
 
 	_, errStream := m.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -652,11 +597,7 @@ func TestRequestScopedErrors_Stop_StopsOuterRetryOn429(t *testing.T) {
 				{
 					Status: 429,
 					Match:  []string{"rate_limit_stop"},
-					Action: "stop",
-				},
-			},
-		},
-	}
+					Action: "stop"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -675,10 +616,8 @@ func TestRequestScopedErrors_Stop_StopsOuterRetryOn429(t *testing.T) {
 			return cliproxyexecutor.Response{}, customStatusError{
 				code:       429,
 				msg:        `{"error": {"message": "rate_limit_stop"}}`,
-				retryAfter: &retryDelay,
-			}
-		},
-	}
+				retryAfter: &retryDelay}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -709,11 +648,7 @@ func TestRequestScopedErrors_Cooldown_OverridesDisableCooling(t *testing.T) {
 				{
 					Status: 400,
 					Match:  []string{"cooldown_anyway"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -729,10 +664,8 @@ func TestRequestScopedErrors_Cooldown_OverridesDisableCooling(t *testing.T) {
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 400,
-				msg:  `{"error": {"message": "cooldown_anyway"}}`,
-			}
-		},
-	}
+				msg:  `{"error": {"message": "cooldown_anyway"}}`}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -763,11 +696,7 @@ func TestRequestScopedErrors_CountTokens_StopAndCooldown(t *testing.T) {
 				{
 					Status: 404,
 					Match:  []string{"count_endpoint_cooldown"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -784,10 +713,8 @@ func TestRequestScopedErrors_CountTokens_StopAndCooldown(t *testing.T) {
 			cliproxyexecutor.MarkUpstreamAttempt(ctx)
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 404,
-				msg:  "count_endpoint_cooldown",
-			}
-		},
-	}
+				msg:  "count_endpoint_cooldown"}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errCount := m.ExecuteCount(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -817,11 +744,7 @@ func TestRequestScopedErrors_ResolvedFromManagerConfig(t *testing.T) {
 					{
 						Status: 400,
 						Match:  []string{"from_config_rule"},
-						Action: "stop",
-					},
-				},
-			},
-		},
+						Action: "stop"}}}},
 		OpenAICompatibility: []internalconfig.OpenAICompatibility{
 			{
 				Name:    "my-compat",
@@ -830,12 +753,7 @@ func TestRequestScopedErrors_ResolvedFromManagerConfig(t *testing.T) {
 					{
 						Status: 400,
 						Match:  []string{"from_compat_config_rule"},
-						Action: "stop",
-					},
-				},
-			},
-		},
-	}
+						Action: "stop"}}}}}
 	m := NewManager(nil, nil, nil)
 	m.SetConfig(cfg)
 
@@ -843,8 +761,7 @@ func TestRequestScopedErrors_ResolvedFromManagerConfig(t *testing.T) {
 		ID:         "auth-config-resolve-1",
 		Provider:   "claude",
 		Status:     StatusActive,
-		Attributes: map[string]string{AttributeConfigIndex: "0", "priority": "10"},
-	}
+		Attributes: map[string]string{AttributeConfigIndex: "0", "priority": "10"}}
 	authCompat := &Auth{
 		ID:       "auth-config-resolve-compat",
 		Provider: "openai-compatible-my-compat",
@@ -852,9 +769,7 @@ func TestRequestScopedErrors_ResolvedFromManagerConfig(t *testing.T) {
 		Attributes: map[string]string{
 			AttributeConfigIndex: "0",
 			"compat_name":        "my-compat",
-			"priority":           "10",
-		},
-	}
+			"priority":           "10"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
@@ -875,14 +790,12 @@ func TestRequestScopedErrors_ResolvedFromManagerConfig(t *testing.T) {
 		identifier: "claude",
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, customStatusError{code: 400, msg: "from_config_rule occurred"}
-		},
-	}
+		}}
 	execCompat := &mockCustomErrorExecutor{
 		identifier: "openai-compatible-my-compat",
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, customStatusError{code: 400, msg: "from_compat_config_rule occurred"}
-		},
-	}
+		}}
 	m.RegisterExecutor(execClaude)
 	m.RegisterExecutor(execCompat)
 
@@ -922,11 +835,7 @@ func TestRequestScopedErrors_NonMatching_FallsBackToDefault(t *testing.T) {
 				{
 					Status: 500,
 					Match:  []string{"some_500_error"},
-					Action: "stop",
-				},
-			},
-		},
-	}
+					Action: "stop"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -943,10 +852,8 @@ func TestRequestScopedErrors_NonMatching_FallsBackToDefault(t *testing.T) {
 			// Status 400 with standard request-fault message (unmatched by rule)
 			return cliproxyexecutor.Response{}, customStatusError{
 				code: 400,
-				msg:  `{"error": {"message": "Invalid request parameter", "type": "invalid_request_error"}}`,
-			}
-		},
-	}
+				msg:  `{"error": {"message": "Invalid request parameter", "type": "invalid_request_error"}}`}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -978,11 +885,7 @@ func TestRequestScopedErrors_StreamSubsequentChunkError(t *testing.T) {
 				{
 					Status: 400,
 					Match:  []string{"mid_stream_context_length"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -1002,10 +905,8 @@ func TestRequestScopedErrors_StreamSubsequentChunkError(t *testing.T) {
 			close(ch)
 			return &cliproxyexecutor.StreamResult{
 				Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-				Chunks:  ch,
-			}, nil
-		},
-	}
+				Chunks:  ch}, nil
+		}}
 	m.RegisterExecutor(streamExecutor)
 
 	streamResult, errStream := m.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -1043,11 +944,7 @@ func TestRequestScopedErrors_UnmatchedBootstrapError_PreservesDefault(t *testing
 				{
 					Status: 500,
 					Match:  []string{"rule_does_not_match"},
-					Action: "stop",
-				},
-			},
-		},
-	}
+					Action: "stop"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -1066,10 +963,8 @@ func TestRequestScopedErrors_UnmatchedBootstrapError_PreservesDefault(t *testing
 			close(ch)
 			return &cliproxyexecutor.StreamResult{
 				Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-				Chunks:  ch,
-			}, nil
-		},
-	}
+				Chunks:  ch}, nil
+		}}
 	m.RegisterExecutor(streamExecutor)
 
 	_, errStream := m.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -1105,11 +1000,7 @@ func TestRequestScopedErrors_TransientCooldownDisabled_ForceCooldownStillApplies
 				{
 					Status: 500,
 					Match:  []string{"cooldown_on_500"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -1124,8 +1015,7 @@ func TestRequestScopedErrors_TransientCooldownDisabled_ForceCooldownStillApplies
 		identifier: "claude",
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, customStatusError{code: 500, msg: "cooldown_on_500"}
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})
@@ -1153,20 +1043,14 @@ func TestRequestScopedErrors_OpenAICompat_BareProviderKeyFallback(t *testing.T) 
 					{
 						Status: 400,
 						Match:  []string{"from_bare_compat_rule"},
-						Action: "stop",
-					},
-				},
-			},
-		},
-	}
+						Action: "stop"}}}}}
 	m := NewManager(nil, nil, nil)
 	m.SetConfig(cfg)
 
 	authCompat := &Auth{
 		ID:       "auth-bare-compat",
 		Provider: "openai-compatible-bare-compat",
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(authCompat.ID, "openai-compatible-bare-compat", []*registry.ModelInfo{{ID: "bare-model"}})
@@ -1182,8 +1066,7 @@ func TestRequestScopedErrors_OpenAICompat_BareProviderKeyFallback(t *testing.T) 
 		identifier: "openai-compatible-bare-compat",
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, customStatusError{code: 400, msg: "from_bare_compat_rule"}
-		},
-	}
+		}}
 	m.RegisterExecutor(execCompat)
 
 	_, errExec := m.Execute(context.Background(), []string{"openai-compatible-bare-compat"}, cliproxyexecutor.Request{Model: "bare-model"}, cliproxyexecutor.Options{})
@@ -1220,10 +1103,7 @@ func TestExtractRequestScopedErrorRulesSupportsLegacyMetadataKey(t *testing.T) {
 			map[string]any{
 				"status": float64(429),
 				"match":  []any{"legacy-rate-limit"},
-				"action": "stop",
-			},
-		},
-	}}
+				"action": "stop"}}}}
 
 	rules := extractRequestScopedErrorRules(auth, nil)
 	if len(rules) != 1 || rules[0].Status != 429 || rules[0].Action != "stop" {
@@ -1248,11 +1128,7 @@ func TestRequestScopedErrors_ResponseBodyProvider_MatchesUnderlyingPayload(t *te
 				{
 					Status: 400,
 					Match:  []string{"claude_fast_overload"},
-					Action: "stop-and-cooldown",
-				},
-			},
-		},
-	}
+					Action: "stop-and-cooldown"}}}}
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3"}})
 	t.Cleanup(func() {
@@ -1270,10 +1146,8 @@ func TestRequestScopedErrors_ResponseBodyProvider_MatchesUnderlyingPayload(t *te
 			return cliproxyexecutor.Response{}, wrappedResponseBodyError{
 				status: 400,
 				msg:    "claude Fast upstream request failed with status 400",
-				body:   []byte(`{"type":"error","error":{"type":"invalid_request_error","message":"claude_fast_overload"}}`),
-			}
-		},
-	}
+				body:   []byte(`{"type":"error","error":{"type":"invalid_request_error","message":"claude_fast_overload"}}`)}
+		}}
 	m.RegisterExecutor(exec)
 
 	_, errExec := m.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: "claude-3"}, cliproxyexecutor.Options{})

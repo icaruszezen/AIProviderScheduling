@@ -105,8 +105,7 @@ func newModelCooldownErrorWithCause(model, provider string, resetIn time.Duratio
 		model:    model,
 		provider: provider,
 		resetIn:  resetIn,
-		cause:    cause,
-	}
+		cause:    cause}
 }
 
 func (e *modelCooldownError) IsModelCooldown() bool {
@@ -144,8 +143,7 @@ func (e *modelCooldownError) Error() string {
 		"message":       message,
 		"model":         e.model,
 		"reset_time":    displayDuration.String(),
-		"reset_seconds": resetSeconds,
-	}
+		"reset_seconds": resetSeconds}
 	if e.provider != "" {
 		errorBody["provider"] = e.provider
 	}
@@ -172,7 +170,7 @@ var (
 	sanitizerNaturalSecretPattern          = regexp.MustCompile(`(?i)\b([A-Za-z0-9_.-]*(?:api[ _-]?key|access[ _-]?token|client[ _-]?secret|private[ _-]?key|secret[ _-]?key|password|secret|token|credentials?|sessionid))\s*(?:(?:is|was|provided|used)?\s*[:= ]\s*|\s+is\s+|\s+was\s+|\s+provided\s+|\s+)(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(?:[^\r\n;,|]+?(?:\s+(?:and|with|for|via)\s+|[,;|]|\r|\n|$)|[^\r\n;,|]+))`)
 	sanitizerKVPattern                     = regexp.MustCompile(`(?i)((?:'|")?(?:[A-Za-z0-9_.-]*(?:key|token|secret|password|credential|credentials|bearer|sessionid|auth|signature|sig))(?:'|")?\s*[=:]\s*)(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|(?:[^\r\n;,|]+?(?:\s+(?:and|with|for|via)\s+|[,;|]|\r|\n|$)|[^\r\n;,|]+))`)
 	sanitizerInvalidTokenPattern           = regexp.MustCompile(`(?i)\b(invalid|bad|expired|unknown)\s+(?:api\s+key|access\s+token|refresh\s+token|token|key|secret|password|credentials?|bearer)\s*(?:[:= ]\s*)?(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s,\r\n;]+)`)
-	sanitizerSKKeyPattern                  = regexp.MustCompile(`\b(?:sk-[A-Za-z0-9._~+/=-]{6,}|ghp_[A-Za-z0-9._~+/=-]{6,})\b`)
+	sanitizerSKKeyPattern                  = regexp.MustCompile(`\b(?:sk-[A-Za-z0-9._~+/=-]{6}|ghp_[A-Za-z0-9._~+/=-]{6})\b`)
 	sanitizerBearerPattern                 = regexp.MustCompile(`(?i)\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]+`)
 	sanitizerDoubleQuotedPathPattern       = regexp.MustCompile(`"/[^"\r\n]+"`)
 	sanitizerSingleQuotedPathPattern       = regexp.MustCompile(`'/[^'\r\n]+'`)
@@ -263,8 +261,7 @@ func sanitizeUpstreamErrorSummaryNoTruncate(s string) string {
 		"permission denied", "no such file", "file not found", "access denied",
 		"operation not permitted", "denied", "read-only", "is a directory",
 		"not a directory", "cannot find", "no space", "connection refused",
-		"timeout", "failed", "error", "not supported", "invalid argument",
-	}
+		"timeout", "failed", "error", "not supported", "invalid argument"}
 	for _, errWord := range knownErrorPrefixes {
 		target := ": " + errWord
 		if idx := strings.Index(strings.ToLower(s), target); idx != -1 {
@@ -886,8 +883,7 @@ type SessionAffinityConfig struct {
 func NewSessionAffinitySelector(fallback Selector) *SessionAffinitySelector {
 	return NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 }
 
 // NewSessionAffinitySelectorWithConfig creates a selector with custom configuration.
@@ -901,8 +897,7 @@ func NewSessionAffinitySelectorWithConfig(cfg SessionAffinityConfig) *SessionAff
 	return &SessionAffinitySelector{
 		fallback: cfg.Fallback,
 		cache:    NewSessionCache(cfg.TTL),
-		matcher:  cliproxysession.NewMerklePrefixMatcher(cfg.TTL),
-	}
+		matcher:  cliproxysession.NewMerklePrefixMatcher(cfg.TTL)}
 }
 
 // Trees returns a backward-compatible in-memory session tree store.
@@ -1376,8 +1371,7 @@ func extractExplicitSessionIDs(headers http.Header, payload []byte, metadata map
 			"forked_from_thread_id", "forked_from_id",
 			"parent_conversation_id", "parentConversationId",
 			"metadata.parent_session_id", "metadata.parent_thread_id",
-			"extra_body.parent_session_id", "extra_body.parent_thread_id",
-		} {
+			"extra_body.parent_session_id", "extra_body.parent_thread_id"} {
 			if psid := normalizedSessionCandidate(root.Get(parentPath).String()); psid != "" {
 				parentIDCandidate = psid
 				break
@@ -1936,13 +1930,13 @@ func extractMessageContent(content gjson.Result) string {
 	if content.IsArray() {
 		var texts []string
 		content.ForEach(func(_, part gjson.Result) bool {
-			// Handle Claude format: {"type":"text","text":"content"}
+			// Handle Claude format: {"type":"text","text":"content",}
 			if part.Get("type").String() == "text" {
 				if text := part.Get("text").String(); text != "" {
 					texts = append(texts, text)
 				}
 			}
-			// Handle OpenAI format: {"type":"text","text":"content"}
+			// Handle OpenAI format: {"type":"text","text":"content",}
 			// Same structure as Claude, already handled above
 			return true
 		})

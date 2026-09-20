@@ -105,7 +105,7 @@ func TestHomeSelectionEndsAfterExecute(t *testing.T) {
 	}
 }
 
-func TestHomeNonStreamingExecutionLogsSelectedOAuthAuth(t *testing.T) {
+func TestHomeNonStreamingExecutionLogsSelectedAPIKeyAuth(t *testing.T) {
 	previousLevel := log.GetLevel()
 	log.SetLevel(log.DebugLevel)
 	hook := logtest.NewLocal(log.StandardLogger())
@@ -123,16 +123,13 @@ func TestHomeNonStreamingExecutionLogsSelectedOAuthAuth(t *testing.T) {
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count_tokens",
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
-	}
+			}}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,7 +144,7 @@ func TestHomeNonStreamingExecutionLogsSelectedOAuthAuth(t *testing.T) {
 				t.Fatalf("execution error = %v", errRun)
 			}
 
-			const expected = "Use OAuth provider=home-execution auth_file=home-auth for model model-a via socks5 proxy"
+			const expected = "Use API key ho...ey for model model-a via socks5 proxy"
 			for _, entry := range hook.AllEntries() {
 				if entry.Level == log.DebugLevel && entry.Message == expected {
 					if got := entry.Data["request_id"]; got != "req-home-log" {
@@ -172,9 +169,8 @@ func (homeOAuthLoggingDispatcher) RPopAuth(context.Context, string, string, http
 		ProxyURL: "socks5://127.0.0.1:1080",
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			AttributeAuthKind: AuthKindOAuth,
-		},
-	}})
+			AttributeAuthKind: AuthKindAPIKey,
+			AttributeAPIKey:   "home-key"}}})
 }
 
 func (homeOAuthLoggingDispatcher) AbortAmbiguousDispatch() {}
@@ -264,9 +260,7 @@ func (d *retainingHomeExecutionDispatcher) RPopAuth(context.Context, string, str
 		Provider: "home-execution",
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	}})
+			"websockets": "true"}}})
 }
 
 func (*retainingHomeExecutionDispatcher) AbortAmbiguousDispatch() {}
@@ -309,8 +303,7 @@ func TestHomeWebsocketSessionReusesRetainedSelection(t *testing.T) {
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth"}}
 	for range 2 {
 		if _, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts); errExecute != nil {
 			t.Fatalf("Execute() error = %v", errExecute)
@@ -375,8 +368,7 @@ func TestHomeWebsocketTargetChangeEndsSelectionBeforeRedispatch(t *testing.T) {
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth"}}
 
 	if _, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts); errExecute != nil {
 		t.Fatalf("first Execute() error = %v", errExecute)
@@ -411,9 +403,7 @@ func (d *unpinnedTargetChangeDispatcher) RPopAuth(_ context.Context, _ string, _
 		Provider: "home-execution",
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	}})
+			"websockets": "true"}}})
 }
 func (*unpinnedTargetChangeDispatcher) AbortAmbiguousDispatch() {}
 
@@ -463,8 +453,7 @@ func TestHomeWebsocketUnpinnedModelChangeClosesSelectionBeforeRedispatch(t *test
 	manager.RegisterExecutor(executor)
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-	}}
+		cliproxyexecutor.ExecutionSessionMetadataKey: "session-1"}}
 
 	if _, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts); errExecute != nil {
 		t.Fatalf("first Execute() error = %v", errExecute)
@@ -548,8 +537,7 @@ func TestHomeStreamLifecycleFailureEndsBeforeFreshDispatch(t *testing.T) {
 	manager.RegisterExecutor(executor)
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Stream: true, Metadata: map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "session-426",
-	}}
+		cliproxyexecutor.ExecutionSessionMetadataKey: "session-426"}}
 
 	result, errExecute := manager.ExecuteStream(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts)
 	if errExecute != nil {
@@ -614,9 +602,7 @@ func (d *freshHomeStreamSelectionDispatcher) RPopAuthWithConstraints(_ context.C
 			Provider: "home-execution",
 			Status:   StatusActive,
 			Attributes: map[string]string{
-				AttributeAuthKind: AuthKindAPIKey,
-			},
-		}})
+				AttributeAuthKind: AuthKindAPIKey}}})
 	}
 	return nil, home.ErrAuthNotFound
 }
@@ -769,8 +755,7 @@ func TestHomeWebsocketSessionReusesSelectionWithoutPinnedMetadataAndCachesRuntim
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "session-without-pin",
-	}}
+		cliproxyexecutor.ExecutionSessionMetadataKey: "session-without-pin"}}
 	for range 2 {
 		if _, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts); errExecute != nil {
 			t.Fatalf("Execute() error = %v", errExecute)
@@ -788,8 +773,7 @@ func TestCloseExecutionSessionReclaimsHomeSessionLock(t *testing.T) {
 	manager := NewManager(nil, nil, nil)
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "reclaim-lock",
-	}}
+		cliproxyexecutor.ExecutionSessionMetadataKey: "reclaim-lock"}}
 	unlock := manager.lockHomeWebsocketSession(ctx, opts)
 	if unlock == nil {
 		t.Fatal("lockHomeWebsocketSession() = nil")
@@ -867,16 +851,13 @@ func TestHomeNonstreamAndCountUseOneModelPerSelection(t *testing.T) {
 		t.Run(map[bool]string{false: "Execute", true: "CountTokens"}[countTokens], func(t *testing.T) {
 			dispatcher := &homePerSelectionDispatcher{auths: []Auth{
 				{ID: "home-auth-a", Provider: "home-pool", Status: StatusActive, Attributes: map[string]string{"api_key": "test-key", "compat_name": "pool", "provider_key": "pool"}},
-				{ID: "home-auth-b", Provider: "home-pool", Status: StatusActive, Attributes: map[string]string{"api_key": "test-key", "compat_name": "pool", "provider_key": "pool"}},
-			}}
+				{ID: "home-auth-b", Provider: "home-pool", Status: StatusActive, Attributes: map[string]string{"api_key": "test-key", "compat_name": "pool", "provider_key": "pool"}}}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{
 				Home: internalconfig.HomeConfig{Enabled: true},
 				OpenAICompatibility: []internalconfig.OpenAICompatibility{{
 					Name:   "pool",
-					Models: []internalconfig.OpenAICompatibilityModel{{Name: "upstream-a", Alias: "requested"}, {Name: "upstream-b", Alias: "requested"}},
-				}},
-			})
+					Models: []internalconfig.OpenAICompatibilityModel{{Name: "upstream-a", Alias: "requested"}, {Name: "upstream-b", Alias: "requested"}}}}})
 			manager.PublishHomeDispatch(dispatcher, executionregistry.New(), 1)
 			executor := &homePerSelectionFailureExecutor{dispatcher: dispatcher}
 			manager.RegisterExecutor(executor)
@@ -969,8 +950,7 @@ func (d *accountedHomeExecutionDispatcher) RPopAuth(_ context.Context, model str
 		Concurrency: homeConcurrencyTuple{Accounted: true, CredentialID: auth.ID, Model: model},
 		Model:       model,
 		AuthIndex:   auth.ID,
-		Auth:        auth,
-	})
+		Auth:        auth})
 }
 func (*accountedHomeExecutionDispatcher) AbortAmbiguousDispatch() {}
 
@@ -983,8 +963,7 @@ func TestAccountedHomeExecuteAndCountReleaseOnce(t *testing.T) {
 			releases := make(chan executionregistry.ReleaseGroup, 2)
 			registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 			manager.PublishHomeDispatch(&accountedHomeExecutionDispatcher{auths: []Auth{{
-				ID: "cred-1", Provider: "home-execution", Status: StatusActive,
-			}}}, registry, 1)
+				ID: "cred-1", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 			manager.RegisterExecutor(&homeExecutionExecutor{})
 
 			var errExecute error
@@ -1020,8 +999,7 @@ func TestAccountedHomeStreamEndsOnlyAfterSourceTerminates(t *testing.T) {
 	releases := make(chan executionregistry.ReleaseGroup, 1)
 	registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 	manager.PublishHomeDispatch(&accountedHomeExecutionDispatcher{auths: []Auth{{
-		ID: "cred-1", Provider: "home-execution", Status: StatusActive,
-	}}}, registry, 1)
+		ID: "cred-1", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 	chunks := make(chan cliproxyexecutor.StreamChunk, 1)
 	chunks <- cliproxyexecutor.StreamChunk{Payload: []byte("initial")}
 	manager.RegisterExecutor(&homeExecutionStreamExecutor{chunks: chunks})
@@ -1059,8 +1037,7 @@ func TestAccountedHomeStreamErrorDrainsUntilSourceClosesBeforeRelease(t *testing
 	releases := make(chan executionregistry.ReleaseGroup, 1)
 	registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 	manager.PublishHomeDispatch(&accountedHomeExecutionDispatcher{auths: []Auth{{
-		ID: "cred-1", Provider: "home-execution", Status: StatusActive,
-	}}}, registry, 1)
+		ID: "cred-1", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 	chunks := make(chan cliproxyexecutor.StreamChunk, 1)
 	chunks <- cliproxyexecutor.StreamChunk{Payload: []byte("initial")}
 	manager.RegisterExecutor(&homeExecutionStreamExecutor{chunks: chunks})
@@ -1120,8 +1097,7 @@ func TestAccountedHomeStreamErrorCancellationReleasesSelection(t *testing.T) {
 	releases := make(chan executionregistry.ReleaseGroup, 1)
 	registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 	manager.PublishHomeDispatch(&accountedHomeExecutionDispatcher{auths: []Auth{{
-		ID: "cred-1", Provider: "home-execution", Status: StatusActive,
-	}}}, registry, 1)
+		ID: "cred-1", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 	chunks := make(chan cliproxyexecutor.StreamChunk, 2)
 	chunks <- cliproxyexecutor.StreamChunk{Payload: []byte("initial")}
 	chunks <- cliproxyexecutor.StreamChunk{Err: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream failed"}}
@@ -1166,8 +1142,7 @@ func TestAccountedHomeStreamConsumerCancellationEndsSelection(t *testing.T) {
 	releases := make(chan executionregistry.ReleaseGroup, 1)
 	registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 	manager.PublishHomeDispatch(&accountedHomeExecutionDispatcher{auths: []Auth{{
-		ID: "cred-1", Provider: "home-execution", Status: StatusActive,
-	}}}, registry, 1)
+		ID: "cred-1", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 	chunks := make(chan cliproxyexecutor.StreamChunk, 1)
 	chunks <- cliproxyexecutor.StreamChunk{Payload: []byte("initial")}
 	manager.RegisterExecutor(&homeExecutionStreamExecutor{chunks: chunks})
@@ -1217,8 +1192,7 @@ func TestAccountedHomeRetrySelectsAndReleasesEveryAttempt(t *testing.T) {
 	registry.SetReleaseSink(func(group executionregistry.ReleaseGroup, _ int64) { releases <- group })
 	dispatcher := &accountedHomeExecutionDispatcher{auths: []Auth{
 		{ID: "cred-1", Provider: "home-execution", Status: StatusActive},
-		{ID: "cred-2", Provider: "home-execution", Status: StatusActive},
-	}}
+		{ID: "cred-2", Provider: "home-execution", Status: StatusActive}}}
 	manager.PublishHomeDispatch(dispatcher, registry, 1)
 	executor := &retryingAccountedHomeExecutor{}
 	manager.RegisterExecutor(executor)
@@ -1248,8 +1222,7 @@ func TestHomeStreamWithoutSourceEndsSelection(t *testing.T) {
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	registry := executionregistry.New()
 	manager.PublishHomeDispatch(&homePerSelectionDispatcher{auths: []Auth{{
-		ID: "home-auth", Provider: "home-execution", Status: StatusActive,
-	}}}, registry, 1)
+		ID: "home-auth", Provider: "home-execution", Status: StatusActive}}}, registry, 1)
 	manager.RegisterExecutor(&missingHomeStreamSourceExecutor{})
 
 	result, errExecute := manager.ExecuteStream(context.Background(), []string{"home-execution"}, cliproxyexecutor.Request{Model: "test"}, cliproxyexecutor.Options{Stream: true})
@@ -1277,8 +1250,7 @@ func homeRequestMetadataFromContext(ctx context.Context) homeRequestMetadataSnap
 		requestedModel:  coreusage.RequestedModelAliasFromContext(ctx),
 		reasoningEffort: coreusage.ReasoningEffortFromContext(ctx),
 		serviceTier:     coreusage.ServiceTierFromContext(ctx),
-		generate:        coreusage.GenerateFromContext(ctx),
-	}
+		generate:        coreusage.GenerateFromContext(ctx)}
 }
 
 // homeRequestMetadataExecutor records the metadata visible at auth preparation and execution.
@@ -1387,8 +1359,7 @@ func assertHomeRequestMetadata(t *testing.T, got homeRequestMetadataSnapshot, se
 		requestedModel:  "client-model",
 		reasoningEffort: "high",
 		serviceTier:     serviceTier,
-		generate:        false,
-	}
+		generate:        false}
 	if got != want {
 		t.Fatalf("request metadata = %#v, want %#v", got, want)
 	}
@@ -1411,8 +1382,7 @@ func homeRequestMetadataOptions(serviceTier string) cliproxyexecutor.Options {
 		cliproxyexecutor.RequestedModelMetadataKey:  "client-model",
 		cliproxyexecutor.ReasoningEffortMetadataKey: "high",
 		cliproxyexecutor.ServiceTierMetadataKey:     serviceTier,
-		cliproxyexecutor.GenerateMetadataKey:        false,
-	}}
+		cliproxyexecutor.GenerateMetadataKey:        false}}
 }
 
 type homeRequestMetadataPath struct {
@@ -1426,8 +1396,7 @@ func homeExecuteMetadataPath() homeRequestMetadataPath {
 		run: func(manager *Manager, opts cliproxyexecutor.Options) error {
 			_, errExecute := manager.Execute(context.Background(), []string{"home-execution"}, cliproxyexecutor.Request{Model: "route-model"}, opts)
 			return errExecute
-		},
-	}
+		}}
 }
 
 func homeCountMetadataPath() homeRequestMetadataPath {
@@ -1436,8 +1405,7 @@ func homeCountMetadataPath() homeRequestMetadataPath {
 		run: func(manager *Manager, opts cliproxyexecutor.Options) error {
 			_, errCount := manager.ExecuteCount(context.Background(), []string{"home-execution"}, cliproxyexecutor.Request{Model: "route-model"}, opts)
 			return errCount
-		},
-	}
+		}}
 }
 
 func homeStreamMetadataPath() homeRequestMetadataPath {
@@ -1452,8 +1420,7 @@ func homeStreamMetadataPath() homeRequestMetadataPath {
 			for range result.Chunks {
 			}
 			return nil
-		},
-	}
+		}}
 }
 
 // TestHomeExecutionPropagatesRequestMetadata covers the Home regression from issue #4791: the
@@ -1489,8 +1456,7 @@ func TestHomeExecutionFailureResultPreservesRequestMetadata(t *testing.T) {
 	for _, path := range paths {
 		t.Run(path.name, func(t *testing.T) {
 			executor := &homeRequestMetadataExecutor{
-				executeErr: &Error{HTTPStatus: http.StatusBadRequest, Message: "invalid request"},
-			}
+				executeErr: &Error{HTTPStatus: http.StatusBadRequest, Message: "invalid request"}}
 			hook := newHomeRequestMetadataHook()
 			manager := newHomeRequestMetadataManager(t, executor, hook)
 
@@ -1510,8 +1476,7 @@ func TestHomePrepareFailureResultPreservesRequestMetadata(t *testing.T) {
 	for _, path := range paths {
 		t.Run(path.name, func(t *testing.T) {
 			executor := &homeRequestMetadataExecutor{
-				prepareErrOnce: &Error{Code: "prepare_failed", Message: "prepare failed"},
-			}
+				prepareErrOnce: &Error{Code: "prepare_failed", Message: "prepare failed"}}
 			hook := newHomeRequestMetadataHook()
 			manager := newHomeRequestMetadataManager(t, executor, hook)
 

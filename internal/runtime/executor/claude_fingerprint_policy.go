@@ -93,12 +93,12 @@ func claudeFingerprintProfileFromConfig(cfg *config.Config, auth *cliproxyauth.A
 // behavior. It is deliberately independent of the upstream origin: the wire
 // profile follows the credential, while the one origin-sensitive decision (CCH
 // signing) is resolved separately by claudeCCHSigningEnabled.
-func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *cliproxyauth.Auth, apiKey string) claudeFingerprintPolicy {
-	// Keep actual Claude OAuth lifecycle authority separate from the broader
-	// request fingerprint policy used by API keys and delegated providers.
-	authIsOAuth := isClaudeOAuthToken(apiKey)
+func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *cliproxyauth.Auth, _ string) claudeFingerprintPolicy {
+	// Account OAuth tokens are not credentials. Fingerprint policy follows
+	// the configured CLI profile only.
+	authIsOAuth := false
 	profile := claudeFingerprintProfileFromConfig(cfg, auth)
-	profileClaudeCodeCLI := authIsOAuth || profile == claudeFingerprintProfileClaudeCodeCLI
+	profileClaudeCodeCLI := profile == claudeFingerprintProfileClaudeCodeCLI
 
 	return claudeFingerprintPolicy{
 		AuthIsOAuthToken:     authIsOAuth,
@@ -108,8 +108,7 @@ func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *cliproxyauth.Auth,
 		SynthesizeIdentity:   profileClaudeCodeCLI && !authIsOAuth,
 		MCPAlias:             profileClaudeCodeCLI,
 		InjectDiagnostics:    profileClaudeCodeCLI,
-		OAuthCancellation:    authIsOAuth,
-	}
+		OAuthCancellation:    authIsOAuth}
 }
 
 // applyClaudeCLIIdentity applies the Claude Code CLI credential identity to the

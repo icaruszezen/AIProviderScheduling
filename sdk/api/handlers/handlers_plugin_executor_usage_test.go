@@ -27,8 +27,7 @@ type capturePluginExecutorUsagePlugin struct {
 func newCapturePluginExecutorUsagePlugin(targetProvider string) *capturePluginExecutorUsagePlugin {
 	return &capturePluginExecutorUsagePlugin{
 		targetProvider: targetProvider,
-		records:        make(chan usage.Record, 50),
-	}
+		records:        make(chan usage.Record, 50)}
 }
 
 func (p *capturePluginExecutorUsagePlugin) HandleUsage(_ context.Context, record usage.Record) {
@@ -80,9 +79,7 @@ func TestHandlerPluginExecutorPublishesUsageNonStreamOpenAI(t *testing.T) {
 
 	mockHost := &mockPluginUsageHost{
 		execResp: coreexecutor.Response{
-			Payload: openAIResponseBody,
-		},
-	}
+			Payload: openAIResponseBody}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -125,8 +122,7 @@ func TestHandlerPluginExecutorPublishesUsageStreamOpenAI(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -169,8 +165,7 @@ func TestHandlerPluginExecutorPublishesUsageStreamCodex(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -208,9 +203,7 @@ func TestHandlerPluginExecutorPublishesUsageNonStreamClaude(t *testing.T) {
 
 	mockHost := &mockPluginUsageHost{
 		execResp: coreexecutor.Response{
-			Payload: claudeResponseBody,
-		},
-	}
+			Payload: claudeResponseBody}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -252,8 +245,7 @@ func TestHandlerPluginExecutorPublishesUsageStreamClaude(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -295,9 +287,7 @@ func TestHandlerPluginExecutorPublishesUsageGemini(t *testing.T) {
 
 	mockHost := &mockPluginUsageHost{
 		execResp: coreexecutor.Response{
-			Payload: geminiResponseBody,
-		},
-	}
+			Payload: geminiResponseBody}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -336,8 +326,7 @@ func TestHandlerPluginExecutorPublishesUsageStreamInteractions(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -377,8 +366,7 @@ func TestHandlerPluginExecutorPublishesUsageStreamAntigravity(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -413,8 +401,7 @@ func TestHandlerPluginExecutorPublishesFailure(t *testing.T) {
 	originalModel := "gpt-4o"
 
 	mockHost := &mockPluginUsageHost{
-		execErr: errors.New("upstream plugin failure"),
-	}
+		execErr: errors.New("upstream plugin failure")}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -453,8 +440,7 @@ func TestHandlerPluginExecutorPublishesStreamFailure(t *testing.T) {
 	close(chunks)
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -497,8 +483,7 @@ func TestHandlerPluginExecutorPublishesStreamCancellation(t *testing.T) {
 	chunks <- coreexecutor.StreamChunk{Payload: []byte("data: {\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\n")}
 
 	mockHost := &mockPluginUsageHost{
-		streamResult: &coreexecutor.StreamResult{Chunks: chunks},
-	}
+		streamResult: &coreexecutor.StreamResult{Chunks: chunks}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -533,9 +518,7 @@ func TestHandlerPluginExecutorSkipsUsageForNestedExecution(t *testing.T) {
 
 	mockHost := &mockPluginUsageHost{
 		execResp: coreexecutor.Response{
-			Payload: openAIResponseBody,
-		},
-	}
+			Payload: openAIResponseBody}}
 	mockHost.hasRouters = true
 	mockHost.route = func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
 		return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: targetPluginID}, true
@@ -549,8 +532,7 @@ func TestHandlerPluginExecutorSkipsUsageForNestedExecution(t *testing.T) {
 		EntryProtocol: "openai",
 		ExitProtocol:  "openai",
 		Model:         originalModel,
-		Body:          []byte(fmt.Sprintf(`{"model":%q}`, originalModel)),
-	})
+		Body:          []byte(fmt.Sprintf(`{"model":%q}`, originalModel))})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModel() error = %+v", errMsg)
 	}
@@ -574,16 +556,13 @@ func TestHandlerPluginExecutorSkipsOuterUsageWhenPluginCallsHostModelExecute(t *
 		provider: "openai",
 		execute: func(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (coreexecutor.Response, error) {
 			return coreexecutor.Response{
-				Payload: []byte(`{"id":"chatcmpl-inner","choices":[{"message":{"role":"assistant","content":"inner"}}],"usage":{"prompt_tokens":5,"completion_tokens":5,"total_tokens":10}}`),
-			}, nil
-		},
-	}
+				Payload: []byte(`{"id":"chatcmpl-inner","choices":[{"message":{"role":"assistant","content":"inner"}}],"usage":{"prompt_tokens":5,"completion_tokens":5,"total_tokens":10}}`)}, nil
+		}}
 	manager.RegisterExecutor(innerExecutor)
 	auth := &coreauth.Auth{
 		ID:       "auth-" + innerModel,
 		Provider: innerExecutor.Identifier(),
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}
@@ -609,8 +588,7 @@ func TestHandlerPluginExecutorSkipsOuterUsageWhenPluginCallsHostModelExecute(t *
 			EntryProtocol: "openai",
 			ExitProtocol:  "openai",
 			Model:         innerModel,
-			Body:          []byte(fmt.Sprintf(`{"model":%q}`, innerModel)),
-		})
+			Body:          []byte(fmt.Sprintf(`{"model":%q}`, innerModel))})
 		if errInner != nil {
 			return coreexecutor.Response{}, errInner.Error
 		}
@@ -645,14 +623,12 @@ func TestHandlerPluginExecutorSkipsOuterFailureWhenPluginCallsHostModelExecute(t
 		provider: "openai",
 		execute: func(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (coreexecutor.Response, error) {
 			return coreexecutor.Response{}, errors.New("inner failure")
-		},
-	}
+		}}
 	manager.RegisterExecutor(innerExecutor)
 	auth := &coreauth.Auth{
 		ID:       "auth-" + innerModel,
 		Provider: innerExecutor.Identifier(),
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}
@@ -676,8 +652,7 @@ func TestHandlerPluginExecutorSkipsOuterFailureWhenPluginCallsHostModelExecute(t
 			EntryProtocol: "openai",
 			ExitProtocol:  "openai",
 			Model:         innerModel,
-			Body:          []byte(fmt.Sprintf(`{"model":%q}`, innerModel)),
-		})
+			Body:          []byte(fmt.Sprintf(`{"model":%q}`, innerModel))})
 		if errInner != nil {
 			return coreexecutor.Response{}, errInner.Error
 		}

@@ -107,8 +107,7 @@ func CacheCodexReasoningReplayItemsBestEffort(ctx context.Context, modelName, se
 	defer codexReasoningReplayMu.Unlock()
 	codexReasoningReplayEntries[key] = codexReasoningReplayEntry{
 		Items:     normalized,
-		Timestamp: now,
-	}
+		Timestamp: now}
 	if len(codexReasoningReplayEntries) > CodexReasoningReplayCacheMaxEntries {
 		evictOldestCodexReasoningReplayEntries(CodexReasoningReplayCacheEvictBatchSize)
 	}

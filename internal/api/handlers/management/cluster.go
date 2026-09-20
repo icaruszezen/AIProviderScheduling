@@ -84,8 +84,7 @@ func (h *Handler) SlaveConfigWriteGuard() gin.HandlerFunc {
 		}
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"error":   "slave_node_readonly",
-			"message": "slave node: config is synced from master",
-		})
+			"message": "slave node: config is synced from master"})
 	}
 }
 
@@ -100,19 +99,7 @@ func slaveWriteAllowed(method, path string) bool {
 		return true
 	case path == "/v0/management/cluster", strings.HasPrefix(path, "/v0/management/cluster/"):
 		return true
-	case strings.HasPrefix(path, "/v0/management/auth-files"):
-		return true
-	case path == "/v0/management/oauth" || path == "/v0/management/oauth-callback" || path == "/v0/management/oauth-session":
-		return true
-	case strings.HasSuffix(path, "-auth-url"):
-		return true
-	case path == "/v0/management/get-auth-status":
-		return true
 	case path == "/v0/management/logs" || strings.HasPrefix(path, "/v0/management/request-error-logs"):
-		return true
-	case path == "/v0/management/reset-quota":
-		return true
-	case path == "/v0/management/vertex/import":
 		return true
 	case path == "/v0/management/api-call":
 		return true
@@ -142,8 +129,7 @@ func (h *Handler) ClusterTokenMiddleware() gin.HandlerFunc {
 		clientIP := c.ClientIP()
 		if remaining := h.banRemaining(clientIP, time.Now()); remaining > 0 {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": fmt.Sprintf("IP banned due to too many failed attempts. Try again in %s", remaining),
-			})
+				"error": fmt.Sprintf("IP banned due to too many failed attempts. Try again in %s", remaining)})
 			return
 		}
 		provided := clusterTokenFromRequest(c)
@@ -288,8 +274,7 @@ func (h *Handler) PatchCluster(c *gin.Context) {
 	if body.Role != nil && !config.ClusterRoleIsValid(*body.Role) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "invalid_role",
-			"message": fmt.Sprintf("role must be one of %s, %s, %s", config.ClusterRoleStandalone, config.ClusterRoleMaster, config.ClusterRoleSlave),
-		})
+			"message": fmt.Sprintf("role must be one of %s, %s, %s", config.ClusterRoleStandalone, config.ClusterRoleMaster, config.ClusterRoleSlave)})
 		return
 	}
 	if err := validateClusterInterval("sync_interval_seconds", body.SyncIntervalSeconds); err != nil {
@@ -331,8 +316,7 @@ func (h *Handler) PatchCluster(c *gin.Context) {
 	if next.IsSlave() && next.MasterURL == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "master_url_required",
-			"message": "master_url is required when role is slave",
-		})
+			"message": "master_url is required when role is slave"})
 		return
 	}
 	h.cfg.Cluster = next

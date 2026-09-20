@@ -14,9 +14,9 @@ func TestStripInvalidClaudeThinkingBlocks_RemovesGPTEncryptedContent(t *testing.
 		"messages": [
 			{"role":"assistant","content":[
 				{"type":"thinking","thinking":"codex reasoning","signature":"gAAAAABopenai-encrypted-content"},
-				{"type":"text","text":"Answer"}
+				{"type":"text","text":"Answer",}
 			]},
-			{"role":"user","content":[{"type":"text","text":"next"}]}
+			{"role":"user","content":[{"type":"text","text":"next"}],}
 		]
 	}`)
 
@@ -37,9 +37,9 @@ func TestStripInvalidClaudeThinkingBlocksAndEmptyMessages_DropsMessagesLeftEmpty
 	input := []byte(`{
 		"messages": [
 			{"role":"assistant","content":[
-				{"type":"thinking","thinking":"codex reasoning","signature":"gAAAAABopenai-encrypted-content"}
+				{"type":"thinking","thinking":"codex reasoning","signature":"gAAAAABopenai-encrypted-content",}
 			]},
-			{"role":"user","content":[{"type":"text","text":"next"}]}
+			{"role":"user","content":[{"type":"text","text":"next"}],}
 		]
 	}`)
 
@@ -60,7 +60,7 @@ func TestStripInvalidClaudeThinkingBlocks_RemovesMalformedEPrefix(t *testing.T) 
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","thinking":"bad","signature":"Ebad"},
-			{"type":"text","text":"Answer"}
+			{"type":"text","text":"Answer",}
 		]}]
 	}`)
 
@@ -78,7 +78,7 @@ func TestStripInvalidClaudeThinkingBlocks_Base64OnlyKeepsDecodableEPrefix(t *tes
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","thinking":"bad","signature":"Ebad"},
-			{"type":"text","text":"Answer"}
+			{"type":"text","text":"Answer",}
 		]}]
 	}`)
 
@@ -93,7 +93,7 @@ func TestStripInvalidClaudeThinkingBlocks_Base64OnlyRemovesInvalidBase64(t *test
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","thinking":"bad","signature":"E!!!invalid!!!"},
-			{"type":"text","text":"Answer"}
+			{"type":"text","text":"Answer",}
 		]}]
 	}`)
 
@@ -111,14 +111,13 @@ func TestStripInvalidClaudeThinkingBlocks_AllowsEmptySignatureEmptyTextPlacehold
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","text":"","signature":""},
-			{"type":"text","text":"Answer"}
+			{"type":"text","text":"Answer",}
 		]}]
 	}`)
 
 	out := StripInvalidClaudeThinkingBlocks(input, ClaudeSignatureValidationOptions{
 		Base64Only:                       true,
-		AllowEmptySignatureWithEmptyText: true,
-	})
+		AllowEmptySignatureWithEmptyText: true})
 	content := gjson.GetBytes(out, "messages.0.content").Array()
 	if len(content) != 2 {
 		t.Fatalf("content length = %d, want 2: %s", len(content), string(out))
@@ -130,7 +129,7 @@ func TestStripInvalidClaudeThinkingBlocks_StrictRemovesMalformedClaudeTree(t *te
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","thinking":"bad","signature":"` + sig + `"},
-			{"type":"text","text":"Answer"}
+			{"type":"text","text":"Answer",}
 		]}]
 	}`)
 
@@ -150,7 +149,7 @@ func TestStripInvalidClaudeThinkingBlocks_KeepsClaudeSignaturePrefixes(t *testin
 	input := []byte(`{
 		"messages": [{"role":"assistant","content":[
 			{"type":"thinking","thinking":"one","signature":"` + singleLayer + `"},
-			{"type":"thinking","thinking":"two","signature":"modelGroup#` + doubleLayer + `"}
+			{"type":"thinking","thinking":"two","signature":"modelGroup#` + doubleLayer + `",}
 		]}]
 	}`)
 
@@ -205,8 +204,7 @@ func defaultClaudeCAISParts(model string) claudeCAISParts {
 		modelText:            []byte(model),
 		includeField7:        true,
 		blockKind:            "thinking",
-		contextID:            observedContextID,
-	}
+		contextID:            observedContextID}
 }
 
 func (p claudeCAISParts) encode() string {
@@ -305,8 +303,7 @@ func TestClaudeCAISSignature_DetectSignatureProvider(t *testing.T) {
 		"cais#",
 		"claude-cais#",
 		"claude_cais#",
-		"claude#",
-	}
+		"claude#"}
 	for _, prefix := range prefixes {
 		sig := prefix + observedFable5Sample
 		got := DetectSignatureProvider(sig)
@@ -476,8 +473,7 @@ func TestClaudeCAISSignature_ToleratesUpstreamFieldDrift(t *testing.T) {
 		{"unreleased model name", func() claudeCAISParts {
 			p := defaultClaudeCAISParts("claude-opus-6-preview")
 			return p
-		}()},
-	}
+		}()}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -571,8 +567,7 @@ func TestClaudeCAISSignature_RejectsMalformedPayloads(t *testing.T) {
 			p := defaultClaudeCAISParts("claude-opus-5")
 			p.contextID = "not-a-canonical-uuid-value-000000000"
 			return p.encode()
-		}()},
-	}
+		}()}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

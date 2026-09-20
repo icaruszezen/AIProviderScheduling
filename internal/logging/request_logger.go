@@ -169,8 +169,7 @@ func NewFileRequestLogger(enabled bool, logsDir string, configDir string, errorL
 		enabled:           enabled,
 		logsDir:           logsDir,
 		errorLogsMaxFiles: errorLogsMaxFiles,
-		homeEnabled:       false,
-	}
+		homeEnabled:       false}
 }
 
 // IsEnabled returns whether request logging is currently enabled.

@@ -61,8 +61,7 @@ type StreamRewriter struct {
 func NewStreamRewriter(options StreamRewriteOptions) *StreamRewriter {
 	return &StreamRewriter{
 		options:    options,
-		pendingBuf: nil,
-	}
+		pendingBuf: nil}
 }
 
 // RewriteChunk rewrites model names in a single SSE chunk.

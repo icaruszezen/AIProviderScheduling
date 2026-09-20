@@ -43,6 +43,5 @@ func EmitWebSocketResponseEvent(ctx context.Context, opts cliproxyexecutor.Optio
 		AuthType:       authType,
 		EventType:      eventType,
 		Payload:        payload,
-		Metadata:       opts.Metadata,
-	})
+		Metadata:       opts.Metadata})
 }

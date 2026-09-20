@@ -118,8 +118,7 @@ func (h *BaseAPIHandler) streamWithPluginExecutor(ctx context.Context, entryProt
 			OriginalRequest: cloneBytes(streamOriginalRequest),
 			RequestBody:     cloneBytes(streamRequestBody),
 			ChunkIndex:      pluginapi.StreamChunkHeaderInitIndex,
-			Metadata:        opts.Metadata,
-		}, execOptions.SkipInterceptorPluginID)
+			Metadata:        opts.Metadata}, execOptions.SkipInterceptorPluginID)
 		applyStreamHeaders(intercepted.Headers)
 	}
 	upstreamHeaders := downstreamHeadersAfterInterceptors(baseStreamHeaders, rawStreamHeaders, passthroughHeadersEnabled)
@@ -226,8 +225,7 @@ func (h *BaseAPIHandler) streamWithPluginExecutor(ctx context.Context, entryProt
 					Body:            payload,
 					HistoryChunks:   cloneByteSlices(historyChunks),
 					ChunkIndex:      chunkIndex,
-					Metadata:        opts.Metadata,
-				}
+					Metadata:        opts.Metadata}
 				// Re-evaluate each chunk so mid-stream plugin reloads stay correct.
 				// Schema v3+ omits bodies here (one header-init clone only).
 				if streamChunkPayloadIncludesRequestBody(interceptorHost) {
@@ -327,8 +325,7 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 	}
 	req := coreexecutor.Request{
 		Model:   normalizedModel,
-		Payload: payload,
-	}
+		Payload: payload}
 	afterAuthCapture := &requestAfterAuthCapture{}
 	lifecycle := h.newRequestLifecycleTracker(ctx, entryProtocol, normalizedModel, originalRequestedModel, true, reqMeta, execOptions.SkipInterceptorPluginID)
 	opts := coreexecutor.Options{
@@ -340,8 +337,7 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 		Headers:                     modelExecutionHeaders(ctx, execOptions.Headers),
 		Query:                       modelExecutionQuery(ctx, execOptions.Query),
 		RequestAfterAuthInterceptor: h.requestAfterAuthInterceptor(afterAuthCapture, lifecycle.requestID(), execOptions.SkipInterceptorPluginID),
-		WebSocketResponseObserver:   h.webSocketResponseObserver(lifecycle.requestID(), execOptions.SkipInterceptorPluginID),
-	}
+		WebSocketResponseObserver:   h.webSocketResponseObserver(lifecycle.requestID(), execOptions.SkipInterceptorPluginID)}
 	opts.Metadata = reqMeta
 	var interceptErr *interfaces.ErrorMessage
 	req, opts, interceptErr = h.applyRequestInterceptorsBeforeAuth(ctx, entryProtocol, originalRequestedModel, lifecycle.requestID(), req, opts, execOptions.SkipInterceptorPluginID)
@@ -418,8 +414,7 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 			OriginalRequest: cloneBytes(streamOriginalRequest),
 			RequestBody:     cloneBytes(streamRequestBody),
 			ChunkIndex:      pluginapi.StreamChunkHeaderInitIndex,
-			Metadata:        executedOpts.Metadata,
-		}, execOptions.SkipInterceptorPluginID)
+			Metadata:        executedOpts.Metadata}, execOptions.SkipInterceptorPluginID)
 		applyStreamHeaders(intercepted.Headers)
 		streamHeaderInitialized = true
 	}
@@ -443,8 +438,7 @@ func (h *BaseAPIHandler) executeStreamWithAuthManagerFormats(ctx context.Context
 				Body:            payload,
 				HistoryChunks:   cloneByteSlices(historyChunks),
 				ChunkIndex:      *chunkIndex,
-				Metadata:        opts.Metadata,
-			}
+				Metadata:        opts.Metadata}
 			// Re-evaluate each chunk so mid-stream plugin reloads stay correct.
 			// Schema v3+ omits bodies here (one header-init clone only).
 			if streamChunkPayloadIncludesRequestBody(interceptorHost) {

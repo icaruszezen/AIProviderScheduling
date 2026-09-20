@@ -9,7 +9,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
@@ -62,7 +61,6 @@ func (s *Service) registerPluginAuthParser() {
 	if s != nil && s.pluginHost != nil {
 		parser = s.pluginHost
 	}
-	sdkAuth.RegisterPluginAuthParser(parser)
 	if s != nil && s.watcher != nil {
 		s.watcher.SetPluginAuthParser(parser)
 	}
@@ -77,7 +75,6 @@ func (s *Service) syncPluginRuntime(ctx context.Context) {
 
 func (s *Service) syncPluginRuntimeConfig(ctx context.Context) bool {
 	if s == nil {
-		sdkAuth.RegisterPluginAuthParser(nil)
 		return false
 	}
 	s.cfgMu.RLock()
@@ -88,7 +85,6 @@ func (s *Service) syncPluginRuntimeConfig(ctx context.Context) bool {
 
 func (s *Service) syncPluginRuntimeConfigForConfig(ctx context.Context, cfg *config.Config) bool {
 	if s == nil {
-		sdkAuth.RegisterPluginAuthParser(nil)
 		return false
 	}
 	if ctx == nil {
@@ -144,8 +140,7 @@ func (s *Service) syncPluginModelRuntime(ctx context.Context) {
 		includeBaseline:   homeEnabled,
 		includePlugins:    true,
 		forceReplaceAuths: false,
-		auths:             s.coreManager.List(),
-	})
+		auths:             s.coreManager.List()})
 	s.refreshPluginModelRegistrations(ctx)
 	if ctx.Err() != nil {
 		return
@@ -175,8 +170,7 @@ func (s *Service) registerModelsForAuthBatch(ctx context.Context, auths []*corea
 			category: modelRegistrationCategory(authForRegistration),
 			run: func(compatCache *openAICompatibilityRegistrationCache) {
 				s.completeModelRegistrationForAuthWithCache(ctx, authForRegistration, compatCache)
-			},
-		})
+			}})
 	}
 	s.runModelRegistrationTasks(ctx, tasks)
 }
@@ -345,8 +339,7 @@ func (s *Service) registerModelRefreshCallback() {
 						refreshed++
 						refreshedMu.Unlock()
 					}
-				},
-			})
+				}})
 		}
 		s.runModelRegistrationTasks(context.Background(), tasks)
 

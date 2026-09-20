@@ -20,8 +20,7 @@ type codexWebsocketSessionStore struct {
 }
 
 var globalCodexWebsocketSessionStore = &codexWebsocketSessionStore{
-	sessions: make(map[string]*codexWebsocketSession),
-}
+	sessions: make(map[string]*codexWebsocketSession)}
 
 type websocketConnectionCloser struct {
 	conn *websocket.Conn
@@ -468,8 +467,7 @@ func (e *CodexWebsocketsExecutor) getOrCreateSession(sessionID string) *codexWeb
 	}
 	sess := &codexWebsocketSession{
 		sessionID:            sessionID,
-		upstreamDisconnectCh: make(chan error, 1),
-	}
+		upstreamDisconnectCh: make(chan error, 1)}
 	store.sessions[sessionID] = sess
 	return sess
 }

@@ -141,8 +141,7 @@ func codexBuiltinImage15ModelInfo() *ModelInfo {
 		OwnedBy:     "openai",
 		Type:        "openai",
 		DisplayName: "GPT Image 1.5",
-		Version:     codexBuiltinImage15ModelID,
-	}
+		Version:     codexBuiltinImage15ModelID}
 }
 
 func codexBuiltinImageModelInfo() *ModelInfo {
@@ -153,8 +152,7 @@ func codexBuiltinImageModelInfo() *ModelInfo {
 		OwnedBy:     "openai",
 		Type:        "openai",
 		DisplayName: "GPT Image 2",
-		Version:     codexBuiltinImageModelID,
-	}
+		Version:     codexBuiltinImageModelID}
 }
 
 func xaiBuiltinImageModelInfo() *ModelInfo {
@@ -166,8 +164,7 @@ func xaiBuiltinImageModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Image",
 		Name:        xaiBuiltinImageModelID,
-		Description: "xAI Grok image generation model.",
-	}
+		Description: "xAI Grok image generation model."}
 }
 
 func xaiBuiltinImageQualityModelInfo() *ModelInfo {
@@ -179,8 +176,7 @@ func xaiBuiltinImageQualityModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Image Quality",
 		Name:        xaiBuiltinImageQualityModelID,
-		Description: "xAI Grok higher-fidelity image generation model.",
-	}
+		Description: "xAI Grok higher-fidelity image generation model."}
 }
 
 func xaiBuiltinImage20ModelInfo() *ModelInfo {
@@ -192,8 +188,7 @@ func xaiBuiltinImage20ModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Image 2.0",
 		Name:        xaiBuiltinImage20ModelID,
-		Description: "xAI Grok image generation model.",
-	}
+		Description: "xAI Grok image generation model."}
 }
 
 func xaiBuiltinVideoModelInfo() *ModelInfo {
@@ -205,8 +200,7 @@ func xaiBuiltinVideoModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Video",
 		Name:        xaiBuiltinVideoModelID,
-		Description: "xAI Grok video generation model.",
-	}
+		Description: "xAI Grok video generation model."}
 }
 
 func xaiBuiltinVideo15ModelInfo() *ModelInfo {
@@ -218,8 +212,7 @@ func xaiBuiltinVideo15ModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Video 1.5",
 		Name:        xaiBuiltinVideo15ModelID,
-		Description: "xAI Grok video generation model.",
-	}
+		Description: "xAI Grok video generation model."}
 }
 
 func xaiBuiltinVideo15PreviewModelInfo() *ModelInfo {
@@ -231,8 +224,7 @@ func xaiBuiltinVideo15PreviewModelInfo() *ModelInfo {
 		Type:        "xai",
 		DisplayName: "Grok Imagine Video 1.5 Preview",
 		Name:        xaiBuiltinVideo15PreviewID,
-		Description: "Compatibility alias for the xAI Grok video generation model.",
-	}
+		Description: "Compatibility alias for the xAI Grok video generation model."}
 }
 
 func upsertModelInfos(models []*ModelInfo, extras ...*ModelInfo) []*ModelInfo {
@@ -348,8 +340,7 @@ func LookupStaticModelInfo(modelID string) *ModelInfo {
 		data.CodexPro,
 		data.Kimi,
 		data.Antigravity,
-		data.XAI,
-	}
+		data.XAI}
 	for _, models := range allModels {
 		for _, m := range models {
 			if m != nil && m.ID == modelID {

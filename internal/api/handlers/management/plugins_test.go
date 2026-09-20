@@ -58,11 +58,7 @@ func TestConfigReloadGenerationSkipsOlderSnapshot(t *testing.T) {
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: true\nmode: old\n"),
-				},
-			},
-		},
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: true\nmode: old\n")}}}}
 	reloadedModes := make([]string, 0, 1)
 	h.SetConfigReloadHook(func(_ context.Context, cfg *config.Config) {
 		reloadedModes = append(reloadedModes, pluginRawScalarValue(t, cfg.Plugins.Configs["sample"], "mode"))
@@ -95,12 +91,8 @@ func TestListPluginsIncludesScannedAndConfiguredPlugins(t *testing.T) {
 				Enabled: false,
 				Dir:     pluginsDir,
 				Configs: map[string]config.PluginInstanceConfig{
-					"configured-only": {Enabled: &disabled},
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"configured-only": {Enabled: &disabled}}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -121,8 +113,6 @@ func TestListPluginsIncludesScannedAndConfiguredPlugins(t *testing.T) {
 			Registered       bool   `json:"registered"`
 			Enabled          bool   `json:"enabled"`
 			EffectiveEnabled bool   `json:"effective_enabled"`
-			SupportsOAuth    bool   `json:"supports_oauth"`
-			OAuthProvider    string `json:"oauth_provider"`
 			Logo             string `json:"logo"`
 			ConfigFields     []any  `json:"config_fields"`
 			Menus            []any  `json:"menus"`
@@ -153,11 +143,8 @@ func TestListPluginsIncludesScannedAndConfiguredPlugins(t *testing.T) {
 			Registered:       item.Registered,
 			Enabled:          item.Enabled,
 			EffectiveEnabled: item.EffectiveEnabled,
-			Path:             item.Path,
-		}
+			Path:             item.Path}
 		if item.Registered ||
-			item.SupportsOAuth ||
-			item.OAuthProvider != "" ||
 			item.Logo != "" ||
 			len(item.ConfigFields) != 0 ||
 			len(item.Menus) != 0 {
@@ -194,12 +181,8 @@ func TestListPluginsUsesConfiguredStoreVersionWhenFilesCoexist(t *testing.T) {
 				Enabled: true,
 				Dir:     pluginsDir,
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample-provider": pluginConfigFromYAML(t, "enabled: true\nstore:\n  version: 0.1.0\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample-provider": pluginConfigFromYAML(t, "enabled: true\nstore:\n  version: 0.1.0\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -243,12 +226,8 @@ allowed_models:
 options:
   retries: 2
   strict: true
-`),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+`)}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -289,11 +268,8 @@ func TestGetPluginConfigReturnsEmptyObjectForKnownUnconfiguredPlugin(t *testing.
 	h := &Handler{
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
-				Dir: pluginsDir,
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+				Dir: pluginsDir}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -319,8 +295,7 @@ func TestGetPluginConfigReturnsNotFoundForUnknownPlugin(t *testing.T) {
 
 	h := &Handler{
 		cfg:            &config.Config{},
-		configFilePath: writeTestConfigFile(t),
-	}
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -342,12 +317,8 @@ func TestPatchPluginEnabledUpdatesOnlyPluginConfig(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Enabled: false,
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: false\npriority: 2\nmode: safe\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: false\npriority: 2\nmode: safe\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 	reloads, reloadDone := captureConfigReload(h)
 
 	rec := httptest.NewRecorder()
@@ -395,12 +366,8 @@ func TestPatchPluginEnabledReloadSnapshotRawImmutability(t *testing.T) {
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: false\nmode: first\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: false\nmode: first\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 	reloads := make(chan *config.Config, 1)
 	releaseReload := make(chan struct{})
 	reloadDone := make(chan struct{})
@@ -459,12 +426,8 @@ func TestPutPluginConfigReplacesPluginConfig(t *testing.T) {
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: false\nmode: safe\nold: true\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: false\nmode: safe\nold: true\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -494,12 +457,8 @@ func TestPatchPluginConfigMergesAndDeletesFields(t *testing.T) {
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: false\npriority: 3\nmode: safe\nremove: yes\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: false\npriority: 3\nmode: safe\nremove: yes\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -542,12 +501,8 @@ func TestDeletePluginRejectsUnresolvedPluginsDir(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Dir: "~/.cli-proxy-api/plugins",
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample": pluginConfigFromYAML(t, "enabled: false\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample": pluginConfigFromYAML(t, "enabled: false\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
 	c.Params = gin.Params{{Key: "id", Value: "sample"}}
@@ -587,12 +542,8 @@ func TestDeletePluginRemovesDiscoveredFileAndConfig(t *testing.T) {
 				Dir: pluginsDir,
 				Configs: map[string]config.PluginInstanceConfig{
 					"sample": pluginConfigFromYAML(t, "enabled: true\nmode: safe\n"),
-					"keep":   pluginConfigFromYAML(t, "enabled: true\nmode: retained\n"),
-				},
-			},
-		},
-		configFilePath: configPath,
-	}
+					"keep":   pluginConfigFromYAML(t, "enabled: true\nmode: retained\n")}}},
+		configFilePath: configPath}
 	reloads := make(chan *config.Config, 1)
 	releaseReload := make(chan struct{})
 	reloadDone := make(chan struct{})
@@ -686,12 +637,8 @@ func TestDeletePluginUsesConfiguredStoreVersionWhenFilesCoexist(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Dir: pluginsDir,
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample-provider": pluginConfigFromYAML(t, "enabled: true\nstore:\n  version: 0.1.0\n"),
-				},
-			},
-		},
-		configFilePath: writeTestConfigFile(t),
-	}
+					"sample-provider": pluginConfigFromYAML(t, "enabled: true\nstore:\n  version: 0.1.0\n")}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -719,8 +666,7 @@ func TestDeletePluginReturnsNotFoundForUnknownPlugin(t *testing.T) {
 
 	h := &Handler{
 		cfg:            &config.Config{},
-		configFilePath: writeTestConfigFile(t),
-	}
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(rec)
@@ -741,8 +687,7 @@ func TestPluginDisplayFieldsEscapeHTML(t *testing.T) {
 		Name:        `<img src=x onerror=alert(1)>`,
 		Type:        pluginapi.ConfigFieldTypeEnum,
 		EnumValues:  []string{`<fast>`, `safe & sound`},
-		Description: `"quoted" 'single' <b>mode</b>`,
-	}})
+		Description: `"quoted" 'single' <b>mode</b>`}})
 	if len(fields) != 1 {
 		t.Fatalf("fields len = %d, want 1", len(fields))
 	}
@@ -759,8 +704,7 @@ func TestPluginDisplayFieldsEscapeHTML(t *testing.T) {
 	menus := pluginMenus([]pluginhost.RegisteredPluginMenu{{
 		Path:        `/v0/resource/plugins/sample/<status>`,
 		Menu:        `<b>Status</b>`,
-		Description: `Shows <script>alert(1)</script>.`,
-	}})
+		Description: `Shows <script>alert(1)</script>.`}})
 	if len(menus) != 1 {
 		t.Fatalf("menus len = %d, want 1", len(menus))
 	}
@@ -775,8 +719,7 @@ func TestPluginDisplayFieldsEscapeHTML(t *testing.T) {
 		Version:          `1.0.0&evil=true`,
 		Author:           `"attacker"`,
 		GitHubRepository: `https://example.com/repo?x=<script>`,
-		Logo:             `<svg onload=alert(1)>`,
-	})
+		Logo:             `<svg onload=alert(1)>`})
 	if meta.Name != html.EscapeString(`<script>alert(1)</script>`) ||
 		meta.Version != html.EscapeString(`1.0.0&evil=true`) ||
 		meta.Author != html.EscapeString(`"attacker"`) ||

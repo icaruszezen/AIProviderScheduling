@@ -115,8 +115,7 @@ func New() *Host {
 		streams:                newStreamBridge(),
 		httpStreams:            newHostHTTPStreamBridge(),
 		modelStreams:           newModelStreamBridge(),
-		callbackContexts:       newCallbackContextRegistry(),
-	}
+		callbackContexts:       newCallbackContextRegistry()}
 	h.snapshot.Store(emptySnapshot())
 	return h
 }
@@ -125,6 +124,15 @@ func NewForTest(loader pluginLoader) *Host {
 	h := New()
 	h.loader = loader
 	return h
+}
+
+func (h *Host) SetAuthManager(manager *coreauth.Manager) {
+	if h == nil {
+		return
+	}
+	h.mu.Lock()
+	h.authManager = manager
+	h.mu.Unlock()
 }
 
 func (h *Host) SetModelExecutor(executor modelExecutor) {
@@ -383,8 +391,7 @@ func (h *Host) ApplyConfig(ctx context.Context, cfg *config.Config) {
 			version:  file.Version,
 			priority: item.Priority,
 			meta:     plugin.Metadata,
-			plugin:   plugin,
-		})
+			plugin:   plugin})
 		loadedFiles = append(loadedFiles, file)
 	}
 
@@ -429,8 +436,7 @@ func (h *Host) startPluginLoad(ctx context.Context, file pluginFile, item runtim
 			id:      file.ID,
 			path:    file.Path,
 			version: file.Version,
-			client:  newGuardedPluginClient(client),
-		}
+			client:  newGuardedPluginClient(client)}
 		plugin, okCall := h.callRegister(ctx, loaded, item)
 		request.result <- pluginLoadResult{loaded: loaded, plugin: plugin, initialized: okCall}
 	}()
@@ -577,8 +583,7 @@ func (h *Host) withLoadedPluginFallbacks(files []pluginFile, items map[string]ru
 		files = append(files, pluginFile{
 			ID:      id,
 			Path:    lp.path,
-			Version: strings.TrimSpace(lp.version),
-		})
+			Version: strings.TrimSpace(lp.version)})
 		selected[id] = struct{}{}
 	}
 	return files
@@ -670,8 +675,7 @@ func (h *Host) ShutdownAllContext(ctx context.Context) {
 			name:    lp.name,
 			path:    lp.path,
 			version: lp.version,
-			client:  lp.client,
-		})
+			client:  lp.client})
 	}
 	for _, retiredPlugins := range h.retired {
 		for _, lp := range retiredPlugins {
@@ -683,8 +687,7 @@ func (h *Host) ShutdownAllContext(ctx context.Context) {
 				name:    lp.name,
 				path:    lp.path,
 				version: lp.version,
-				client:  lp.client,
-			})
+				client:  lp.client})
 		}
 	}
 	h.loaded = make(map[string]*loadedPlugin)
@@ -895,8 +898,7 @@ func quiesceUnsupported(errQuiesce error) bool {
 		"unsupported method",
 		"method unsupported",
 		"method is not supported",
-		"method not supported",
-	} {
+		"method not supported"} {
 		if strings.Contains(message, indication) {
 			return true
 		}
@@ -933,12 +935,10 @@ func (h *Host) rollbackReplacement(lp *loadedPlugin, item runtimeItemConfig) (ca
 			version:  lp.version,
 			priority: item.Priority,
 			meta:     plugin.Metadata,
-			plugin:   plugin,
-		}, pluginFile{
+			plugin:   plugin}, pluginFile{
 			ID:      lp.id,
 			Path:    lp.path,
-			Version: lp.version,
-		}, true
+			Version: lp.version}, true
 }
 
 func (h *Host) callRegister(ctx context.Context, lp *loadedPlugin, item runtimeItemConfig) (pluginapi.Plugin, bool) {

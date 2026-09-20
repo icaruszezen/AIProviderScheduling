@@ -89,15 +89,13 @@ func newClaudeCancellationTestManager(t *testing.T, executor *claudeCancellation
 	}
 	model := "claude-cancel-model-" + uuid.NewString()
 	auth := &Auth{
-		ID:         "claude-cancel-auth-" + uuid.NewString(),
-		Provider:   "claude",
-		Attributes: map[string]string{"auth_kind": "oauth"},
+		ID:       "claude-cancel-auth-" + uuid.NewString(),
+		Provider: "claude",
+		Attributes: map[string]string{
+			AttributeAuthKind: AuthKindAPIKey,
+			AttributeAPIKey:   "access-token"},
 		Metadata: map[string]any{
-			"access_token":  "access-token",
-			"refresh_token": "refresh-token",
-			"request_retry": float64(0),
-		},
-	}
+			"request_retry": float64(0)}}
 	manager := NewManager(nil, nil, hook)
 	manager.SetRetryConfig(0, 0, 0)
 	manager.RegisterExecutor(executor)
@@ -133,23 +131,19 @@ func TestManagerClaudePrepareCancellationStopsWithoutCooldown(t *testing.T) {
 			run: func(ctx context.Context, manager *Manager, model string) error {
 				_, errExecute := manager.Execute(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count tokens",
 			run: func(ctx context.Context, manager *Manager, model string) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "stream",
 			run: func(ctx context.Context, manager *Manager, model string) error {
 				_, errStream := manager.ExecuteStream(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{Stream: true})
 				return errStream
-			},
-		},
-	}
+			}}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
@@ -175,84 +169,13 @@ func TestManagerClaudePrepareCancellationStopsWithoutCooldown(t *testing.T) {
 	}
 }
 
-func TestManagerClaudeRefreshCancellationStopsWithoutCooldown(t *testing.T) {
-	unauthorized := &Error{HTTPStatus: http.StatusUnauthorized, Message: "unauthorized"}
-	tests := []struct {
-		name      string
-		configure func(*claudeCancellationTestExecutor)
-		run       func(context.Context, *Manager, string) error
-	}{
-		{
-			name: "execute",
-			configure: func(executor *claudeCancellationTestExecutor) {
-				executor.executeFn = func(context.Context, *Auth) (cliproxyexecutor.Response, error) {
-					return cliproxyexecutor.Response{}, unauthorized
-				}
-			},
-			run: func(ctx context.Context, manager *Manager, model string) error {
-				_, errExecute := manager.Execute(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
-				return errExecute
-			},
-		},
-		{
-			name: "count tokens",
-			configure: func(executor *claudeCancellationTestExecutor) {
-				executor.countFn = func(context.Context, *Auth) (cliproxyexecutor.Response, error) {
-					return cliproxyexecutor.Response{}, unauthorized
-				}
-			},
-			run: func(ctx context.Context, manager *Manager, model string) error {
-				_, errCount := manager.ExecuteCount(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
-				return errCount
-			},
-		},
-		{
-			name: "stream",
-			configure: func(executor *claudeCancellationTestExecutor) {
-				executor.streamFn = func(context.Context, *Auth) (*cliproxyexecutor.StreamResult, error) {
-					return nil, unauthorized
-				}
-			},
-			run: func(ctx context.Context, manager *Manager, model string) error {
-				_, errStream := manager.ExecuteStream(ctx, []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{Stream: true})
-				return errStream
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
-			executor := &claudeCancellationTestExecutor{}
-			tt.configure(executor)
-			executor.refreshFn = func(ctx context.Context, _ *Auth) (*Auth, error) {
-				cancel()
-				return nil, ctx.Err()
-			}
-			manager, auth, model := newClaudeCancellationTestManager(t, executor, nil)
-
-			errExecute := tt.run(ctx, manager, model)
-			if !errors.Is(errExecute, context.Canceled) {
-				t.Fatalf("error = %v, want context.Canceled", errExecute)
-			}
-			if got := executor.refreshCalls.Load(); got != 1 {
-				t.Fatalf("Refresh calls = %d, want 1", got)
-			}
-			if upstreamCalls := executor.executeCalls.Load() + executor.countCalls.Load() + executor.streamCalls.Load(); upstreamCalls != 1 {
-				t.Fatalf("upstream calls = %d, want 1", upstreamCalls)
-			}
-			requireClaudeCancellationNeutral(t, manager, auth.ID, model)
-		})
-	}
-}
-
 func TestManagerClaudeStreamTailCancellationIsAvailabilityNeutral(t *testing.T) {
 	source := make(chan cliproxyexecutor.StreamChunk, 1)
 	source <- cliproxyexecutor.StreamChunk{Payload: []byte("first")}
 	executor := &claudeCancellationTestExecutor{
 		streamFn: func(context.Context, *Auth) (*cliproxyexecutor.StreamResult, error) {
 			return &cliproxyexecutor.StreamResult{Chunks: source}, nil
-		},
-	}
+		}}
 	hook := &resultCaptureHook{}
 	manager, auth, model := newClaudeCancellationTestManager(t, executor, hook)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -284,8 +207,7 @@ func TestManagerClaudeUpstreamFailureStillCoolsCredential(t *testing.T) {
 	executor := &claudeCancellationTestExecutor{
 		executeFn: func(context.Context, *Auth) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, &Error{HTTPStatus: http.StatusInternalServerError, Message: "upstream failure"}
-		},
-	}
+		}}
 	manager, auth, model := newClaudeCancellationTestManager(t, executor, nil)
 
 	_, errExecute := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
@@ -306,9 +228,8 @@ func TestClaudeRequestCancellationDoesNotChangeOtherProviders(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	tests := []*Auth{
-		{Provider: "codex", Attributes: map[string]string{"auth_kind": "oauth"}},
-		{Provider: "claude", Attributes: map[string]string{"auth_kind": "api_key"}},
-	}
+		{Provider: "codex", Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "codex-key"}},
+		{Provider: "claude", Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "claude-key"}}}
 	for _, auth := range tests {
 		if errCancel := claudeOAuthRequestCancellation(ctx, auth, context.Canceled); errCancel != nil {
 			t.Fatalf("auth %#v was classified as Claude OAuth cancellation: %v", auth.Attributes, errCancel)

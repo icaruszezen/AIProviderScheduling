@@ -58,15 +58,13 @@ func NewManager(opts Options) *Manager {
 			WriteBufferSize: 1024,
 			CheckOrigin: func(r *http.Request) bool {
 				return true
-			},
-		},
+			}},
 		providerFactory: opts.ProviderFactory,
 		onConnected:     opts.OnConnected,
 		onDisconnected:  opts.OnDisconnected,
 		logDebugf:       opts.LogDebugf,
 		logInfof:        opts.LogInfof,
-		logWarnf:        opts.LogWarnf,
-	}
+		logWarnf:        opts.LogWarnf}
 	if mgr.logDebugf == nil {
 		mgr.logDebugf = func(string, ...any) {}
 	}

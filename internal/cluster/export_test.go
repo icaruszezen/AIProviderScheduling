@@ -13,7 +13,6 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Host = "127.0.0.1"
 	cfg.Port = 8317
-	cfg.AuthDir = "~/.cli-proxy-api"
 	cfg.APIKeys = []string{"client-key-1"}
 	cfg.GeminiKey = []config.GeminiKey{{APIKey: "gemini-secret"}}
 	cfg.RemoteManagement.SecretKey = "mgmt-secret"
@@ -22,8 +21,7 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 		Token:        "super-secret-cluster-token",
 		NodeID:       "master-1",
 		MasterURL:    "http://should-not-export",
-		AdvertiseURL: "http://also-local",
-	}
+		AdvertiseURL: "http://also-local"}
 	cfg.Plugins.Dir = "/opt/local-plugins"
 	cfg.Plugins.Enabled = true
 
@@ -72,7 +70,6 @@ func TestHashConvergesAcrossNodes(t *testing.T) {
 	masterPath := filepath.Join(t.TempDir(), "config.yaml")
 	masterYAML := "host: 0.0.0.0\n" +
 		"port: 8317\n" +
-		"auth-dir: /master/auths\n" +
 		"request-retry: 4\n" +
 		"api-keys:\n  - client-b\n  - client-a\n" +
 		"gemini-api-key:\n" +
@@ -102,7 +99,6 @@ func TestHashConvergesAcrossNodes(t *testing.T) {
 	slavePath := filepath.Join(t.TempDir(), "config.yaml")
 	slaveYAML := "host: 10.0.0.9\n" +
 		"port: 9000\n" +
-		"auth-dir: /slave/auths\n" +
 		"plugins:\n  dir: /slave/plugins\n" +
 		"cluster:\n  role: slave\n  node-id: slave-1\n  master-url: http://master:8317\n  token: " +
 		strings.Repeat("s", config.MinClusterTokenLength) + "\n"
@@ -147,7 +143,6 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	local := &config.Config{}
 	local.Host = "10.0.0.8"
 	local.Port = 9000
-	local.AuthDir = "/var/lib/cpa/auths"
 	local.APIKeys = []string{"old-key"}
 	local.RemoteManagement.AllowRemote = false
 	local.RemoteManagement.SecretKey = "local-mgmt"
@@ -155,14 +150,12 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 		Role:      config.ClusterRoleSlave,
 		Token:     "shared-token",
 		NodeID:    "slave-1",
-		MasterURL: "http://master:8317",
-	}
+		MasterURL: "http://master:8317"}
 	local.Plugins.Dir = "/slave/plugins"
 
 	incoming := &config.Config{}
 	incoming.Host = "should-ignore"
 	incoming.Port = 1
-	incoming.AuthDir = "/should/ignore"
 	incoming.APIKeys = []string{"synced-key"}
 	incoming.GeminiKey = []config.GeminiKey{{APIKey: "synced-gemini"}}
 	incoming.RequestRetry = 3
@@ -173,9 +166,6 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	merged := MergeLocal(local, incoming)
 	if merged.Host != "10.0.0.8" || merged.Port != 9000 {
 		t.Fatalf("host/port overwritten: %s:%d", merged.Host, merged.Port)
-	}
-	if merged.AuthDir != "/var/lib/cpa/auths" {
-		t.Fatalf("auth-dir overwritten: %s", merged.AuthDir)
 	}
 	if merged.RemoteManagement.SecretKey != "local-mgmt" {
 		t.Fatal("remote-management overwritten")
@@ -208,19 +198,17 @@ func TestApplyDoesNotTouchAuthFiles(t *testing.T) {
 	if err := os.WriteFile(authPath, []byte(`{"email":"local@example.com"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(configPath, []byte("host: 10.0.0.2\nport: 8317\nauth-dir: "+authDir+"\n"), 0o600); err != nil {
+	if err := os.WriteFile(configPath, []byte("host: 10.0.0.2\nport: 8317\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
 	local := &config.Config{}
 	local.Host = "10.0.0.2"
 	local.Port = 8317
-	local.AuthDir = authDir
 	local.Cluster = config.ClusterConfig{Role: config.ClusterRoleSlave, Token: "tok", NodeID: "s1", MasterURL: "http://127.0.0.1:1"}
 
 	incoming := &config.Config{}
 	incoming.APIKeys = []string{"from-master"}
-	incoming.AuthDir = "/tmp/should-not-use"
 	merged := MergeLocal(local, incoming)
 	if err := config.SaveConfigPreserveComments(configPath, merged); err != nil {
 		t.Fatalf("save: %v", err)

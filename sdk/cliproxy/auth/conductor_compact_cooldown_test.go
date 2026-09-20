@@ -64,8 +64,7 @@ func (e *compactTestExecutor) HttpRequest(context.Context, *Auth, *http.Request)
 
 func TestManager_ResponsesCompact_TransientFailure_AvailabilityNeutral(t *testing.T) {
 	executor := &compactTestExecutor{
-		compactErr: compactTestStatusError{code: http.StatusInternalServerError, msg: "upstream compact 500"},
-	}
+		compactErr: compactTestStatusError{code: http.StatusInternalServerError, msg: "upstream compact 500"}}
 	m := NewManager(nil, nil, nil)
 	m.RegisterExecutor(executor)
 
@@ -132,8 +131,7 @@ func TestManager_ResponsesCompact_TransientFailure_AvailabilityNeutral(t *testin
 
 func TestManager_ResponsesCompact_RequestFault_StopsFallback(t *testing.T) {
 	executor := &compactTestExecutor{
-		compactErr: compactTestStatusError{code: http.StatusNotFound, msg: "404 endpoint not found"},
-	}
+		compactErr: compactTestStatusError{code: http.StatusNotFound, msg: "404 endpoint not found"}}
 	m := NewManager(nil, nil, nil)
 	m.RegisterExecutor(executor)
 
@@ -180,8 +178,7 @@ func TestManager_ResponsesCompact_RequestFault_StopsFallback(t *testing.T) {
 
 func TestManager_ResponsesCompact_Unauthorized_CoolsCredential(t *testing.T) {
 	executor := &compactTestExecutor{
-		compactErr: compactTestStatusError{code: http.StatusUnauthorized, msg: "401 unauthorized"},
-	}
+		compactErr: compactTestStatusError{code: http.StatusUnauthorized, msg: "401 unauthorized"}}
 	m := NewManager(nil, nil, nil)
 	m.RegisterExecutor(executor)
 
@@ -221,8 +218,7 @@ func TestManager_ResponsesCompact_Unauthorized_CoolsCredential(t *testing.T) {
 
 func TestManager_ResponsesCompact_Forbidden_CoolsCredential(t *testing.T) {
 	executor := &compactTestExecutor{
-		compactErr: compactTestStatusError{code: http.StatusForbidden, msg: "403 forbidden"},
-	}
+		compactErr: compactTestStatusError{code: http.StatusForbidden, msg: "403 forbidden"}}
 	m := NewManager(nil, nil, nil)
 	m.RegisterExecutor(executor)
 
@@ -262,8 +258,7 @@ func TestManager_ResponsesCompact_Forbidden_CoolsCredential(t *testing.T) {
 
 func TestManager_ResponsesCompact_Quota429_CoolsCredential(t *testing.T) {
 	executor := &compactTestExecutor{
-		compactErr: compactTestStatusError{code: http.StatusTooManyRequests, msg: `{"error":{"type":"usage_limit_reached","message":"quota exceeded"}}`},
-	}
+		compactErr: compactTestStatusError{code: http.StatusTooManyRequests, msg: `{"error":{"type":"usage_limit_reached","message":"quota exceeded"}}`}}
 	m := NewManager(nil, nil, nil)
 	m.RegisterExecutor(executor)
 

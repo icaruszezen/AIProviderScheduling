@@ -9,8 +9,7 @@ import (
 
 func pluginLogFields(id, name, version, path string) log.Fields {
 	fields := log.Fields{
-		"plugin_id": strings.TrimSpace(id),
-	}
+		"plugin_id": strings.TrimSpace(id)}
 	if name = strings.TrimSpace(name); name != "" {
 		fields["plugin_name"] = name
 	}
@@ -29,8 +28,7 @@ func pluginLogFieldsFromMetadata(id string, meta pluginapi.Metadata, path string
 
 func pluginHotReloadLogFields(id, activeVersion, activePath, retiredVersion, retiredPath string) log.Fields {
 	fields := log.Fields{
-		"plugin_id": strings.TrimSpace(id),
-	}
+		"plugin_id": strings.TrimSpace(id)}
 	if activeVersion = strings.TrimSpace(activeVersion); activeVersion != "" {
 		fields["active_version"] = activeVersion
 	}

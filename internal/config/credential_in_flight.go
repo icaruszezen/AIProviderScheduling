@@ -38,8 +38,7 @@ func DefaultCredentialInFlightConfig() CredentialInFlightConfig {
 		MaxAggregateGroups: DefaultInFlightMaxAggregateGroups,
 		MaxDetails:         DefaultInFlightMaxDetails,
 		MaxStringBytes:     DefaultInFlightMaxStringBytes,
-		StagingRetention:   "1m",
-	}
+		StagingRetention:   "1m"}
 }
 
 // Durations parses and validates the in-flight observation durations.

@@ -139,8 +139,7 @@ func TestReleaseFlusherDoesNotLoseASequenceMarkedDuringSend(t *testing.T) {
 	sender := &blockingReleaseSender{
 		started: make(chan struct{}),
 		release: make(chan struct{}),
-		frames:  make(chan ConcurrencyReleaseFrame, 4),
-	}
+		frames:  make(chan ConcurrencyReleaseFrame, 4)}
 	flusher := newReleaseFlusher(time.Millisecond, 10*time.Millisecond, sender.Send)
 	group := executionregistry.ReleaseGroup{CredentialID: "cred-1", Model: "gpt"}
 	flusher.MarkDirty(group, 1)
@@ -175,8 +174,7 @@ func TestReleaseFlusherUsesCurrentLimiterConfig(t *testing.T) {
 	flusher.SetConfigProvider(func() internalconfig.CredentialConcurrencyConfig {
 		return internalconfig.CredentialConcurrencyConfig{
 			ReleaseFlushInterval: 5 * time.Millisecond,
-			ReleaseMaxBackoff:    25 * time.Millisecond,
-		}
+			ReleaseMaxBackoff:    25 * time.Millisecond}
 	})
 	if got := flusher.timings(); got.flushInterval != 5*time.Millisecond || got.maxBackoff != 25*time.Millisecond {
 		t.Fatalf("timings = %#v", got)

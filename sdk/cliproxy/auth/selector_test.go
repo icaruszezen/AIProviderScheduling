@@ -24,8 +24,7 @@ func TestFillFirstSelectorPick_Deterministic(t *testing.T) {
 	auths := []*Auth{
 		{ID: "b"},
 		{ID: "a"},
-		{ID: "c"},
-	}
+		{ID: "c"}}
 
 	got, err := selector.Pick(context.Background(), "gemini", "", cliproxyexecutor.Options{}, auths)
 	if err != nil {
@@ -46,8 +45,7 @@ func TestRoundRobinSelectorPick_CyclesDeterministic(t *testing.T) {
 	auths := []*Auth{
 		{ID: "b"},
 		{ID: "a"},
-		{ID: "c"},
-	}
+		{ID: "c"}}
 
 	want := []string{"a", "b", "c", "a", "b"}
 	for i, id := range want {
@@ -72,8 +70,7 @@ func TestWeightedRoundRobinSelectorPick_DistributesAndSkipsNonPositiveWeights(t 
 		{ID: "a", Attributes: map[string]string{AttributeWeight: "5"}},
 		{ID: "b", Attributes: map[string]string{AttributeWeight: "3"}},
 		{ID: "c", Attributes: map[string]string{AttributeWeight: "2"}},
-		{ID: "disabled-by-weight", Attributes: map[string]string{AttributeWeight: "0"}},
-	}
+		{ID: "disabled-by-weight", Attributes: map[string]string{AttributeWeight: "0"}}}
 
 	counts := make(map[string]int)
 	for index := 0; index < 100; index++ {
@@ -128,8 +125,7 @@ func TestWeightedRoundRobinSelectorPick_RebalancesWhenHighestWeightUnavailable(t
 	auths := []*Auth{
 		{ID: "a", Disabled: true, Attributes: map[string]string{AttributeWeight: "5"}},
 		{ID: "b", Attributes: map[string]string{AttributeWeight: "3"}},
-		{ID: "c", Attributes: map[string]string{AttributeWeight: "2"}},
-	}
+		{ID: "c", Attributes: map[string]string{AttributeWeight: "2"}}}
 	counts := make(map[string]int)
 	for index := 0; index < 100; index++ {
 		got, errPick := selector.Pick(context.Background(), "gemini", "model", cliproxyexecutor.Options{}, auths)
@@ -152,12 +148,9 @@ func TestWeightedRoundRobinSelectorPick_SkipsUnavailableAndQuotaExceededWithoutR
 		{
 			ID: "model-unavailable",
 			ModelStates: map[string]*ModelState{
-				model: {Unavailable: true},
-			},
-		},
+				model: {Unavailable: true}}},
 		{ID: "quota-exceeded", Quota: QuotaState{Exceeded: true}},
-		{ID: "available"},
-	}
+		{ID: "available"}}
 
 	gotModel, errModel := selector.Pick(context.Background(), "gemini", model, cliproxyexecutor.Options{}, auths)
 	if errModel != nil || gotModel == nil || gotModel.ID != "available" {
@@ -182,8 +175,7 @@ func TestAuthWeight_MetadataFallbackAndAttributePrecedence(t *testing.T) {
 	}
 	if got := authWeight(&Auth{
 		Attributes: map[string]string{AttributeWeight: "3"},
-		Metadata:   map[string]any{AttributeWeight: float64(7)},
-	}); got != 3 {
+		Metadata:   map[string]any{AttributeWeight: float64(7)}}); got != 3 {
 		t.Fatalf("authWeight(attribute and metadata) = %d, want attribute weight 3", got)
 	}
 }
@@ -338,8 +330,7 @@ func TestRoundRobinSelectorPick_PriorityBuckets(t *testing.T) {
 	auths := []*Auth{
 		{ID: "c", Attributes: map[string]string{"priority": "0"}},
 		{ID: "a", Attributes: map[string]string{"priority": "10"}},
-		{ID: "b", Attributes: map[string]string{"priority": "10"}},
-	}
+		{ID: "b", Attributes: map[string]string{"priority": "10"}}}
 
 	want := []string{"a", "b", "a", "b"}
 	for i, id := range want {
@@ -375,11 +366,7 @@ func TestFillFirstSelectorPick_PriorityFallbackCooldown(t *testing.T) {
 				Unavailable:    true,
 				NextRetryAfter: now.Add(30 * time.Minute),
 				Quota: QuotaState{
-					Exceeded: true,
-				},
-			},
-		},
-	}
+					Exceeded: true}}}}
 	low := &Auth{ID: "low", Attributes: map[string]string{"priority": "0"}}
 
 	got, err := selector.Pick(context.Background(), "mixed", model, cliproxyexecutor.Options{}, []*Auth{high, low})
@@ -399,8 +386,7 @@ func TestRoundRobinSelectorPick_Concurrent(t *testing.T) {
 	auths := []*Auth{
 		{ID: "b"},
 		{ID: "a"},
-		{ID: "c"},
-	}
+		{ID: "c"}}
 
 	start := make(chan struct{})
 	var wg sync.WaitGroup
@@ -466,11 +452,7 @@ func TestSelectorPick_AllCooldownReturnsModelCooldownError(t *testing.T) {
 					NextRetryAfter: next,
 					Quota: QuotaState{
 						Exceeded:      true,
-						NextRecoverAt: next,
-					},
-				},
-			},
-		},
+						NextRecoverAt: next}}}},
 		{
 			ID: "b",
 			ModelStates: map[string]*ModelState{
@@ -480,12 +462,7 @@ func TestSelectorPick_AllCooldownReturnsModelCooldownError(t *testing.T) {
 					NextRetryAfter: next,
 					Quota: QuotaState{
 						Exceeded:      true,
-						NextRecoverAt: next,
-					},
-				},
-			},
-		},
-	}
+						NextRecoverAt: next}}}}}
 
 	t.Run("mixed provider redacts provider field", func(t *testing.T) {
 		t.Parallel()
@@ -565,11 +542,7 @@ func TestIsAuthBlockedForModel_UnavailableWithoutNextRetryIsBlocked(t *testing.T
 				Status:      StatusActive,
 				Unavailable: true,
 				Quota: QuotaState{
-					Exceeded: true,
-				},
-			},
-		},
-	}
+					Exceeded: true}}}}
 
 	blocked, reason, next := isAuthBlockedForModel(auth, model, now)
 	if !blocked {
@@ -605,9 +578,7 @@ func TestIsAuthBlockedForModel_ExpiredRecoveryIsAvailable(t *testing.T) {
 		NextRetryAfter: now.Add(-time.Minute),
 		Quota: QuotaState{
 			Exceeded:      true,
-			NextRecoverAt: now.Add(-time.Second),
-		},
-	}
+			NextRecoverAt: now.Add(-time.Second)}}
 	blocked, reason, next := isAuthBlockedForModel(auth, "", now)
 	if blocked || reason != blockReasonNone || !next.IsZero() {
 		t.Fatalf("isAuthBlockedForModel() = %v, %v, %v; want false, none, zero", blocked, reason, next)
@@ -632,15 +603,10 @@ func TestFillFirstSelectorPick_ThinkingSuffixFallsBackToBaseModelState(t *testin
 				Unavailable:    true,
 				NextRetryAfter: now.Add(30 * time.Minute),
 				Quota: QuotaState{
-					Exceeded: true,
-				},
-			},
-		},
-	}
+					Exceeded: true}}}}
 	low := &Auth{
 		ID:         "low",
-		Attributes: map[string]string{"priority": "0"},
-	}
+		Attributes: map[string]string{"priority": "0"}}
 
 	got, err := selector.Pick(context.Background(), "mixed", requestedModel, cliproxyexecutor.Options{}, []*Auth{high, low})
 	if err != nil {
@@ -668,20 +634,14 @@ func TestIsAuthBlockedForModel_ThinkingSuffixStatesBlockCanonicalModel(t *testin
 				NextRetryAfter: now.Add(time.Hour),
 				Quota: QuotaState{
 					Exceeded:      true,
-					NextRecoverAt: now.Add(time.Hour),
-				},
-			},
+					NextRecoverAt: now.Add(time.Hour)}},
 			"test-model(low)": {
 				Status:         StatusError,
 				Unavailable:    true,
 				NextRetryAfter: laterRetry,
 				Quota: QuotaState{
 					Exceeded:      true,
-					NextRecoverAt: laterRetry,
-				},
-			},
-		},
-	}
+					NextRecoverAt: laterRetry}}}}
 
 	for _, model := range []string{"test-model", "test-model(medium)", "test-model(low)"} {
 		blocked, reason, next := isAuthBlockedForModel(auth, model, now)
@@ -697,8 +657,7 @@ func TestRoundRobinSelectorPick_ThinkingSuffixSharesCursor(t *testing.T) {
 	selector := &RoundRobinSelector{}
 	auths := []*Auth{
 		{ID: "b"},
-		{ID: "a"},
-	}
+		{ID: "a"}}
 
 	first, err := selector.Pick(context.Background(), "gemini", "test-model(high)", cliproxyexecutor.Options{}, auths)
 	if err != nil {
@@ -810,8 +769,7 @@ func TestSuccessorIndex_WrapsAndSkipsFilteredCandidates(t *testing.T) {
 		{name: "resumes after previous pick", lastID: "aaa", want: 1},
 		{name: "resumes after filtered-out pick", lastID: "bbb", want: 1},
 		{name: "wraps at the end of the ring", lastID: "eee", want: 0},
-		{name: "wraps for removed trailing pick", lastID: "zzz", want: 0},
-	}
+		{name: "wraps for removed trailing pick", lastID: "zzz", want: 0}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := successorIndex(available, tt.lastID); got != tt.want {
@@ -856,39 +814,31 @@ func TestExtractSessionID(t *testing.T) {
 		{
 			name:    "valid_claude_code_format",
 			payload: `{"metadata":{"user_id":"user_3f221fe75652cf9a89a31647f16274bb8036a9b85ac4dc226a4df0efec8dc04d_account__session_ac980658-63bd-4fb3-97ba-8da64cb1e344"}}`,
-			want:    "claude:ac980658-63bd-4fb3-97ba-8da64cb1e344",
-		},
+			want:    "claude:ac980658-63bd-4fb3-97ba-8da64cb1e344"},
 		{
 			name:    "json_user_id_with_session_id",
 			payload: `{"metadata":{"user_id":"{\"device_id\":\"be82c3aee1e0c2d74535bacc85f9f559228f02dd8a17298cf522b71e6c375714\",\"account_uuid\":\"\",\"session_id\":\"e26d4046-0f88-4b09-bb5b-f863ab5fb24e\"}"}}`,
-			want:    "claude:e26d4046-0f88-4b09-bb5b-f863ab5fb24e",
-		},
+			want:    "claude:e26d4046-0f88-4b09-bb5b-f863ab5fb24e"},
 		{
 			name:    "json_user_id_without_session_id",
 			payload: `{"metadata":{"user_id":"{\"device_id\":\"abc123\"}"}}`,
-			want:    `user:{"device_id":"abc123"}`,
-		},
+			want:    `user:{"device_id":"abc123"}`},
 		{
 			name:    "no_session_but_user_id",
 			payload: `{"metadata":{"user_id":"user_abc123"}}`,
-			want:    "user:user_abc123",
-		},
+			want:    "user:user_abc123"},
 		{
 			name:    "conversation_id",
 			payload: `{"conversation_id":"conv-12345"}`,
-			want:    "conv:conv-12345",
-		},
+			want:    "conv:conv-12345"},
 		{
 			name:    "no_metadata",
 			payload: `{"model":"claude-3"}`,
-			want:    "",
-		},
+			want:    ""},
 		{
 			name:    "empty_payload",
 			payload: ``,
-			want:    "",
-		},
-	}
+			want:    ""}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -909,8 +859,7 @@ func TestSessionAffinitySelector_SameSessionSameAuth(t *testing.T) {
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	// Use valid UUID format for session ID
 	payload := []byte(`{"metadata":{"user_id":"user_xxx_account__session_ac980658-63bd-4fb3-97ba-8da64cb1e344"}}`)
@@ -947,8 +896,7 @@ func TestSessionAffinitySelector_ThinkingSuffixVariantsPreserveBindingAndRelease
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	payload := []byte(`{"metadata":{"user_id":"user_xxx_account__session_ac980658-63bd-4fb3-97ba-8da64cb1e344"}}`)
 	opts := cliproxyexecutor.Options{OriginalRequest: payload}
@@ -984,17 +932,14 @@ func TestSessionAffinitySelector_ThinkingSuffixVariantsPreserveBindingAndRelease
 		OriginalRequest: payload,
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "anthropic",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-sonnet-4-5(high)",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-sonnet-4-5(high)"}}
 	selector.OnResult(Result{
 		Provider: "anthropic",
 		Model:    "claude-sonnet-4-5(high)",
 		AuthID:   first.ID,
 		Success:  false,
 		Error:    &Error{Code: "rate_limited", Message: "rate limited"},
-		Options:  optsWithMetadata,
-	})
+		Options:  optsWithMetadata})
 
 	// After release, next pick should reselect using fallback selector
 	next, errNext := selector.Pick(context.Background(), "anthropic", "claude-sonnet-4-5", opts, auths)
@@ -1084,8 +1029,7 @@ func TestSessionAffinitySelector_NoSessionFallback(t *testing.T) {
 	auths := []*Auth{
 		{ID: "auth-b"},
 		{ID: "auth-a"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	// No session in payload, should fallback to FillFirstSelector (picks "auth-a" after sorting)
 	payload := []byte(`{"model":"claude-3"}`)
@@ -1109,8 +1053,7 @@ func TestSessionAffinitySelector_DifferentSessionsDifferentAuths(t *testing.T) {
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	// Use valid UUID format for session IDs
 	session1 := []byte(`{"metadata":{"user_id":"user_xxx_account__session_11111111-1111-1111-1111-111111111111"}}`)
@@ -1142,15 +1085,13 @@ func TestSessionAffinitySelector_FailoverWhenAuthUnavailable(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	payload := []byte(`{"metadata":{"user_id":"user_xxx_account__session_failover-test-uuid"}}`)
 	opts := cliproxyexecutor.Options{OriginalRequest: payload}
@@ -1362,8 +1303,7 @@ func TestExtractSessionID_DerivedSessionAndExplicitPriority(t *testing.T) {
 
 	executionMetadata := map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "execution-session",
-		cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:derived-root",
-	}
+		cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:derived-root"}
 	if got := ExtractSessionID(nil, payload, executionMetadata); got != "execution:execution-session" {
 		t.Fatalf("ExtractSessionID() = %q, want explicit execution session", got)
 	}
@@ -1407,7 +1347,7 @@ func TestExtractSessionID_MessageHashFallback(t *testing.T) {
 	multiTurnPayload := []byte(`{"messages":[
 		{"role":"user","content":"Hello world"},
 		{"role":"assistant","content":"Hi! How can I help?"},
-		{"role":"user","content":"Tell me a joke"}
+		{"role":"user","content":"Tell me a joke",}
 	]}`)
 	fullHash := ExtractSessionID(nil, multiTurnPayload, nil)
 	if fullHash == "" {
@@ -1452,7 +1392,7 @@ func TestExtractSessionID_ClaudeAPITopLevelSystem(t *testing.T) {
 		"messages": [
 			{"role": "user", "content": "Hello"},
 			{"role": "assistant", "content": "Hi!"},
-			{"role": "user", "content": "Help me"}
+			{"role": "user", "content": "Help me",}
 		],
 		"system": "You are Claude Code"
 	}`)
@@ -1473,7 +1413,7 @@ func TestExtractSessionID_GeminiFormat(t *testing.T) {
 		"systemInstruction": {"parts": [{"text": "You are a helpful assistant."}]},
 		"contents": [
 			{"role": "user", "parts": [{"text": "Hello Gemini"}]},
-			{"role": "model", "parts": [{"text": "Hi there!"}]}
+			{"role": "model", "parts": [{"text": "Hi there!"}],}
 		]
 	}`)
 
@@ -1496,7 +1436,7 @@ func TestExtractSessionID_GeminiFormat(t *testing.T) {
 		"systemInstruction": {"parts": [{"text": "You are a helpful assistant."}]},
 		"contents": [
 			{"role": "user", "parts": [{"text": "Hello different"}]},
-			{"role": "model", "parts": [{"text": "Hi there!"}]}
+			{"role": "model", "parts": [{"text": "Hi there!"}],}
 		]
 	}`)
 	got3 := ExtractSessionID(nil, differentPayload, nil)
@@ -1512,7 +1452,7 @@ func TestExtractSessionID_OpenAIResponsesAPI(t *testing.T) {
 		"instructions": "You are Codex, based on GPT-5.",
 		"input": [
 			{"type": "message", "role": "developer", "content": [{"type": "input_text", "text": "system instructions"}]},
-			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hi"}]}
+			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hi"}],}
 		]
 	}`)
 
@@ -1531,7 +1471,7 @@ func TestExtractSessionID_OpenAIResponsesAPI(t *testing.T) {
 			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hi"}]},
 			{"type": "reasoning", "summary": [{"type": "summary_text", "text": "thinking..."}], "encrypted_content": "xxx"},
 			{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Hello!"}]},
-			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "what can you do"}]}
+			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "what can you do"}],}
 		]
 	}`)
 
@@ -1553,7 +1493,7 @@ func TestExtractSessionID_OpenAIResponsesAPI(t *testing.T) {
 			{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Hello!"}]},
 			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "what can you do"}]},
 			{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "I can help with..."}]},
-			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "thanks"}]}
+			{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "thanks"}],}
 		]
 	}`)
 
@@ -1569,8 +1509,7 @@ func TestSessionAffinitySelector_ThreeScenarios(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}, {ID: "auth-c"}}
@@ -1583,49 +1522,39 @@ func TestSessionAffinitySelector_ThreeScenarios(t *testing.T) {
 		{
 			name:     "OpenAI_Scenario1_NewRequest",
 			scenario: "new",
-			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"}]}`),
-		},
+			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"}]}`)},
 		{
 			name:     "OpenAI_Scenario2_SecondTurn",
 			scenario: "second",
-			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi there!"},{"role":"user","content":"Help me"}]}`),
-		},
+			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi there!"},{"role":"user","content":"Help me"}]}`)},
 		{
 			name:     "OpenAI_Scenario3_ManyTurns",
 			scenario: "many",
-			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi there!"},{"role":"user","content":"Help me"},{"role":"assistant","content":"Sure!"},{"role":"user","content":"Thanks"}]}`),
-		},
+			payload:  []byte(`{"messages":[{"role":"system","content":"You are helpful"},{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi there!"},{"role":"user","content":"Help me"},{"role":"assistant","content":"Sure!"},{"role":"user","content":"Thanks"}]}`)},
 		{
 			name:     "Gemini_Scenario1_NewRequest",
 			scenario: "new",
-			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}`),
-		},
+			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]}]}`)},
 		{
 			name:     "Gemini_Scenario2_SecondTurn",
 			scenario: "second",
-			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]},{"role":"model","parts":[{"text":"Hi!"}]},{"role":"user","parts":[{"text":"Help"}]}]}`),
-		},
+			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]},{"role":"model","parts":[{"text":"Hi!"}]},{"role":"user","parts":[{"text":"Help"}]}]}`)},
 		{
 			name:     "Gemini_Scenario3_ManyTurns",
 			scenario: "many",
-			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]},{"role":"model","parts":[{"text":"Hi!"}]},{"role":"user","parts":[{"text":"Help"}]},{"role":"model","parts":[{"text":"Sure!"}]},{"role":"user","parts":[{"text":"Thanks"}]}]}`),
-		},
+			payload:  []byte(`{"systemInstruction":{"parts":[{"text":"You are helpful"}]},"contents":[{"role":"user","parts":[{"text":"Hello Gemini"}]},{"role":"model","parts":[{"text":"Hi!"}]},{"role":"user","parts":[{"text":"Help"}]},{"role":"model","parts":[{"text":"Sure!"}]},{"role":"user","parts":[{"text":"Thanks"}]}]}`)},
 		{
 			name:     "Claude_Scenario1_NewRequest",
 			scenario: "new",
-			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"}]}`),
-		},
+			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"}]}`)},
 		{
 			name:     "Claude_Scenario2_SecondTurn",
 			scenario: "second",
-			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"},{"role":"assistant","content":"Hello!"},{"role":"user","content":"Help me"}]}`),
-		},
+			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"},{"role":"assistant","content":"Hello!"},{"role":"user","content":"Help me"}]}`)},
 		{
 			name:     "Claude_Scenario3_ManyTurns",
 			scenario: "many",
-			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"},{"role":"assistant","content":"Hello!"},{"role":"user","content":"Help"},{"role":"assistant","content":"Sure!"},{"role":"user","content":"Thanks"}]}`),
-		},
-	}
+			payload:  []byte(`{"messages":[{"role":"user","content":"Hello Claude"},{"role":"assistant","content":"Hello!"},{"role":"user","content":"Help"},{"role":"assistant","content":"Sure!"},{"role":"user","content":"Thanks"}]}`)}}
 
 	for _, tc := range testCases {
 		tc := tc
@@ -1687,13 +1616,11 @@ func TestSessionAffinitySelectorBodyIdentifierTransitionsPreserveBinding(t *test
 		firstPayload []byte
 	}{
 		{name: "prompt cache first", firstPayload: []byte(`{"prompt_cache_key":"shared-cache-bucket"}`)},
-		{name: "conversation first", firstPayload: []byte(`{"conversation":{"id":"conversation-session"}}`)},
-	} {
+		{name: "conversation first", firstPayload: []byte(`{"conversation":{"id":"conversation-session"}}`)}} {
 		t.Run(tt.name, func(t *testing.T) {
 			selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 				Fallback: &RoundRobinSelector{},
-				TTL:      time.Minute,
-			})
+				TTL:      time.Minute})
 			defer selector.Stop()
 			auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 			provider := "responses-transition-" + tt.name
@@ -1718,8 +1645,7 @@ func TestSessionAffinitySelectorCombinedIdentifiersBindConversationFallback(t *t
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	provider := "responses-combined-to-conversation"
@@ -1742,8 +1668,7 @@ func TestSessionAffinitySelectorCombinedIdentifiersBindConversationFallback(t *t
 func TestSessionAffinitySelectorPrimaryTrafficKeepsConversationAliasAlive(t *testing.T) {
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	provider := "responses-active-primary-alias"
@@ -1782,8 +1707,7 @@ func TestSessionAffinitySelectorPrimaryTrafficKeepsConversationAliasAlive(t *tes
 func TestSessionAffinitySelectorSharedPromptKeyPreservesConversationAliases(t *testing.T) {
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	provider := "responses-shared-prompt-key"
@@ -1819,8 +1743,7 @@ func TestSessionAffinitySelectorSharedPromptKeyPreservesConversationAliases(t *t
 func TestSessionAffinitySelectorConversationIDContainingPromptMarkerRemainsStable(t *testing.T) {
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	provider := "responses-opaque-conversation"
@@ -1900,8 +1823,7 @@ func TestSessionAffinitySelector_MultiModelSession(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	// auth-a supports only model-a, auth-b supports only model-b
@@ -1971,7 +1893,7 @@ func TestExtractSessionID_MultimodalContent(t *testing.T) {
 	multiTurnPayload := []byte(`{"messages":[
 		{"role":"user","content":[{"type":"text","text":"Hello world"},{"type":"image","source":{"data":"..."}}]},
 		{"role":"assistant","content":"I see an image!"},
-		{"role":"user","content":"What is it?"}
+		{"role":"user","content":"What is it?",}
 	]}`)
 	fullHash := ExtractSessionID(nil, multiTurnPayload, nil)
 	if fullHash == "" {
@@ -1984,7 +1906,7 @@ func TestExtractSessionID_MultimodalContent(t *testing.T) {
 	// Different user content produces different hash
 	differentPayload := []byte(`{"messages":[
 		{"role":"user","content":[{"type":"text","text":"Different content"}]},
-		{"role":"assistant","content":"I see something different!"}
+		{"role":"assistant","content":"I see something different!",}
 	]}`)
 	differentHash := ExtractSessionID(nil, differentPayload, nil)
 	if fullHash == differentHash {
@@ -1998,8 +1920,7 @@ func TestSessionAffinitySelector_CrossProviderIsolation(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	authClaude := &Auth{ID: "auth-claude"}
@@ -2083,15 +2004,13 @@ func TestSessionAffinitySelector_RoundRobinDistribution(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	sessionCount := 12
 	counts := make(map[string]int)
@@ -2120,15 +2039,13 @@ func TestSessionAffinitySelector_Concurrent(t *testing.T) {
 	fallback := &RoundRobinSelector{}
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: fallback,
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-a"},
 		{ID: "auth-b"},
-		{ID: "auth-c"},
-	}
+		{ID: "auth-c"}}
 
 	payload := []byte(`{"metadata":{"user_id":"user_xxx_account__session_concurrent-test"}}`)
 	opts := cliproxyexecutor.Options{OriginalRequest: payload}
@@ -2192,44 +2109,35 @@ func TestExtractSessionIDNativeSignals(t *testing.T) {
 		{
 			name:    "claude code header",
 			headers: http.Header{"X-Claude-Code-Session-Id": []string{"claude-session"}},
-			want:    "claude:claude-session",
-		},
+			want:    "claude:claude-session"},
 		{
 			name:    "lowercase claude code header",
 			headers: http.Header{"x-claude-code-session-id": []string{"lowercase-session"}},
-			want:    "claude:lowercase-session",
-		},
+			want:    "claude:lowercase-session"},
 		{
 			name:    "codex hyphen header",
 			headers: http.Header{"Session-Id": []string{"codex-session"}},
-			want:    "codex:codex-session",
-		},
+			want:    "codex:codex-session"},
 		{
 			name:    "codex underscore header",
 			headers: http.Header{"Session_id": []string{"legacy-codex-session"}},
-			want:    "codex:legacy-codex-session",
-		},
+			want:    "codex:legacy-codex-session"},
 		{
 			name:    "open code session affinity",
 			headers: http.Header{"X-Session-Affinity": []string{"ses_opencode"}},
-			want:    "affinity:ses_opencode",
-		},
+			want:    "affinity:ses_opencode"},
 		{
 			name:    "prompt cache key",
 			payload: `{"prompt_cache_key":"prompt-session"}`,
-			want:    "pck:prompt-session",
-		},
+			want:    "pck:prompt-session"},
 		{
 			name:    "responses conversation object",
 			payload: `{"conversation":{"id":"conv-object"}}`,
-			want:    "conv:conv-object",
-		},
+			want:    "conv:conv-object"},
 		{
 			name:    "responses conversation string",
 			payload: `{"conversation":"conv-string"}`,
-			want:    "conv:conv-string",
-		},
-	}
+			want:    "conv:conv-string"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2252,50 +2160,38 @@ func TestExtractSessionIDNativeSignalPriority(t *testing.T) {
 		{
 			name: "claude header beats metadata",
 			headers: http.Header{
-				"X-Claude-Code-Session-Id": []string{"header-session"},
-			},
+				"X-Claude-Code-Session-Id": []string{"header-session"}},
 			payload: `{"metadata":{"user_id":"user_hash_account__session_22222222-2222-4222-8222-222222222222"}}`,
-			want:    "claude:header-session",
-		},
+			want:    "claude:header-session"},
 		{
 			name: "claude metadata beats codex header",
 			headers: http.Header{
-				"Session-Id": []string{"codex-session"},
-			},
+				"Session-Id": []string{"codex-session"}},
 			payload: `{"metadata":{"user_id":"user_hash_account__session_22222222-2222-4222-8222-222222222222"}}`,
-			want:    "claude:22222222-2222-4222-8222-222222222222",
-		},
+			want:    "claude:22222222-2222-4222-8222-222222222222"},
 		{
 			name: "codex header beats x session id and prompt key",
 			headers: http.Header{
 				"Session-Id":   []string{"codex-session"},
-				"X-Session-Id": []string{"generic-session"},
-			},
+				"X-Session-Id": []string{"generic-session"}},
 			payload: `{"prompt_cache_key":"prompt-session"}`,
-			want:    "codex:codex-session",
-		},
+			want:    "codex:codex-session"},
 		{
 			name: "x session id beats affinity",
 			headers: http.Header{
 				"X-Session-Id":       []string{"generic-session"},
-				"X-Session-Affinity": []string{"affinity-session"},
-			},
-			want: "header:generic-session",
-		},
+				"X-Session-Affinity": []string{"affinity-session"}},
+			want: "header:generic-session"},
 		{
 			name:    "prompt cache key beats conversation id",
 			payload: `{"conversation":{"id":"conversation-session"},"prompt_cache_key":"shared-cache-bucket"}`,
-			want:    "pck:shared-cache-bucket",
-		},
+			want:    "pck:shared-cache-bucket"},
 		{
 			name: "client request id beats body fallbacks",
 			headers: http.Header{
-				"X-Client-Request-Id": []string{"client-session"},
-			},
+				"X-Client-Request-Id": []string{"client-session"}},
 			payload: `{"prompt_cache_key":"prompt-session","conversation":{"id":"conversation-session"}}`,
-			want:    "clientreq:client-session",
-		},
-	}
+			want:    "clientreq:client-session"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2319,37 +2215,29 @@ func TestExtractSessionIDRejectsInvalidExplicitSignals(t *testing.T) {
 		{
 			name:    "whitespace",
 			headers: http.Header{"X-Claude-Code-Session-Id": []string{"   "}},
-			want:    "",
-		},
+			want:    ""},
 		{
 			name:    "newline",
 			headers: http.Header{"X-Session-Id": []string{"bad\nsession"}},
-			want:    "",
-		},
+			want:    ""},
 		{
 			name:    "control character",
 			headers: http.Header{"Session-Id": []string{"bad\x00session"}},
-			want:    "",
-		},
+			want:    ""},
 		{
 			name:    "too long",
 			headers: http.Header{"X-Client-Request-Id": []string{tooLong}},
-			want:    "",
-		},
+			want:    ""},
 		{
 			name: "invalid stronger signal falls through",
 			headers: http.Header{
 				"X-Claude-Code-Session-Id": []string{"bad\nsession"},
-				"Session-Id":               []string{"valid-codex"},
-			},
-			want: "codex:valid-codex",
-		},
+				"Session-Id":               []string{"valid-codex"}},
+			want: "codex:valid-codex"},
 		{
 			name:    "invalid prompt key falls through to conversation",
 			payload: `{"prompt_cache_key":"   ","conversation":{"id":"valid-conversation"}}`,
-			want:    "conv:valid-conversation",
-		},
-	}
+			want:    "conv:valid-conversation"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2369,24 +2257,21 @@ func TestExtractSessionIDClaudeMetadataParsesBeforeBoundingSessionID(t *testing.
 		"account_uuid":      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 		"session_id":        sessionID,
 		"organization_uuid": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-		"email":             "user@example.com",
-	}
+		"email":             "user@example.com"}
 
 	for _, tt := range []struct {
 		name   string
 		encode func(any) ([]byte, error)
 	}{
 		{name: "rich compact json", encode: json.Marshal},
-		{name: "pretty printed json", encode: func(v any) ([]byte, error) { return json.MarshalIndent(v, "", "  ") }},
-	} {
+		{name: "pretty printed json", encode: func(v any) ([]byte, error) { return json.MarshalIndent(v, "", "  ") }}} {
 		t.Run(tt.name, func(t *testing.T) {
 			userID, errMarshal := tt.encode(metadata)
 			if errMarshal != nil {
 				t.Fatalf("marshal metadata: %v", errMarshal)
 			}
 			payload, errPayload := json.Marshal(map[string]any{
-				"metadata": map[string]string{"user_id": string(userID)},
-			})
+				"metadata": map[string]string{"user_id": string(userID)}})
 			if errPayload != nil {
 				t.Fatalf("marshal payload: %v", errPayload)
 			}
@@ -2400,17 +2285,14 @@ func TestExtractSessionIDClaudeMetadataParsesBeforeBoundingSessionID(t *testing.
 func TestSessionAffinitySelectorUsesRequestPayloadWhenOriginalRequestMissing(t *testing.T) {
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	request := cliproxyexecutor.Request{
 		Model:   "gpt-test",
-		Payload: []byte(`{"conversation":{"id":"request-only-conversation"},"input":"hello"}`),
-	}
+		Payload: []byte(`{"conversation":{"id":"request-only-conversation"},"input":"hello"}`)}
 	_, opts := cliproxysession.Enrich(request, cliproxyexecutor.Options{
-		SourceFormat: sdktranslator.FormatOpenAIResponse,
-	})
+		SourceFormat: sdktranslator.FormatOpenAIResponse})
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 
 	first, errFirst := selector.Pick(context.Background(), "openai", request.Model, opts, auths)

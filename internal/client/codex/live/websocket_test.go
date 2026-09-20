@@ -143,10 +143,10 @@ func TestHandleDirectWebsocketAppliesClientSecretSession(t *testing.T) {
 	manager := auth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(&captureExecutor{})
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "oauth-token"},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 	})
 	handler := NewHandler(manager, nil)
 	handler.sidebandAPIBaseURL = "ws" + strings.TrimPrefix(upstreamServer.URL, "http") + "/v1"
@@ -215,13 +215,11 @@ func TestHandleDirectWebsocketRelaysStandardRealtimeFrames(t *testing.T) {
 	manager := auth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(&captureExecutor{})
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{
-			"access_token": "oauth-token",
-			"account_id":   "account-123",
-		},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
+		Metadata:   map[string]any{"account_id": "account-123"},
 	})
 	handler := NewHandler(manager, nil)
 	handler.sidebandAPIBaseURL = "ws" + strings.TrimPrefix(upstreamServer.URL, "http") + "/v1"

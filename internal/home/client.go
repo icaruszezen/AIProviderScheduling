@@ -214,8 +214,7 @@ func New(homeCfg config.HomeConfig) *Client {
 		homeCfg:    homeCfg,
 		seedHost:   strings.TrimSpace(homeCfg.Host),
 		seedPort:   homeCfg.Port,
-		instanceID: uuid.NewString(),
-	}
+		instanceID: uuid.NewString()}
 }
 
 // NewLifetime creates a fresh client while preserving cluster failover state.
@@ -233,8 +232,7 @@ func (c *Client) NewLifetime() *Client {
 		reconnectFailures:    c.reconnectFailures,
 		testOperationTimeout: c.testOperationTimeout,
 		instanceID:           c.instanceID,
-		legacyMembership:     c.legacyMembership,
-	}
+		legacyMembership:     c.legacyMembership}
 	next.recoveryState.Store(c.recoveryState.Load())
 	return next
 }
@@ -545,8 +543,7 @@ func (c *Client) redisOptionsLocked(addr string) (*redis.Options, error) {
 		WriteTimeout:          writeTimeout,
 		MaxRetries:            -1,
 		DialerRetries:         1,
-		ContextTimeoutEnabled: true,
-	}
+		ContextTimeoutEnabled: true}
 	options.Dialer = c.trackedRedisDialer(redis.NewDialer(options))
 	return options, nil
 }
@@ -661,8 +658,7 @@ func newHomeTLSConfig(cfg config.HomeTLSConfig, fallbackServerName string) (*tls
 	tlsConfig := &tls.Config{
 		MinVersion:         tls.VersionTLS12,
 		ServerName:         serverName,
-		InsecureSkipVerify: cfg.InsecureSkipVerify,
-	}
+		InsecureSkipVerify: cfg.InsecureSkipVerify}
 
 	clientCertPath := strings.TrimSpace(cfg.ClientCert)
 	clientKeyPath := strings.TrimSpace(cfg.ClientKey)
@@ -988,8 +984,7 @@ func (c *Client) GetModels(ctx context.Context, headers http.Header, query url.V
 	req := modelsRequest{
 		Type:    "models",
 		Headers: headersToLowerMap(headers),
-		Query:   queryToLowerMap(query),
-	}
+		Query:   queryToLowerMap(query)}
 	keyBytes, err := json.Marshal(&req)
 	if err != nil {
 		return nil, err
@@ -1306,8 +1301,7 @@ func newAuthDispatchRequest(requestedModel string, sessionID string, parentSessi
 		Headers:             headersToLowerMap(headers),
 		CredentialPolicy:    strings.TrimSpace(credentialPolicy),
 		ExcludedAuthIDs:     excludedAuthIDsCopy,
-		PinnedAuthID:        strings.TrimSpace(pinnedAuthID),
-	}
+		PinnedAuthID:        strings.TrimSpace(pinnedAuthID)}
 }
 
 func newAuthDispatchRequestWithRetryRound(requestedModel string, sessionID string, parentSessionID string, headers http.Header, count int, credentialPolicy string, retryRound int, excludedAuthIDs *[]string, pinnedAuthID string) authDispatchRequest {
@@ -1442,8 +1436,7 @@ func (c *Client) GetRefreshAuth(ctx context.Context, authIndex string, accessTok
 	}
 	req := refreshRequest{
 		Type:      "refresh",
-		AuthIndex: authIndex,
-	}
+		AuthIndex: authIndex}
 	req.ObservedAccessTokenSHA256 = strings.TrimSpace(accessTokenSHA256)
 	keyBytes, err := json.Marshal(&req)
 	if err != nil {

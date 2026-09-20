@@ -15,9 +15,7 @@ func TestRPCCapabilitiesIncludeFrontendAuthProviderExclusive(t *testing.T) {
 	plugin := pluginapi.Plugin{
 		Capabilities: pluginapi.Capabilities{
 			FrontendAuthProvider:          frontendAuthProviderFunc{identifier: "exclusive-auth"},
-			FrontendAuthProviderExclusive: true,
-		},
-	}
+			FrontendAuthProviderExclusive: true}}
 
 	caps := rpcCapabilitiesFromPlugin(plugin)
 	if !caps.FrontendAuthProvider {
@@ -48,9 +46,7 @@ func TestRPCCapabilitiesIncludeScheduler(t *testing.T) {
 		Capabilities: pluginapi.Capabilities{
 			Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 				return pluginapi.SchedulerPickResponse{}, nil
-			}),
-		},
-	}
+			})}}
 
 	caps := rpcCapabilitiesFromPlugin(plugin)
 	if !caps.Scheduler {
@@ -78,9 +74,7 @@ func TestRPCCapabilitiesIncludeModelRouter(t *testing.T) {
 		Capabilities: pluginapi.Capabilities{
 			ModelRouter: modelRouterFunc(func(context.Context, pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 				return pluginapi.ModelRouteResponse{}, nil
-			}),
-		},
-	}
+			})}}
 
 	caps := rpcCapabilitiesFromPlugin(plugin)
 	if !caps.ModelRouter {
@@ -105,8 +99,7 @@ func TestRPCCapabilitiesIncludeModelRouter(t *testing.T) {
 
 func TestRegisterRPCPluginSendsHostSchemaVersion(t *testing.T) {
 	lookup := newTestSymbolLookup(&testPlugin{
-		registerResult: validTestPlugin("schema"),
-	})
+		registerResult: validTestPlugin("schema")})
 
 	registered, errRegister := registerRPCPlugin(context.Background(), nil, "schema", lookup, pluginabi.MethodPluginRegister, []byte("mode: test"))
 	if errRegister != nil {
@@ -125,8 +118,7 @@ func TestRegisterRPCPluginSendsHostSchemaVersion(t *testing.T) {
 
 func TestRegisterRPCPluginRejectsFutureSchemaVersion(t *testing.T) {
 	lookup := newTestSymbolLookup(&testPlugin{
-		registerResult: validTestPlugin("future-schema"),
-	})
+		registerResult: validTestPlugin("future-schema")})
 	lookup.schemaVersion = pluginabi.SchemaVersion + 1
 
 	_, errRegister := registerRPCPlugin(context.Background(), nil, "future-schema", lookup, pluginabi.MethodPluginRegister, nil)
@@ -164,8 +156,7 @@ func TestRPCModelRouteUsesAdapter(t *testing.T) {
 				Name:             "router",
 				Version:          "1.0.0",
 				Author:           "test",
-				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-			},
+				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
 			Capabilities: pluginapi.Capabilities{
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					routeCalls++
@@ -174,12 +165,8 @@ func TestRPCModelRouteUsesAdapter(t *testing.T) {
 						Handled:    true,
 						TargetKind: pluginapi.ModelRouteTargetExecutor,
 						Target:     "claude-websearch-plugin",
-						Reason:     "typed websearch",
-					}, nil
-				}),
-			},
-		},
-	})
+						Reason:     "typed websearch"}, nil
+				})}}})
 
 	plugin, errRegister := registerRPCPlugin(context.Background(), nil, "router", lookup, pluginabi.MethodPluginRegister, nil)
 	if errRegister != nil {
@@ -197,9 +184,7 @@ func TestRPCModelRouteUsesAdapter(t *testing.T) {
 		Query:          map[string][]string{"beta": {"true"}},
 		Body:           []byte(`{"tools":[{"type":"web_search_20250305","name":"web_search"}]}`),
 		Metadata: map[string]any{
-			"keep": "value",
-		},
-	}
+			"keep": "value"}}
 	resp, errRoute := plugin.Capabilities.ModelRouter.RouteModel(context.Background(), req)
 	if errRoute != nil {
 		t.Fatalf("ModelRouter.RouteModel() error = %v", errRoute)
@@ -234,20 +219,15 @@ func TestRPCSchedulerPickUsesAdapter(t *testing.T) {
 				Name:             "scheduler",
 				Version:          "1.0.0",
 				Author:           "test",
-				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-			},
+				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
 			Capabilities: pluginapi.Capabilities{
 				Scheduler: schedulerFunc(func(ctx context.Context, req pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 					pickCalls++
 					gotReq = req
 					return pluginapi.SchedulerPickResponse{
 						AuthID:  "auth-2",
-						Handled: true,
-					}, nil
-				}),
-			},
-		},
-	})
+						Handled: true}, nil
+				})}}})
 
 	plugin, errRegister := registerRPCPlugin(context.Background(), nil, "scheduler", lookup, pluginabi.MethodPluginRegister, nil)
 	if errRegister != nil {
@@ -263,25 +243,20 @@ func TestRPCSchedulerPickUsesAdapter(t *testing.T) {
 		Model:     "gpt-5.4",
 		Stream:    true,
 		Options: pluginapi.SchedulerOptions{
-			Headers: map[string][]string{"X-Test": {"one", "two"}},
-		},
+			Headers: map[string][]string{"X-Test": {"one", "two"}}},
 		Candidates: []pluginapi.SchedulerAuthCandidate{
 			{
 				ID:         "auth-1",
 				Provider:   "openai",
 				Priority:   10,
 				Status:     "ready",
-				Attributes: map[string]string{"region": "us"},
-			},
+				Attributes: map[string]string{"region": "us"}},
 			{
 				ID:         "auth-2",
 				Provider:   "codex",
 				Priority:   20,
 				Status:     "ready",
-				Attributes: map[string]string{"region": "eu"},
-			},
-		},
-	}
+				Attributes: map[string]string{"region": "eu"}}}}
 	resp, errPick := plugin.Capabilities.Scheduler.Pick(context.Background(), req)
 	if errPick != nil {
 		t.Fatalf("Scheduler.Pick() error = %v", errPick)
@@ -325,9 +300,7 @@ func TestSanitizePluginRequestScheduler(t *testing.T) {
 			Headers: map[string][]string{"X-Test": {"one", "two"}},
 			Metadata: map[string]any{
 				"keep": "value",
-				"drop": make(chan struct{}),
-			},
-		},
+				"drop": make(chan struct{})}},
 		Candidates: []pluginapi.SchedulerAuthCandidate{
 			{
 				ID:         "auth-1",
@@ -337,11 +310,7 @@ func TestSanitizePluginRequestScheduler(t *testing.T) {
 				Attributes: map[string]string{"region": "us"},
 				Metadata: map[string]any{
 					"keep": "candidate",
-					"drop": make(chan struct{}),
-				},
-			},
-		},
-	}
+					"drop": make(chan struct{})}}}}
 
 	raw, errMarshal := json.Marshal(sanitizePluginRequest(req))
 	if errMarshal != nil {

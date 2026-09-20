@@ -9,14 +9,11 @@ func TestSanitizeGeminiKeys_AllowsEmptyAPIKeyWithBaseURL(t *testing.T) {
 			{APIKey: "  "}, // whitespace key without base URL, should be dropped
 			{APIKey: "", BaseURL: "https://custom-gemini.example.com", Headers: map[string]string{"Header-A": "1"}},
 			{APIKey: "", BaseURL: "https://custom-gemini.example.com", Headers: map[string]string{"Header-B": "2"}},
-			{APIKey: "key-1", BaseURL: "https://custom-gemini.example.com"},
-		},
+			{APIKey: "key-1", BaseURL: "https://custom-gemini.example.com"}},
 		InteractionsKey: []GeminiKey{
 			{APIKey: ""},   // empty key without base URL, should be dropped
 			{APIKey: "  "}, // whitespace key without base URL, should be dropped
-			{APIKey: "", BaseURL: "https://custom-interactions.example.com"},
-		},
-	}
+			{APIKey: "", BaseURL: "https://custom-interactions.example.com"}}}
 	cfg.SanitizeGeminiKeys()
 	cfg.SanitizeInteractionsKeys()
 

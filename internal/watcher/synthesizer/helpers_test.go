@@ -31,21 +31,17 @@ func TestStableIDGenerator_Next(t *testing.T) {
 			name:       "basic gemini apikey",
 			kind:       "gemini:apikey",
 			parts:      []string{"test-key", ""},
-			wantPrefix: "gemini:apikey:",
-		},
+			wantPrefix: "gemini:apikey:"},
 		{
 			name:       "claude with base url",
 			kind:       "claude:apikey",
 			parts:      []string{"sk-ant-xxx", "https://api.anthropic.com"},
-			wantPrefix: "claude:apikey:",
-		},
+			wantPrefix: "claude:apikey:"},
 		{
 			name:       "empty parts",
 			kind:       "codex:apikey",
 			parts:      []string{},
-			wantPrefix: "codex:apikey:",
-		},
-	}
+			wantPrefix: "codex:apikey:"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,66 +116,51 @@ func TestApplyAuthExcludedModelsMeta(t *testing.T) {
 			name: "apikey with excluded models",
 			auth: &coreauth.Auth{
 				Provider:   "gemini",
-				Attributes: make(map[string]string),
-			},
+				Attributes: make(map[string]string)},
 			cfg:      &config.Config{},
 			perKey:   []string{"model-a", "model-b"},
 			authKind: "apikey",
 			wantHash: true,
-			wantKind: "apikey",
-		},
+			wantKind: "apikey"},
 		{
-			name: "oauth with provider excluded models",
+			name: "oauth ignores provider excluded models",
 			auth: &coreauth.Auth{
 				Provider:   "claude",
-				Attributes: make(map[string]string),
-			},
-			cfg: &config.Config{
-				OAuthExcludedModels: map[string][]string{
-					"claude": {"claude-2.0"},
-				},
-			},
+				Attributes: make(map[string]string)},
+			cfg:      &config.Config{},
 			perKey:   nil,
 			authKind: "oauth",
-			wantHash: true,
-			wantKind: "oauth",
-		},
+			wantHash: false,
+			wantKind: "oauth"},
 		{
 			name: "nil auth",
 			auth: nil,
-			cfg:  &config.Config{},
-		},
+			cfg:  &config.Config{}},
 		{
 			name:     "nil config",
 			auth:     &coreauth.Auth{Provider: "test"},
 			cfg:      nil,
-			authKind: "apikey",
-		},
+			authKind: "apikey"},
 		{
 			name: "nil attributes initialized",
 			auth: &coreauth.Auth{
 				Provider:   "gemini",
-				Attributes: nil,
-			},
+				Attributes: nil},
 			cfg:      &config.Config{},
 			perKey:   []string{"model-x"},
 			authKind: "apikey",
 			wantHash: true,
-			wantKind: "apikey",
-		},
+			wantKind: "apikey"},
 		{
 			name: "apikey with duplicate excluded models",
 			auth: &coreauth.Auth{
 				Provider:   "gemini",
-				Attributes: make(map[string]string),
-			},
+				Attributes: make(map[string]string)},
 			cfg:      &config.Config{},
 			perKey:   []string{"model-a", "MODEL-A", "model-b", "model-a"},
 			authKind: "apikey",
 			wantHash: true,
-			wantKind: "apikey",
-		},
-	}
+			wantKind: "apikey"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -201,25 +182,20 @@ func TestApplyAuthExcludedModelsMeta(t *testing.T) {
 	}
 }
 
-func TestApplyAuthExcludedModelsMeta_OAuthMergeWritesCombinedModels(t *testing.T) {
+func TestApplyAuthExcludedModelsMeta_IgnoresGlobalOAuthExcludedModels(t *testing.T) {
 	auth := &coreauth.Auth{
 		Provider:   "claude",
-		Attributes: make(map[string]string),
-	}
-	cfg := &config.Config{
-		OAuthExcludedModels: map[string][]string{
-			"claude": {"global-a", "shared"},
-		},
-	}
+		Attributes: make(map[string]string)}
+	cfg := &config.Config{}
 
 	ApplyAuthExcludedModelsMeta(auth, cfg, []string{"per", "SHARED"}, "oauth")
 
-	const wantCombined = "global-a,per,shared"
+	const wantCombined = "per,shared"
 	if gotCombined := auth.Attributes["excluded_models"]; gotCombined != wantCombined {
 		t.Fatalf("expected excluded_models=%q, got %q", wantCombined, gotCombined)
 	}
 
-	expectedHash := diff.ComputeExcludedModelsHash([]string{"global-a", "per", "shared"})
+	expectedHash := diff.ComputeExcludedModelsHash([]string{"per", "shared"})
 	if gotHash := auth.Attributes["excluded_models_hash"]; gotHash != expectedHash {
 		t.Fatalf("expected excluded_models_hash=%q, got %q", expectedHash, gotHash)
 	}
@@ -236,47 +212,37 @@ func TestAddConfigHeadersToAttrs(t *testing.T) {
 			name: "basic headers",
 			headers: map[string]string{
 				"Authorization": "Bearer token",
-				"X-Custom":      "value",
-			},
+				"X-Custom":      "value"},
 			attrs: map[string]string{"existing": "key"},
 			want: map[string]string{
 				"existing":             "key",
 				"header:Authorization": "Bearer token",
-				"header:X-Custom":      "value",
-			},
-		},
+				"header:X-Custom":      "value"}},
 		{
 			name:    "empty headers",
 			headers: map[string]string{},
 			attrs:   map[string]string{"existing": "key"},
-			want:    map[string]string{"existing": "key"},
-		},
+			want:    map[string]string{"existing": "key"}},
 		{
 			name:    "nil headers",
 			headers: nil,
 			attrs:   map[string]string{"existing": "key"},
-			want:    map[string]string{"existing": "key"},
-		},
+			want:    map[string]string{"existing": "key"}},
 		{
 			name:    "nil attrs",
 			headers: map[string]string{"key": "value"},
 			attrs:   nil,
-			want:    nil,
-		},
+			want:    nil},
 		{
 			name: "skip empty keys and values",
 			headers: map[string]string{
 				"":      "value",
 				"key":   "",
 				"  ":    "value",
-				"valid": "valid-value",
-			},
+				"valid": "valid-value"},
 			attrs: make(map[string]string),
 			want: map[string]string{
-				"header:valid": "valid-value",
-			},
-		},
-	}
+				"header:valid": "valid-value"}}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -86,7 +86,7 @@ func enrichAuthSelectionError(err error, providers []string, model string) error
 
 	// Clarify the most common alias confusion between Anthropic route names and internal provider keys.
 	if strings.Contains(","+providerText+",", ",claude,") {
-		detail += "; check Claude auth/key session and cooldown state via /v0/management/auth-files"
+		detail += "; check Claude API keys and cooldown state via /v0/management/claude-api-key"
 	}
 
 	status := authErr.HTTPStatus
@@ -98,8 +98,7 @@ func enrichAuthSelectionError(err error, providers []string, model string) error
 		Code:       authErr.Code,
 		Message:    detail,
 		Retryable:  authErr.Retryable,
-		HTTPStatus: status,
-	}
+		HTTPStatus: status}
 	var result error
 	if cause != nil {
 		result = coreauth.WithCause(enriched, cause)

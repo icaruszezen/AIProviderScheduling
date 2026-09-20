@@ -84,8 +84,7 @@ func TestWarnLogUpstreamFailureUsesMarkedHomeDiagnostic(t *testing.T) {
 	errRefresh := markedDiagnosticStatusError{
 		message:    "credential refresh temporarily unavailable",
 		diagnostic: "antigravity refresh failed: stage=transport err=EOF access_token=provider-secret",
-		statusCode: http.StatusServiceUnavailable,
-	}
+		statusCode: http.StatusServiceUnavailable}
 
 	warnLogUpstreamFailure(
 		context.Background(),
@@ -117,8 +116,7 @@ func TestHomeCredentialBoundaryWarnLogUsesSafeDiagnostic(t *testing.T) {
 	upstreamErr := markedDiagnosticStatusError{
 		message:    "credential refresh temporarily unavailable",
 		diagnostic: diagnostic,
-		statusCode: http.StatusServiceUnavailable,
-	}
+		statusCode: http.StatusServiceUnavailable}
 	hook := setupTestLoggerHook(t)
 	auth := &Auth{ID: "auth-1", Provider: "antigravity"}
 	executor := &requestPrepareExecutor{prepareErr: upstreamErr}
@@ -167,10 +165,8 @@ func TestWarnLogOnAuthUnavailable_SingleProvider(t *testing.T) {
 		Quota: QuotaState{
 			Exceeded:      true,
 			Reason:        "rate_limit_exceeded",
-			NextRecoverAt: now.Add(45 * time.Second),
-		},
-		NextRetryAfter: now.Add(45 * time.Second),
-	}
+			NextRecoverAt: now.Add(45 * time.Second)},
+		NextRetryAfter: now.Add(45 * time.Second)}
 	auth2 := &Auth{
 		ID:            "auth-cooling-2",
 		Provider:      "claude",
@@ -180,10 +176,8 @@ func TestWarnLogOnAuthUnavailable_SingleProvider(t *testing.T) {
 		Quota: QuotaState{
 			Exceeded:      true,
 			Reason:        "quota_exceeded",
-			NextRecoverAt: now.Add(90 * time.Second),
-		},
-		NextRetryAfter: now.Add(90 * time.Second),
-	}
+			NextRecoverAt: now.Add(90 * time.Second)},
+		NextRetryAfter: now.Add(90 * time.Second)}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3-5-sonnet"}})
@@ -201,8 +195,7 @@ func TestWarnLogOnAuthUnavailable_SingleProvider(t *testing.T) {
 	}
 
 	exec := &mockCustomErrorExecutor{
-		identifier: "claude",
-	}
+		identifier: "claude"}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()
@@ -255,10 +248,8 @@ func TestWarnLogOnAuthUnavailable_SessionAffinityLegacyPath(t *testing.T) {
 		Quota: QuotaState{
 			Exceeded:      true,
 			Reason:        "rate_limit_exceeded",
-			NextRecoverAt: now.Add(45 * time.Second),
-		},
-		NextRetryAfter: now.Add(45 * time.Second),
-	}
+			NextRecoverAt: now.Add(45 * time.Second)},
+		NextRetryAfter: now.Add(45 * time.Second)}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3-5-sonnet"}})
@@ -271,8 +262,7 @@ func TestWarnLogOnAuthUnavailable_SessionAffinityLegacyPath(t *testing.T) {
 	}
 
 	exec := &mockCustomErrorExecutor{
-		identifier: "claude",
-	}
+		identifier: "claude"}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()
@@ -318,10 +308,8 @@ func TestWarnLogOnAuthUnavailable_MixedProviders(t *testing.T) {
 		Quota: QuotaState{
 			Exceeded:      true,
 			Reason:        "rate_limit",
-			NextRecoverAt: now.Add(30 * time.Second),
-		},
-		NextRetryAfter: now.Add(30 * time.Second),
-	}
+			NextRecoverAt: now.Add(30 * time.Second)},
+		NextRetryAfter: now.Add(30 * time.Second)}
 	auth2 := &Auth{
 		ID:            "auth-codex-cooling",
 		Provider:      "codex",
@@ -331,10 +319,8 @@ func TestWarnLogOnAuthUnavailable_MixedProviders(t *testing.T) {
 		Quota: QuotaState{
 			Exceeded:      true,
 			Reason:        "quota_exceeded",
-			NextRecoverAt: now.Add(60 * time.Second),
-		},
-		NextRetryAfter: now.Add(60 * time.Second),
-	}
+			NextRecoverAt: now.Add(60 * time.Second)},
+		NextRetryAfter: now.Add(60 * time.Second)}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "gpt-5"}})
@@ -393,8 +379,7 @@ func TestWarnLogOnUpstreamFailure_NonStream(t *testing.T) {
 		Provider:   "codex",
 		FileName:   "codex-prod.json",
 		Status:     StatusActive,
-		Attributes: map[string]string{"priority": "10"},
-	}
+		Attributes: map[string]string{"priority": "10"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "codex", []*registry.ModelInfo{{ID: "gpt-4o"}})
@@ -411,8 +396,7 @@ func TestWarnLogOnUpstreamFailure_NonStream(t *testing.T) {
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			time.Sleep(5 * time.Millisecond)
 			return cliproxyexecutor.Response{}, errors.New("500 Internal Server Error: upstream timeout")
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()
@@ -443,67 +427,6 @@ func TestWarnLogOnUpstreamFailure_NonStream(t *testing.T) {
 	}
 }
 
-func TestWarnLogOnUpstreamFailure_401RefreshSuccess_DoesNotLogWarn(t *testing.T) {
-	previousCooldown := quotaCooldownDisabled.Load()
-	quotaCooldownDisabled.Store(false)
-	t.Cleanup(func() { quotaCooldownDisabled.Store(previousCooldown) })
-
-	hook := setupTestLoggerHook(t)
-	m := NewManager(nil, nil, nil)
-
-	auth := &Auth{
-		ID:         "auth-test-401-refresh",
-		Provider:   "codex",
-		FileName:   "codex-oauth.json",
-		Status:     StatusActive,
-		Attributes: map[string]string{"auth_kind": "oauth", "priority": "10"},
-		Metadata:   map[string]any{"access_token": "old-token", "refresh_token": "valid-refresh-token"},
-	}
-
-	reg := registry.GetGlobalRegistry()
-	reg.RegisterClient(auth.ID, "codex", []*registry.ModelInfo{{ID: "gpt-4o"}})
-	t.Cleanup(func() {
-		reg.UnregisterClient(auth.ID)
-	})
-
-	if _, err := m.Register(context.Background(), auth); err != nil {
-		t.Fatalf("register auth: %v", err)
-	}
-
-	callCount := 0
-	exec := &mockCustomErrorExecutor{
-		identifier: "codex",
-		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
-			callCount++
-			if callCount == 1 {
-				return cliproxyexecutor.Response{}, customStatusError{code: http.StatusUnauthorized, msg: "401 unauthorized"}
-			}
-			return cliproxyexecutor.Response{Payload: []byte(`{"ok":true}`)}, nil
-		},
-	}
-	m.RegisterExecutor(exec)
-
-	hook.Reset()
-
-	req := cliproxyexecutor.Request{Model: "gpt-4o"}
-	opts := cliproxyexecutor.Options{}
-
-	resp, errExec := m.Execute(context.Background(), []string{"codex"}, req, opts)
-	if errExec != nil {
-		t.Fatalf("unexpected error from Execute: %v", errExec)
-	}
-	if string(resp.Payload) != `{"ok":true}` {
-		t.Fatalf("unexpected response payload: %s", string(resp.Payload))
-	}
-
-	// 401 refresh was successful, so no upstream failure warning should be logged
-	for _, entry := range hook.AllEntries() {
-		if entry.Level == log.WarnLevel && strings.Contains(entry.Message, "upstream execution failed") {
-			t.Fatalf("did not expect upstream failure warning when 401 refresh succeeded, got: %s", entry.Message)
-		}
-	}
-}
-
 func TestWarnLogOnUpstreamFailure_ClientCanceled_DoesNotLogWarn(t *testing.T) {
 	previousCooldown := quotaCooldownDisabled.Load()
 	quotaCooldownDisabled.Store(false)
@@ -517,8 +440,7 @@ func TestWarnLogOnUpstreamFailure_ClientCanceled_DoesNotLogWarn(t *testing.T) {
 		Provider:   "codex",
 		FileName:   "codex-prod.json",
 		Status:     StatusActive,
-		Attributes: map[string]string{"priority": "10"},
-	}
+		Attributes: map[string]string{"priority": "10"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "codex", []*registry.ModelInfo{{ID: "gpt-4o"}})
@@ -537,8 +459,7 @@ func TestWarnLogOnUpstreamFailure_ClientCanceled_DoesNotLogWarn(t *testing.T) {
 		identifier: "codex",
 		executeFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 			return cliproxyexecutor.Response{}, ctx.Err()
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()
@@ -568,8 +489,7 @@ func TestWarnLogOnStreamUpstreamFailure(t *testing.T) {
 		Provider:   "claude",
 		FileName:   "claude-stream.json",
 		Status:     StatusActive,
-		Attributes: map[string]string{"priority": "10"},
-	}
+		Attributes: map[string]string{"priority": "10"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{{ID: "claude-sonnet-4"}})
@@ -586,8 +506,7 @@ func TestWarnLogOnStreamUpstreamFailure(t *testing.T) {
 		executeStreamFn: func(ctx context.Context, auth *Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
 			time.Sleep(5 * time.Millisecond)
 			return nil, errors.New("502 Bad Gateway: connection dropped")
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()
@@ -631,8 +550,7 @@ func TestWarnLogOnStreamBootstrapFailure(t *testing.T) {
 		Provider:   "claude",
 		FileName:   "claude-bootstrap.json",
 		Status:     StatusActive,
-		Attributes: map[string]string{"priority": "10"},
-	}
+		Attributes: map[string]string{"priority": "10"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{{ID: "claude-sonnet-4"}})
@@ -651,8 +569,7 @@ func TestWarnLogOnStreamBootstrapFailure(t *testing.T) {
 			ch <- cliproxyexecutor.StreamChunk{Err: errors.New("504 Gateway Timeout: ttfb timeout")}
 			close(ch)
 			return &cliproxyexecutor.StreamResult{Chunks: ch}, nil
-		},
-	}
+		}}
 	m.RegisterExecutor(exec)
 
 	hook.Reset()

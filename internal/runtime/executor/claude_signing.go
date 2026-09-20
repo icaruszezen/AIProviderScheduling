@@ -200,7 +200,7 @@ func stripDefaultKimiClaudeCodeAttribution(auth *cliproxyauth.Auth, endpoint str
 // requires https and the default port, which native does not check.
 func claudeCCHSigningEnabled(apiKey string, kind claudeCCHUpstreamKind, cliFingerprint bool, origin string) bool {
 	if isClaudeOAuthToken(apiKey) {
-		return true
+		return false
 	}
 	if kind == claudeCCHUpstreamVertex {
 		return true
@@ -279,8 +279,7 @@ func normalizeClaudeCCHInput(body []byte) ([]byte, error) {
 
 	scanner := claudeCCHJSONScanner{
 		body:  body,
-		edits: make([]claudeCCHNormalizationEdit, 0),
-	}
+		edits: make([]claudeCCHNormalizationEdit, 0)}
 	if err := scanner.parseValue(true); err != nil {
 		return nil, err
 	}
@@ -384,8 +383,7 @@ func (scanner *claudeCCHJSONScanner) parseObject(collect bool) error {
 			end:         memberEnd,
 			commaBefore: commaBefore,
 			commaAfter:  commaAfter,
-			excluded:    excluded,
-		})
+			excluded:    excluded})
 		if commaAfter >= 0 {
 			commaBefore = commaAfter
 			continue

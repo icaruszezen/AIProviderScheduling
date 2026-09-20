@@ -53,8 +53,7 @@ func newWebsocketToolOutputCache(ttl time.Duration, maxPerSession int) *websocke
 	return &websocketToolOutputCache{
 		ttl:           ttl,
 		maxPerSession: maxPerSession,
-		sessions:      make(map[string]*websocketToolOutputSession),
-	}
+		sessions:      make(map[string]*websocketToolOutputSession)}
 }
 
 func (c *websocketToolOutputCache) record(sessionKey string, callID string, item json.RawMessage) {
@@ -74,8 +73,7 @@ func (c *websocketToolOutputCache) record(sessionKey string, callID string, item
 	if !ok || session == nil {
 		session = &websocketToolOutputSession{
 			lastSeen: now,
-			outputs:  make(map[string]json.RawMessage),
-		}
+			outputs:  make(map[string]json.RawMessage)}
 		c.sessions[sessionKey] = session
 	}
 	session.lastSeen = now
@@ -240,8 +238,7 @@ func newResponsesWebsocketToolCacheTurn(sessionKey string) *responsesWebsocketTo
 	return &responsesWebsocketToolCacheTurn{
 		sessionKey: sessionKey,
 		outputs:    make(map[string]json.RawMessage),
-		calls:      make(map[string]json.RawMessage),
-	}
+		calls:      make(map[string]json.RawMessage)}
 }
 
 func (t *responsesWebsocketToolCacheTurn) recordResponse(payload []byte) {

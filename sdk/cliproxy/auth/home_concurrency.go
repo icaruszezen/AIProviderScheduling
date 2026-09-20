@@ -36,8 +36,7 @@ func NewHomeConcurrencyBusyError(message string, retryAfter time.Duration) error
 		Code:       "credential_concurrency_exceeded",
 		Message:    message,
 		Retryable:  true,
-		HTTPStatus: http.StatusTooManyRequests,
-	}, retryAfter)
+		HTTPStatus: http.StatusTooManyRequests}, retryAfter)
 }
 
 func newHomeConcurrencyBusyError(cause *Error, retryAfter time.Duration) *HomeConcurrencyBusyError {

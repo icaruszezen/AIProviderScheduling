@@ -51,8 +51,7 @@ func newConfigTabModel(client *Client) configTabModel {
 	ti.CharLimit = 256
 	return configTabModel{
 		client:    client,
-		textInput: ti,
-	}
+		textInput: ti}
 }
 
 func (m configTabModel) Init() tea.Cmd {
@@ -175,8 +174,7 @@ func (m configTabModel) toggleBool(idx int) tea.Cmd {
 		return configUpdateMsg{
 			path:  f.apiPath,
 			value: newValue,
-			err:   errPutBool,
-		}
+			err:   errPutBool}
 	}
 }
 
@@ -191,8 +189,7 @@ func (m configTabModel) submitEdit(idx int, newValue string) tea.Cmd {
 			if errAtoi != nil {
 				return configUpdateMsg{
 					path: f.apiPath,
-					err:  fmt.Errorf("%s: %s", T("invalid_int"), newValue),
-				}
+					err:  fmt.Errorf("%s: %s", T("invalid_int"), newValue)}
 			}
 			value = valueInt
 			err = m.client.PutIntField(f.apiPath, valueInt)
@@ -203,8 +200,7 @@ func (m configTabModel) submitEdit(idx int, newValue string) tea.Cmd {
 		return configUpdateMsg{
 			path:  f.apiPath,
 			value: value,
-			err:   err,
-		}
+			err:   err}
 	}
 }
 

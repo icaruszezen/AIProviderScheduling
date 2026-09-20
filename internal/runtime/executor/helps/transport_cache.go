@@ -44,8 +44,7 @@ func NewTransportCache[K comparable](capacity int) *TransportCache[K] {
 	return &TransportCache[K]{
 		capacity: capacity,
 		order:    list.New(),
-		items:    make(map[K]*list.Element, capacity),
-	}
+		items:    make(map[K]*list.Element, capacity)}
 }
 
 // Get returns the transport cached under key, calling build on the first use of

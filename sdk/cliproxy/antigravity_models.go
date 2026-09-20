@@ -28,11 +28,13 @@ type antigravityModelCapabilityHints struct {
 }
 
 func (s *Service) fetchAntigravityModelCapabilityHintsForAuth(ctx context.Context, auth *coreauth.Auth) antigravityModelCapabilityHints {
-	if auth == nil || auth.Metadata == nil {
+	if auth == nil {
 		return antigravityModelCapabilityHints{}
 	}
-	accessToken, _ := auth.Metadata["access_token"].(string)
-	accessToken = strings.TrimSpace(accessToken)
+	accessToken := ""
+	if auth.Attributes != nil {
+		accessToken = strings.TrimSpace(auth.Attributes[coreauth.AttributeAPIKey])
+	}
 	if accessToken == "" {
 		return antigravityModelCapabilityHints{}
 	}

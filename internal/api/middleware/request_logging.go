@@ -120,8 +120,7 @@ func attachDeferredRequestBodyCapture(req *http.Request, logger logging.RequestL
 		body:          req.Body,
 		file:          file,
 		source:        source,
-		contentLength: req.ContentLength,
-	}
+		contentLength: req.ContentLength}
 	req.Body = capture
 	requestInfo.deferredBodyCapture = capture
 	return capture
@@ -345,8 +344,7 @@ func captureRequestInfo(c *gin.Context, captureBody bool) (*RequestInfo, error) 
 		Headers:   headers,
 		Body:      body,
 		RequestID: logging.GetGinRequestID(c),
-		Timestamp: time.Now(),
-	}, nil
+		Timestamp: time.Now()}, nil
 }
 
 func decodeCapturedRequestBodyForLog(raw []byte, encoding string) []byte {

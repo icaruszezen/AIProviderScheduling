@@ -97,8 +97,7 @@ func (h *OpenAIResponsesAPIHandler) forwardResponsesWebsocket(
 				if !completed {
 					errMsg := &interfaces.ErrorMessage{
 						StatusCode: http.StatusRequestTimeout,
-						Error:      fmt.Errorf("stream closed before response.completed"),
-					}
+						Error:      fmt.Errorf("stream closed before response.completed")}
 					h.LoggingAPIResponseError(context.WithValue(context.Background(), "gin", c), errMsg)
 					markAPIResponseTimestamp(c)
 					_, errClose := writer.closeWithoutError()

@@ -96,8 +96,7 @@ func (c *homeSessionAliasCache) canonical(primary, fallback string, ttl time.Dur
 	c.setGroupLocked(homeSessionAliasEntry{
 		canonical: canonical,
 		expiresAt: now.Add(ttl),
-		aliases:   aliases,
-	})
+		aliases:   aliases})
 	c.enforceLimitLocked(homeSessionAliasSoftLimit)
 	return canonical
 }

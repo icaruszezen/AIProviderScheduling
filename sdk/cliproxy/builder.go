@@ -12,7 +12,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
 )
@@ -38,9 +37,6 @@ type Builder struct {
 
 	// hooks provides lifecycle callbacks.
 	hooks Hooks
-
-	// authManager handles legacy authentication operations.
-	authManager *sdkAuth.Manager
 
 	// accessManager handles request authentication providers.
 	accessManager *sdkaccess.Manager
@@ -131,12 +127,6 @@ func (b *Builder) WithHooks(h Hooks) *Builder {
 	return b
 }
 
-// WithAuthManager overrides the authentication manager used for token lifecycle operations.
-func (b *Builder) WithAuthManager(mgr *sdkAuth.Manager) *Builder {
-	b.authManager = mgr
-	return b
-}
-
 // WithRequestAccessManager overrides the request authentication manager.
 func (b *Builder) WithRequestAccessManager(mgr *sdkaccess.Manager) *Builder {
 	b.accessManager = mgr
@@ -217,11 +207,6 @@ func (b *Builder) Build() (*Service, error) {
 		watcherFactory = defaultWatcherFactory
 	}
 
-	authManager := b.authManager
-	if authManager == nil {
-		authManager = newDefaultAuthManager()
-	}
-
 	accessManager := b.accessManager
 	if accessManager == nil {
 		accessManager = sdkaccess.NewManager()
@@ -242,16 +227,7 @@ func (b *Builder) Build() (*Service, error) {
 	cooldownStateStore := b.cooldownStateStore
 	var appliedRoutingState *routingRuntimeState
 	if coreManager == nil {
-		tokenStore := sdkAuth.GetTokenStore()
-		if dirSetter, ok := tokenStore.(interface{ SetBaseDir(string) }); ok && b.cfg != nil {
-			dirSetter.SetBaseDir(b.cfg.AuthDir)
-		}
-		if cooldownStateStore == nil {
-			if provider, ok := tokenStore.(coreauth.CooldownStateStoreProvider); ok {
-				cooldownStateStore = provider.CooldownStateStore()
-			}
-		}
-
+		tokenStore := coreauth.NewMemoryStore()
 		routingState := normalizedRoutingRuntimeState(b.cfg)
 		coreManager = coreauth.NewManager(tokenStore, newRoutingSelector(routingState), nil)
 		appliedRoutingState = &routingState
@@ -259,7 +235,6 @@ func (b *Builder) Build() (*Service, error) {
 	// Attach a default RoundTripper provider so providers can opt-in per-auth transports.
 	coreManager.SetRoundTripperProvider(newDefaultRoundTripperProvider())
 	coreManager.SetConfig(b.cfg)
-	coreManager.SetOAuthModelAlias(b.cfg.OAuthModelAlias)
 	if pluginHost != nil {
 		coreManager.SetPluginScheduler(pluginHost)
 	}
@@ -271,14 +246,12 @@ func (b *Builder) Build() (*Service, error) {
 		apiKeyProvider:      apiKeyProvider,
 		watcherFactory:      watcherFactory,
 		hooks:               b.hooks,
-		authManager:         authManager,
 		accessManager:       accessManager,
 		coreManager:         coreManager,
 		cooldownStateStore:  cooldownStateStore,
 		pluginHost:          pluginHost,
 		appliedRoutingState: appliedRoutingState,
-		serverOptions:       append([]api.ServerOption(nil), b.serverOptions...),
-	}
+		serverOptions:       append([]api.ServerOption(nil), b.serverOptions...)}
 	if b.postAuthHook != nil {
 		service.serverOptions = append(service.serverOptions, api.WithPostAuthHook(b.postAuthHook))
 	}
@@ -306,8 +279,7 @@ func (s *Service) runtimeAuthSyncHook() coreauth.PostAuthHook {
 		update := watcher.AuthUpdate{
 			Action: action,
 			ID:     auth.ID,
-			Auth:   auth,
-		}
+			Auth:   auth}
 		if s.watcher != nil && s.watcher.DispatchPersistedAuthUpdate(update) {
 			return nil
 		}

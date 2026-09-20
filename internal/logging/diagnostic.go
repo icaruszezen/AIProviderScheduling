@@ -117,8 +117,7 @@ func SafeErrorDiagnostic(err error) string {
 		{needle: "invalid_grant", label: "oauth_error=invalid_grant"},
 		{needle: "refresh_token_expired", label: "oauth_error=refresh_token_expired"},
 		{needle: "refresh_token_revoked", label: "oauth_error=refresh_token_revoked"},
-		{needle: "refresh_token_reused", label: "oauth_error=refresh_token_reused"},
-	} {
+		{needle: "refresh_token_reused", label: "oauth_error=refresh_token_reused"}} {
 		if strings.Contains(raw, signal.needle) {
 			appendPart(signal.label)
 		}

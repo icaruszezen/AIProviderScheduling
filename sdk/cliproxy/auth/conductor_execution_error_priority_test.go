@@ -45,9 +45,7 @@ func (d *retryTerminalPriorityHomeDispatcher) RPopAuthWithRetryRoundConstraints(
 			Auth: Auth{
 				ID:       authID,
 				Provider: "home-retry-contract",
-				Status:   StatusActive,
-			},
-		})
+				Status:   StatusActive}})
 	}
 	if retryRound == 0 {
 		return []byte(`{"error":{"type":"auth_unavailable","message":"a credential is immediately available next round"}}`), nil
@@ -103,31 +101,26 @@ func TestManagerRetryPreservesTerminalContextErrorAfterUpstreamFailure(t *testin
 			invoke: func(ctx context.Context, manager *Manager, provider, model string) error {
 				_, errExecute := manager.Execute(ctx, []string{provider}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count-tokens",
 			invoke: func(ctx context.Context, manager *Manager, provider, model string) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{provider}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "stream",
 			invoke: func(ctx context.Context, manager *Manager, provider, model string) error {
 				_, errStream := manager.ExecuteStream(ctx, []string{provider}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{Stream: true})
 				return errStream
-			},
-		},
-	}
+			}}}
 	terminalCases := []struct {
 		name         string
 		err          error
 		cancelParent bool
 	}{
 		{name: "canceled", err: context.Canceled, cancelParent: true},
-		{name: "deadline-exceeded", err: context.DeadlineExceeded},
-	}
+		{name: "deadline-exceeded", err: context.DeadlineExceeded}}
 
 	for _, path := range paths {
 		for _, terminalCase := range terminalCases {
@@ -150,8 +143,7 @@ func TestManagerRetryPreservesTerminalContextErrorAfterUpstreamFailure(t *testin
 					identifier:  provider,
 					upstreamErr: upstreamErr,
 					terminalErr: terminalCase.err,
-					cancel:      cancel,
-				}
+					cancel:      cancel}
 				manager.RegisterExecutor(executor)
 				registerRetryRoundLocalAuths(t, manager, provider, model, map[string]int{authID: 1})
 
@@ -180,30 +172,25 @@ func TestHomeRetryPreservesTerminalContextErrorAfterUpstreamFailure(t *testing.T
 			invoke: func(ctx context.Context, manager *Manager) error {
 				_, errExecute := manager.Execute(ctx, []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count-tokens",
 			invoke: func(ctx context.Context, manager *Manager) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "stream",
 			invoke: func(ctx context.Context, manager *Manager) error {
 				_, errStream := manager.ExecuteStream(ctx, []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true})
 				return errStream
-			},
-		},
-	}
+			}}}
 	terminalCases := []struct {
 		name string
 		err  error
 	}{
 		{name: "canceled", err: context.Canceled},
-		{name: "deadline-exceeded", err: context.DeadlineExceeded},
-	}
+		{name: "deadline-exceeded", err: context.DeadlineExceeded}}
 
 	for _, path := range paths {
 		for _, terminalCase := range terminalCases {
@@ -212,8 +199,7 @@ func TestHomeRetryPreservesTerminalContextErrorAfterUpstreamFailure(t *testing.T
 				executor := &retryTerminalPriorityExecutor{
 					identifier:  "home-retry-contract",
 					upstreamErr: upstreamErr,
-					terminalErr: terminalCase.err,
-				}
+					terminalErr: terminalCase.err}
 				manager := NewManager(nil, nil, nil)
 				manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 				manager.SetRetryConfig(1, 0, 0)
@@ -245,23 +231,19 @@ func TestHomePreferredUpstreamErrorPreservesCurrentRetryAfter(t *testing.T) {
 			invoke: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count-tokens",
 			invoke: func(manager *Manager) error {
 				_, errCount := manager.ExecuteCount(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "stream",
 			invoke: func(manager *Manager) error {
 				_, errStream := manager.ExecuteStream(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true})
 				return errStream
-			},
-		},
-	}
+			}}}
 
 	for _, path := range paths {
 		t.Run(path.name, func(t *testing.T) {
@@ -270,11 +252,9 @@ func TestHomePreferredUpstreamErrorPreservesCurrentRetryAfter(t *testing.T) {
 			executor := &retryTerminalPriorityExecutor{
 				identifier:  "home-retry-contract",
 				upstreamErr: upstreamErr,
-				terminalErr: internalErr,
-			}
+				terminalErr: internalErr}
 			dispatcher := &retryTerminalPriorityHomeDispatcher{
-				finalPayload: []byte(`{"error":{"type":"model_cooldown","message":"current Home retry window","retryable":true,"retry_after_ms":10000,"request_retry":1}}`),
-			}
+				finalPayload: []byte(`{"error":{"type":"model_cooldown","message":"current Home retry window","retryable":true,"retry_after_ms":10000,"request_retry":1}}`)}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(1, 20*time.Second, 0)

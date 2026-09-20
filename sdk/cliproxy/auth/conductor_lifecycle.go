@@ -69,6 +69,9 @@ func (m *Manager) Register(ctx context.Context, auth *Auth) (*Auth, error) {
 	if auth == nil {
 		return nil, nil
 	}
+	if auth.AuthKind() == AuthKindOAuth {
+		return nil, errOAuthCredentialsUnsupported()
+	}
 	NormalizeCredentialMetadata(auth.Metadata)
 	if errWeight := ValidateAuthWeight(auth); errWeight != nil {
 		return nil, fmt.Errorf("register auth: %w", errWeight)
@@ -124,6 +127,9 @@ func (m *Manager) Register(ctx context.Context, auth *Auth) (*Auth, error) {
 func (m *Manager) Update(ctx context.Context, auth *Auth) (*Auth, error) {
 	if auth == nil || auth.ID == "" {
 		return nil, nil
+	}
+	if auth.AuthKind() == AuthKindOAuth {
+		return nil, errOAuthCredentialsUnsupported()
 	}
 	NormalizeCredentialMetadata(auth.Metadata)
 	if errWeight := ValidateAuthWeight(auth); errWeight != nil {
@@ -293,6 +299,9 @@ func (m *Manager) Load(ctx context.Context) error {
 			continue
 		}
 		NormalizeCredentialMetadata(auth.Metadata)
+		if IsUnsupportedOAuthAuth(auth) {
+			continue
+		}
 		if errWeight := ValidateAuthWeight(auth); errWeight != nil {
 			continue
 		}
@@ -313,8 +322,7 @@ func (m *Manager) Load(ctx context.Context) error {
 			m.authEpochs[prevID]++
 			removedTombstones = append(removedTombstones, removalTombstone{
 				id:    prevID,
-				epoch: m.authEpochs[prevID],
-			})
+				epoch: m.authEpochs[prevID]})
 		}
 	}
 

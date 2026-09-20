@@ -28,8 +28,7 @@ func (h *Host) RegisterUsagePlugins() {
 		coreusage.RegisterNamedPlugin("plugin:"+record.id, &usageAdapter{
 			host:     h,
 			pluginID: record.id,
-			plugin:   plugin,
-		})
+			plugin:   plugin})
 	}
 }
 
@@ -53,8 +52,7 @@ func (h *Host) refreshThinkingProviders(records []capabilityRecord) {
 			path:     record.path,
 			version:  record.version,
 			provider: provider,
-			applier:  applier,
-		})
+			applier:  applier})
 	}
 }
 
@@ -165,8 +163,7 @@ func (a *usageAdapter) HandleUsage(ctx context.Context, record coreusage.Record)
 		Failed:          record.Failed,
 		Failure: pluginapi.UsageFailure{
 			StatusCode: record.Fail.StatusCode,
-			Body:       record.Fail.Body,
-		},
+			Body:       record.Fail.Body},
 		Detail: pluginapi.UsageDetail{
 			InputTokens:         record.Detail.InputTokens,
 			OutputTokens:        record.Detail.OutputTokens,
@@ -174,10 +171,8 @@ func (a *usageAdapter) HandleUsage(ctx context.Context, record coreusage.Record)
 			CachedTokens:        record.Detail.CachedTokens,
 			CacheReadTokens:     record.Detail.CacheReadTokens,
 			CacheCreationTokens: record.Detail.CacheCreationTokens,
-			TotalTokens:         record.Detail.TotalTokens,
-		},
-		ResponseHeaders: cloneHeader(record.ResponseHeaders),
-	})
+			TotalTokens:         record.Detail.TotalTokens},
+		ResponseHeaders: cloneHeader(record.ResponseHeaders)})
 }
 
 func (a *thinkingAdapter) Apply(body []byte, config thinking.ThinkingConfig, modelInfo *registry.ModelInfo) (out []byte, err error) {
@@ -197,10 +192,8 @@ func (a *thinkingAdapter) Apply(body []byte, config thinking.ThinkingConfig, mod
 		Config: pluginapi.ThinkingConfig{
 			Mode:   config.Mode.String(),
 			Budget: config.Budget,
-			Level:  string(config.Level),
-		},
-		Body: bytes.Clone(body),
-	})
+			Level:  string(config.Level)},
+		Body: bytes.Clone(body)})
 	if errApply != nil || len(resp.Body) == 0 {
 		return bytes.Clone(body), nil
 	}
@@ -289,8 +282,7 @@ func (h *Host) callRequestNormalizer(ctx context.Context, record capabilityRecor
 		ToFormat:   to.String(),
 		Model:      model,
 		Stream:     stream,
-		Body:       bytes.Clone(body),
-	})
+		Body:       bytes.Clone(body)})
 	if errNormalizeRequest != nil || len(resp.Body) == 0 {
 		return nil, false
 	}
@@ -313,8 +305,7 @@ func (h *Host) callRequestTranslator(ctx context.Context, record capabilityRecor
 		ToFormat:   to.String(),
 		Model:      model,
 		Stream:     stream,
-		Body:       bytes.Clone(body),
-	})
+		Body:       bytes.Clone(body)})
 	if errTranslateRequest != nil || len(resp.Body) == 0 {
 		return nil, false
 	}
@@ -339,8 +330,7 @@ func (h *Host) callResponseNormalizer(ctx context.Context, record capabilityReco
 		Stream:            stream,
 		OriginalRequest:   bytes.Clone(originalRequestRawJSON),
 		TranslatedRequest: bytes.Clone(requestRawJSON),
-		Body:              bytes.Clone(body),
-	})
+		Body:              bytes.Clone(body)})
 	if errNormalizeResponse != nil || len(resp.Body) == 0 {
 		return nil, false
 	}
@@ -365,8 +355,7 @@ func (h *Host) callResponseTranslator(ctx context.Context, record capabilityReco
 		Stream:            stream,
 		OriginalRequest:   bytes.Clone(originalRequestRawJSON),
 		TranslatedRequest: bytes.Clone(requestRawJSON),
-		Body:              bytes.Clone(body),
-	})
+		Body:              bytes.Clone(body)})
 	if errTranslateResponse != nil || len(resp.Body) == 0 {
 		return nil, false
 	}

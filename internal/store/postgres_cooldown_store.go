@@ -174,8 +174,7 @@ func (s *postgresCooldownStateStore) Save(ctx context.Context, records []cliprox
 func cooldownStateKey(record cliproxyauth.CooldownStateRecord) postgresCooldownStateKey {
 	return postgresCooldownStateKey{
 		authID: strings.TrimSpace(record.AuthID),
-		model:  strings.TrimSpace(record.Model),
-	}
+		model:  strings.TrimSpace(record.Model)}
 }
 
 func normalizePostgresCooldownTime(value, fallback time.Time) time.Time {

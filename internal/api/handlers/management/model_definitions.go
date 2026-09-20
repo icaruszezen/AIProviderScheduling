@@ -28,6 +28,5 @@ func (h *Handler) GetStaticModelDefinitions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"channel": strings.ToLower(strings.TrimSpace(channel)),
-		"models":  models,
-	})
+		"models":  models})
 }

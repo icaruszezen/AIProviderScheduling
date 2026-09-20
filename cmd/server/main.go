@@ -35,7 +35,6 @@ import (
 	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/tui"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	sdkpluginstore "github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
 	log "github.com/sirupsen/logrus"
@@ -67,22 +66,11 @@ func shouldEnableExampleAPIKeySafeMode(cfg *config.Config, commandMode, tuiMode,
 }
 
 // main is the entry point of the application.
-// It parses command-line flags, loads configuration, and starts the appropriate
-// service based on the provided flags (login, codex-login, or server mode).
+// It parses command-line flags, loads configuration, and starts the server.
 func main() {
 	fmt.Printf("AIProviderScheduling Version: %s, Commit: %s, BuiltAt: %s\n", buildinfo.Version, buildinfo.Commit, buildinfo.BuildDate)
 
 	// Command-line flags to control the application's behavior.
-	var codexLogin bool
-	var codexDeviceLogin bool
-	var claudeLogin bool
-	var noBrowser bool
-	var oauthCallbackPort int
-	var antigravityLogin bool
-	var kimiLogin bool
-	var xaiLogin bool
-	var vertexImport string
-	var vertexImportPrefix string
 	var configPath string
 	var password string
 	var homeJWT string
@@ -91,18 +79,7 @@ func main() {
 	var standalone bool
 	var localModel bool
 
-	// Define command-line flags for different operation modes.
-	flag.BoolVar(&codexLogin, "codex-login", false, "Login to Codex using OAuth")
-	flag.BoolVar(&codexDeviceLogin, "codex-device-login", false, "Login to Codex using device code flow")
-	flag.BoolVar(&claudeLogin, "claude-login", false, "Login to Claude using OAuth")
-	flag.BoolVar(&noBrowser, "no-browser", false, "Don't open browser automatically for OAuth")
-	flag.IntVar(&oauthCallbackPort, "oauth-callback-port", 0, "Override OAuth callback port (defaults to provider-specific port)")
-	flag.BoolVar(&antigravityLogin, "antigravity-login", false, "Login to Antigravity using OAuth")
-	flag.BoolVar(&kimiLogin, "kimi-login", false, "Login to Kimi using OAuth")
-	flag.BoolVar(&xaiLogin, "xai-login", false, "Login to xAI using OAuth")
 	flag.StringVar(&configPath, "config", DefaultConfigPath, "Configure File Path")
-	flag.StringVar(&vertexImport, "vertex-import", "", "Import Vertex service account key JSON file")
-	flag.StringVar(&vertexImportPrefix, "vertex-import-prefix", "", "Prefix for Vertex model namespacing (use with -vertex-import)")
 	flag.StringVar(&password, "password", "", "")
 	flag.StringVar(&homeJWT, "home-jwt", "", "Home control plane JWT for mTLS certificate bootstrap and connection")
 	flag.BoolVar(&homeDisableClusterDiscovery, "home-disable-cluster-discovery", false, "Disable Home CLUSTER NODES discovery and keep using the configured -home-jwt address")
@@ -325,8 +302,7 @@ func main() {
 					SchemaVersion:     sdkpluginstore.PluginSyncSchemaVersion,
 					GOOS:              platform.GOOS,
 					GOARCH:            platform.GOARCH,
-					InstalledVersions: installedVersions,
-				}
+					InstalledVersions: installedVersions}
 				pluginSyncResponse, errFetchPlugins := homeClient.GetPluginSync(ctxHomePlugins, pluginSyncRequest)
 				errHomePlugins = errFetchPlugins
 				switch {
@@ -383,8 +359,7 @@ func main() {
 		pgStoreInst, err = store.NewPostgresStore(ctx, store.PostgresStoreConfig{
 			DSN:      pgStoreDSN,
 			Schema:   pgStoreSchema,
-			SpoolDir: pgStoreLocalPath,
-		})
+			SpoolDir: pgStoreLocalPath})
 		cancel()
 		if err != nil {
 			log.Errorf("failed to initialize postgres token store: %v", err)
@@ -401,7 +376,6 @@ func main() {
 		configFilePath = pgStoreInst.ConfigPath()
 		cfg, err = config.LoadConfigOptional(configFilePath, isCloudDeploy)
 		if err == nil {
-			cfg.AuthDir = pgStoreInst.AuthDir()
 			log.Infof("postgres-backed token store enabled, workspace path: %s", pgStoreInst.WorkDir())
 		}
 	} else if useObjectStore {
@@ -447,8 +421,7 @@ func main() {
 			SecretKey: objectStoreSecret,
 			LocalRoot: objectStoreRoot,
 			UseSSL:    useSSL,
-			PathStyle: true,
-		}
+			PathStyle: true}
 		objectStoreInst, err = store.NewObjectTokenStore(objCfg)
 		if err != nil {
 			log.Errorf("failed to initialize object token store: %v", err)
@@ -468,7 +441,6 @@ func main() {
 			if cfg == nil {
 				cfg = &config.Config{}
 			}
-			cfg.AuthDir = objectStoreInst.AuthDir()
 			log.Infof("object-backed token store enabled, bucket: %s", objectStoreBucket)
 		}
 	} else if useGitStore {
@@ -480,6 +452,9 @@ func main() {
 			}
 		}
 		gitStoreRoot = filepath.Join(gitStoreLocalPath, "gitstore")
+		// Historical workspace name. The git store still uses .../auths as its
+		// base so existing remotes keep working. Runtime credentials come from
+		// config.yaml, not leftover JSON files in this directory.
 		authDir := filepath.Join(gitStoreRoot, "auths")
 		gitStoreInst = store.NewGitTokenStore(gitStoreRemoteURL, gitStoreUser, gitStorePassword, gitStoreBranch)
 		gitStoreInst.SetBaseDir(authDir)
@@ -512,7 +487,6 @@ func main() {
 		}
 		cfg, err = config.LoadConfigOptional(configFilePath, isCloudDeploy)
 		if err == nil {
-			cfg.AuthDir = gitStoreInst.AuthDir()
 			log.Infof("git-backed token store enabled, repository path: %s", gitStoreRoot)
 		}
 	} else if configPath != "" {
@@ -574,21 +548,9 @@ func main() {
 	// Set the log level based on the configuration.
 	util.SetLogLevel(cfg)
 
-	if resolvedAuthDir, errResolveAuthDir := util.ResolveAuthDir(cfg.AuthDir); errResolveAuthDir != nil {
-		log.Errorf("failed to resolve auth directory: %v", errResolveAuthDir)
-		return
-	} else {
-		cfg.AuthDir = resolvedAuthDir
-	}
 	managementasset.SetCurrentConfig(cfg)
 
-	// Create login options to be used in authentication flows.
-	options := &cmd.LoginOptions{
-		NoBrowser:    noBrowser,
-		CallbackPort: oauthCallbackPort,
-	}
-
-	commandMode := vertexImport != "" || antigravityLogin || codexLogin || codexDeviceLogin || claudeLogin || kimiLogin || xaiLogin
+	commandMode := false
 	cloudConfigMissing := isCloudDeploy && !configFileExists
 	homeMode := configLoadedFromHome || (cfg != nil && cfg.Home.Enabled)
 	exampleAPIKeySafeMode := shouldEnableExampleAPIKeySafeMode(cfg, commandMode, tuiMode, standalone, cloudConfigMissing, homeMode)
@@ -597,17 +559,6 @@ func main() {
 		matches := safemode.ExampleAPIKeys(cfg.APIKeys)
 		log.WithField("api_keys", strings.Join(matches, ",")).Error("unsafe example API key configured; proxy API endpoints disabled until api-keys is updated")
 		serverOptions = append(serverOptions, api.WithExampleAPIKeySafeMode())
-	}
-
-	// Register the shared token store once so all components use the same persistence backend.
-	if usePostgresStore {
-		sdkAuth.RegisterTokenStore(pgStoreInst)
-	} else if useObjectStore {
-		sdkAuth.RegisterTokenStore(objectStoreInst)
-	} else if useGitStore {
-		sdkAuth.RegisterTokenStore(gitStoreInst)
-	} else {
-		sdkAuth.RegisterTokenStore(sdkAuth.NewFileTokenStore())
 	}
 
 	// Register built-in access providers before constructing services.
@@ -641,28 +592,7 @@ func main() {
 		}
 	}
 
-	// Handle different command modes based on the provided flags.
-
-	if vertexImport != "" {
-		// Handle Vertex service account import
-		cmd.DoVertexImport(cfg, vertexImport, vertexImportPrefix)
-	} else if antigravityLogin {
-		// Handle Antigravity login
-		cmd.DoAntigravityLogin(cfg, options)
-	} else if codexLogin {
-		// Handle Codex login
-		cmd.DoCodexLogin(cfg, options)
-	} else if codexDeviceLogin {
-		// Handle Codex device-code login
-		cmd.DoCodexDeviceLogin(cfg, options)
-	} else if claudeLogin {
-		// Handle Claude login
-		cmd.DoClaudeLogin(cfg, options)
-	} else if kimiLogin {
-		cmd.DoKimiLogin(cfg, options)
-	} else if xaiLogin {
-		cmd.DoXAILogin(cfg, options)
-	} else {
+	{
 		// In cloud deploy mode without config file, just wait for shutdown signals
 		if isCloudDeploy && !configFileExists {
 			// No config file available, just wait for shutdown

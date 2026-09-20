@@ -1,5 +1,5 @@
 // Package management provides the management API handlers and middleware
-// for configuring the server and managing auth files.
+// for configuring the server and provider API keys.
 package management
 
 import (
@@ -18,7 +18,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginstore"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -53,7 +52,6 @@ type Handler struct {
 	attemptsMu              sync.Mutex
 	failedAttempts          map[string]*attemptInfo // keyed by client IP
 	authManager             *coreauth.Manager
-	tokenStore              coreauth.Store
 	localPassword           string
 	allowRemoteOverride     bool
 	envSecret               string
@@ -84,10 +82,8 @@ func NewHandler(cfg *config.Config, configFilePath string, manager *coreauth.Man
 		configFilePath:      configFilePath,
 		failedAttempts:      make(map[string]*attemptInfo),
 		authManager:         manager,
-		tokenStore:          sdkAuth.GetTokenStore(),
 		allowRemoteOverride: envSecret != "",
-		envSecret:           envSecret,
-	}
+		envSecret:           envSecret}
 	h.startAttemptCleanup()
 	return h
 }
@@ -234,8 +230,7 @@ func (h *Handler) reloadSnapshotConfigLocked() configReloadSnapshot {
 	h.reloadGeneration++
 	return configReloadSnapshot{
 		cfg:        h.cfg.CloneForRuntime(),
-		generation: h.reloadGeneration,
-	}
+		generation: h.reloadGeneration}
 }
 
 // saveConfigAndSnapshotLocked saves h.cfg and returns a full runtime config snapshot.
@@ -438,8 +433,7 @@ func (h *Handler) persistLocked(c *gin.Context) bool {
 	if h.slaveReadonlyLocked() {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":   "slave_node_readonly",
-			"message": "slave node: config is synced from master",
-		})
+			"message": "slave node: config is synced from master"})
 		return false
 	}
 	return h.saveAndReloadLocked(c)

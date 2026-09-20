@@ -297,8 +297,7 @@ var claudeLegacySystemReminderModels = map[string]struct{}{
 	"claude-sonnet-4-20250514":   {},
 	"claude-sonnet-4-5":          {},
 	"claude-sonnet-4-5-20250929": {},
-	"claude-sonnet-4-6":          {},
-}
+	"claude-sonnet-4-6":          {}}
 
 func claudeUsesLegacySystemReminder(payload []byte) bool {
 	model := strings.ToLower(strings.TrimSpace(gjson.GetBytes(payload, "model").String()))
@@ -328,8 +327,7 @@ func newClaudeCallerSystemBlockError(index int, blockType string) error {
 		code: http.StatusBadRequest,
 		msg: fmt.Sprintf("invalid_request_error: system.%d.type: Input should be 'text'. "+
 			"System instructions support text only, but this block has type %q. "+
-			"Move non-text content into a user message.", index, blockType),
-	}}
+			"Move non-text content into a user message.", index, blockType)}}
 }
 
 // claudeMidSystemMessageModelError reports a mid-conversation
@@ -358,8 +356,7 @@ func newClaudeMidSystemMessageModelError(model string) error {
 		code: http.StatusBadRequest,
 		msg: fmt.Sprintf("invalid_request_error: role 'system' is not supported on this model. "+
 			"Model %q predates mid-conversation system turns, so system instructions must "+
-			"stay in the top-level system field for it.", model),
-	}}
+			"stay in the top-level system field for it.", model)}}
 }
 
 // validateClaudeMidSystemMessageModel rejects a request that pairs a legacy
@@ -663,8 +660,7 @@ func captureClaudeCodeSystemPlacement(before, after []byte, cloaked bool) claude
 	return claudeCodeSystemPlacementState{
 		insertAt:    insertAt,
 		insertedRaw: insertedRaw,
-		texts:       append([]string(nil), texts...),
-	}
+		texts:       append([]string(nil), texts...)}
 }
 
 // reconcileClaudeCodeSystemPlacementAfterPayload repairs an otherwise stale
@@ -953,8 +949,7 @@ func resolveClaudeWirePolicy(cfg *config.Config, auth *cliproxyauth.Auth, apiKey
 	settings := claudeCloakSettings{
 		strictMode:     attrStrict,
 		sensitiveWords: attrWords,
-		cacheUserID:    attrCache,
-	}
+		cacheUserID:    attrCache}
 	if attrMode != "" {
 		cloakMode = attrMode
 	}
@@ -979,8 +974,7 @@ func resolveClaudeWirePolicy(cfg *config.Config, auth *cliproxyauth.Auth, apiKey
 		OAuth:                fp.AuthIsOAuthToken,
 		ProfileClaudeCodeCLI: fp.ProfileClaudeCodeCLI,
 		ConfirmedClaudeCode:  confirmedClaudeCode,
-		Cloak:                (fp.ProfileClaudeCodeCLI || cloakConfigured) && !confirmedClaudeCode,
-	}
+		Cloak:                (fp.ProfileClaudeCodeCLI || cloakConfigured) && !confirmedClaudeCode}
 	if confirmedClaudeCode {
 		// Native Claude Code is always a passthrough client. An operator-level
 		// "always" mode may cloak unknown callers, but must not overwrite a
@@ -1059,7 +1053,7 @@ type claudeCacheControl struct {
 // 2.1.221 and 2.1.227 binaries, which is byte-identical in all three:
 //
 //	function ctor({scope, ttl} = {}) {
-//	  return {type: "ephemeral", ...ttl && {ttl}, ...scope === "global" && {scope}}
+//	  return {type: "ephemeral", ...ttl && {ttl}, ...scope === "global" && {scope,}}
 //	}
 //
 // ttl is spread in only when the caller passes one, so the default native wire
@@ -1067,8 +1061,7 @@ type claudeCacheControl struct {
 // separately, for the credentials native selects it on. The struct field order
 // preserves the native {type, ttl} key order when sjson marshals a value.
 var claudeCodeCacheControl = claudeCacheControl{
-	Type: "ephemeral",
-}
+	Type: "ephemeral"}
 
 // claudeCacheControlTTL1h is the only non-default ttl native ever selects.
 const claudeCacheControlTTL1h = "1h"
@@ -1121,7 +1114,7 @@ func claudePayloadHasCacheableSystem(payload []byte) bool {
 //
 //	function upgrade(block, ttl) {
 //	  if (!("cache_control" in block) || !block.cache_control || block.cache_control.ttl) return block
-//	  return {...block, cache_control: {...block.cache_control, ttl}}
+//	  return {...block, cache_control: {...block.cache_control, ttl,}}
 //	}
 //
 // It never creates a breakpoint, so placement stays owned by ensureCacheControl.

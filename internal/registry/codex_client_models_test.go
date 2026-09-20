@@ -50,8 +50,7 @@ func TestValidateCodexClientModelsJSON(t *testing.T) {
 		{name: "missing default", raw: testCodexClientCatalog(t, validOther)},
 		{name: "missing required field", raw: testCodexClientCatalog(t, missingField)},
 		{name: "wrong required field type", raw: testCodexClientCatalog(t, wrongFieldType)},
-		{name: "default reasoning level not supported", raw: testCodexClientCatalog(t, unsupportedDefault)},
-	}
+		{name: "default reasoning level not supported", raw: testCodexClientCatalog(t, unsupportedDefault)}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ValidateCodexClientModelsJSON(tt.raw); err == nil {
@@ -148,8 +147,7 @@ func TestRefreshCodexClientModelsKeepsLastValidSnapshot(t *testing.T) {
 	}{
 		{name: "remote files missing", statusCode: http.StatusNotFound},
 		{name: "remote JSON malformed", statusCode: http.StatusOK, body: `{"models":`},
-		{name: "remote JSON incomplete", statusCode: http.StatusOK, body: `{"models":[{"slug":"gpt-5.5"}]}`},
-	}
+		{name: "remote JSON incomplete", statusCode: http.StatusOK, body: `{"models":[{"slug":"gpt-5.5"}]}`}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			servers := make([]*httptest.Server, 0, 2)
@@ -194,8 +192,7 @@ func testCodexClientModel(slug string, priority int) map[string]any {
 		"max_context_window":         372000,
 		"priority":                   priority,
 		"default_reasoning_level":    "medium",
-		"supported_reasoning_levels": []map[string]any{{"effort": "medium", "description": "Balanced"}},
-	}
+		"supported_reasoning_levels": []map[string]any{{"effort": "medium", "description": "Balanced"}}}
 }
 
 func testCodexClientCatalog(t *testing.T, models ...map[string]any) []byte {

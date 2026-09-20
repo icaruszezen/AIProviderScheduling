@@ -49,15 +49,12 @@ openai-compatibility:
 			name: "YAML",
 			decode: func(cfg *Config) error {
 				return yaml.Unmarshal([]byte(yamlConfig), cfg)
-			},
-		},
+			}},
 		{
 			name: "JSON",
 			decode: func(cfg *Config) error {
 				return json.Unmarshal([]byte(jsonConfig), cfg)
-			},
-		},
-	} {
+			}}} {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg Config
 			if errDecode := tt.decode(&cfg); errDecode != nil {

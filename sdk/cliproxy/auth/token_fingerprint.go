@@ -44,7 +44,13 @@ func NotifyAccessTokenFingerprint(ctx context.Context, auth *Auth) {
 }
 
 func accessTokenForFingerprint(auth *Auth) string {
-	if auth == nil || auth.Metadata == nil {
+	if auth == nil {
+		return ""
+	}
+	if apiKey := strings.TrimSpace(authAttribute(auth, AttributeAPIKey)); apiKey != "" {
+		return apiKey
+	}
+	if auth.Metadata == nil {
 		return ""
 	}
 	for _, key := range []string{"access_token", "accessToken"} {

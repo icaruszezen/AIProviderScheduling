@@ -47,8 +47,7 @@ func TestCredentialInFlightWireContractRejectsInvalidJSON(t *testing.T) {
 		{name: "unknown aggregate owner field", raw: bytes.Replace(raw, []byte(`"credential_id": "cred-a"`), []byte(`"credential_id": "cred-a", "fingerprint": "owner"`), 1)},
 		{name: "unknown detail secret field", raw: bytes.Replace(raw, []byte(`"request_id": "req-1"`), []byte(`"request_id": "req-1", "secret": "secret"`), 1)},
 		{name: "unknown overflow secret field", raw: bytes.Replace(raw, []byte(`"aggregate_group_count": 100001`), []byte(`"aggregate_group_count": 100001, "api_key": "secret"`), 1)},
-		{name: "trailing JSON", raw: append(append([]byte{}, raw...), []byte(` {"part": {}}`)...)},
-	} {
+		{name: "trailing JSON", raw: append(append([]byte{}, raw...), []byte(` {"part": {}}`)...)}} {
 		t.Run(test.name, func(t *testing.T) {
 			if _, errDecode := decodeInFlightContractFixture(test.raw); errDecode == nil {
 				t.Fatal("decodeInFlightContractFixture() error = nil")
@@ -107,21 +106,18 @@ func assertInFlightContractFields(t *testing.T) {
 		{name: "DetailsTruncated", tag: "details_truncated,omitempty"},
 		{name: "Aggregates", tag: "aggregates,omitempty"},
 		{name: "Details", tag: "details,omitempty"},
-		{name: "AggregateGroupCount", tag: "aggregate_group_count,omitempty"},
-	})
+		{name: "AggregateGroupCount", tag: "aggregate_group_count,omitempty"}})
 	assertOrderedInFlightJSONFields(t, reflect.TypeOf(InFlightAggregate{}), []inFlightJSONField{
 		{name: "CredentialID", tag: "credential_id"},
 		{name: "Model", tag: "model"},
 		{name: "Status", tag: "status"},
-		{name: "Count", tag: "count"},
-	})
+		{name: "Count", tag: "count"}})
 	assertOrderedInFlightJSONFields(t, reflect.TypeOf(InFlightRequestDetail{}), []inFlightJSONField{
 		{name: "RequestID", tag: "request_id"},
 		{name: "CredentialID", tag: "credential_id"},
 		{name: "Model", tag: "model"},
 		{name: "RequestKind", tag: "request_kind"},
-		{name: "StartedAt", tag: "started_at"},
-	})
+		{name: "StartedAt", tag: "started_at"}})
 }
 
 func assertInFlightFixtureKeys(t *testing.T, fixture inFlightContractFixture) {

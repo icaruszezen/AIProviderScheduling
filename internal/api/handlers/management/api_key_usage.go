@@ -109,8 +109,7 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 		providerBucket[compositeKey] = apiKeyUsageEntry{
 			Success:        auth.Success,
 			Failed:         auth.Failed,
-			RecentRequests: recent,
-		}
+			RecentRequests: recent}
 	}
 
 	c.JSON(http.StatusOK, out)

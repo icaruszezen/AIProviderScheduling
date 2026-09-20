@@ -30,52 +30,41 @@ func TestHTTPStatusFromError(t *testing.T) {
 		{
 			name: "url error wraps canceled",
 			err:  &url.Error{Op: "Post", URL: "https://example.com", Err: context.Canceled},
-			want: StatusClientClosedRequest,
-		},
+			want: StatusClientClosedRequest},
 		{
 			name: "url error wraps deadline",
 			err:  &url.Error{Op: "Post", URL: "https://example.com", Err: context.DeadlineExceeded},
-			want: http.StatusGatewayTimeout,
-		},
+			want: http.StatusGatewayTimeout},
 		{
 			name: "fmt wrap canceled",
 			err:  fmt.Errorf("upstream: %w", context.Canceled),
-			want: StatusClientClosedRequest,
-		},
+			want: StatusClientClosedRequest},
 		{
 			name: "explicit status code wins",
 			err:  statusError{status: http.StatusTooManyRequests, body: "rate limited"},
-			want: http.StatusTooManyRequests,
-		},
+			want: http.StatusTooManyRequests},
 		{
 			name: "explicit status wins over canceled unwrap",
 			err: statusAndUnwrapError{
 				status: http.StatusTooManyRequests,
 				body:   "rate limited",
-				cause:  context.Canceled,
-			},
-			want: http.StatusTooManyRequests,
-		},
+				cause:  context.Canceled},
+			want: http.StatusTooManyRequests},
 		{
 			name: "zero status code falls through to canceled unwrap",
 			err: statusAndUnwrapError{
 				status: 0,
 				body:   "canceled",
-				cause:  context.Canceled,
-			},
-			want: StatusClientClosedRequest,
-		},
+				cause:  context.Canceled},
+			want: StatusClientClosedRequest},
 		{
 			name: "zero status code without unwrap stays unknown",
 			err:  statusError{status: 0, body: context.Canceled.Error()},
-			want: 0,
-		},
+			want: 0},
 		{
 			name: "wrapped status code via errors.As",
 			err:  fmt.Errorf("execute failed: %w", statusError{status: http.StatusUnauthorized, body: "unauthorized"}),
-			want: http.StatusUnauthorized,
-		},
-	}
+			want: http.StatusUnauthorized}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -115,8 +104,7 @@ func TestIsRequestFaultStructuredIdentifiers(t *testing.T) {
 		"invalid_value",
 		"unsupported_value",
 		"invalid_request_error",
-		"previous_response_not_found",
-	} {
+		"previous_response_not_found"} {
 		t.Run("code/"+code, func(t *testing.T) {
 			err := errors.New(`{"error":{"code":"` + code + `"}}`)
 			if !IsRequestFault(http.StatusBadGateway, err) {
@@ -129,8 +117,7 @@ func TestIsRequestFaultStructuredIdentifiers(t *testing.T) {
 		"invalid_request",
 		"invalid_request_error",
 		"bad_request_error",
-		"invalid_prompt",
-	} {
+		"invalid_prompt"} {
 		t.Run("type/"+errType, func(t *testing.T) {
 			err := errors.New(`{"error":{"type":"` + errType + `"}}`)
 			if !IsRequestFault(http.StatusBadGateway, err) {
@@ -155,65 +142,55 @@ func TestIsRequestFault(t *testing.T) {
 			name:   "cyber policy behind bad gateway",
 			status: http.StatusBadGateway,
 			err:    errors.New(`{"error":{"type":"invalid_request","code":"cyber_policy","message":"blocked"}}`),
-			want:   true,
-		},
+			want:   true},
 		{
 			name:   "context length behind internal error",
 			status: http.StatusInternalServerError,
 			err:    errors.New(`{"response":{"error":{"type":"server_error","code":"context_length_exceeded"}}}`),
-			want:   true,
-		},
+			want:   true},
 		{
 			name:   "invalid request type behind bad gateway",
 			status: http.StatusBadGateway,
 			err:    errors.New(`{"body":{"error":{"type":"invalid_request","message":"invalid"}}}`),
-			want:   true,
-		},
+			want:   true},
 		{
 			name: "status from error",
 			err:  statusError{status: http.StatusConflict, body: "conflict"},
-			want: true,
-		},
+			want: true},
 		{
 			// Verbatim upstream text: plain text, not JSON, so it can only be matched
 			// by message.
 			name:   "item not persisted with store=false",
 			status: http.StatusNotFound,
 			err:    errors.New("Item with id 'rs_0b5f3eb6f51f175c0169ca74e4a85881998539920821603a74' not found. Items are not persisted when `store` is set to false. Try again with `store` set to true, or remove this item from your input."),
-			want:   true,
-		},
+			want:   true},
 		{
 			// An upstream internal error is not a request fault: it must stay eligible
 			// for credential rotation and (credential, model) cooldown.
 			name:   "upstream unknown internal error",
 			status: http.StatusInternalServerError,
-			err:    errors.New(`{"error":{"code":500,"message":"Internal error encountered.","status":"UNKNOWN"}}`),
-		},
+			err:    errors.New(`{"error":{"code":500,"message":"Internal error encountered.","status":"UNKNOWN"}}`)},
 		{name: "plain not found", status: http.StatusNotFound, err: errors.New("model not found")},
 		{name: "unauthorized", status: http.StatusUnauthorized, err: errors.New("invalid token")},
 		{
 			name:   "deepseek authentication failure is credential failure",
 			status: http.StatusUnauthorized,
 			err:    errors.New(`{"error":{"code":"invalid_request_error","message":"Authentication Fails, Your api key: ****heck is invalid","param":null,"type":"authentication_error"}}`),
-			want:   false,
-		},
+			want:   false},
 		{
 			name:   "deepseek insufficient balance is payment failure",
 			status: http.StatusPaymentRequired,
 			err:    errors.New(`{"error":{"message":"Insufficient Balance","type":"unknown_error","param":null,"code":"invalid_request_error"}}`),
-			want:   false,
-		},
+			want:   false},
 		{
 			name:   "rate limit status overrides generic request error code",
 			status: http.StatusTooManyRequests,
 			err:    errors.New(`{"error":{"message":"Rate Limit Reached","type":"unknown_error","param":null,"code":"invalid_request_error"}}`),
-			want:   false,
-		},
+			want:   false},
 		{name: "quota", status: http.StatusTooManyRequests, err: errors.New("quota")},
 		{name: "transport", status: http.StatusBadGateway, err: errors.New("unexpected EOF")},
 		{name: "invalid JSON body", status: http.StatusBadGateway, err: errors.New(`{"error":`)},
-		{name: "nil", status: 0},
-	}
+		{name: "nil", status: 0}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -242,8 +219,7 @@ func TestIsClientCancellation(t *testing.T) {
 		{name: "status 429 rate limit", status: http.StatusTooManyRequests, err: errors.New("rate limited"), want: false},
 		{name: "status 500 internal error", status: http.StatusInternalServerError, err: errors.New("internal error"), want: false},
 		{name: "plain unrelated error", status: 0, err: errors.New("connection reset by peer"), want: false},
-		{name: "nil error and 0 status", status: 0, err: nil, want: false},
-	}
+		{name: "nil error and 0 status", status: 0, err: nil, want: false}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

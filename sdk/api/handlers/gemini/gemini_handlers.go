@@ -29,8 +29,7 @@ type GeminiAPIHandler struct {
 // It takes an BaseAPIHandler instance as input and returns a GeminiAPIHandler.
 func NewGeminiAPIHandler(apiHandlers *handlers.BaseAPIHandler) *GeminiAPIHandler {
 	return &GeminiAPIHandler{
-		BaseAPIHandler: apiHandlers,
-	}
+		BaseAPIHandler: apiHandlers}
 }
 
 // HandlerType returns the identifier for this handler implementation.
@@ -73,8 +72,7 @@ func (h *GeminiAPIHandler) GeminiModels(c *gin.Context) {
 		normalizedModels = append(normalizedModels, normalizedModel)
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"models": normalizedModels,
-	})
+		"models": normalizedModels})
 }
 
 // GeminiGetHandler handles GET requests for specific Gemini model information.
@@ -87,9 +85,7 @@ func (h *GeminiAPIHandler) GeminiGetHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 	action := strings.TrimPrefix(request.Action, "/")
@@ -119,9 +115,7 @@ func (h *GeminiAPIHandler) GeminiGetHandler(c *gin.Context) {
 	c.JSON(http.StatusNotFound, handlers.ErrorResponse{
 		Error: handlers.ErrorDetail{
 			Message: "Not Found",
-			Type:    "not_found",
-		},
-	})
+			Type:    "not_found"}})
 }
 
 // GeminiHandler handles POST requests for Gemini API operations.
@@ -134,9 +128,7 @@ func (h *GeminiAPIHandler) GeminiHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 	action := strings.Split(strings.TrimPrefix(request.Action, "/"), ":")
@@ -144,9 +136,7 @@ func (h *GeminiAPIHandler) GeminiHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("%s not found.", c.Request.URL.Path),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -181,9 +171,7 @@ func (h *GeminiAPIHandler) handleStreamGenerateContent(c *gin.Context, modelName
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -337,6 +325,5 @@ func (h *GeminiAPIHandler) forwardGeminiStream(c *gin.Context, flusher http.Flus
 			} else {
 				_, _ = c.Writer.Write(body)
 			}
-		},
-	})
+		}})
 }

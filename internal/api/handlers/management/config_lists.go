@@ -974,8 +974,8 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 	}
 	for i := range arr {
 		normalizeVertexCompatKey(&arr[i])
-		if arr[i].APIKey == "" {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("vertex-api-key[%d].api-key is required", i)})
+		if arr[i].APIKey == "" && len(arr[i].ServiceAccount) == 0 {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("vertex-api-key[%d].api-key or service-account is required", i)})
 			return
 		}
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("vertex-api-key[%d].weight", i), arr[i].Weight) {
@@ -991,6 +991,10 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	type vertexCompatPatch struct {
 		APIKey                   *string                     `json:"api-key"`
+		ServiceAccount           *map[string]any             `json:"service-account"`
+		ProjectID                *string                     `json:"project-id"`
+		Location                 *string                     `json:"location"`
+		Email                    *string                     `json:"email"`
 		Weight                   json.RawMessage             `json:"weight"`
 		Prefix                   *string                     `json:"prefix"`
 		BaseURL                  *string                     `json:"base-url"`
@@ -1039,13 +1043,25 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	entry := h.cfg.VertexCompatAPIKey[targetIndex]
 	if body.Value.APIKey != nil {
 		trimmed := strings.TrimSpace(*body.Value.APIKey)
-		if trimmed == "" {
+		if trimmed == "" && len(entry.ServiceAccount) == 0 && (body.Value.ServiceAccount == nil || len(*body.Value.ServiceAccount) == 0) {
 			h.cfg.VertexCompatAPIKey = append(h.cfg.VertexCompatAPIKey[:targetIndex], h.cfg.VertexCompatAPIKey[targetIndex+1:]...)
 			h.cfg.SanitizeVertexCompatKeys()
 			h.persistLocked(c)
 			return
 		}
 		entry.APIKey = trimmed
+	}
+	if body.Value.ServiceAccount != nil {
+		entry.ServiceAccount = config.NormalizeServiceAccount(*body.Value.ServiceAccount)
+	}
+	if body.Value.ProjectID != nil {
+		entry.ProjectID = strings.TrimSpace(*body.Value.ProjectID)
+	}
+	if body.Value.Location != nil {
+		entry.Location = strings.TrimSpace(*body.Value.Location)
+	}
+	if body.Value.Email != nil {
+		entry.Email = strings.TrimSpace(*body.Value.Email)
 	}
 	if len(body.Value.Weight) > 0 {
 		weight, errWeight := parseCredentialWeightPatch(body.Value.Weight)
@@ -1142,285 +1158,6 @@ func (h *Handler) DeleteVertexCompatKey(c *gin.Context) {
 		}
 	}
 	c.JSON(400, gin.H{"error": "missing api-key or index"})
-}
-
-// oauth-excluded-models: map[string][]string
-func (h *Handler) GetOAuthExcludedModels(c *gin.Context) {
-	c.JSON(200, gin.H{"oauth-excluded-models": config.NormalizeOAuthExcludedModels(h.cfg.OAuthExcludedModels)})
-}
-
-func (h *Handler) PutOAuthExcludedModels(c *gin.Context) {
-	data, err := c.GetRawData()
-	if err != nil {
-		c.JSON(400, gin.H{"error": "failed to read body"})
-		return
-	}
-	var entries map[string][]string
-	if err = json.Unmarshal(data, &entries); err != nil {
-		var wrapper struct {
-			Items map[string][]string `json:"items"`
-		}
-		if err2 := json.Unmarshal(data, &wrapper); err2 != nil {
-			c.JSON(400, gin.H{"error": "invalid body"})
-			return
-		}
-		entries = wrapper.Items
-	}
-	h.cfg.OAuthExcludedModels = config.NormalizeOAuthExcludedModels(entries)
-	h.persist(c)
-}
-
-func (h *Handler) PatchOAuthExcludedModels(c *gin.Context) {
-	var body struct {
-		Provider *string  `json:"provider"`
-		Models   []string `json:"models"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil || body.Provider == nil {
-		c.JSON(400, gin.H{"error": "invalid body"})
-		return
-	}
-	provider := strings.ToLower(strings.TrimSpace(*body.Provider))
-	if provider == "" {
-		c.JSON(400, gin.H{"error": "invalid provider"})
-		return
-	}
-	normalized := config.NormalizeExcludedModels(body.Models)
-	if len(normalized) == 0 {
-		if h.cfg.OAuthExcludedModels == nil {
-			c.JSON(404, gin.H{"error": "provider not found"})
-			return
-		}
-		if _, ok := h.cfg.OAuthExcludedModels[provider]; !ok {
-			c.JSON(404, gin.H{"error": "provider not found"})
-			return
-		}
-		delete(h.cfg.OAuthExcludedModels, provider)
-		if len(h.cfg.OAuthExcludedModels) == 0 {
-			h.cfg.OAuthExcludedModels = nil
-		}
-		h.persist(c)
-		return
-	}
-	if h.cfg.OAuthExcludedModels == nil {
-		h.cfg.OAuthExcludedModels = make(map[string][]string)
-	}
-	h.cfg.OAuthExcludedModels[provider] = normalized
-	h.persist(c)
-}
-
-func (h *Handler) DeleteOAuthExcludedModels(c *gin.Context) {
-	provider := strings.ToLower(strings.TrimSpace(c.Query("provider")))
-	if provider == "" {
-		c.JSON(400, gin.H{"error": "missing provider"})
-		return
-	}
-	if h.cfg.OAuthExcludedModels == nil {
-		c.JSON(404, gin.H{"error": "provider not found"})
-		return
-	}
-	if _, ok := h.cfg.OAuthExcludedModels[provider]; !ok {
-		c.JSON(404, gin.H{"error": "provider not found"})
-		return
-	}
-	delete(h.cfg.OAuthExcludedModels, provider)
-	if len(h.cfg.OAuthExcludedModels) == 0 {
-		h.cfg.OAuthExcludedModels = nil
-	}
-	h.persist(c)
-}
-
-// oauth-model-alias: map[string][]OAuthModelAlias
-func (h *Handler) GetOAuthModelAlias(c *gin.Context) {
-	c.JSON(200, gin.H{"oauth-model-alias": sanitizedOAuthModelAlias(h.cfg.OAuthModelAlias)})
-}
-
-func (h *Handler) PutOAuthModelAlias(c *gin.Context) {
-	data, err := c.GetRawData()
-	if err != nil {
-		c.JSON(400, gin.H{"error": "failed to read body"})
-		return
-	}
-	var entries map[string][]config.OAuthModelAlias
-	if err = json.Unmarshal(data, &entries); err != nil {
-		var wrapper struct {
-			Items map[string][]config.OAuthModelAlias `json:"items"`
-		}
-		if err2 := json.Unmarshal(data, &wrapper); err2 != nil {
-			c.JSON(400, gin.H{"error": "invalid body"})
-			return
-		}
-		entries = wrapper.Items
-	}
-	h.cfg.OAuthModelAlias = sanitizedOAuthModelAlias(entries)
-	h.persist(c)
-}
-
-func (h *Handler) PatchOAuthModelAlias(c *gin.Context) {
-	var body struct {
-		Provider *string                  `json:"provider"`
-		Channel  *string                  `json:"channel"`
-		Aliases  []config.OAuthModelAlias `json:"aliases"`
-	}
-	if errBindJSON := c.ShouldBindJSON(&body); errBindJSON != nil {
-		c.JSON(400, gin.H{"error": "invalid body"})
-		return
-	}
-	channelRaw := ""
-	if body.Channel != nil {
-		channelRaw = *body.Channel
-	} else if body.Provider != nil {
-		channelRaw = *body.Provider
-	}
-	channel := strings.ToLower(strings.TrimSpace(channelRaw))
-	if channel == "" {
-		c.JSON(400, gin.H{"error": "invalid channel"})
-		return
-	}
-
-	normalizedMap := sanitizedOAuthModelAlias(map[string][]config.OAuthModelAlias{channel: body.Aliases})
-	normalized := normalizedMap[channel]
-	if len(normalized) == 0 {
-		if h.cfg.OAuthModelAlias == nil {
-			c.JSON(404, gin.H{"error": "channel not found"})
-			return
-		}
-		if _, ok := h.cfg.OAuthModelAlias[channel]; !ok {
-			c.JSON(404, gin.H{"error": "channel not found"})
-			return
-		}
-		delete(h.cfg.OAuthModelAlias, channel)
-		if len(h.cfg.OAuthModelAlias) == 0 {
-			h.cfg.OAuthModelAlias = nil
-		}
-		h.persist(c)
-		return
-	}
-	if h.cfg.OAuthModelAlias == nil {
-		h.cfg.OAuthModelAlias = make(map[string][]config.OAuthModelAlias)
-	}
-	h.cfg.OAuthModelAlias[channel] = normalized
-	h.persist(c)
-}
-
-func (h *Handler) DeleteOAuthModelAlias(c *gin.Context) {
-	channel := strings.ToLower(strings.TrimSpace(c.Query("channel")))
-	if channel == "" {
-		channel = strings.ToLower(strings.TrimSpace(c.Query("provider")))
-	}
-	if channel == "" {
-		c.JSON(400, gin.H{"error": "missing channel"})
-		return
-	}
-	if h.cfg.OAuthModelAlias == nil {
-		c.JSON(404, gin.H{"error": "channel not found"})
-		return
-	}
-	if _, ok := h.cfg.OAuthModelAlias[channel]; !ok {
-		c.JSON(404, gin.H{"error": "channel not found"})
-		return
-	}
-	delete(h.cfg.OAuthModelAlias, channel)
-	if len(h.cfg.OAuthModelAlias) == 0 {
-		h.cfg.OAuthModelAlias = nil
-	}
-	h.persist(c)
-}
-
-// oauth-request-scoped-errors: map[string][]RequestScopedErrorRule
-func (h *Handler) GetOAuthRequestScopedErrors(c *gin.Context) {
-	c.JSON(200, gin.H{"oauth-request-scoped-errors": sanitizedOAuthRequestScopedErrors(h.cfg.OAuthRequestScopedErrors)})
-}
-
-func (h *Handler) PutOAuthRequestScopedErrors(c *gin.Context) {
-	data, err := c.GetRawData()
-	if err != nil {
-		c.JSON(400, gin.H{"error": "failed to read body"})
-		return
-	}
-	var entries map[string][]config.RequestScopedErrorRule
-	if err = json.Unmarshal(data, &entries); err != nil {
-		var wrapper struct {
-			Items map[string][]config.RequestScopedErrorRule `json:"items"`
-		}
-		if err2 := json.Unmarshal(data, &wrapper); err2 != nil {
-			c.JSON(400, gin.H{"error": "invalid body"})
-			return
-		}
-		entries = wrapper.Items
-	}
-	h.cfg.OAuthRequestScopedErrors = sanitizedOAuthRequestScopedErrors(entries)
-	h.persist(c)
-}
-
-func (h *Handler) PatchOAuthRequestScopedErrors(c *gin.Context) {
-	var body struct {
-		Provider *string                         `json:"provider"`
-		Channel  *string                         `json:"channel"`
-		Rules    []config.RequestScopedErrorRule `json:"rules"`
-	}
-	if errBindJSON := c.ShouldBindJSON(&body); errBindJSON != nil {
-		c.JSON(400, gin.H{"error": "invalid body"})
-		return
-	}
-	channelRaw := ""
-	if body.Channel != nil {
-		channelRaw = *body.Channel
-	} else if body.Provider != nil {
-		channelRaw = *body.Provider
-	}
-	channel := strings.ToLower(strings.TrimSpace(channelRaw))
-	if channel == "" {
-		c.JSON(400, gin.H{"error": "invalid channel"})
-		return
-	}
-
-	normalizedMap := sanitizedOAuthRequestScopedErrors(map[string][]config.RequestScopedErrorRule{channel: body.Rules})
-	normalized := normalizedMap[channel]
-	if len(normalized) == 0 {
-		if h.cfg.OAuthRequestScopedErrors == nil {
-			c.JSON(404, gin.H{"error": "channel not found"})
-			return
-		}
-		if _, ok := h.cfg.OAuthRequestScopedErrors[channel]; !ok {
-			c.JSON(404, gin.H{"error": "channel not found"})
-			return
-		}
-		delete(h.cfg.OAuthRequestScopedErrors, channel)
-		if len(h.cfg.OAuthRequestScopedErrors) == 0 {
-			h.cfg.OAuthRequestScopedErrors = nil
-		}
-		h.persist(c)
-		return
-	}
-	if h.cfg.OAuthRequestScopedErrors == nil {
-		h.cfg.OAuthRequestScopedErrors = make(map[string][]config.RequestScopedErrorRule)
-	}
-	h.cfg.OAuthRequestScopedErrors[channel] = normalized
-	h.persist(c)
-}
-
-func (h *Handler) DeleteOAuthRequestScopedErrors(c *gin.Context) {
-	channel := strings.ToLower(strings.TrimSpace(c.Query("channel")))
-	if channel == "" {
-		channel = strings.ToLower(strings.TrimSpace(c.Query("provider")))
-	}
-	if channel == "" {
-		c.JSON(400, gin.H{"error": "missing channel"})
-		return
-	}
-	if h.cfg.OAuthRequestScopedErrors == nil {
-		c.JSON(404, gin.H{"error": "channel not found"})
-		return
-	}
-	if _, ok := h.cfg.OAuthRequestScopedErrors[channel]; !ok {
-		c.JSON(404, gin.H{"error": "channel not found"})
-		return
-	}
-	delete(h.cfg.OAuthRequestScopedErrors, channel)
-	if len(h.cfg.OAuthRequestScopedErrors) == 0 {
-		h.cfg.OAuthRequestScopedErrors = nil
-	}
-	h.persist(c)
 }
 
 // codex-api-key: []CodexKey
@@ -2010,48 +1747,4 @@ func normalizeVertexCompatKey(entry *config.VertexCompatKey) {
 		normalized = append(normalized, model)
 	}
 	entry.Models = normalized
-}
-
-func sanitizedOAuthModelAlias(entries map[string][]config.OAuthModelAlias) map[string][]config.OAuthModelAlias {
-	if len(entries) == 0 {
-		return nil
-	}
-	copied := make(map[string][]config.OAuthModelAlias, len(entries))
-	for channel, aliases := range entries {
-		if len(aliases) == 0 {
-			continue
-		}
-		copied[channel] = append([]config.OAuthModelAlias(nil), aliases...)
-	}
-	if len(copied) == 0 {
-		return nil
-	}
-	cfg := config.Config{OAuthModelAlias: copied}
-	cfg.SanitizeOAuthModelAlias()
-	if len(cfg.OAuthModelAlias) == 0 {
-		return nil
-	}
-	return cfg.OAuthModelAlias
-}
-
-func sanitizedOAuthRequestScopedErrors(entries map[string][]config.RequestScopedErrorRule) map[string][]config.RequestScopedErrorRule {
-	if len(entries) == 0 {
-		return nil
-	}
-	copied := make(map[string][]config.RequestScopedErrorRule, len(entries))
-	for channel, rules := range entries {
-		if len(rules) == 0 {
-			continue
-		}
-		copied[channel] = append([]config.RequestScopedErrorRule(nil), rules...)
-	}
-	if len(copied) == 0 {
-		return nil
-	}
-	cfg := config.Config{OAuthRequestScopedErrors: copied}
-	cfg.SanitizeOAuthRequestScopedErrors()
-	if len(cfg.OAuthRequestScopedErrors) == 0 {
-		return nil
-	}
-	return cfg.OAuthRequestScopedErrors
 }

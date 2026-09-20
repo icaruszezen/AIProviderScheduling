@@ -48,8 +48,7 @@ func (h *Host) callHostModelExecuteStream(ctx context.Context, request []byte) (
 	return marshalRPCResult(pluginapi.HostModelStreamResponse{
 		StatusCode: stream.StatusCode,
 		Headers:    cloneHeader(stream.Headers),
-		StreamID:   streamID,
-	})
+		StreamID:   streamID})
 }
 
 func (h *Host) callHostModelStreamRead(ctx context.Context, request []byte) ([]byte, error) {
@@ -66,8 +65,7 @@ func (h *Host) callHostModelStreamRead(ctx context.Context, request []byte) ([]b
 	}
 	resp := pluginapi.HostModelStreamReadResponse{
 		Payload: append([]byte(nil), chunk.Payload...),
-		Done:    done,
-	}
+		Done:    done}
 	if chunk.Err != nil {
 		resp.Error = chunk.Err.Error()
 		resp.Done = true

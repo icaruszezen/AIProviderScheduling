@@ -19,8 +19,7 @@ func newMuxListener(addr net.Addr, buffer int) *muxListener {
 	return &muxListener{
 		addr:    addr,
 		connCh:  make(chan net.Conn, buffer),
-		closeCh: make(chan struct{}),
-	}
+		closeCh: make(chan struct{})}
 }
 
 func (l *muxListener) Put(conn net.Conn) error {

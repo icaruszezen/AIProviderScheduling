@@ -50,15 +50,12 @@ openai-compatibility:
 			name: "YAML",
 			decode: func(cfg *Config) error {
 				return yaml.Unmarshal([]byte(yamlConfig), cfg)
-			},
-		},
+			}},
 		{
 			name: "JSON",
 			decode: func(cfg *Config) error {
 				return json.Unmarshal([]byte(jsonConfig), cfg)
-			},
-		},
-	} {
+			}}} {
 		t.Run(testCase.name, func(t *testing.T) {
 			var cfg Config
 			if errDecode := testCase.decode(&cfg); errDecode != nil {
@@ -74,8 +71,7 @@ openai-compatibility:
 				{name: "gemini", got: cfg.GeminiKey[0].Models[0].MaxContextLength},
 				{name: "interactions", got: cfg.InteractionsKey[0].Models[0].MaxContextLength},
 				{name: "xai", got: cfg.XAIKey[0].Models[0].MaxContextLength},
-				{name: "openai compatibility", got: cfg.OpenAICompatibility[0].Models[0].MaxContextLength},
-			}
+				{name: "openai compatibility", got: cfg.OpenAICompatibility[0].Models[0].MaxContextLength}}
 			for _, model := range models {
 				if model.got != want {
 					t.Errorf("%s max-context-length = %d, want %d", model.name, model.got, want)

@@ -109,8 +109,7 @@ func validateCodexClientModel(model map[string]any) error {
 		"base_instructions",
 		"minimal_client_version",
 		"visibility",
-		"default_reasoning_level",
-	} {
+		"default_reasoning_level"} {
 		if _, err := requiredCodexClientModelString(model, field); err != nil {
 			return err
 		}

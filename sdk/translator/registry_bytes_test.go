@@ -11,8 +11,7 @@ func TestRegistryTranslateStreamReturnsByteChunks(t *testing.T) {
 	registry.Register(FormatOpenAI, FormatGemini, nil, ResponseTransform{
 		Stream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) [][]byte {
 			return [][]byte{append([]byte(nil), rawJSON...)}
-		},
-	})
+		}})
 
 	got := registry.TranslateStream(context.Background(), FormatGemini, FormatOpenAI, "model", nil, nil, []byte(`{"chunk":true}`), nil)
 	if len(got) != 1 {
@@ -28,8 +27,7 @@ func TestRegistryTranslateNonStreamReturnsBytes(t *testing.T) {
 	registry.Register(FormatOpenAI, FormatGemini, nil, ResponseTransform{
 		NonStream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) []byte {
 			return append([]byte(nil), rawJSON...)
-		},
-	})
+		}})
 
 	got := registry.TranslateNonStream(context.Background(), FormatGemini, FormatOpenAI, "model", nil, nil, []byte(`{"done":true}`), nil)
 	if !bytes.Equal(got, []byte(`{"done":true}`)) {
@@ -42,8 +40,7 @@ func TestRegistryTranslateTokenCountReturnsBytes(t *testing.T) {
 	registry.Register(FormatOpenAI, FormatGemini, nil, ResponseTransform{
 		TokenCount: func(ctx context.Context, count int64) []byte {
 			return []byte(`{"totalTokens":7}`)
-		},
-	})
+		}})
 
 	got := registry.TranslateTokenCount(context.Background(), FormatGemini, FormatOpenAI, 7, []byte(`{"fallback":true}`))
 	if !bytes.Equal(got, []byte(`{"totalTokens":7}`)) {

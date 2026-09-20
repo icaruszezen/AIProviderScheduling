@@ -50,8 +50,7 @@ func SummarizeGeminiModels(models []config.GeminiModel) GeminiModelsSummary {
 	})
 	return GeminiModelsSummary{
 		hash:  hashJoined(keys),
-		count: len(keys),
-	}
+		count: len(keys)}
 }
 
 // SummarizeClaudeModels hashes Claude model aliases for change detection.
@@ -75,8 +74,7 @@ func SummarizeClaudeModels(models []config.ClaudeModel) ClaudeModelsSummary {
 	})
 	return ClaudeModelsSummary{
 		hash:  hashJoined(keys),
-		count: len(keys),
-	}
+		count: len(keys)}
 }
 
 // SummarizeCodexModels hashes Codex model aliases for change detection.
@@ -104,8 +102,7 @@ func SummarizeCodexModels(models []config.CodexModel) CodexModelsSummary {
 	})
 	return CodexModelsSummary{
 		hash:  hashJoined(keys),
-		count: len(keys),
-	}
+		count: len(keys)}
 }
 
 // SummarizeVertexModels hashes Vertex-compatible model aliases for change detection.
@@ -132,6 +129,5 @@ func SummarizeVertexModels(models []config.VertexCompatModel) VertexModelsSummar
 	sum := sha256.Sum256([]byte(strings.Join(names, "|")))
 	return VertexModelsSummary{
 		hash:  hex.EncodeToString(sum[:]),
-		count: len(names),
-	}
+		count: len(names)}
 }

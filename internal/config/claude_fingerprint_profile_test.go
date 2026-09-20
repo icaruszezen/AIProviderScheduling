@@ -17,8 +17,7 @@ func TestNormalizeClaudeFingerprintProfile(t *testing.T) {
 		{name: "mixed case and padding", raw: "  Claude-Code-CLI ", want: ClaudeFingerprintProfileClaudeCodeCLI, wantK: true},
 		{name: "legacy alias", raw: "oauth-cli", want: ClaudeFingerprintProfileClaudeCodeCLI, wantK: true},
 		{name: "typo", raw: "claude-code", want: ClaudeFingerprintProfileDefault, wantK: false},
-		{name: "unrelated", raw: "chrome", want: ClaudeFingerprintProfileDefault, wantK: false},
-	}
+		{name: "unrelated", raw: "chrome", want: ClaudeFingerprintProfileDefault, wantK: false}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -42,8 +41,7 @@ func TestSanitizeClaudeKeysFingerprintProfile(t *testing.T) {
 	cfg := &Config{ClaudeKey: []ClaudeKey{
 		{APIKey: "a", FingerprintProfile: "  OAuth-CLI  "},
 		{APIKey: "b", FingerprintProfile: " claude-code "},
-		{APIKey: "c"},
-	}}
+		{APIKey: "c"}}}
 	cfg.SanitizeClaudeKeys()
 
 	if got := cfg.ClaudeKey[0].FingerprintProfile; got != ClaudeFingerprintProfileClaudeCodeCLI {

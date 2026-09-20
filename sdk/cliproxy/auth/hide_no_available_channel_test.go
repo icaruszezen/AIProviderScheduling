@@ -34,29 +34,23 @@ func TestIsNoAvailableChannelError(t *testing.T) {
 		{
 			name: "typical new api 503",
 			err:  statusTextError{code: http.StatusServiceUnavailable, msg: channelBody},
-			want: true,
-		},
+			want: true},
 		{
 			name: "case insensitive",
 			err:  statusTextError{code: http.StatusServiceUnavailable, msg: "NO AVAILABLE CHANNEL FOR MODEL foo"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "other 503",
 			err:  statusTextError{code: http.StatusServiceUnavailable, msg: "upstream overloaded"},
-			want: false,
-		},
+			want: false},
 		{
 			name: "channel text but not 503",
 			err:  statusTextError{code: http.StatusBadGateway, msg: channelBody},
-			want: false,
-		},
+			want: false},
 		{
 			name: "nil",
 			err:  nil,
-			want: false,
-		},
-	}
+			want: false}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsNoAvailableChannelError(tt.err); got != tt.want {
@@ -71,8 +65,7 @@ func TestMaybeMarkHideNoAvailableChannel(t *testing.T) {
 
 	errChannel := statusTextError{
 		code: http.StatusServiceUnavailable,
-		msg:  "No available channel for model gpt-5.6-sol",
-	}
+		msg:  "No available channel for model gpt-5.6-sol"}
 	enabled := &Auth{Metadata: map[string]any{"hide_no_available_channel": true}}
 	disabled := &Auth{Metadata: map[string]any{}}
 
@@ -129,8 +122,7 @@ func TestMarkHideNoAvailableChannelForwardsStatusAndRetryAfter(t *testing.T) {
 	base := hideChannelRetryAfterError{
 		code:       http.StatusServiceUnavailable,
 		msg:        "No available channel for model x",
-		retryAfter: 7 * time.Second,
-	}
+		retryAfter: 7 * time.Second}
 	wrapped := MarkHideNoAvailableChannel(base)
 	if statusCodeFromError(wrapped) != http.StatusServiceUnavailable {
 		t.Fatalf("StatusCode() = %d, want %d", statusCodeFromError(wrapped), http.StatusServiceUnavailable)
@@ -158,8 +150,7 @@ func (d homeHideChannelDispatcher) RPopAuth(context.Context, string, string, htt
 		ID:       "home-hide-auth",
 		Provider: homeHideChannelProvider,
 		Status:   StatusActive,
-		Metadata: metadata,
-	}})
+		Metadata: metadata}})
 }
 
 func (homeHideChannelDispatcher) AbortAmbiguousDispatch() {}
@@ -176,8 +167,7 @@ func (e *homeHideChannelExecutor) Execute(context.Context, *Auth, cliproxyexecut
 	}
 	return cliproxyexecutor.Response{}, statusTextError{
 		code: http.StatusServiceUnavailable,
-		msg:  "No available channel for model gpt-5.6-sol",
-	}
+		msg:  "No available channel for model gpt-5.6-sol"}
 }
 
 func (*homeHideChannelExecutor) ExecuteStream(context.Context, *Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
@@ -192,8 +182,7 @@ func (e *homeHideChannelExecutor) CountTokens(context.Context, *Auth, cliproxyex
 	}
 	return cliproxyexecutor.Response{}, statusTextError{
 		code: http.StatusServiceUnavailable,
-		msg:  "No available channel for model gpt-5.6-sol",
-	}
+		msg:  "No available channel for model gpt-5.6-sol"}
 }
 
 func (*homeHideChannelExecutor) HttpRequest(context.Context, *Auth, *http.Request) (*http.Response, error) {
@@ -209,8 +198,7 @@ func TestHomeExecuteMarksHideNoAvailableChannel(t *testing.T) {
 	}{
 		{name: "execute marked", hide: true, wantMarked: true},
 		{name: "execute unmarked", hide: false, wantMarked: false},
-		{name: "count tokens marked", hide: true, countTokens: true, wantMarked: true},
-	}
+		{name: "count tokens marked", hide: true, countTokens: true, wantMarked: true}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)

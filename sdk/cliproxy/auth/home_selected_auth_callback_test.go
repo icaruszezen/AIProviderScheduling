@@ -70,8 +70,7 @@ func TestHomeSelectedAuthCallbackPinsFirstHandlerSelectionAndCleansFailure(t *te
 		cliproxyexecutor.ExecutionSessionMetadataKey: executor.session,
 		cliproxyexecutor.SelectedAuthCallbackMetadataKey: func(authID string) {
 			_, callbackSawRuntimeAuth = manager.GetExecutionSessionAuthByID(executor.session, authID)
-		},
-	}}
+		}}}
 	result, errExecute := manager.ExecuteStream(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: "model-a"}, opts)
 	if errExecute != nil {
 		t.Fatalf("first ExecuteStream() error = %v", errExecute)

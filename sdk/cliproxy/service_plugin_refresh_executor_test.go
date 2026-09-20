@@ -21,21 +21,17 @@ func TestRegisterExecutorForAuth_PluginAuthProviderWrapsOpenAICompatRefresh(t *t
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 
 	auth := &coreauth.Auth{
 		ID:       "plugin-auth-1",
 		Provider: "plugin-provider",
 		Attributes: map[string]string{
 			"base_url": "https://compat.example.com/v1",
-			"api_key":  "expired-token",
-		},
+			"api_key":  "expired-token"},
 		Metadata: map[string]any{
 			"access_token":  "expired-token",
-			"refresh_token": "refresh-1",
-		},
-	}
+			"refresh_token": "refresh-1"}}
 
 	service.registerExecutorForAuth(auth, true)
 
@@ -67,16 +63,13 @@ func TestRegisterExecutorForAuth_OpenAICompatWithoutPluginAuthProviderStaysBare(
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 	auth := &coreauth.Auth{
 		ID:       "compat-auth-1",
 		Provider: "custom-compat",
 		Attributes: map[string]string{
 			"base_url": "https://compat.example.com/v1",
-			"api_key":  "sk-test",
-		},
-	}
+			"api_key":  "sk-test"}}
 
 	service.registerExecutorForAuth(auth, true)
 
@@ -104,21 +97,17 @@ func TestRegisterExecutorForAuth_OpenAICompatInfoPathAlsoWrapsPluginRefresh(t *t
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 	auth := &coreauth.Auth{
 		ID:       "plugin-auth-compat",
 		Provider: "plugin-provider",
 		Attributes: map[string]string{
 			"base_url":     "https://compat.example.com/v1",
 			"compat_name":  "custom",
-			"provider_key": "custom",
-		},
+			"provider_key": "custom"},
 		Metadata: map[string]any{
 			"access_token":  "expired-token",
-			"refresh_token": "refresh-1",
-		},
-	}
+			"refresh_token": "refresh-1"}}
 
 	service.registerExecutorForAuth(auth, true)
 
@@ -143,15 +132,12 @@ func TestUnregisterOpenAICompatExecutorRemovesPluginRefreshWrapper(t *testing.T)
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 	auth := &coreauth.Auth{
 		ID:       "plugin-auth-1",
 		Provider: "plugin-provider",
 		Attributes: map[string]string{
-			"base_url": "https://compat.example.com/v1",
-		},
-	}
+			"base_url": "https://compat.example.com/v1"}}
 	service.registerExecutorForAuth(auth, true)
 	if _, ok := service.coreManager.Executor("plugin-provider"); !ok {
 		t.Fatal("expected wrapper before unregister")

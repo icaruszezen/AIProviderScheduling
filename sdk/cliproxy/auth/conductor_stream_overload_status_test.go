@@ -26,8 +26,7 @@ func TestExecuteStream_AllCredentialsOverloaded_ReturnsStatusError(t *testing.T)
 			// Mirrors the buffering-enabled codex executor: the rejection is returned
 			// synchronously, before any downstream chunk is committed.
 			return nil, overloadStatusError()
-		},
-	})
+		}})
 
 	result, err := m.ExecuteStream(context.Background(), []string{"codex"},
 		cliproxyexecutor.Request{Model: "gpt-5.6-terra"}, cliproxyexecutor.Options{})
@@ -64,10 +63,8 @@ func TestExecuteStream_UnbufferedOverload_StaysCommittedStream(t *testing.T) {
 			close(ch)
 			return &cliproxyexecutor.StreamResult{
 				Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-				Chunks:  ch,
-			}, nil
-		},
-	})
+				Chunks:  ch}, nil
+		}})
 
 	result, err := m.ExecuteStream(context.Background(), []string{"codex"},
 		cliproxyexecutor.Request{Model: "gpt-5.6-terra"}, cliproxyexecutor.Options{})
@@ -109,10 +106,8 @@ func TestExecuteStream_ErrorAsFirstChunk_IsDowngradedToCommittedStream(t *testin
 			close(ch)
 			return &cliproxyexecutor.StreamResult{
 				Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-				Chunks:  ch,
-			}, nil
-		},
-	})
+				Chunks:  ch}, nil
+		}})
 
 	result, err := m.ExecuteStream(context.Background(), []string{"codex"},
 		cliproxyexecutor.Request{Model: "gpt-5.6-terra"}, cliproxyexecutor.Options{})

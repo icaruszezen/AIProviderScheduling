@@ -62,8 +62,7 @@ func (d *legacyRepeatedStreamDispatcher) RPopAuth(context.Context, string, strin
 	return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
 		ID:       "home-retry-a",
 		Provider: "home-retry-contract",
-		Status:   StatusActive,
-	}})
+		Status:   StatusActive}})
 }
 
 func (*legacyRepeatedStreamDispatcher) AbortAmbiguousDispatch() {}
@@ -81,8 +80,7 @@ func (d *retryRoundStartCooldownDispatcher) RPopAuthWithConstraints(_ context.Co
 	return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
 		ID:       "home-retry-a",
 		Provider: "home-retry-contract",
-		Status:   StatusActive,
-	}})
+		Status:   StatusActive}})
 }
 
 func (*retryRoundStartCooldownDispatcher) AbortAmbiguousDispatch() {}
@@ -100,8 +98,7 @@ func (d *retryRoundRepeatedCooldownDispatcher) RPopAuthWithConstraints(_ context
 	return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
 		ID:       "home-retry-a",
 		Provider: "home-retry-contract",
-		Status:   StatusActive,
-	}})
+		Status:   StatusActive}})
 }
 
 func (*retryRoundRepeatedCooldownDispatcher) AbortAmbiguousDispatch() {}
@@ -119,16 +116,14 @@ func (d *retryRoundLimitDownshiftDispatcher) RPopAuthWithConstraints(_ context.C
 		return json.Marshal(homeAuthDispatchResponse{RequestRetry: &retryLimit, Auth: Auth{
 			ID:       "home-retry-a",
 			Provider: "home-retry-contract",
-			Status:   StatusActive,
-		}})
+			Status:   StatusActive}})
 	case 2:
 		return []byte(`{"error":{"type":"model_cooldown","message":"remaining credentials are cooling down","retryable":true,"retry_after_ms":1,"request_retry":0}}`), nil
 	default:
 		return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
 			ID:       "home-retry-b",
 			Provider: "home-retry-contract",
-			Status:   StatusActive,
-		}})
+			Status:   StatusActive}})
 	}
 }
 
@@ -148,8 +143,7 @@ func (d *retryRoundSelectionFailureDispatcher) RPopAuthWithRetryRoundConstraints
 		return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
 			ID:       "home-retry-a",
 			Provider: "home-retry-contract",
-			Status:   StatusActive,
-		}})
+			Status:   StatusActive}})
 	}
 	if len(d.selectionPayload) > 0 {
 		return append([]byte(nil), d.selectionPayload...), nil
@@ -179,9 +173,7 @@ func (d *aggregateRetryHomeDispatcher) RPopAuthWithConstraints(_ context.Context
 			ID:       authID,
 			Provider: "home-retry-contract",
 			Status:   StatusActive,
-			Metadata: map[string]any{"request_retry": override},
-		},
-	})
+			Metadata: map[string]any{"request_retry": override}}})
 }
 
 func (*aggregateRetryHomeDispatcher) AbortAmbiguousDispatch() {}
@@ -218,9 +210,7 @@ func (d *retryContractHomeDispatcher) RPopAuthWithConstraints(_ context.Context,
 				Provider:   "home-retry-contract",
 				Status:     StatusActive,
 				Metadata:   d.metadata,
-				Attributes: attributes,
-			},
-		})
+				Attributes: attributes}})
 	}
 	if len(d.exhaustedPayload) > 0 {
 		return append([]byte(nil), d.exhaustedPayload...), nil
@@ -364,8 +354,7 @@ func TestHomePinnedAuthRejectsMismatchedDispatch(t *testing.T) {
 	manager.RegisterExecutor(executor)
 
 	_, errExecute := manager.Execute(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a",
-	}})
+		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a"}})
 	var authErr *Error
 	if !errors.As(errExecute, &authErr) || authErr == nil || authErr.Code != "auth_not_found" {
 		t.Fatalf("Execute() error = %T %v, want pinned auth_not_found", errExecute, errExecute)
@@ -383,12 +372,10 @@ func TestHomePinnedAuthRetriesOnlyPinnedCredential(t *testing.T) {
 	dispatcher := &retryContractHomeDispatcher{
 		authIDs:      []string{"home-retry-b", "home-retry-a"},
 		metadata:     map[string]any{"request_retry": 1},
-		requestRetry: &aggregateRetry,
-	}
+		requestRetry: &aggregateRetry}
 	executor := &retryContractHomeExecutor{
 		failAll: true,
-		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-	}
+		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 0)
@@ -396,8 +383,7 @@ func TestHomePinnedAuthRetriesOnlyPinnedCredential(t *testing.T) {
 	manager.RegisterExecutor(executor)
 
 	_, errExecute := manager.Execute(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a",
-	}})
+		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a"}})
 	if errExecute == nil {
 		t.Fatal("Execute() error = nil, want terminal upstream error")
 	}
@@ -413,8 +399,7 @@ func TestHomePinnedAuthRetriesOnlyPinnedCredential(t *testing.T) {
 func TestHomeExcludedCredentialEndsRetainedWebsocketSelection(t *testing.T) {
 	dispatcher := &retryContractHomeDispatcher{
 		authIDs:   []string{"home-retry-a", "home-retry-b"},
-		websocket: true,
-	}
+		websocket: true}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 2)
@@ -423,8 +408,7 @@ func TestHomeExcludedCredentialEndsRetainedWebsocketSelection(t *testing.T) {
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "home-retry-session",
-	}}
+		cliproxyexecutor.ExecutionSessionMetadataKey: "home-retry-session"}}
 	if _, errExecute := manager.Execute(ctx, []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, opts); errExecute != nil {
 		t.Fatalf("first Execute() error = %v", errExecute)
 	}
@@ -515,8 +499,7 @@ func TestHomeRetryPolicyAllowsRemoteCooldownWithoutLocalCredentials(t *testing.T
 	manager.SetRetryConfig(1, time.Second, 0)
 	errRemoteCooldown := &homeDispatchRetryAfterError{
 		cause:      &Error{HTTPStatus: http.StatusTooManyRequests, Message: "all Home credentials are cooling down"},
-		retryAfter: 10 * time.Millisecond,
-	}
+		retryAfter: 10 * time.Millisecond}
 
 	wait, shouldRetry := manager.shouldRetryAfterError(errRemoteCooldown, 0, []string{"home-retry-contract"}, "gpt", time.Second)
 	if !shouldRetry || wait != 10*time.Millisecond {
@@ -550,8 +533,7 @@ func TestRetryIntervalFiltersCooldownCredentials(t *testing.T) {
 		maxWantWait time.Duration
 	}{
 		{name: "short and long cooldowns", cooldowns: []time.Duration{10 * time.Second, time.Minute}, wantRetry: true, maxWantWait: 10 * time.Second},
-		{name: "only long cooldown", cooldowns: []time.Duration{time.Minute}},
-	}
+		{name: "only long cooldown", cooldowns: []time.Duration{time.Minute}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			const (
@@ -574,10 +556,7 @@ func TestRetryIntervalFiltersCooldownCredentials(t *testing.T) {
 							Unavailable:    true,
 							NextRetryAfter: deadline,
 							LastError:      &Error{HTTPStatus: http.StatusTooManyRequests},
-							Quota:          QuotaState{Exceeded: true, NextRecoverAt: deadline},
-						},
-					},
-				}
+							Quota:          QuotaState{Exceeded: true, NextRecoverAt: deadline}}}}
 				registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
 				t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(authID) })
 				if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
@@ -604,8 +583,7 @@ func TestHomeRetryPolicyUsesRemoteCredentialOverrideBeforeSelection(t *testing.T
 		cause:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "all Home credentials are cooling down"},
 		retryAfter:      10 * time.Millisecond,
 		requestRetry:    1,
-		hasRequestRetry: true,
-	}
+		hasRequestRetry: true}
 
 	wait, shouldRetry := manager.shouldRetryAfterErrorWithHomeRetryLimit(context.Background(), cliproxyexecutor.Options{}, errRemoteCooldown, 0, []string{"home-retry-contract"}, "gpt", time.Second, -1, 0)
 	if !shouldRetry || wait != 10*time.Millisecond {
@@ -615,8 +593,7 @@ func TestHomeRetryPolicyUsesRemoteCredentialOverrideBeforeSelection(t *testing.T
 		t.Fatal("remote credential override allowed more than one additional round")
 	}
 	pinnedOpts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey: "home-retry-a"}}
 	if _, shouldRetry = manager.shouldRetryAfterErrorWithHomeRetryLimit(context.Background(), pinnedOpts, errRemoteCooldown, 0, []string{"home-retry-contract"}, "gpt", time.Second, -1, 0); shouldRetry {
 		t.Fatal("aggregate retry limit from unpinned Home credentials affected a pinned request")
 	}
@@ -759,9 +736,7 @@ func TestHomeRetryRoundUsesEarliestCredentialRetryAfter(t *testing.T) {
 		failAll: true,
 		failures: map[string]error{
 			"home-retry-a": retryContractRateLimitError{retryAfter: 5 * time.Millisecond},
-			"home-retry-b": retryContractRateLimitError{retryAfter: 50 * time.Millisecond},
-		},
-	}
+			"home-retry-b": retryContractRateLimitError{retryAfter: 50 * time.Millisecond}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(1, time.Second, 2)
@@ -787,10 +762,8 @@ func TestHomePreferredErrorIgnoresLaterInternalExecutorFailure(t *testing.T) {
 		failAll: true,
 		failures: map[string]error{
 			"home-retry-a": upstreamErr,
-			"home-retry-b": internalErr,
-		},
-		internalFailures: map[string]bool{"home-retry-b": true},
-	}
+			"home-retry-b": internalErr},
+		internalFailures: map[string]bool{"home-retry-b": true}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, 0, 2)
@@ -818,17 +791,14 @@ func TestHomeSelectionFailureIsNotHiddenByEarlierUpstreamAttempt(t *testing.T) {
 		{
 			name:             "malformed concurrency payload",
 			exhaustedPayload: []byte(`{"concurrency":{"accounted":true,"credential_id":"home-retry-a","model":"gpt"},"error":"busy","auth":{"id":"home-retry-a","provider":"home-retry-contract"}}`),
-			wantCode:         "invalid_home_concurrency",
-		},
-	}
+			wantCode:         "invalid_home_concurrency"}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			upstreamErr := &Error{Message: "model upstream failed", HTTPStatus: http.StatusBadGateway}
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:          []string{"home-retry-a"},
 				exhaustedPayload: test.exhaustedPayload,
-				exhaustedErr:     test.exhaustedErr,
-			}
+				exhaustedErr:     test.exhaustedErr}
 			executor := &retryContractHomeExecutor{failAll: true, failure: upstreamErr}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
@@ -856,8 +826,7 @@ func TestHomeNextRoundSelectionFailureSupersedesEarlierUpstreamAttempt(t *testin
 		code    string
 	}{
 		{name: "Home unavailable", err: errors.New("Home transport failed"), code: "home_unavailable"},
-		{name: "invalid auth payload", payload: []byte(`{}`), code: "invalid_auth"},
-	}
+		{name: "invalid auth payload", payload: []byte(`{}`), code: "invalid_auth"}}
 	for _, selectionFailure := range selectionFailures {
 		for _, stream := range []bool{false, true} {
 			name := selectionFailure.name + "/" + map[bool]string{false: "nonstream", true: "stream"}[stream]
@@ -865,8 +834,7 @@ func TestHomeNextRoundSelectionFailureSupersedesEarlierUpstreamAttempt(t *testin
 				upstreamErr := &Error{Message: "model upstream failed", HTTPStatus: http.StatusBadGateway}
 				dispatcher := &retryRoundSelectionFailureDispatcher{
 					selectionPayload: selectionFailure.payload,
-					selectionErr:     selectionFailure.err,
-				}
+					selectionErr:     selectionFailure.err}
 				executor := &retryContractHomeExecutor{failAll: true, failure: upstreamErr}
 				manager := NewManager(nil, nil, nil)
 				manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
@@ -904,9 +872,7 @@ func TestHomeStreamBootstrapErrorPreservesAggregatedRetryAfter(t *testing.T) {
 		streamHeaders:   http.Header{"Retry-After": {"30"}},
 		failures: map[string]error{
 			"home-retry-a": retryContractRateLimitError{retryAfter: 1500 * time.Millisecond},
-			"home-retry-b": retryContractRateLimitError{retryAfter: 5 * time.Second},
-		},
-	}
+			"home-retry-b": retryContractRateLimitError{retryAfter: 5 * time.Second}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 2)
@@ -945,26 +911,21 @@ func TestHomeRetryRoundUsesAuthoritativeRemoteCooldown(t *testing.T) {
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeHomeOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{}, false, 2, retryLimit)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, 2, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:          []string{"home-retry-a"},
-				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"remaining Home credentials are cooling down","retryable":true,"retry_after_ms":5000}}`),
-			}
+				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"remaining Home credentials are cooling down","retryable":true,"retry_after_ms":5000}}`)}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
-				failure: retryContractRateLimitError{retryAfter: 1500 * time.Millisecond},
-			}
+				failure: retryContractRateLimitError{retryAfter: 1500 * time.Millisecond}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(1, time.Second, 2)
@@ -997,26 +958,21 @@ func TestHomeCooldownClassificationPreservesNonRetryableRoundStatus(t *testing.T
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeHomeOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{}, false, 2, retryLimit)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, 2, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:          []string{"home-retry-a"},
-				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"another credential is cooling down","retryable":true,"retry_after_ms":5,"request_retry":2}}`),
-			}
+				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"another credential is cooling down","retryable":true,"retry_after_ms":5,"request_retry":2}}`)}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
-				failure: &Error{HTTPStatus: http.StatusUnauthorized, Message: "invalid credential"},
-			}
+				failure: &Error{HTTPStatus: http.StatusUnauthorized, Message: "invalid credential"}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(3, time.Second, 2)
@@ -1048,29 +1004,23 @@ func TestHomeRetryRoundStartsImmediatelyWhenHomeReportsAvailableNextRound(t *tes
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeHomeOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{}, false, 0, retryLimit)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, 0, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:          []string{"home-retry-a", "home-retry-b"},
-				exhaustedPayload: []byte(`{"error":{"type":"auth_unavailable","message":"a credential is immediately available next round"}}`),
-			}
+				exhaustedPayload: []byte(`{"error":{"type":"auth_unavailable","message":"a credential is immediately available next round"}}`)}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
 				failures: map[string]error{
 					"home-retry-a": retryContractRateLimitError{retryAfter: 5 * time.Second},
-					"home-retry-b": &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-				},
-			}
+					"home-retry-b": &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(1, 10*time.Second, 0)
@@ -1100,26 +1050,21 @@ func TestHomeRetryRoundUsesRemoteCooldownWhenAttemptedErrorHasNoTiming(t *testin
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeHomeOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{}, false, 2, retryLimit)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, 2, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:          []string{"home-retry-a"},
-				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"remaining Home credentials are cooling down","retryable":true,"retry_after_ms":1500}}`),
-			}
+				exhaustedPayload: []byte(`{"error":{"type":"model_cooldown","message":"remaining Home credentials are cooling down","retryable":true,"retry_after_ms":1500}}`)}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
-				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-			}
+				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(1, 2*time.Second, 2)
@@ -1146,14 +1091,10 @@ func TestHomeStreamOAuthUnauthorizedRotatesWithoutRefreshRetry(t *testing.T) {
 	dispatcher := &retryContractHomeDispatcher{
 		authIDs: []string{"home-retry-a", "home-retry-b"},
 		metadata: map[string]any{
-			"auth_kind": "oauth",
-		},
-	}
+			"auth_kind": "apikey"}}
 	executor := &retryContractHomeExecutor{
 		failures: map[string]error{
-			"home-retry-a": &Error{HTTPStatus: http.StatusUnauthorized, Message: "expired"},
-		},
-	}
+			"home-retry-a": &Error{HTTPStatus: http.StatusUnauthorized, Message: "expired"}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 2)
@@ -1179,9 +1120,7 @@ func TestHomeStreamLifecycleRecoveryFailureRotatesWithoutExtraDispatch(t *testin
 	dispatcher := &retryContractHomeDispatcher{authIDs: []string{"home-retry-a", "home-retry-b"}}
 	executor := &retryContractHomeExecutor{
 		failures: map[string]error{
-			"home-retry-a": errors.New("unexpected EOF"),
-		},
-	}
+			"home-retry-a": errors.New("unexpected EOF")}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 2)
@@ -1213,8 +1152,7 @@ func TestRetryRoundAvailabilityRejectsStaleQuotaForNonRetryableStatus(t *testing
 		{name: "implicit quota", want: true},
 		{name: "rate limit", lastError: &Error{HTTPStatus: http.StatusTooManyRequests}, want: true},
 		{name: "payment required", lastError: &Error{HTTPStatus: http.StatusPaymentRequired}, want: false},
-		{name: "not found", lastError: &Error{HTTPStatus: http.StatusNotFound}, want: false},
-	} {
+		{name: "not found", lastError: &Error{HTTPStatus: http.StatusNotFound}, want: false}} {
 		t.Run(test.name, func(t *testing.T) {
 			nextRetry := now.Add(time.Minute)
 			auth := &Auth{
@@ -1227,10 +1165,7 @@ func TestRetryRoundAvailabilityRejectsStaleQuotaForNonRetryableStatus(t *testing
 						Unavailable:    true,
 						NextRetryAfter: nextRetry,
 						LastError:      test.lastError,
-						Quota:          QuotaState{Exceeded: true, NextRecoverAt: nextRetry},
-					},
-				},
-			}
+						Quota:          QuotaState{Exceeded: true, NextRecoverAt: nextRetry}}}}
 			got, next := retryRoundAvailabilityForAuth(auth, "gpt", now)
 			if got != test.want {
 				t.Fatalf("retryRoundAvailabilityForAuth() eligible = %t, want %t", got, test.want)
@@ -1246,14 +1181,10 @@ func TestHomeStreamAPIKeyUnauthorizedRotatesImmediately(t *testing.T) {
 	dispatcher := &retryContractHomeDispatcher{
 		authIDs: []string{"home-retry-a", "home-retry-b"},
 		metadata: map[string]any{
-			"auth_kind": "apikey",
-		},
-	}
+			"auth_kind": "apikey"}}
 	executor := &retryContractHomeExecutor{
 		failures: map[string]error{
-			"home-retry-a": &Error{HTTPStatus: http.StatusUnauthorized, Message: "invalid api key"},
-		},
-	}
+			"home-retry-a": &Error{HTTPStatus: http.StatusUnauthorized, Message: "invalid api key"}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(0, time.Second, 2)
@@ -1335,8 +1266,7 @@ func TestHomeRequestRetryRoundDoesNotRequireRetryAfter(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{authIDs: []string{"home-retry-a", "home-retry-b"}}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
-				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-			}
+				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(1, time.Second, 2)
@@ -1365,8 +1295,7 @@ func TestHomeStreamLegacyDispatcherDoesNotSpinOnIgnoredExclusions(t *testing.T) 
 	dispatcher := &legacyRepeatedStreamDispatcher{}
 	executor := &retryContractHomeExecutor{
 		failAll: true,
-		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-	}
+		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(1, time.Second, 2)
@@ -1389,8 +1318,7 @@ func TestHomeNonStreamLegacyDispatcherCompletesAdditionalRetryRound(t *testing.T
 	dispatcher := &legacyRepeatedStreamDispatcher{}
 	executor := &retryContractHomeExecutor{
 		failAll: true,
-		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-	}
+		failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 	manager.SetRetryConfig(1, time.Second, 0)
@@ -1423,8 +1351,7 @@ func TestHomeLocalSelectionRejectionWaitsForReleaseAcknowledgement(t *testing.T)
 			name: "nonstream repeated auth",
 			dispatcher: &accountedHomeExecutionDispatcher{auths: []Auth{
 				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive},
-				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive},
-			}},
+				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive}}},
 			executor:            &retryContractHomeExecutor{failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}},
 			maxRetryCredentials: 0,
 			blockedGroup:        executionregistry.ReleaseGroup{CredentialID: "home-retry-a", Model: "gpt"},
@@ -1432,14 +1359,12 @@ func TestHomeLocalSelectionRejectionWaitsForReleaseAcknowledgement(t *testing.T)
 			execute: func(manager *Manager, maxRetryCredentials int, retryLimit *int) error {
 				_, errExecute := manager.executeHomeOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{}, false, maxRetryCredentials, retryLimit)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream repeated excluded auth",
 			dispatcher: &accountedHomeExecutionDispatcher{auths: []Auth{
 				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive},
-				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive},
-			}},
+				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive}}},
 			executor:            &retryContractHomeExecutor{failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}},
 			maxRetryCredentials: 0,
 			blockedGroup:        executionregistry.ReleaseGroup{CredentialID: "home-retry-a", Model: "gpt"},
@@ -1447,14 +1372,12 @@ func TestHomeLocalSelectionRejectionWaitsForReleaseAcknowledgement(t *testing.T)
 			execute: func(manager *Manager, maxRetryCredentials int, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, maxRetryCredentials, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream max retry credentials",
 			dispatcher: &accountedHomeExecutionDispatcher{auths: []Auth{
 				{ID: "home-retry-a", Provider: "home-retry-contract", Status: StatusActive},
-				{ID: "home-retry-b", Provider: "home-retry-contract", Status: StatusActive},
-			}},
+				{ID: "home-retry-b", Provider: "home-retry-contract", Status: StatusActive}}},
 			executor:            &retryContractHomeExecutor{failure: errors.New("unexpected EOF")},
 			maxRetryCredentials: 1,
 			blockedGroup:        executionregistry.ReleaseGroup{CredentialID: "home-retry-b", Model: "gpt"},
@@ -1462,9 +1385,7 @@ func TestHomeLocalSelectionRejectionWaitsForReleaseAcknowledgement(t *testing.T)
 			execute: func(manager *Manager, maxRetryCredentials int, retryLimit *int) error {
 				_, errExecute := manager.executeStreamMixedOnce(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true}, maxRetryCredentials, retryLimit, 0, 0)
 				return errExecute
-			},
-		},
-	}
+			}}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1485,8 +1406,7 @@ func TestHomeLocalSelectionRejectionWaitsForReleaseAcknowledgement(t *testing.T)
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{
 				Home:                  internalconfig.HomeConfig{Enabled: true},
-				CredentialConcurrency: internalconfig.CredentialConcurrencyConfig{CPACancelBound: 10 * time.Millisecond},
-			})
+				CredentialConcurrency: internalconfig.CredentialConcurrencyConfig{CPACancelBound: 10 * time.Millisecond}})
 			manager.PublishHomeDispatch(test.dispatcher, registry, 1)
 			manager.RegisterExecutor(test.executor)
 
@@ -1511,14 +1431,12 @@ func TestHomeRetryRoundHonorsCredentialRequestRetryOverride(t *testing.T) {
 		wantCallCount int
 	}{
 		{name: "override disables global rounds", globalRetry: 3, override: 0, wantCallCount: 2},
-		{name: "override enables rounds over global", globalRetry: 0, override: 1, wantCallCount: 4},
-	}
+		{name: "override enables rounds over global", globalRetry: 0, override: 1, wantCallCount: 4}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:  []string{"home-retry-a", "home-retry-b"},
-				metadata: map[string]any{"request_retry": tc.override},
-			}
+				metadata: map[string]any{"request_retry": tc.override}}
 			executor := &retryContractHomeExecutor{failAll: true}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
@@ -1547,15 +1465,13 @@ func TestHomeRetryRoundUsesSuccessfulDispatchAggregate(t *testing.T) {
 			execute: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count tokens",
 			execute: func(manager *Manager) error {
 				_, errExecute := manager.ExecuteCount(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager) error {
@@ -1566,9 +1482,7 @@ func TestHomeRetryRoundUsesSuccessfulDispatchAggregate(t *testing.T) {
 				for range result.Chunks {
 				}
 				return nil
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			dispatcher := &aggregateRetryHomeDispatcher{}
@@ -1602,35 +1516,29 @@ func TestHomeRetryRoundUsesAuthoritativeZeroAggregate(t *testing.T) {
 			execute: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count tokens",
 			execute: func(manager *Manager) error {
 				_, errExecute := manager.ExecuteCount(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(manager *Manager) error {
 				_, errExecute := manager.ExecuteStream(context.Background(), []string{"home-retry-contract"}, cliproxyexecutor.Request{Model: "gpt"}, cliproxyexecutor.Options{Stream: true})
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			remoteRetry := 0
 			dispatcher := &retryContractHomeDispatcher{
 				authIDs:      []string{"home-retry-a", "home-retry-b"},
 				metadata:     map[string]any{"request_retry": 3},
-				requestRetry: &remoteRetry,
-			}
+				requestRetry: &remoteRetry}
 			executor := &retryContractHomeExecutor{
 				failAll: true,
-				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"},
-			}
+				failure: &Error{HTTPStatus: http.StatusBadGateway, Message: "upstream unavailable"}}
 			manager := NewManager(nil, nil, nil)
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.SetRetryConfig(3, time.Second, 2)

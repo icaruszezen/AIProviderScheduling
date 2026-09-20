@@ -26,16 +26,14 @@ func TestDecodeLogCursorRejectsUnsafeFiles(t *testing.T) {
 		"../secret",
 		"nested/main.log",
 		`nested\main.log`,
-		"error.log",
-	}
+		"error.log"}
 
 	for _, name := range unsafeNames {
 		t.Run(name, func(t *testing.T) {
 			raw := mustEncodeRawCursor(t, logCursor{
 				Version:     logCursorVersion,
 				File:        name,
-				Fingerprint: "fingerprint",
-			})
+				Fingerprint: "fingerprint"})
 			if _, err := decodeLogCursor(raw); err == nil {
 				t.Fatalf("decodeLogCursor(%q) succeeded, want error", name)
 			}
@@ -47,8 +45,7 @@ func TestDecodeLogCursorRejectsUnsafeFiles(t *testing.T) {
 			raw := mustEncodeRawCursor(t, logCursor{
 				Version:     logCursorVersion,
 				File:        name,
-				Fingerprint: "fingerprint",
-			})
+				Fingerprint: "fingerprint"})
 			if _, err := decodeLogCursor(raw); err != nil {
 				t.Fatalf("decodeLogCursor(%q) error = %v", name, err)
 			}
@@ -140,8 +137,7 @@ func TestGetLogsTailLimitReturnsRecentLinesWithCursor(t *testing.T) {
 		"[2026-06-15 10:00:00] first",
 		"[2026-06-15 10:00:01] second",
 		"[2026-06-15 10:00:02] third",
-		"[2026-06-15 10:00:03] fourth",
-	}
+		"[2026-06-15 10:00:03] fourth"}
 	writeMainLog(t, dir, strings.Join(lines, "\n")+"\n")
 
 	resp := performGetLogs(t, newLogsTestHandler(dir, true), "/v0/management/logs?limit=2")
@@ -208,8 +204,7 @@ func TestGetLogsAfterKeepsTimestampScanAndReturnsCursor(t *testing.T) {
 	lines := []string{
 		"[2026-06-15 10:00:00] first",
 		"[2026-06-15 10:00:01] second",
-		"[2026-06-15 10:00:02] third",
-	}
+		"[2026-06-15 10:00:02] third"}
 	writeMainLog(t, dir, strings.Join(lines, "\n")+"\n")
 
 	cutoff := time.Date(2026, 6, 15, 10, 0, 0, 0, time.Local).Unix()
@@ -231,8 +226,7 @@ func TestGetLogsCursorReturnsOnlyNewCompleteLines(t *testing.T) {
 	lines := []string{
 		"[2026-06-15 10:00:00] first",
 		"[2026-06-15 10:00:01] second",
-		"[2026-06-15 10:00:02] third",
-	}
+		"[2026-06-15 10:00:02] third"}
 	writeMainLog(t, dir, strings.Join(lines, "\n")+"\n")
 	initial := performGetLogs(t, newLogsTestHandler(dir, true), "/v0/management/logs?limit=2")
 	if initial.NextCursor == "" {
@@ -326,8 +320,7 @@ func TestGetLogsCursorResetAfterTruncateTailsLimit(t *testing.T) {
 	lines := []string{
 		"[2026-06-15 10:00:00] first",
 		"[2026-06-15 10:00:01] second",
-		"[2026-06-15 10:00:02] third",
-	}
+		"[2026-06-15 10:00:02] third"}
 	writeMainLog(t, dir, strings.Join(lines, "\n")+"\n")
 	initial := performGetLogs(t, newLogsTestHandler(dir, true), "/v0/management/logs?limit=3")
 
@@ -590,8 +583,7 @@ func TestGetLogsInvalidCursorResetsToTail(t *testing.T) {
 	dir := t.TempDir()
 	lines := []string{
 		"[2026-06-15 10:00:00] first",
-		"[2026-06-15 10:00:01] second",
-	}
+		"[2026-06-15 10:00:01] second"}
 	writeMainLog(t, dir, strings.Join(lines, "\n")+"\n")
 
 	cases := []string{
@@ -599,9 +591,7 @@ func TestGetLogsInvalidCursorResetsToTail(t *testing.T) {
 		mustEncodeRawCursor(t, logCursor{
 			Version:     logCursorVersion,
 			File:        "../secret",
-			Fingerprint: "fingerprint",
-		}),
-	}
+			Fingerprint: "fingerprint"})}
 	for _, raw := range cases {
 		resp := performGetLogs(t, newLogsTestHandler(dir, true), "/v0/management/logs?cursor="+url.QueryEscape(raw)+"&limit=1")
 		if !resp.CursorReset {

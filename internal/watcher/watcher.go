@@ -1,10 +1,9 @@
-// Package watcher watches config/auth files and triggers hot reloads.
+// Package watcher watches the config file and triggers hot reloads.
 // It supports cross-platform fsnotify event handling.
 package watcher
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,22 +13,16 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher/synthesizer"
 	"gopkg.in/yaml.v3"
 
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	log "github.com/sirupsen/logrus"
 )
 
 // storePersister captures persistence-capable token store methods used by the watcher.
 type storePersister interface {
 	PersistConfig(ctx context.Context) error
-	PersistAuthFiles(ctx context.Context, message string, paths ...string) error
 }
 
-type authDirProvider interface {
-	AuthDir() string
-}
-
-// Watcher manages file watching for configuration and authentication files
+// Watcher manages file watching for configuration hot-reload.
+// authDir is accepted for API compatibility; account JSON files are not loaded.
 type Watcher struct {
 	configPath        string
 	authDir           string
@@ -47,7 +40,6 @@ type Watcher struct {
 	watcher           *fsnotify.Watcher
 	lastAuthHashes    map[string]string
 	lastAuthContents  map[string]*coreauth.Auth
-	fileAuthsByPath   map[string]map[string]*coreauth.Auth
 	lastRemoveTimes   map[string]time.Time
 	lastConfigHash    string
 	authQueue         chan<- AuthUpdate
@@ -60,7 +52,6 @@ type Watcher struct {
 	dispatchCancel    context.CancelFunc
 	storePersister    storePersister
 	pluginAuthParser  synthesizer.PluginAuthParser
-	mirroredAuthDir   string
 	oldConfigYaml     []byte
 }
 
@@ -96,30 +87,16 @@ func NewWatcher(configPath, authDir string, reloadCallback func(*config.Config))
 		return nil, errNewWatcher
 	}
 	w := &Watcher{
-		configPath:      configPath,
-		authDir:         authDir,
-		reloadCallback:  reloadCallback,
-		watcher:         watcher,
-		lastAuthHashes:  make(map[string]string),
-		fileAuthsByPath: make(map[string]map[string]*coreauth.Auth),
-	}
+		configPath:     configPath,
+		authDir:        authDir,
+		reloadCallback: reloadCallback,
+		watcher:        watcher,
+		lastAuthHashes: make(map[string]string)}
 	w.dispatchCond = sync.NewCond(&w.dispatchMu)
-	if store := sdkAuth.GetTokenStore(); store != nil {
-		if persister, ok := store.(storePersister); ok {
-			w.storePersister = persister
-			log.Debug("persistence-capable token store detected; watcher will propagate persisted changes")
-		}
-		if provider, ok := store.(authDirProvider); ok {
-			if fixed := strings.TrimSpace(provider.AuthDir()); fixed != "" {
-				w.mirroredAuthDir = fixed
-				log.Debugf("mirrored auth directory locked to %s", fixed)
-			}
-		}
-	}
 	return w, nil
 }
 
-// Start begins watching the configuration file and authentication directory
+// Start begins watching the configuration file. Auth-dir JSON files are ignored.
 func (w *Watcher) Start(ctx context.Context) error {
 	return w.start(ctx)
 }
@@ -141,7 +118,7 @@ func (w *Watcher) SetConfig(cfg *config.Config) {
 	w.oldConfigYaml, _ = yaml.Marshal(cfg)
 }
 
-// SetPluginAuthParser updates the plugin auth parser used for file auth synthesis.
+// SetPluginAuthParser keeps the plugin parser ABI. File-backed plugin auth is not synthesized.
 func (w *Watcher) SetPluginAuthParser(parser synthesizer.PluginAuthParser) {
 	w.clientsMutex.Lock()
 	defer w.clientsMutex.Unlock()
@@ -166,12 +143,10 @@ func (w *Watcher) DispatchPersistedAuthUpdate(update AuthUpdate) bool {
 	return w.dispatchPersistedAuthUpdate(update)
 }
 
-// SnapshotCoreAuths converts current clients snapshot into core auth entries.
+// SnapshotCoreAuths converts current config keys into core auth entries.
 func (w *Watcher) SnapshotCoreAuths() []*coreauth.Auth {
 	w.clientsMutex.RLock()
 	cfg := w.config
-	authDir := w.authDir
-	parser := w.pluginAuthParser
 	w.clientsMutex.RUnlock()
-	return snapshotCoreAuths(cfg, authDir, parser)
+	return snapshotCoreAuths(cfg)
 }

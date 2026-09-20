@@ -33,8 +33,7 @@ type routingRuntimeState struct {
 func normalizedRoutingRuntimeState(cfg *config.Config) routingRuntimeState {
 	state := routingRuntimeState{
 		strategy:           "round-robin",
-		sessionAffinityTTL: time.Hour,
-	}
+		sessionAffinityTTL: time.Hour}
 	if cfg == nil {
 		return state
 	}
@@ -70,8 +69,7 @@ func newRoutingSelector(state routingRuntimeState) coreauth.Selector {
 	if state.sessionAffinity {
 		selector = coreauth.NewSessionAffinitySelectorWithConfig(coreauth.SessionAffinityConfig{
 			Fallback: selector,
-			TTL:      state.sessionAffinityTTL,
-		})
+			TTL:      state.sessionAffinityTTL})
 	}
 	return selector
 }
@@ -172,8 +170,7 @@ func (s *Service) applyConfigRuntime(ctx context.Context, commit configCommit, s
 	s.registerAvailableExecutors(registrationCtx, executorRegistrationOptions{
 		includeBaseline:   cfg.Home.Enabled,
 		forceReplaceAuths: true,
-		auths:             auths,
-	})
+		auths:             auths})
 	if errContext := ctx.Err(); errContext != nil {
 		return false
 	}
@@ -183,7 +180,7 @@ func (s *Service) applyConfigRuntime(ctx context.Context, commit configCommit, s
 	if errContext := ctx.Err(); errContext != nil {
 		return false
 	}
-	if s.coreManager != nil && !cfg.Home.Enabled && cfg.SaveCooldownStatus {
+	if s.coreManager != nil && !cfg.Home.Enabled {
 		if errRestoreCooldown := s.coreManager.RestoreCooldownStates(registrationCtx); errRestoreCooldown != nil && ctx.Err() == nil {
 			log.Warnf("failed to restore cooldown state after config update: %v", errRestoreCooldown)
 		}
@@ -222,7 +219,7 @@ func (s *Service) applyManagerConfig(ctx context.Context, commit configCommit) b
 	if !s.coreManager.ApplyConfigWithCooldownStateStore(ctx, commit.cfg, store) {
 		return false
 	}
-	s.coreManager.SetOAuthModelAlias(commit.cfg.OAuthModelAlias)
+	s.coreManager.SetOAuthModelAlias(nil)
 	return true
 }
 
@@ -257,8 +254,7 @@ func (s *Service) registerConfigAPIKeyAuths(ctx context.Context, cfg *config.Con
 	auths, errSynthesize := configSynth.Synthesize(&synthesizer.SynthesisContext{
 		Config:      cfg,
 		Now:         time.Now(),
-		IDGenerator: synthesizer.NewStableIDGenerator(),
-	})
+		IDGenerator: synthesizer.NewStableIDGenerator()})
 	if errSynthesize != nil {
 		log.Warnf("failed to synthesize config API key auths: %v", errSynthesize)
 		return
@@ -282,8 +278,7 @@ func (s *Service) registerConfigAPIKeyAuths(ctx context.Context, cfg *config.Con
 			category: modelRegistrationCategory(authForRegistration),
 			run: func(compatCache *openAICompatibilityRegistrationCache) {
 				s.completeModelRegistrationForAuthWithCache(registrationCtx, authForRegistration, compatCache)
-			},
-		})
+			}})
 	}
 	if needsAliasRebuild {
 		s.coreManager.RefreshAPIKeyModelAlias()
@@ -298,7 +293,6 @@ func forceHomeRuntimeConfig(cfg *config.Config) {
 	cfg.APIKeys = nil
 	cfg.UsageStatisticsEnabled = true
 	cfg.DisableCooling = true
-	cfg.SaveCooldownStatus = false
 	cfg.WebsocketAuth = false
 	cfg.RemoteManagement.AllowRemote = false
 	cfg.RemoteManagement.DisableControlPanel = true

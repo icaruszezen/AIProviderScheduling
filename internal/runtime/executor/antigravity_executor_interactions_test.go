@@ -40,6 +40,7 @@ func TestAntigravityExecutorExecuteStreamTranslatesInteractionsRequest(t *testin
 		ID:       "interactions-antigravity-stream-auth",
 		Provider: "antigravity",
 		Attributes: map[string]string{
+			"api_key":  "token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{

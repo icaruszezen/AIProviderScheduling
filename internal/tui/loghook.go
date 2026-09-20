@@ -21,8 +21,7 @@ func NewLogHook(bufSize int) *LogHook {
 	return &LogHook{
 		ch:        make(chan string, bufSize),
 		formatter: &log.TextFormatter{DisableColors: true, FullTimestamp: true},
-		levels:    log.AllLevels,
-	}
+		levels:    log.AllLevels}
 }
 
 // SetFormatter sets a custom formatter for the hook.

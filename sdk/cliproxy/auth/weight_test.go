@@ -25,11 +25,8 @@ func TestValidateAuthWeight(t *testing.T) {
 			name: "valid attribute does not hide invalid metadata",
 			auth: &Auth{
 				Attributes: map[string]string{AttributeWeight: "2"},
-				Metadata:   map[string]any{AttributeWeight: 1.5},
-			},
-			wantErr: true,
-		},
-	}
+				Metadata:   map[string]any{AttributeWeight: 1.5}},
+			wantErr: true}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

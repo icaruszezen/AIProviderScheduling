@@ -11,8 +11,7 @@ import (
 
 func TestWeightedRoundRobinRoutingSelector(t *testing.T) {
 	state := normalizedRoutingRuntimeState(&internalconfig.Config{
-		Routing: internalconfig.RoutingConfig{Strategy: "wrr"},
-	})
+		Routing: internalconfig.RoutingConfig{Strategy: "wrr"}})
 	if state.strategy != "weighted-round-robin" {
 		t.Fatalf("strategy = %q, want weighted-round-robin", state.strategy)
 	}
@@ -28,9 +27,7 @@ func TestServiceRejectsInvalidCredentialWeightConfigCommit(t *testing.T) {
 	newCfg := &internalconfig.Config{
 		VertexCompatAPIKey: []internalconfig.VertexCompatKey{{
 			APIKey: "vertex-key",
-			Weight: &invalidWeight,
-		}},
-	}
+			Weight: &invalidWeight}}}
 
 	if service.applyConfigUpdateWithAuthSynthesis(nil, newCfg, true) {
 		t.Fatal("hot config application accepted an invalid credential weight")
@@ -58,14 +55,11 @@ func (s *trackingStoppableSelector) Stop() {
 func TestApplyManagerConfigStopsReplacedServiceAffinitySelector(t *testing.T) {
 	tracking := &trackingStoppableSelector{}
 	service := &Service{
-		coreManager: coreauth.NewManager(nil, tracking, nil),
-	}
+		coreManager: coreauth.NewManager(nil, tracking, nil)}
 
 	newCfg := &internalconfig.Config{
 		Routing: internalconfig.RoutingConfig{
-			Strategy: "round-robin",
-		},
-	}
+			Strategy: "round-robin"}}
 	commit := configCommit{cfg: newCfg, sequence: 1}
 	if !service.applyManagerConfig(context.Background(), commit) {
 		t.Fatal("applyManagerConfig failed")

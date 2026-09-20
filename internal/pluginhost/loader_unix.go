@@ -144,8 +144,7 @@ func (dynamicLibraryLoader) Open(file pluginFile, host *Host) (pluginClient, err
 	client := &dynamicLibraryClient{
 		handle:  handle,
 		hostAPI: hostAPI,
-		hostCtx: hostCtx,
-	}
+		hostCtx: hostCtx}
 	rc := C.cliproxy_call_init(initSymbol, hostAPI, &client.api)
 	if rc != 0 {
 		client.Shutdown()

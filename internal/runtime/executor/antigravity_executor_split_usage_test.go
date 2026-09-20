@@ -49,7 +49,8 @@ func TestAntigravityStreamFinalizesSplitTerminalUsageOnce(t *testing.T) {
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
 			"project_id":   "project-1",
 		},
-		Attributes: map[string]string{"base_url": server.URL},
+		Attributes: map[string]string{
+			"api_key": "token-123", "base_url": server.URL},
 	}, cliproxyexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(`{"model":"gemini-3.7-flash","messages":[{"role":"user","content":"hello"}],"stream":true}`),

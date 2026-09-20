@@ -58,8 +58,7 @@ func (r *Registry) FreezeInFlight(_ time.Time) Freeze {
 	freeze := Freeze{
 		Revision:        r.snapshotRevision,
 		BarrierRevision: r.publishedBarrier,
-		Executions:      make([]Observation, 0, len(r.scopes)),
-	}
+		Executions:      make([]Observation, 0, len(r.scopes))}
 	for _, scope := range r.scopes {
 		freeze.Executions = append(freeze.Executions, Observation{
 			RequestID:    scope.spec.RequestID,
@@ -67,8 +66,7 @@ func (r *Registry) FreezeInFlight(_ time.Time) Freeze {
 			Model:        scope.spec.Model,
 			RequestKind:  scope.spec.Kind,
 			StartedAt:    scope.spec.StartedAt,
-			Accounted:    scope.spec.Accounted,
-		})
+			Accounted:    scope.spec.Accounted})
 	}
 	return freeze
 }

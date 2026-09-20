@@ -29,8 +29,7 @@ func TestPatchAPIKeyWeightForEveryFamily(t *testing.T) {
 		}, patch: (*Handler).PatchCodexKey, get: func(cfg *config.Config) *int { return cfg.CodexKey[0].Weight }},
 		{name: "xai", setup: func(cfg *config.Config) {
 			cfg.XAIKey = []config.XAIKey{{APIKey: "key", BaseURL: "https://example.com"}}
-		}, patch: (*Handler).PatchXAIKey, get: func(cfg *config.Config) *int { return cfg.XAIKey[0].Weight }},
-	}
+		}, patch: (*Handler).PatchXAIKey, get: func(cfg *config.Config) *int { return cfg.XAIKey[0].Weight }}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

@@ -116,8 +116,7 @@ func RecordAPIRequest(ctx context.Context, cfg *config.Config, info UpstreamRequ
 		index:          index,
 		request:        requestText,
 		response:       &strings.Builder{},
-		responseSource: apiResponseSourceOrNil(ginCtx),
-	}
+		responseSource: apiResponseSourceOrNil(ginCtx)}
 	attempts = append(attempts, attempt)
 	ginCtx.Set(apiAttemptsKey, attempts)
 	if requestText != "" {
@@ -452,8 +451,7 @@ func ensureAttempt(ginCtx *gin.Context) ([]*upstreamAttempt, *upstreamAttempt) {
 		attempt := &upstreamAttempt{
 			index:          1,
 			response:       &strings.Builder{},
-			responseSource: apiResponseSourceOrNil(ginCtx),
-		}
+			responseSource: apiResponseSourceOrNil(ginCtx)}
 		if source, ok := apiRequestSource(ginCtx); ok {
 			if errWrite := source.AppendBytes([]byte("=== API REQUEST 1 ===\n<missing>\n\n")); errWrite != nil {
 				log.WithError(errWrite).Warn("failed to append missing api request log part")

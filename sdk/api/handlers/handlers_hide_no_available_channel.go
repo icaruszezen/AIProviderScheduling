@@ -43,8 +43,7 @@ func SanitizeHiddenNoAvailableChannelMessage(msg *interfaces.ErrorMessage) *inte
 	return &interfaces.ErrorMessage{
 		StatusCode:             http.StatusServiceUnavailable,
 		Error:                  errors.New(http.StatusText(http.StatusServiceUnavailable)),
-		HideNoAvailableChannel: true,
-	}
+		HideNoAvailableChannel: true}
 }
 
 func originalErrorLogBody(msg *interfaces.ErrorMessage) []byte {

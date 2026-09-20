@@ -40,7 +40,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync/atomic"
-	"time"
 	"unsafe"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
@@ -163,15 +162,8 @@ func handleMethod(method string, request []byte) ([]byte, error) {
 		return okEnvelope(identifierResponse{Identifier: "plugin-example"})
 	case pluginabi.MethodAuthParse:
 		return okEnvelope(pluginapi.AuthParseResponse{Handled: true, Auth: exampleAuthData(request)})
-	case pluginabi.MethodAuthLoginStart:
-		return okEnvelope(pluginapi.AuthLoginStartResponse{
-			Provider:  "plugin-example",
-			URL:       "https://example.invalid/plugin-login",
-			State:     "example-state",
-			ExpiresAt: time.Now().Add(5 * time.Minute).UTC(),
-		})
-	case pluginabi.MethodAuthLoginPoll:
-		return okEnvelope(pluginapi.AuthLoginPollResponse{Status: pluginapi.AuthLoginStatusError, Message: "example plugin has no interactive login"})
+	case pluginabi.MethodAuthLoginStart, pluginabi.MethodAuthLoginPoll:
+		return errorEnvelope("oauth_login_unsupported", pluginapi.ErrOAuthLoginUnsupported.Error()), nil
 	case pluginabi.MethodAuthRefresh:
 		return okEnvelope(pluginapi.AuthRefreshResponse{Auth: exampleAuthData(request)})
 	case pluginabi.MethodFrontendAuthIdentifier:

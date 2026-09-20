@@ -19,8 +19,7 @@ func TestHostPickAuthUsesHighestPrioritySchedulerOnly(t *testing.T) {
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 				lowCalls++
 				return pluginapi.SchedulerPickResponse{Handled: true, AuthID: "auth-low"}, nil
-			})}},
-		},
+			})}}},
 		capabilityRecord{
 			id:       "high",
 			priority: 10,
@@ -31,8 +30,7 @@ func TestHostPickAuthUsesHighestPrioritySchedulerOnly(t *testing.T) {
 					t.Fatalf("req.Plugin.Name = %q, want high", req.Plugin.Name)
 				}
 				return pluginapi.SchedulerPickResponse{Handled: true, AuthID: "auth-high"}, nil
-			})}},
-		},
+			})}}},
 	)
 
 	resp, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-high", "auth-low"))
@@ -58,8 +56,7 @@ func TestHostPickAuthReturnsSchedulerError(t *testing.T) {
 		id: "scheduler",
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 			return pluginapi.SchedulerPickResponse{}, errors.New("tenant quota exhausted")
-		})}},
-	})
+		})}}})
 
 	_, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-1"))
 	if !handled {
@@ -75,8 +72,7 @@ func TestHostPickAuthPanicFusesAndFallsBack(t *testing.T) {
 		id: "scheduler",
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 			panic("boom")
-		})}},
-	})
+		})}}})
 
 	_, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-1"))
 	if handled {
@@ -99,15 +95,13 @@ func TestHostPickAuthUnhandledDoesNotCallLowerPriorityScheduler(t *testing.T) {
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 				lowCalls++
 				return pluginapi.SchedulerPickResponse{Handled: true, AuthID: "auth-low"}, nil
-			})}},
-		},
+			})}}},
 		capabilityRecord{
 			id:       "high",
 			priority: 10,
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 				return pluginapi.SchedulerPickResponse{Handled: false}, nil
-			})}},
-		},
+			})}}},
 	)
 
 	_, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-low"))
@@ -129,17 +123,13 @@ func TestHostPickAuthInvalidResponseFallsBack(t *testing.T) {
 	}{
 		{
 			name: "unknown auth id",
-			resp: pluginapi.SchedulerPickResponse{Handled: true, AuthID: "missing"},
-		},
+			resp: pluginapi.SchedulerPickResponse{Handled: true, AuthID: "missing"}},
 		{
 			name: "unknown delegate",
-			resp: pluginapi.SchedulerPickResponse{Handled: true, DelegateBuiltin: "unknown"},
-		},
+			resp: pluginapi.SchedulerPickResponse{Handled: true, DelegateBuiltin: "unknown"}},
 		{
 			name: "handled without decision",
-			resp: pluginapi.SchedulerPickResponse{Handled: true},
-		},
-	}
+			resp: pluginapi.SchedulerPickResponse{Handled: true}}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,8 +137,7 @@ func TestHostPickAuthInvalidResponseFallsBack(t *testing.T) {
 				id: "scheduler",
 				plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 					return tt.resp, nil
-				})}},
-			})
+				})}}})
 
 			_, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-1"))
 			if errPick != nil {
@@ -166,8 +155,7 @@ func TestHostPickAuthPrefersValidAuthIDOverInvalidDelegate(t *testing.T) {
 		id: "scheduler",
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 			return pluginapi.SchedulerPickResponse{Handled: true, AuthID: "auth-a", DelegateBuiltin: "unknown"}, nil
-		})}},
-	})
+		})}}})
 
 	resp, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-a"))
 	if errPick != nil {
@@ -188,8 +176,7 @@ func TestHostPickAuthAllowsKnownBuiltinDelegates(t *testing.T) {
 				id: "scheduler",
 				plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{Scheduler: schedulerFunc(func(context.Context, pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
 					return pluginapi.SchedulerPickResponse{Handled: true, DelegateBuiltin: delegate}, nil
-				})}},
-			})
+				})}}})
 
 			resp, handled, errPick := host.PickAuth(context.Background(), schedulerRequest("auth-1"))
 			if errPick != nil {
@@ -208,8 +195,7 @@ func TestHostPickAuthAllowsKnownBuiltinDelegates(t *testing.T) {
 func schedulerRequest(ids ...string) pluginapi.SchedulerPickRequest {
 	req := pluginapi.SchedulerPickRequest{
 		Provider: "test",
-		Model:    "test-model",
-	}
+		Model:    "test-model"}
 	for _, id := range ids {
 		req.Candidates = append(req.Candidates, pluginapi.SchedulerAuthCandidate{ID: id})
 	}

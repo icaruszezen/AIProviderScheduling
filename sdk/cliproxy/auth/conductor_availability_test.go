@@ -18,10 +18,7 @@ func TestUpdateAggregatedAvailability_UnavailableWithoutNextRetryDoesNotBlockAut
 		ModelStates: map[string]*ModelState{
 			model: {
 				Status:      StatusError,
-				Unavailable: true,
-			},
-		},
-	}
+				Unavailable: true}}}
 
 	updateAggregatedAvailability(auth, now)
 
@@ -45,10 +42,7 @@ func TestUpdateAggregatedAvailability_FutureNextRetryBlocksAuth(t *testing.T) {
 			model: {
 				Status:         StatusError,
 				Unavailable:    true,
-				NextRetryAfter: next,
-			},
-		},
-	}
+				NextRetryAfter: next}}}
 
 	updateAggregatedAvailability(auth, now)
 
@@ -133,10 +127,7 @@ func TestManager_ResetQuotaClearsRuntimeAndRegistryState(t *testing.T) {
 				Unavailable:    true,
 				NextRetryAfter: next,
 				Quota:          QuotaState{Exceeded: true, Reason: "quota", NextRecoverAt: next, BackoffLevel: 2},
-				UpdatedAt:      next,
-			},
-		},
-	}); errRegister != nil {
+				UpdatedAt:      next}}}); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
 

@@ -133,8 +133,7 @@ func (t *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 	}
 	resp.Body = &closeConnectionBody{
 		ReadCloser:      resp.Body,
-		closeConnection: h2Conn.Close,
-	}
+		closeConnection: h2Conn.Close}
 	return resp, nil
 }
 
@@ -153,8 +152,7 @@ func newClaudeCodeTLSConfig(host string, sessionCache tls.ClientSessionCache) *t
 		ServerName:                         host,
 		ClientSessionCache:                 sessionCache,
 		OmitEmptyPsk:                       true,
-		PreferSkipResumptionOnNilExtension: true,
-	}
+		PreferSkipResumptionOnNilExtension: true}
 }
 
 // claudeCodeTLSClientHelloSpec reproduces the deterministic Node/OpenSSL
@@ -180,8 +178,7 @@ func claudeCodeTLSClientHelloSpec() *tls.ClientHelloSpec {
 			tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 			tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		},
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA},
 		CompressionMethods: []uint8{0},
 		Extensions: []tls.TLSExtension{
 			&tls.SNIExtension{},
@@ -201,8 +198,7 @@ func claudeCodeTLSClientHelloSpec() *tls.ClientHelloSpec {
 				tls.PKCS1WithSHA384,
 				tls.PSSWithSHA512,
 				tls.PKCS1WithSHA512,
-				tls.PKCS1WithSHA1,
-			}},
+				tls.PKCS1WithSHA1}},
 			&tls.SCTExtension{},
 			&tls.KeyShareExtension{KeyShares: []tls.KeyShare{{Group: tls.X25519}}},
 			&tls.PSKKeyExchangeModesExtension{Modes: []uint8{tls.PskModeDHE}},
@@ -210,9 +206,7 @@ func claudeCodeTLSClientHelloSpec() *tls.ClientHelloSpec {
 			&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
 			// pre_shared_key MUST be the final extension (RFC 8446 4.2.11), after
 			// padding. It contributes zero bytes until a cached session exists.
-			&tls.UtlsPreSharedKeyExtension{},
-		},
-	}
+			&tls.UtlsPreSharedKeyExtension{}}}
 }
 
 const claudeCodeRoundTripperCacheCapacity = 64
@@ -248,8 +242,7 @@ var claudeCodeMessagesHeaderOrder = []string{
 	"Connection",
 	"Host",
 	"Accept-Encoding",
-	"Content-Length",
-}
+	"Content-Length"}
 
 var claudeCodeCountTokensHeaderOrder = []string{
 	"Accept",
@@ -272,8 +265,7 @@ var claudeCodeCountTokensHeaderOrder = []string{
 	"Connection",
 	"Host",
 	"Accept-Encoding",
-	"Content-Length",
-}
+	"Content-Length"}
 
 func claudeCodeRequestHeaderOrder(_, requestTarget string) []string {
 	if strings.HasPrefix(requestTarget, "/v1/messages/count_tokens") {
@@ -339,8 +331,7 @@ func newClaudeCodeRoundTripper(proxyURL string) http.RoundTripper {
 				return nil, fmt.Errorf("claude tls: handshake upstream: %w", errHandshake)
 			}
 			return httpwire.NewOrderedRequestConn(tlsConn, claudeCodeRequestHeaderOrder), nil
-		},
-	}
+		}}
 	return transport
 }
 
@@ -397,9 +388,7 @@ func NewUtlsHTTPClient(ctx context.Context, cfg *config.Config, auth *cliproxyau
 		Transport: &fallbackRoundTripper{
 			anthropic: anthropicRT,
 			chrome:    chromeRT,
-			fallback:  standardTransport,
-		},
-	}
+			fallback:  standardTransport}}
 	if timeout > 0 {
 		client.Timeout = timeout
 	}

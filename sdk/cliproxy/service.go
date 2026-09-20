@@ -16,7 +16,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/wsrelay"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executionregistry"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
@@ -80,9 +79,6 @@ type Service struct {
 
 	// authQueueStop cancels the auth update queue processing.
 	authQueueStop context.CancelFunc
-
-	// authManager handles legacy authentication operations.
-	authManager *sdkAuth.Manager
 
 	// accessManager handles request authentication providers.
 	accessManager *sdkaccess.Manager

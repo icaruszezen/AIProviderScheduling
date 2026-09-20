@@ -110,8 +110,7 @@ func (e *AntigravityExecutor) CountTokens(ctx context.Context, auth *cliproxyaut
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	cliproxyexecutor.MarkUpstreamAttempt(ctx)
 	httpResp, errDo := httpClient.Do(httpReq)

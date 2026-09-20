@@ -87,6 +87,7 @@ func assertIssue4959LeadingUserContents(t *testing.T, contents []gjson.Result) {
 func testAntigravityAuth(baseURL string) *cliproxyauth.Auth {
 	return &cliproxyauth.Auth{
 		Attributes: map[string]string{
+			"api_key":  "token-123",
 			"base_url": baseURL,
 		},
 		Metadata: map[string]any{
@@ -229,7 +230,8 @@ func TestAntigravityStreamObfuscatesSensitiveSystemInstruction(t *testing.T) {
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
 			"project_id":   "project-1",
 		},
-		Attributes: map[string]string{"base_url": server.URL},
+		Attributes: map[string]string{
+			"api_key": "token-123", "base_url": server.URL},
 	}, cliproxyexecutor.Request{
 		Model:   "gemini-3.6-flash-high",
 		Payload: []byte(`{"model":"gemini-3.6-flash-high","instructions":"You are Hermes Agent, an intelligent AI assistant created by Nous Research.","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"hello"}]}]}`),
@@ -285,7 +287,8 @@ func TestAntigravityStreamDoesNotEmitSyntheticTerminalOnReadError(t *testing.T) 
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
 			"project_id":   "project-1",
 		},
-		Attributes: map[string]string{"base_url": server.URL},
+		Attributes: map[string]string{
+			"api_key": "token-123", "base_url": server.URL},
 	}, cliproxyexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),
@@ -624,11 +627,12 @@ func TestAntigravityRequestPathsDoNotFallbackEndpoints(t *testing.T) {
 						Body:       io.NopCloser(strings.NewReader(`{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}`)),
 					}, nil
 				}))
-				auth := &cliproxyauth.Auth{Metadata: map[string]any{
-					"access_token": "token",
-					"expired":      time.Now().Add(2 * time.Hour).Format(time.RFC3339),
-					"project_id":   "project-1",
-				}}
+				auth := &cliproxyauth.Auth{
+					Attributes: map[string]string{"api_key": "token"}, Metadata: map[string]any{
+						"access_token": "token",
+						"expired":      time.Now().Add(2 * time.Hour).Format(time.RFC3339),
+						"project_id":   "project-1",
+					}}
 				req := cliproxyexecutor.Request{
 					Model:   route.model,
 					Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),

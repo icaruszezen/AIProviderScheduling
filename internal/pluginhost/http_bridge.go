@@ -54,8 +54,7 @@ func (c *hostHTTPClient) Do(ctx context.Context, req pluginapi.HTTPRequest) (plu
 	return pluginapi.HTTPResponse{
 		StatusCode: resp.StatusCode,
 		Headers:    cloneHeader(resp.Header),
-		Body:       body,
-	}, nil
+		Body:       body}, nil
 }
 
 func (c *hostHTTPClient) DoStream(ctx context.Context, req pluginapi.HTTPRequest) (pluginapi.HTTPStreamResponse, error) {
@@ -102,8 +101,7 @@ func (c *hostHTTPClient) DoStream(ctx context.Context, req pluginapi.HTTPRequest
 	return pluginapi.HTTPStreamResponse{
 		StatusCode: resp.StatusCode,
 		Headers:    cloneHeader(resp.Header),
-		Chunks:     chunks,
-	}, nil
+		Chunks:     chunks}, nil
 }
 
 func (c *hostHTTPClient) doHTTP(ctx context.Context, req pluginapi.HTTPRequest) (*http.Response, *config.Config, error) {
@@ -160,8 +158,7 @@ func (c *hostHTTPClient) recordHTTPRequest(ctx context.Context, cfg *config.Conf
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 }
 
 func (h *Host) currentRuntimeConfig() *config.Config {

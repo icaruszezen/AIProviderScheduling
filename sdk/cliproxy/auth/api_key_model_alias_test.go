@@ -15,11 +15,7 @@ func TestLookupAPIKeyUpstreamModel(t *testing.T) {
 				BaseURL: "https://example.com",
 				Models: []internalconfig.GeminiModel{
 					{Name: "gemini-2.5-pro-exp-03-25", Alias: "g25p"},
-					{Name: "gemini-2.5-flash(low)", Alias: "g25f"},
-				},
-			},
-		},
-	}
+					{Name: "gemini-2.5-flash(low)", Alias: "g25f"}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -53,8 +49,7 @@ func TestLookupAPIKeyUpstreamModel(t *testing.T) {
 		{"non-existent auth", "non-existent", "g25p", ""},
 		{"unknown alias", "a1", "unknown-alias", ""},
 		{"empty auth ID", "", "g25p", ""},
-		{"empty model", "a1", "", ""},
-	}
+		{"empty model", "a1", "", ""}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -71,9 +66,7 @@ func TestLookupAPIKeyUpstreamModel_InteractionsKey(t *testing.T) {
 		InteractionsKey: []internalconfig.GeminiKey{{
 			APIKey:  "interactions-key",
 			BaseURL: "https://interactions.example.com",
-			Models:  []internalconfig.GeminiModel{{Name: "gemini-2.5-flash", Alias: "native-flash"}},
-		}},
-	}
+			Models:  []internalconfig.GeminiModel{{Name: "gemini-2.5-flash", Alias: "native-flash"}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -92,10 +85,7 @@ func TestAPIKeyModelAlias_ConfigHotReload(t *testing.T) {
 		GeminiKey: []internalconfig.GeminiKey{
 			{
 				APIKey: "k",
-				Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-pro-exp-03-25", Alias: "g25p"}},
-			},
-		},
-	}
+				Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-pro-exp-03-25", Alias: "g25p"}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -113,10 +103,7 @@ func TestAPIKeyModelAlias_ConfigHotReload(t *testing.T) {
 		GeminiKey: []internalconfig.GeminiKey{
 			{
 				APIKey: "k",
-				Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-flash", Alias: "g25p"}},
-			},
-		},
-	})
+				Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-flash", Alias: "g25p"}}}}})
 
 	// New alias should take effect
 	if resolved := mgr.lookupAPIKeyUpstreamModel("a1", "g25p"); resolved != "gemini-2.5-flash" {
@@ -129,8 +116,7 @@ func TestAPIKeyModelAlias_MultipleProviders(t *testing.T) {
 		GeminiKey: []internalconfig.GeminiKey{{APIKey: "gemini-key", Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-pro", Alias: "gp"}}}},
 		ClaudeKey: []internalconfig.ClaudeKey{{APIKey: "claude-key", Models: []internalconfig.ClaudeModel{{Name: "claude-sonnet-4", Alias: "cs4"}}}},
 		CodexKey:  []internalconfig.CodexKey{{APIKey: "codex-key", Models: []internalconfig.CodexModel{{Name: "o3", Alias: "o"}}}},
-		XAIKey:    []internalconfig.XAIKey{{APIKey: "xai-key", Models: []internalconfig.XAIModel{{Name: "grok-4.5", Alias: "grok-latest"}}}},
-	}
+		XAIKey:    []internalconfig.XAIKey{{APIKey: "xai-key", Models: []internalconfig.XAIModel{{Name: "grok-4.5", Alias: "grok-latest"}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -147,8 +133,7 @@ func TestAPIKeyModelAlias_MultipleProviders(t *testing.T) {
 		{"gemini-auth", "gp", "gemini-2.5-pro"},
 		{"claude-auth", "cs4", "claude-sonnet-4"},
 		{"codex-auth", "o", "o3"},
-		{"xai-auth", "grok-latest", "grok-4.5"},
-	}
+		{"xai-auth", "grok-latest", "grok-4.5"}}
 
 	for _, tt := range tests {
 		if resolved := mgr.lookupAPIKeyUpstreamModel(tt.authID, tt.input); resolved != tt.want {
@@ -160,16 +145,14 @@ func TestAPIKeyModelAlias_MultipleProviders(t *testing.T) {
 func TestApplyAPIKeyModelAlias(t *testing.T) {
 	cfg := &internalconfig.Config{
 		GeminiKey: []internalconfig.GeminiKey{
-			{APIKey: "k", Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-pro-exp-03-25", Alias: "g25p"}}},
-		},
-	}
+			{APIKey: "k", Models: []internalconfig.GeminiModel{{Name: "gemini-2.5-pro-exp-03-25", Alias: "g25p"}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
 
 	ctx := context.Background()
 	apiKeyAuth := &Auth{ID: "a1", Provider: "gemini", Attributes: map[string]string{"api_key": "k"}}
-	oauthAuth := &Auth{ID: "oauth-auth", Provider: "claude", Attributes: map[string]string{"auth_kind": "oauth"}}
+	oauthAuth := &Auth{ID: "oauth-auth", Provider: "claude", Attributes: map[string]string{"auth_kind": "apikey"}}
 	_, _ = mgr.Register(ctx, apiKeyAuth)
 
 	tests := []struct {
@@ -182,15 +165,12 @@ func TestApplyAPIKeyModelAlias(t *testing.T) {
 			name:       "api_key auth with alias",
 			auth:       apiKeyAuth,
 			inputModel: "g25p(8192)",
-			wantModel:  "gemini-2.5-pro-exp-03-25(8192)",
-		},
+			wantModel:  "gemini-2.5-pro-exp-03-25(8192)"},
 		{
 			name:       "oauth auth passthrough",
 			auth:       oauthAuth,
 			inputModel: "some-model",
-			wantModel:  "some-model",
-		},
-	}
+			wantModel:  "some-model"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -210,10 +190,7 @@ func TestResolveAPIKeyModelAliasWithResult_ForceMapping(t *testing.T) {
 			Models: []internalconfig.ClaudeModel{{
 				Name:         "glm-5.2",
 				Alias:        "claude-sonnet-latest",
-				ForceMapping: true,
-			}},
-		}},
-	}
+				ForceMapping: true}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -242,10 +219,7 @@ func TestResolveAPIKeyModelAliasWithResult_SameBasePreservesSuffix(t *testing.T)
 			Models: []internalconfig.GeminiModel{{
 				Name:         "gemini-2.5-pro",
 				Alias:        "gemini-2.5-pro(8192)",
-				ForceMapping: true,
-			}},
-		}},
-	}
+				ForceMapping: true}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)
@@ -269,10 +243,7 @@ func TestResolveAPIKeyModelAliasWithResult_ForceMappingUsesConfigAliasNotRequest
 			Models: []internalconfig.CodexModel{{
 				Name:         "gpt-5.5",
 				Alias:        "claude-sonnet-4-5",
-				ForceMapping: true,
-			}},
-		}},
-	}
+				ForceMapping: true}}}}}
 
 	mgr := NewManager(nil, nil, nil)
 	mgr.SetConfig(cfg)

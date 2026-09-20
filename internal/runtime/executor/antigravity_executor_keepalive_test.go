@@ -65,9 +65,10 @@ func TestAntigravityExecuteStreamReusesUpstreamConnection(t *testing.T) {
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 	auth := &cliproxyauth.Auth{
-		ID:         "antigravity-keepalive-auth",
-		Provider:   "antigravity",
-		Attributes: map[string]string{"base_url": server.URL},
+		ID:       "antigravity-keepalive-auth",
+		Provider: "antigravity",
+		Attributes: map[string]string{
+			"api_key": "token", "base_url": server.URL},
 		Metadata: map[string]any{
 			"access_token": "token",
 			"project_id":   "project-1",
@@ -137,9 +138,10 @@ func TestAntigravityCountTokensReusesUpstreamConnection(t *testing.T) {
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 	auth := &cliproxyauth.Auth{
-		ID:         "antigravity-counttokens-auth",
-		Provider:   "antigravity",
-		Attributes: map[string]string{"base_url": server.URL},
+		ID:       "antigravity-counttokens-auth",
+		Provider: "antigravity",
+		Attributes: map[string]string{
+			"api_key": "token", "base_url": server.URL},
 		Metadata: map[string]any{
 			"access_token": "token",
 			"project_id":   "project-1",
@@ -200,8 +202,9 @@ func TestAntigravityHTTPRequestReusesUpstreamConnection(t *testing.T) {
 
 	exec := NewAntigravityExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		ID:       "antigravity-http-request-auth",
-		Provider: "antigravity",
+		Attributes: map[string]string{"api_key": "token"},
+		ID:         "antigravity-http-request-auth",
+		Provider:   "antigravity",
 		Metadata: map[string]any{
 			"access_token": "token",
 			"project_id":   "project-1",
@@ -279,8 +282,9 @@ func TestAntigravityHTTPRequestConcurrentSessionsStayIsolated(t *testing.T) {
 
 	exec := NewAntigravityExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		ID:       "antigravity-concurrent-sessions-auth",
-		Provider: "antigravity",
+		Attributes: map[string]string{"api_key": "token"},
+		ID:         "antigravity-concurrent-sessions-auth",
+		Provider:   "antigravity",
 		Metadata: map[string]any{
 			"access_token": "token",
 			"project_id":   "project-1",

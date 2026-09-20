@@ -21,8 +21,7 @@ const (
 
 var modelsURLs = []string{
 	"https://raw.githubusercontent.com/router-for-me/models/refs/heads/main/models.json",
-	"https://models.router-for.me/models.json",
-}
+	"https://models.router-for.me/models.json"}
 
 //go:embed models/models.json
 var embeddedModelsJSON []byte
@@ -215,8 +214,7 @@ func detectChangedProviders(oldData, newData *staticModelsJSON) []string {
 		{"codex", oldData.CodexPro, newData.CodexPro},
 		{"kimi", oldData.Kimi, newData.Kimi},
 		{"antigravity", oldData.Antigravity, newData.Antigravity},
-		{"xai", oldData.XAI, newData.XAI},
-	}
+		{"xai", oldData.XAI, newData.XAI}}
 
 	seen := make(map[string]bool, len(sections))
 	var changed []string
@@ -335,8 +333,7 @@ func validateModelsCatalog(data *staticModelsJSON) error {
 		{name: "codex-pro", models: data.CodexPro},
 		{name: "kimi", models: data.Kimi},
 		{name: "antigravity", models: data.Antigravity},
-		{name: "xai", models: data.XAI},
-	}
+		{name: "xai", models: data.XAI}}
 
 	for _, section := range requiredSections {
 		if err := validateModelSection(section.name, section.models); err != nil {

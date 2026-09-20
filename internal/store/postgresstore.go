@@ -36,8 +36,9 @@ type PostgresStoreConfig struct {
 	SpoolDir      string
 }
 
-// PostgresStore persists configuration and authentication metadata using PostgreSQL as backend
+// PostgresStore persists configuration using PostgreSQL as backend
 // while mirroring data to a local workspace so existing file-based workflows continue to operate.
+// The local "auths/" spool is a historical directory name; runtime credentials come from config.yaml.
 type PostgresStore struct {
 	db            *sql.DB
 	cfg           PostgresStoreConfig
@@ -100,8 +101,7 @@ func NewPostgresStore(ctx context.Context, cfg PostgresStoreConfig) (*PostgresSt
 		cfg:        cfg,
 		spoolRoot:  absSpool,
 		configPath: filepath.Join(configDir, "config.yaml"),
-		authDir:    authDir,
-	}
+		authDir:    authDir}
 	store.cooldownStore = &postgresCooldownStateStore{store: store}
 	return store, nil
 }
@@ -164,15 +164,12 @@ func (s *PostgresStore) EnsureSchema(ctx context.Context) error {
 	return nil
 }
 
-// Bootstrap synchronizes configuration and auth records between PostgreSQL and the local workspace.
+// Bootstrap synchronizes configuration between PostgreSQL and the local workspace.
 func (s *PostgresStore) Bootstrap(ctx context.Context, exampleConfigPath string) error {
 	if err := s.EnsureSchema(ctx); err != nil {
 		return err
 	}
 	if err := s.syncConfigFromDatabase(ctx, exampleConfigPath); err != nil {
-		return err
-	}
-	if err := s.syncAuthFromDatabase(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -184,14 +181,6 @@ func (s *PostgresStore) ConfigPath() string {
 		return ""
 	}
 	return s.configPath
-}
-
-// AuthDir returns the local directory containing mirrored auth files.
-func (s *PostgresStore) AuthDir() string {
-	if s == nil {
-		return ""
-	}
-	return s.authDir
 }
 
 // WorkDir exposes the root spool directory used for mirroring.
@@ -334,8 +323,7 @@ func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) 
 		}
 		attr := map[string]string{
 			cliproxyauth.AttributePath:          path,
-			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourcePostgres,
-		}
+			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourcePostgres}
 		if email := strings.TrimSpace(valueAsString(metadata["email"])); email != "" {
 			attr["email"] = email
 		}
@@ -350,9 +338,12 @@ func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) 
 			CreatedAt:        createdAt,
 			UpdatedAt:        updatedAt,
 			LastRefreshedAt:  time.Time{},
-			NextRefreshAfter: time.Time{},
-		}
+			NextRefreshAfter: time.Time{}}
 		cliproxyauth.ApplyCustomHeadersFromMetadata(auth)
+		if cliproxyauth.IsUnsupportedOAuthAuth(auth) {
+			log.Warnf("postgres store: skipping leftover OAuth auth %s", id)
+			continue
+		}
 		if disabled, ok := metadata["disabled"].(bool); ok && disabled {
 			auth.Disabled = true
 			auth.Status = cliproxyauth.StatusDisabled

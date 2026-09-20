@@ -11,9 +11,7 @@ func TestExtractCustomHeadersFromMetadata(t *testing.T) {
 			" X-Test ": " value ",
 			"":         "ignored",
 			"X-Empty":  "   ",
-			"X-Num":    float64(1),
-		},
-	}
+			"X-Num":    float64(1)}}
 
 	got := ExtractCustomHeadersFromMetadata(meta)
 	want := map[string]string{"X-Test": "value"}
@@ -27,14 +25,10 @@ func TestApplyCustomHeadersFromMetadata(t *testing.T) {
 		Metadata: map[string]any{
 			"headers": map[string]string{
 				"X-Test":  "new",
-				"X-Empty": "   ",
-			},
-		},
+				"X-Empty": "   "}},
 		Attributes: map[string]string{
 			"header:X-Test": "old",
-			"keep":          "1",
-		},
-	}
+			"keep":          "1"}}
 
 	ApplyCustomHeadersFromMetadata(auth)
 

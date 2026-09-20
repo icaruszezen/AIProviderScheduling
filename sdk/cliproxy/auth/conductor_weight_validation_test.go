@@ -29,8 +29,7 @@ func TestManagerLoadSkipsInvalidExplicitWeights(t *testing.T) {
 		{ID: "omitted", Provider: "test"},
 		{ID: "zero", Provider: "test", Metadata: map[string]any{AttributeWeight: json.Number("0")}},
 		{ID: "fraction", Provider: "test", Metadata: map[string]any{AttributeWeight: json.Number("1.5")}},
-		{ID: "overflow", Provider: "test", Attributes: map[string]string{AttributeWeight: "9223372036854775808"}},
-	}}
+		{ID: "overflow", Provider: "test", Attributes: map[string]string{AttributeWeight: "9223372036854775808"}}}}
 	manager := NewManager(store, nil, nil)
 
 	if errLoad := manager.Load(context.Background()); errLoad != nil {
@@ -57,8 +56,7 @@ func TestManagerRegisterAndUpdateRejectInvalidExplicitWeights(t *testing.T) {
 	invalid := &Auth{
 		ID:       "invalid",
 		Provider: "test",
-		Metadata: map[string]any{AttributeWeight: "nonnumeric"},
-	}
+		Metadata: map[string]any{AttributeWeight: "nonnumeric"}}
 	if _, errRegister := manager.Register(ctx, invalid); errRegister == nil {
 		t.Fatal("Register() accepted an invalid weight")
 	}
@@ -73,8 +71,7 @@ func TestManagerRegisterAndUpdateRejectInvalidExplicitWeights(t *testing.T) {
 		ID:         "valid",
 		Provider:   "test",
 		Attributes: map[string]string{AttributeWeight: "2"},
-		Metadata:   map[string]any{"type": "test"},
-	}
+		Metadata:   map[string]any{"type": "test"}}
 	if _, errRegister := manager.Register(ctx, valid); errRegister != nil {
 		t.Fatalf("Register(valid) error = %v", errRegister)
 	}

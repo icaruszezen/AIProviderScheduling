@@ -15,8 +15,7 @@ import (
 func TestServiceApplyCoreAuthAddOrUpdate_DeleteReAddDoesNotInheritStaleRuntimeState(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-	}
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 
 	authID := "service-stale-state-auth"
 	modelID := "stale-model"
@@ -35,10 +34,7 @@ func TestServiceApplyCoreAuthAddOrUpdate_DeleteReAddDoesNotInheritStaleRuntimeSt
 		NextRefreshAfter: nextRefreshAfter,
 		ModelStates: map[string]*coreauth.ModelState{
 			modelID: {
-				Quota: coreauth.QuotaState{BackoffLevel: 7},
-			},
-		},
-	})
+				Quota: coreauth.QuotaState{BackoffLevel: 7}}}})
 
 	service.applyCoreAuthRemoval(context.Background(), authID)
 
@@ -49,8 +45,7 @@ func TestServiceApplyCoreAuthAddOrUpdate_DeleteReAddDoesNotInheritStaleRuntimeSt
 	service.applyCoreAuthAddOrUpdate(context.Background(), &coreauth.Auth{
 		ID:       authID,
 		Provider: "claude",
-		Status:   coreauth.StatusActive,
-	})
+		Status:   coreauth.StatusActive})
 
 	updated, ok := service.coreManager.GetByID(authID)
 	if !ok || updated == nil {
@@ -76,9 +71,7 @@ func TestServiceApplyCoreAuthAddOrUpdate_DeleteReAddDoesNotInheritStaleRuntimeSt
 func TestForceHomeRuntimeConfigEnablesUsageStatistics(t *testing.T) {
 	cfg := &config.Config{
 		UsageStatisticsEnabled: false,
-		DisableCooling:         false,
-		SaveCooldownStatus:     true,
-	}
+		DisableCooling:         false}
 
 	forceHomeRuntimeConfig(cfg)
 
@@ -87,9 +80,6 @@ func TestForceHomeRuntimeConfigEnablesUsageStatistics(t *testing.T) {
 	}
 	if !cfg.DisableCooling {
 		t.Fatal("expected home runtime config to force cooling disabled")
-	}
-	if cfg.SaveCooldownStatus {
-		t.Fatal("expected home runtime config to force cooldown status persistence disabled")
 	}
 }
 
@@ -113,22 +103,17 @@ func TestLifetimeRegistryObservesBarrierFromAppliedHomeConfig(t *testing.T) {
 }
 
 func TestApplyHomeOverlayDoesNotApplyWithoutReadyClient(t *testing.T) {
-	baseCfg := &config.Config{UsageStatisticsEnabled: false, SaveCooldownStatus: true}
+	baseCfg := &config.Config{UsageStatisticsEnabled: false}
 	baseCfg.Home.Enabled = true
 	service := &Service{cfg: baseCfg}
 
 	service.applyHomeOverlay(&config.Config{
-		UsageStatisticsEnabled: false,
-		SaveCooldownStatus:     true,
-	})
+		UsageStatisticsEnabled: false})
 
 	if service.cfg == nil || service.cfg.UsageStatisticsEnabled {
 		t.Fatal("unready home overlay changed usage statistics")
 	}
 	if !service.cfg.Home.Enabled {
 		t.Fatal("unready home overlay changed local home settings")
-	}
-	if !service.cfg.SaveCooldownStatus {
-		t.Fatal("unready home overlay changed cooldown status persistence")
 	}
 }

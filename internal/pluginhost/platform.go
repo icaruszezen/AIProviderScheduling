@@ -299,8 +299,7 @@ func DiscoverPluginFiles(root string, desiredVersions ...map[string]string) ([]P
 		out = append(out, PluginFileInfo{
 			ID:      file.ID,
 			Path:    file.Path,
-			Version: file.Version,
-		})
+			Version: file.Version})
 	}
 	return out, nil
 }

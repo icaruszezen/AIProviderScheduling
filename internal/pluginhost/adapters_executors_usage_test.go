@@ -24,8 +24,7 @@ type testUsageCapturePlugin struct {
 func newTestUsageCapturePlugin(targetProvider string) *testUsageCapturePlugin {
 	return &testUsageCapturePlugin{
 		targetProvider: targetProvider,
-		records:        make(chan coreusage.Record, 50),
-	}
+		records:        make(chan coreusage.Record, 50)}
 }
 
 func (p *testUsageCapturePlugin) HandleUsage(_ context.Context, record coreusage.Record) {
@@ -82,10 +81,8 @@ func TestExecutorAdapterExecutePublishesUsage(t *testing.T) {
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			return pluginapi.ExecutorResponse{
 				Payload: []byte(`{"id":"chatcmpl-1","choices":[{"message":{"role":"assistant","content":"hello"}}],"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30}}`),
-				Headers: http.Header{"Content-Type": []string{"application/json"}},
-			}, nil
-		},
-	}
+				Headers: http.Header{"Content-Type": []string{"application/json"}}}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -96,17 +93,14 @@ func TestExecutorAdapterExecutePublishesUsage(t *testing.T) {
 		ID:         "auth-1",
 		Provider:   "plugin-provider",
 		FileName:   "auth-1.json",
-		Attributes: map[string]string{"type": "oauth"},
-	}
+		Attributes: map[string]string{"type": "oauth"}}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","messages":[{"role":"user","content":"hi"}]}`),
-	}
+		Payload: []byte(`{"model":"test-model","messages":[{"role":"user","content":"hi"}]}`)}
 	opts := coreexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
-		ResponseFormat: sdktranslator.FormatOpenAI,
-	}
+		ResponseFormat: sdktranslator.FormatOpenAI}
 
 	resp, err := adapter.Execute(context.Background(), auth, req, opts)
 	if err != nil {
@@ -137,10 +131,8 @@ func TestExecutorAdapterExecuteThroughAuthManagerPublishesUsage(t *testing.T) {
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			return pluginapi.ExecutorResponse{
 				Payload: []byte(`{"id":"chatcmpl-1","choices":[{"message":{"role":"assistant","content":"hello"}}],"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30}}`),
-				Headers: http.Header{"Content-Type": []string{"application/json"}},
-			}, nil
-		},
-	}
+				Headers: http.Header{"Content-Type": []string{"application/json"}}}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -157,8 +149,7 @@ func TestExecutorAdapterExecuteThroughAuthManagerPublishesUsage(t *testing.T) {
 		Provider:   "plugin-provider-mgr",
 		Status:     coreauth.StatusActive,
 		FileName:   "auth-mgr-1.json",
-		Attributes: map[string]string{"type": "oauth"},
-	}
+		Attributes: map[string]string{"type": "oauth"}}
 	if _, err := authMgr.Register(context.Background(), auth); err != nil {
 		t.Fatalf("Register auth: %v", err)
 	}
@@ -170,12 +161,10 @@ func TestExecutorAdapterExecuteThroughAuthManagerPublishesUsage(t *testing.T) {
 
 	req := coreexecutor.Request{
 		Model:   model,
-		Payload: []byte(`{"model":"test-model-mgr","messages":[{"role":"user","content":"hi"}]}`),
-	}
+		Payload: []byte(`{"model":"test-model-mgr","messages":[{"role":"user","content":"hi"}]}`)}
 	opts := coreexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
-		ResponseFormat: sdktranslator.FormatOpenAI,
-	}
+		ResponseFormat: sdktranslator.FormatOpenAI}
 
 	resp, err := authMgr.Execute(context.Background(), []string{"plugin-provider-mgr"}, req, opts)
 	if err != nil {
@@ -205,10 +194,8 @@ func TestExecutorAdapterExecuteNilAuthSkipsUsage(t *testing.T) {
 		identifier: "plugin-provider-nil-auth",
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			return pluginapi.ExecutorResponse{
-				Payload: []byte(`{"id":"chatcmpl-1","choices":[{"message":{"role":"assistant","content":"hello"}}],"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30}}`),
-			}, nil
-		},
-	}
+				Payload: []byte(`{"id":"chatcmpl-1","choices":[{"message":{"role":"assistant","content":"hello"}}],"usage":{"prompt_tokens":10,"completion_tokens":20,"total_tokens":30}}`)}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -218,12 +205,10 @@ func TestExecutorAdapterExecuteNilAuthSkipsUsage(t *testing.T) {
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","messages":[{"role":"user","content":"hi"}]}`),
-	}
+		Payload: []byte(`{"model":"test-model","messages":[{"role":"user","content":"hi"}]}`)}
 	opts := coreexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
-		ResponseFormat: sdktranslator.FormatOpenAI,
-	}
+		ResponseFormat: sdktranslator.FormatOpenAI}
 
 	resp, err := adapter.Execute(context.Background(), nil, req, opts)
 	if err != nil {
@@ -247,8 +232,7 @@ func TestExecutorAdapterExecuteErrorPublishesFailure(t *testing.T) {
 		identifier: "plugin-provider-error",
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			return pluginapi.ExecutorResponse{}, errors.New("upstream failed")
-		},
-	}
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -258,13 +242,11 @@ func TestExecutorAdapterExecuteErrorPublishesFailure(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-1",
-		Provider: "plugin-provider-error",
-	}
+		Provider: "plugin-provider-error"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model"}`),
-	}
+		Payload: []byte(`{"model":"test-model"}`)}
 
 	_, err := adapter.Execute(context.Background(), auth, req, coreexecutor.Options{})
 	if err == nil {
@@ -288,8 +270,7 @@ func TestExecutorAdapterExecutePanicPublishesFailure(t *testing.T) {
 		identifier: "plugin-provider-panic",
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			panic("execute panic boom")
-		},
-	}
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -299,13 +280,11 @@ func TestExecutorAdapterExecutePanicPublishesFailure(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-panic-1",
-		Provider: "plugin-provider-panic",
-	}
+		Provider: "plugin-provider-panic"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model"}`),
-	}
+		Payload: []byte(`{"model":"test-model"}`)}
 
 	_, err := adapter.Execute(context.Background(), auth, req, coreexecutor.Options{})
 	if err == nil {
@@ -335,10 +314,8 @@ func TestExecutorAdapterExecuteStreamPublishesUsage(t *testing.T) {
 		identifier: "plugin-provider-stream",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -348,18 +325,15 @@ func TestExecutorAdapterExecuteStreamPublishesUsage(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-stream-1",
-		Provider: "plugin-provider-stream",
-	}
+		Provider: "plugin-provider-stream"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 	opts := coreexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
 		ResponseFormat: sdktranslator.FormatOpenAI,
-		Stream:         true,
-	}
+		Stream:         true}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), auth, req, opts)
 	if err != nil {
@@ -404,10 +378,8 @@ func TestExecutorAdapterExecuteStreamThroughAuthManagerPublishesUsage(t *testing
 		identifier: "plugin-provider-stream-mgr",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -424,8 +396,7 @@ func TestExecutorAdapterExecuteStreamThroughAuthManagerPublishesUsage(t *testing
 		Provider:   "plugin-provider-stream-mgr",
 		Status:     coreauth.StatusActive,
 		FileName:   "auth-stream-mgr-1.json",
-		Attributes: map[string]string{"type": "oauth"},
-	}
+		Attributes: map[string]string{"type": "oauth"}}
 	if _, err := authMgr.Register(context.Background(), auth); err != nil {
 		t.Fatalf("Register auth: %v", err)
 	}
@@ -437,13 +408,11 @@ func TestExecutorAdapterExecuteStreamThroughAuthManagerPublishesUsage(t *testing
 
 	req := coreexecutor.Request{
 		Model:   model,
-		Payload: []byte(`{"model":"test-model-stream-mgr","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model-stream-mgr","stream":true}`)}
 	opts := coreexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
 		ResponseFormat: sdktranslator.FormatOpenAI,
-		Stream:         true,
-	}
+		Stream:         true}
 
 	streamRes, err := authMgr.ExecuteStream(context.Background(), []string{"plugin-provider-stream-mgr"}, req, opts)
 	if err != nil {
@@ -480,10 +449,8 @@ func TestExecutorAdapterExecuteStreamTwoCompleteChunksWithoutNewline(t *testing.
 		identifier: "plugin-provider-no-newline",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -493,13 +460,11 @@ func TestExecutorAdapterExecuteStreamTwoCompleteChunksWithoutNewline(t *testing.
 
 	auth := &coreauth.Auth{
 		ID:       "auth-no-newline-1",
-		Provider: "plugin-provider-no-newline",
-	}
+		Provider: "plugin-provider-no-newline"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), auth, req, coreexecutor.Options{})
 	if err != nil {
@@ -533,10 +498,8 @@ func TestExecutorAdapterExecuteStreamSplitChunks(t *testing.T) {
 		identifier: "plugin-provider-split",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -546,13 +509,11 @@ func TestExecutorAdapterExecuteStreamSplitChunks(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-split-1",
-		Provider: "plugin-provider-split",
-	}
+		Provider: "plugin-provider-split"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), auth, req, coreexecutor.Options{})
 	if err != nil {
@@ -585,10 +546,8 @@ func TestExecutorAdapterExecuteStreamErrorChunk(t *testing.T) {
 		identifier: "plugin-provider-stream-err",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -598,13 +557,11 @@ func TestExecutorAdapterExecuteStreamErrorChunk(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-stream-err-1",
-		Provider: "plugin-provider-stream-err",
-	}
+		Provider: "plugin-provider-stream-err"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), auth, req, coreexecutor.Options{})
 	if err != nil {
@@ -639,8 +596,7 @@ func TestExecutorAdapterExecuteStreamPanicPublishesFailure(t *testing.T) {
 		identifier: "plugin-provider-stream-panic",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			panic("execute stream panic boom")
-		},
-	}
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -650,13 +606,11 @@ func TestExecutorAdapterExecuteStreamPanicPublishesFailure(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-stream-panic-1",
-		Provider: "plugin-provider-stream-panic",
-	}
+		Provider: "plugin-provider-stream-panic"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	_, err := adapter.ExecuteStream(context.Background(), auth, req, coreexecutor.Options{})
 	if err == nil {
@@ -685,10 +639,8 @@ func TestExecutorAdapterExecuteStreamNilAuthSkipsUsage(t *testing.T) {
 		identifier: "plugin-provider-stream-nil",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -698,8 +650,7 @@ func TestExecutorAdapterExecuteStreamNilAuthSkipsUsage(t *testing.T) {
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), nil, req, coreexecutor.Options{})
 	if err != nil {
@@ -730,10 +681,8 @@ func TestExecutorAdapterExecuteStreamSplitAcrossBraceBoundary(t *testing.T) {
 		identifier: "plugin-provider-split-brace",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -743,13 +692,11 @@ func TestExecutorAdapterExecuteStreamSplitAcrossBraceBoundary(t *testing.T) {
 
 	auth := &coreauth.Auth{
 		ID:       "auth-split-brace-1",
-		Provider: "plugin-provider-split-brace",
-	}
+		Provider: "plugin-provider-split-brace"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	streamRes, err := adapter.ExecuteStream(context.Background(), auth, req, coreexecutor.Options{})
 	if err != nil {
@@ -779,10 +726,8 @@ func TestExecutorAdapterExecuteStreamErrorChunkImmediatePublishWithoutClose(t *t
 		identifier: "plugin-provider-stream-err-unclosed",
 		executeStream: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorStreamResponse, error) {
 			return pluginapi.ExecutorStreamResponse{
-				Chunks: streamChunks,
-			}, nil
-		},
-	}
+				Chunks: streamChunks}, nil
+		}}
 
 	adapter := newExecutorAdapterForRecordForTest(host, executorRecord, exec,
 		[]sdktranslator.Format{sdktranslator.FormatOpenAI},
@@ -792,13 +737,11 @@ func TestExecutorAdapterExecuteStreamErrorChunkImmediatePublishWithoutClose(t *t
 
 	auth := &coreauth.Auth{
 		ID:       "auth-stream-err-unclosed-1",
-		Provider: "plugin-provider-stream-err-unclosed",
-	}
+		Provider: "plugin-provider-stream-err-unclosed"}
 
 	req := coreexecutor.Request{
 		Model:   "test-model",
-		Payload: []byte(`{"model":"test-model","stream":true}`),
-	}
+		Payload: []byte(`{"model":"test-model","stream":true}`)}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -18,8 +18,7 @@ func TestSessionAffinitySelectorLCPPreservesBindingAcrossConversationGrowth(t *t
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: lastAuthSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -28,9 +27,7 @@ func TestSessionAffinitySelectorLCPPreservesBindingAcrossConversationGrowth(t *t
 		OriginalRequest: []byte(`{"messages":[{"role":"system","content":"stable"},{"role":"user","content":"first"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.CallerScopeMetadataKey:      "caller-a",
-			cliproxyexecutor.DerivedSessionIDMetadataKey: "legacy-derived-first",
-		},
-	}
+			cliproxyexecutor.DerivedSessionIDMetadataKey: "legacy-derived-first"}}
 	firstAuth, errFirst := selector.Pick(context.Background(), "openai", "model", first, auths)
 	if errFirst != nil {
 		t.Fatalf("first Pick() error = %v", errFirst)
@@ -53,9 +50,7 @@ func TestSessionAffinitySelectorLCPPreservesBindingAcrossConversationGrowth(t *t
 		OriginalRequest: []byte(`{"messages":[{"role":"system","content":"stable"},{"role":"user","content":"first"},{"role":"assistant","content":"answer"},{"role":"user","content":"continue"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.CallerScopeMetadataKey:      "caller-a",
-			cliproxyexecutor.DerivedSessionIDMetadataKey: "legacy-derived-after-growth",
-		},
-	}
+			cliproxyexecutor.DerivedSessionIDMetadataKey: "legacy-derived-after-growth"}}
 	grownAuth, errGrown := selector.Pick(context.Background(), "openai", "model", grown, auths)
 	if errGrown != nil {
 		t.Fatalf("grown Pick() error = %v", errGrown)
@@ -73,19 +68,16 @@ func TestSessionAffinitySelectorLCPSkipsWhenCallerScopeMissing(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	first := cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
-		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"first request without caller scope"}]}`),
-	}
+		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"first request without caller scope"}]}`)}
 	second := cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
-		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"second request without caller scope"}]}`),
-	}
+		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"second request without caller scope"}]}`)}
 	firstAuth, errFirst := selector.Pick(context.Background(), "openai", "model", first, auths)
 	if errFirst != nil {
 		t.Fatalf("first Pick() error = %v", errFirst)
@@ -110,8 +102,7 @@ func TestSessionAffinitySelectorLCPCallerScopeIsolation(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -121,16 +112,12 @@ func TestSessionAffinitySelectorLCPCallerScopeIsolation(t *testing.T) {
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: payload,
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-a",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-a"}}
 	callerB := cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: payload,
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-b",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-b"}}
 
 	authA, errA := selector.Pick(context.Background(), "openai", "model", callerA, auths)
 	if errA != nil {
@@ -150,8 +137,7 @@ func TestSessionAffinitySelectorLCPFailureRemovesExactSequence(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -159,9 +145,7 @@ func TestSessionAffinitySelectorLCPFailureRemovesExactSequence(t *testing.T) {
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"failure"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-a",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-a"}}
 	first, errFirst := selector.Pick(context.Background(), "openai", "model", opts, auths)
 	if errFirst != nil {
 		t.Fatalf("first Pick() error = %v", errFirst)
@@ -175,8 +159,7 @@ func TestSessionAffinitySelectorLCPFailureRemovesExactSequence(t *testing.T) {
 		Provider: "openai",
 		Model:    "model",
 		Error:    &Error{Code: "rate_limited", Message: "rate limited"},
-		Options:  opts,
-	})
+		Options:  opts})
 
 	next, errNext := selector.Pick(context.Background(), "openai", "model", opts, auths)
 	if errNext != nil {
@@ -192,8 +175,7 @@ func TestSessionAffinitySelectorLCPOnResultReusesPrecomputedFingerprints(t *test
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -201,9 +183,7 @@ func TestSessionAffinitySelectorLCPOnResultReusesPrecomputedFingerprints(t *test
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"precomputed metadata test"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-a",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-a"}}
 	first, errFirst := selector.Pick(context.Background(), "openai", "model", opts, auths)
 	if errFirst != nil {
 		t.Fatalf("first Pick() error = %v", errFirst)
@@ -218,16 +198,14 @@ func TestSessionAffinitySelectorLCPOnResultReusesPrecomputedFingerprints(t *test
 	optsWithoutPayload := cliproxyexecutor.Options{
 		SourceFormat:    opts.SourceFormat,
 		OriginalRequest: nil,
-		Metadata:        opts.Metadata,
-	}
+		Metadata:        opts.Metadata}
 
 	selector.OnResult(Result{
 		AuthID:   first.ID,
 		Provider: "openai",
 		Model:    "model",
 		Success:  true,
-		Options:  optsWithoutPayload,
-	})
+		Options:  optsWithoutPayload})
 
 	second, errSecond := selector.Pick(context.Background(), "openai", "model", opts, auths)
 	if errSecond != nil {
@@ -243,16 +221,14 @@ func TestSessionAffinitySelectorExplicitHarnessSessionOverridesLCP(t *testing.T)
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	payload := []byte(`{"messages":[{"role":"user","content":"same prompt"}]}`)
 	lcpAuth, errLCP := selector.Pick(context.Background(), "openai", "model", cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
-		OriginalRequest: payload,
-	}, auths)
+		OriginalRequest: payload}, auths)
 	if errLCP != nil {
 		t.Fatalf("LCP Pick() error = %v", errLCP)
 	}
@@ -264,8 +240,7 @@ func TestSessionAffinitySelectorExplicitHarnessSessionOverridesLCP(t *testing.T)
 	explicitAuth, errExplicit := selector.Pick(context.Background(), "openai", "model", cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: payload,
-		Headers:         explicitHeaders,
-	}, auths)
+		Headers:         explicitHeaders}, auths)
 	if errExplicit != nil {
 		t.Fatalf("explicit Pick() error = %v", errExplicit)
 	}
@@ -279,8 +254,7 @@ func TestCanonicalSessionIDUnifiedResolution(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -289,8 +263,7 @@ func TestCanonicalSessionIDUnifiedResolution(t *testing.T) {
 	explicitOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"claude-abc"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"hello"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	_, errExplicit := selector.Pick(context.Background(), "claude", "model", explicitOpts, auths)
 	if errExplicit != nil {
 		t.Fatalf("explicit Pick() error = %v", errExplicit)
@@ -307,9 +280,7 @@ func TestCanonicalSessionIDUnifiedResolution(t *testing.T) {
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"lcp unified session test"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-unified",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-unified"}}
 	_, errLCP := selector.Pick(context.Background(), "openai", "model", lcpOpts, auths)
 	if errLCP != nil {
 		t.Fatalf("LCP Pick() error = %v", errLCP)
@@ -328,8 +299,7 @@ func TestCanonicalSessionIDUnifiedResolution(t *testing.T) {
 	// Case 3: A current explicit identity overrides stale inferred metadata.
 	staleMetadata := map[string]any{
 		cliproxyexecutor.CanonicalSessionIDMetadataKey:   lcpSessionID,
-		cliproxyexecutor.LCPAffinitySessionIDMetadataKey: lcpSessionID,
-	}
+		cliproxyexecutor.LCPAffinitySessionIDMetadataKey: lcpSessionID}
 	if resolved := CanonicalSessionID(http.Header{"X-Session-ID": []string{"current-explicit"}}, nil, staleMetadata); resolved != "header:current-explicit" {
 		t.Fatalf("CanonicalSessionID() with stale LCP metadata = %q, want header:current-explicit", resolved)
 	}
@@ -340,23 +310,18 @@ func TestSessionAffinitySelectorLCPUsesCanonicalFormatWhenSourceFormatMissing(t 
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
 	first := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-gemini",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-gemini"}}
 	second := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]},{"role":"model","parts":[{"text":"hi"}]}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "caller-gemini",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "caller-gemini"}}
 	firstAuth, errFirst := selector.Pick(context.Background(), "gemini", "model", first, auths)
 	if errFirst != nil {
 		t.Fatalf("first Pick() error = %v", errFirst)
@@ -375,8 +340,7 @@ func TestSessionAffinityClaudeSubagentInheritsParentBindingAndSeparatesAgentID(t
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -385,8 +349,7 @@ func TestSessionAffinityClaudeSubagentInheritsParentBindingAndSeparatesAgentID(t
 	parentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"claude-root-100"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "claude", "model", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -399,11 +362,9 @@ func TestSessionAffinityClaudeSubagentInheritsParentBindingAndSeparatesAgentID(t
 	subagent1Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-100"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent 1 task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent1Auth, errSub1 := selector.Pick(context.Background(), "claude", "model", subagent1Opts, auths)
 	if errSub1 != nil {
 		t.Fatalf("subagent 1 Pick() error = %v", errSub1)
@@ -421,11 +382,9 @@ func TestSessionAffinityClaudeSubagentInheritsParentBindingAndSeparatesAgentID(t
 	subagent2Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-100"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-002"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-002"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent 2 task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent2Auth, errSub2 := selector.Pick(context.Background(), "claude", "model", subagent2Opts, auths)
 	if errSub2 != nil {
 		t.Fatalf("subagent 2 Pick() error = %v", errSub2)
@@ -443,8 +402,7 @@ func TestSessionAffinityCodexSubagentInheritsParentThread(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -453,8 +411,7 @@ func TestSessionAffinityCodexSubagentInheritsParentThread(t *testing.T) {
 	parentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"Session-Id": []string{"thread-parent-999"}},
 		OriginalRequest: []byte(`{"input":[{"role":"user","content":"parent task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "openai", "model", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -465,11 +422,9 @@ func TestSessionAffinityCodexSubagentInheritsParentThread(t *testing.T) {
 		Headers: http.Header{
 			"Session-Id":               []string{"thread-child-888"},
 			"x-codex-parent-thread-id": []string{"thread-parent-999"},
-			"x-openai-subagent":        []string{"true"},
-		},
+			"x-openai-subagent":        []string{"true"}},
 		OriginalRequest: []byte(`{"input":[{"role":"user","content":"child subagent task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	childAuth, errChild := selector.Pick(context.Background(), "openai", "model", childOpts, auths)
 	if errChild != nil {
 		t.Fatalf("child Pick() error = %v", errChild)
@@ -487,8 +442,7 @@ func TestSessionAffinityPayloadParentSessionInheritance(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -496,8 +450,7 @@ func TestSessionAffinityPayloadParentSessionInheritance(t *testing.T) {
 	// 1. Parent session
 	parentOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"session_id":"parent-sess-001","messages":[{"role":"user","content":"parent"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "openai", "model", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -506,8 +459,7 @@ func TestSessionAffinityPayloadParentSessionInheritance(t *testing.T) {
 	// 2. Child session with parent_session_id in payload
 	childOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"session_id":"child-sess-002","parent_session_id":"parent-sess-001","messages":[{"role":"user","content":"child"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	childAuth, errChild := selector.Pick(context.Background(), "openai", "model", childOpts, auths)
 	if errChild != nil {
 		t.Fatalf("child Pick() error = %v", errChild)
@@ -525,8 +477,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -535,8 +486,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 	agyOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Http-Session-Id": []string{"agy-sess-456"}},
 		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	_, errAgy := selector.Pick(context.Background(), "gemini", "model", agyOpts, auths)
 	if errAgy != nil {
 		t.Fatalf("agy Pick() error = %v", errAgy)
@@ -549,8 +499,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 	slotOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Slot-Session-Id": []string{"pi-slot-789"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"pi slot task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	_, errSlot := selector.Pick(context.Background(), "openai", "model", slotOpts, auths)
 	if errSlot != nil {
 		t.Fatalf("slot Pick() error = %v", errSlot)
@@ -562,8 +511,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 	// 3. Google Gemini Context Caching
 	geminiCacheOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"cachedContent":"projects/123/locations/us-central1/cachedContents/456","contents":[{"role":"user","parts":[{"text":"query"}]}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	_, errGemini := selector.Pick(context.Background(), "gemini", "model", geminiCacheOpts, auths)
 	if errGemini != nil {
 		t.Fatalf("gemini cache Pick() error = %v", errGemini)
@@ -576,8 +524,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 	threadOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Thread-Id": []string{"thread_abc123"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"run thread"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	_, errThread := selector.Pick(context.Background(), "openai", "model", threadOpts, auths)
 	if errThread != nil {
 		t.Fatalf("thread Pick() error = %v", errThread)
@@ -589,8 +536,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 	// 5. Payload metadata.agent_id with parent session inheritance
 	parentAgentOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"session_id":"sess-main-555","messages":[{"role":"user","content":"main"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAgentAuth, errP := selector.Pick(context.Background(), "openai", "model", parentAgentOpts, auths)
 	if errP != nil {
 		t.Fatalf("parentAgent Pick() error = %v", errP)
@@ -598,8 +544,7 @@ func TestSessionAffinityExtendedHeadersAndPayloadIdentities(t *testing.T) {
 
 	subAgentPayloadOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"session_id":"sess-main-555","metadata":{"agent_id":"worker-agent-1"},"messages":[{"role":"user","content":"worker"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subAgentAuth, errSub := selector.Pick(context.Background(), "openai", "model", subAgentPayloadOpts, auths)
 	if errSub != nil {
 		t.Fatalf("subAgent Pick() error = %v", errSub)
@@ -617,8 +562,7 @@ func TestSessionAffinitySelectorSubagentInheritance(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{{ID: "auth-a"}, {ID: "auth-b"}}
@@ -628,9 +572,7 @@ func TestSessionAffinitySelectorSubagentInheritance(t *testing.T) {
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"tree-root-sess"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"start root task"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp"}}
 	rootAuth, errRoot := selector.Pick(context.Background(), "claude", "claude-3-7-sonnet", rootOpts, auths)
 	if errRoot != nil {
 		t.Fatalf("root Pick() error = %v", errRoot)
@@ -640,13 +582,10 @@ func TestSessionAffinitySelectorSubagentInheritance(t *testing.T) {
 	sub1Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"tree-root-sess"},
-			"X-Claude-Code-Agent-Id":   []string{"checker-agent"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"checker-agent"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"run checker"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp"}}
 	sub1Auth, errSub1 := selector.Pick(context.Background(), "claude", "claude-3-7-sonnet", sub1Opts, auths)
 	if errSub1 != nil {
 		t.Fatalf("sub1 Pick() error = %v", errSub1)
@@ -660,13 +599,10 @@ func TestSessionAffinitySelectorSubagentInheritance(t *testing.T) {
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id":      []string{"tree-root-sess"},
 			"X-Claude-Code-Agent-Id":        []string{"leaf-agent"},
-			"X-Claude-Code-Parent-Agent-Id": []string{"checker-agent"},
-		},
+			"X-Claude-Code-Parent-Agent-Id": []string{"checker-agent"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"run leaf checker"}]}`),
 		Metadata: map[string]any{
-			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey: "scope-corp"}}
 	sub2Auth, errSub2 := selector.Pick(context.Background(), "claude", "claude-3-7-sonnet", sub2Opts, auths)
 	if errSub2 != nil {
 		t.Fatalf("sub2 Pick() error = %v", errSub2)
@@ -725,15 +661,12 @@ func TestSessionAffinitySelectorNilFallbackNoPanic(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: nilSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer selector.Stop()
 
 	opts := cliproxyexecutor.Options{
 		Headers: http.Header{
-			"X-Session-ID": []string{"sess-nil-test"},
-		},
-	}
+			"X-Session-ID": []string{"sess-nil-test"}}}
 	candidates := []*Auth{{ID: "auth-1", Status: StatusActive}}
 	auth, err := selector.Pick(context.Background(), "openai", "gpt-4o", opts, candidates)
 	if err != nil {
@@ -793,20 +726,17 @@ func TestSessionAffinityClaudeMetadataSubagentNonInheritingGeminiModel(t *testin
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-a", Provider: "antigravity", Status: StatusActive},
-		{ID: "auth-b", Provider: "antigravity", Status: StatusActive},
-	}
+		{ID: "auth-b", Provider: "antigravity", Status: StatusActive}}
 
 	// 1. Parent request binds to auth-a
 	parentOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"model":"gemini-3.7-flash-high","metadata":{"user_id":"{\"device_id\":\"dev-1\",\"session_id\":\"sess-main-1\"}"},"messages":[{"role":"user","content":"parent task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "mixed", "gemini-3.7-flash-high", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -821,11 +751,9 @@ func TestSessionAffinityClaudeMetadataSubagentNonInheritingGeminiModel(t *testin
 	// 2. Subagent 1 request with X-Claude-Code-Agent-Id header and metadata.user_id in payload
 	subagent1Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
-			"X-Claude-Code-Agent-Id": []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id": []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"model":"gemini-3.7-flash-high","metadata":{"user_id":"{\"device_id\":\"dev-1\",\"session_id\":\"sess-main-1\"}"},"messages":[{"role":"user","content":"subagent 1 task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent1Auth, errSub1 := selector.Pick(context.Background(), "mixed", "gemini-3.7-flash-high", subagent1Opts, auths)
 	if errSub1 != nil {
 		t.Fatalf("subagent 1 Pick() error = %v", errSub1)
@@ -841,11 +769,9 @@ func TestSessionAffinityClaudeMetadataSubagentNonInheritingGeminiModel(t *testin
 	// 3. Subsequent turn for subagent 1 must retain auth-b
 	subagent1Turn2Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
-			"X-Claude-Code-Agent-Id": []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id": []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"model":"gemini-3.7-flash-high","metadata":{"user_id":"{\"device_id\":\"dev-1\",\"session_id\":\"sess-main-1\"}"},"messages":[{"role":"user","content":"subagent 1 turn 2"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent1Turn2Auth, errSub1Turn2 := selector.Pick(context.Background(), "mixed", "gemini-3.7-flash-high", subagent1Turn2Opts, auths)
 	if errSub1Turn2 != nil {
 		t.Fatalf("subagent 1 turn 2 Pick() error = %v", errSub1Turn2)
@@ -860,19 +786,15 @@ func BenchmarkSessionAffinitySelectorPickLCP(b *testing.B) {
 	defer log.SetLevel(log.InfoLevel)
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
-		TTL: time.Hour,
-	})
+		TTL: time.Hour})
 	auths := []*Auth{
 		{ID: "auth-1", Status: StatusActive},
-		{ID: "auth-2", Status: StatusActive},
-	}
+		{ID: "auth-2", Status: StatusActive}}
 	opts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"benchmark message for LCP selector"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "openai",
-			cliproxyexecutor.CallerScopeMetadataKey:             "bench-caller",
-		},
-	}
+			cliproxyexecutor.CallerScopeMetadataKey:             "bench-caller"}}
 	// Warm up binding
 	_, _ = selector.Pick(context.Background(), "openai", "gpt-4o", opts, auths)
 

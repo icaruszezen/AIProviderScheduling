@@ -22,9 +22,7 @@ func TestHomeForceMappingAliasResult(t *testing.T) {
 		Attributes: map[string]string{
 			homeUpstreamModelAttributeKey: "grok-4.5",
 			homeForceMappingAttributeKey:  "true",
-			homeOriginalAliasAttributeKey: "grok-latest",
-		},
-	}
+			homeOriginalAliasAttributeKey: "grok-latest"}}
 
 	result := homeForceMappingAliasResult(auth, "grok-latest")
 	if result.UpstreamModel != "grok-4.5" || !result.ForceMapping || result.OriginalAlias != "grok-latest" {
@@ -38,9 +36,7 @@ func TestHomeForceMappingAliasResultRequiresSameOriginalAlias(t *testing.T) {
 		Attributes: map[string]string{
 			homeUpstreamModelAttributeKey: "grok-4.5",
 			homeForceMappingAttributeKey:  "true",
-			homeOriginalAliasAttributeKey: "grok-latest",
-		},
-	}
+			homeOriginalAliasAttributeKey: "grok-latest"}}
 
 	if result := homeForceMappingAliasResult(auth, " GROK-LATEST "); !result.ForceMapping {
 		t.Fatalf("homeForceMappingAliasResult() = %+v, want same alias force mapping", result)
@@ -77,8 +73,7 @@ func TestHomeNonForceAliasSessionReuseAndTargetChangeReleasesAccountedModel(t *t
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "non-force-alias-session",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "non-force-alias-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "non-force-alias-auth"}}
 	for _, model := range []string{"alias-a(high)", "alias-a", "alias-b"} {
 		if _, errExecute := manager.Execute(ctx, []string{"force-mapping"}, cliproxyexecutor.Request{Model: model}, opts); errExecute != nil {
 			t.Fatalf("Execute(%q) error = %v", model, errExecute)
@@ -97,8 +92,7 @@ func TestHomeNonForceAliasSessionReuseAndTargetChangeReleasesAccountedModel(t *t
 	releasesMu.Unlock()
 	wantReleases := []executionregistry.ReleaseGroup{
 		{CredentialID: "non-force-alias-auth", Model: "target-a"},
-		{CredentialID: "non-force-alias-auth", Model: "target-b"},
-	}
+		{CredentialID: "non-force-alias-auth", Model: "target-b"}}
 	if !reflect.DeepEqual(gotReleases, wantReleases) {
 		t.Fatalf("accounted release groups = %#v, want %#v", gotReleases, wantReleases)
 	}
@@ -129,15 +123,11 @@ func (d *accountedAliasTargetDispatcher) RPopAuth(_ context.Context, model strin
 			Provider: "force-mapping",
 			Status:   StatusActive,
 			Attributes: map[string]string{
-				"websockets": "true",
-			},
-		},
+				"websockets": "true"}},
 		"concurrency": homeConcurrencyTuple{
 			Accounted:    true,
 			CredentialID: "non-force-alias-auth",
-			Model:        target,
-		},
-	})
+			Model:        target}})
 }
 
 func (*accountedAliasTargetDispatcher) AbortAmbiguousDispatch() {}
@@ -156,8 +146,7 @@ func TestHomeAuthSelectionRouteRetainsRequestedResponseAliasAcrossWebsocketReuse
 		cliproxyexecutor.AuthSelectionModelMetadataKey: "route-model",
 		cliproxyexecutor.RequestedModelMetadataKey:     "client-alias",
 		cliproxyexecutor.ExecutionSessionMetadataKey:   "auth-selection-route",
-		cliproxyexecutor.PinnedAuthMetadataKey:         "auth-selection-route-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:         "auth-selection-route-auth"}}
 	for attempt := 0; attempt < 2; attempt++ {
 		response, errExecute := manager.Execute(ctx, []string{"force-mapping"}, cliproxyexecutor.Request{Model: "execution-model"}, opts)
 		if errExecute != nil {
@@ -193,11 +182,8 @@ func (d *authSelectionAliasDispatcher) RPopAuth(_ context.Context, model string,
 			Provider: "force-mapping",
 			Status:   StatusActive,
 			Attributes: map[string]string{
-				"websockets": "true",
-			},
-		},
-		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "auth-selection-route-auth", Model: "target-model"},
-	})
+				"websockets": "true"}},
+		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "auth-selection-route-auth", Model: "target-model"}})
 }
 
 func (*authSelectionAliasDispatcher) AbortAmbiguousDispatch() {}
@@ -246,8 +232,7 @@ func TestHomeForceMappingAliasChangeEndsAndFlushesBeforeRedispatch(t *testing.T)
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "force-mapping-alias-change",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "force-mapping-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "force-mapping-auth"}}
 	for _, model := range []string{"alias-a", "alias-b"} {
 		if _, errExecute := manager.Execute(ctx, []string{"force-mapping"}, cliproxyexecutor.Request{Model: model}, opts); errExecute != nil {
 			t.Fatalf("Execute(%q) error = %v", model, errExecute)
@@ -283,15 +268,11 @@ func (d *forceMappingAliasChangeDispatcher) RPopAuth(_ context.Context, _ string
 			Attributes: map[string]string{
 				"websockets":                  "true",
 				homeForceMappingAttributeKey:  "true",
-				homeOriginalAliasAttributeKey: "alias-a",
-			},
-		},
+				homeOriginalAliasAttributeKey: "alias-a"}},
 		"concurrency": homeConcurrencyTuple{
 			Accounted:    true,
 			CredentialID: "force-mapping-auth",
-			Model:        "upstream-a",
-		},
-	})
+			Model:        "upstream-a"}})
 }
 
 func (*forceMappingAliasChangeDispatcher) AbortAmbiguousDispatch() {}
@@ -324,8 +305,7 @@ func TestHomeRetainedRouteRewritesReasoningSuffixAndWaitsForReleaseACK(t *testin
 	flusher := internalhome.NewReleaseFlusher(func() internalconfig.CredentialConcurrencyConfig {
 		return internalconfig.CredentialConcurrencyConfig{
 			ReleaseFlushInterval: time.Millisecond,
-			ReleaseMaxBackoff:    10 * time.Millisecond,
-		}
+			ReleaseMaxBackoff:    10 * time.Millisecond}
 	}, func(_ context.Context, _ internalhome.ConcurrencyReleaseFrame) error {
 		dispatcher.acks.Add(1)
 		return nil
@@ -351,8 +331,7 @@ func TestHomeRetainedRouteRewritesReasoningSuffixAndWaitsForReleaseACK(t *testin
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "retained-route-ack",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "retained-route-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "retained-route-auth"}}
 	for _, model := range []string{"alias-a", "alias-a(high)", "alias-a", "alias-a(custom)"} {
 		response, errExecute := manager.Execute(ctx, []string{"retained-route"}, cliproxyexecutor.Request{Model: model}, opts)
 		if errExecute != nil {
@@ -411,11 +390,8 @@ func (d *ackOrderedRouteDispatcher) RPopAuth(_ context.Context, model string, _ 
 			Provider: "retained-route",
 			Status:   StatusActive,
 			Attributes: map[string]string{
-				"websockets": "true",
-			},
-		},
-		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "retained-route-auth", Model: target},
-	})
+				"websockets": "true"}},
+		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "retained-route-auth", Model: target}})
 }
 
 func (*ackOrderedRouteDispatcher) AbortAmbiguousDispatch() {}
@@ -466,8 +442,7 @@ func TestHomeRetainedPrefixedRouteRewritesSuffixAndResponse(t *testing.T) {
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "prefixed-retained-route",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "prefixed-retained-route-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "prefixed-retained-route-auth"}}
 	for _, model := range []string{"team/alias-a", "team/alias-a(high)"} {
 		response, errExecute := manager.Execute(ctx, []string{"prefixed-retained-route"}, cliproxyexecutor.Request{Model: model}, opts)
 		if errExecute != nil {
@@ -486,8 +461,7 @@ func TestHomeRetainedPrefixedRouteRewritesSuffixAndResponse(t *testing.T) {
 	manager.mu.RLock()
 	selection := manager.homeSessionSelections["prefixed-retained-route"][homeSessionSelectionKey{
 		credentialID: "prefixed-retained-route-auth",
-		routeModel:   "team/alias-a",
-	}]
+		routeModel:   "team/alias-a"}]
 	manager.mu.RUnlock()
 	if selection == nil {
 		t.Fatal("retained selection missing external route key")
@@ -520,11 +494,8 @@ func (d *prefixedRetainedRouteDispatcher) RPopAuth(_ context.Context, model stri
 			Prefix:   "team",
 			Status:   StatusActive,
 			Attributes: map[string]string{
-				"websockets": "true",
-			},
-		},
-		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "prefixed-retained-route-auth", Model: "target-a"},
-	})
+				"websockets": "true"}},
+		"concurrency": homeConcurrencyTuple{Accounted: true, CredentialID: "prefixed-retained-route-auth", Model: "target-a"}})
 }
 
 func (*prefixedRetainedRouteDispatcher) AbortAmbiguousDispatch() {}
@@ -574,8 +545,7 @@ func TestHomeRedispatchStopsWhenReleaseAcknowledgementFails(t *testing.T) {
 		return internalconfig.CredentialConcurrencyConfig{
 			CPACancelBound:       20 * time.Millisecond,
 			ReleaseFlushInterval: time.Millisecond,
-			ReleaseMaxBackoff:    time.Millisecond,
-		}
+			ReleaseMaxBackoff:    time.Millisecond}
 	}, func(context.Context, internalhome.ConcurrencyReleaseFrame) error {
 		return context.DeadlineExceeded
 	})
@@ -597,16 +567,13 @@ func TestHomeRedispatchStopsWhenReleaseAcknowledgementFails(t *testing.T) {
 		CredentialConcurrency: internalconfig.CredentialConcurrencyConfig{
 			CPACancelBound:       20 * time.Millisecond,
 			ReleaseFlushInterval: time.Millisecond,
-			ReleaseMaxBackoff:    time.Millisecond,
-		},
-	})
+			ReleaseMaxBackoff:    time.Millisecond}})
 	manager.PublishHomeDispatch(dispatcher, registry, 1)
 	manager.RegisterExecutor(&retainedRouteModelExecutor{})
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "release-failure",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "retained-route-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "retained-route-auth"}}
 	if _, errExecute := manager.Execute(ctx, []string{"retained-route"}, cliproxyexecutor.Request{Model: "alias-a"}, opts); errExecute != nil {
 		t.Fatalf("first Execute() error = %v", errExecute)
 	}
@@ -623,9 +590,7 @@ func TestHomeForceMappingAliasResultRequiresExplicitFlag(t *testing.T) {
 		Provider: "xai",
 		Attributes: map[string]string{
 			homeUpstreamModelAttributeKey: "grok-4.5",
-			homeOriginalAliasAttributeKey: "grok-latest",
-		},
-	}
+			homeOriginalAliasAttributeKey: "grok-latest"}}
 
 	result := homeForceMappingAliasResult(auth, "grok-latest")
 	if result.ForceMapping || result.OriginalAlias != "" {

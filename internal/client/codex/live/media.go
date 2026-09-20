@@ -30,8 +30,7 @@ var opusCodec = webrtc.RTPCodecCapability{
 	MimeType:    webrtc.MimeTypeOpus,
 	ClockRate:   48000,
 	Channels:    2,
-	SDPFmtpLine: "minptime=10;useinbandfec=1",
-}
+	SDPFmtpLine: "minptime=10;useinbandfec=1"}
 
 type mediaRelaySession interface {
 	AcceptUpstreamAnswer(context.Context, string) (string, error)
@@ -150,8 +149,7 @@ func newPionMediaRelayWithLimiter(relayConfig config.CodexLiveMediaRelayConfig, 
 			URLs:           urls,
 			Username:       server.Username,
 			Credential:     server.Credential,
-			CredentialType: webrtc.ICECredentialTypePassword,
-		})
+			CredentialType: webrtc.ICECredentialTypePassword})
 	}
 	if limiter == nil {
 		limiter = &mediaSessionLimiter{}
@@ -162,8 +160,7 @@ func newPionMediaRelayWithLimiter(relayConfig config.CodexLiveMediaRelayConfig, 
 		upstreamAPI:      upstreamAPI,
 		proxyUpstreamAPI: proxyUpstreamAPI,
 		configuration:    webrtc.Configuration{ICEServers: iceServers},
-		limiter:          limiter,
-	}, nil
+		limiter:          limiter}, nil
 }
 
 func (l *mediaSessionLimiter) setLimit(limit int) {
@@ -211,8 +208,7 @@ func newPionAPIWithOptions(relayConfig config.CodexLiveMediaRelayConfig, filterP
 	mediaEngine := &webrtc.MediaEngine{}
 	if errRegister := mediaEngine.RegisterCodec(webrtc.RTPCodecParameters{
 		RTPCodecCapability: opusCodec,
-		PayloadType:        111,
-	}, webrtc.RTPCodecTypeAudio); errRegister != nil {
+		PayloadType:        111}, webrtc.RTPCodecTypeAudio); errRegister != nil {
 		return nil, fmt.Errorf("register Opus codec: %w", errRegister)
 	}
 	interceptorRegistry := &interceptor.Registry{}
@@ -238,8 +234,7 @@ func newPionAPIWithOptions(relayConfig config.CodexLiveMediaRelayConfig, filterP
 			webrtc.NetworkTypeUDP4,
 			webrtc.NetworkTypeUDP6,
 			webrtc.NetworkTypeTCP4,
-			webrtc.NetworkTypeTCP6,
-		})
+			webrtc.NetworkTypeTCP6})
 		settingEngine.SetIncludeLoopbackCandidate(true)
 		settingEngine.SetIPFilter(func(ip net.IP) bool {
 			return ip != nil && ip.IsLoopback()
@@ -310,8 +305,7 @@ func (r *pionMediaRelay) NewSession(ctx context.Context, clientOffer string, rou
 		proxyDialer:    proxyDialer,
 		proxyScheme:    proxyScheme(route.proxyURL),
 		credential:     strings.TrimSpace(route.credential),
-		authIndex:      strings.TrimSpace(route.authIndex),
-	}
+		authIndex:      strings.TrimSpace(route.authIndex)}
 	session.bridge = newDataChannelBridge(session.done, func(err error) {
 		session.fail("data_channel_failed", err)
 	})
@@ -320,8 +314,7 @@ func (r *pionMediaRelay) NewSession(ctx context.Context, clientOffer string, rou
 
 	if errRemote := downstream.SetRemoteDescription(webrtc.SessionDescription{
 		Type: webrtc.SDPTypeOffer,
-		SDP:  clientOffer,
-	}); errRemote != nil {
+		SDP:  clientOffer}); errRemote != nil {
 		_ = session.Close()
 		return nil, "", fmt.Errorf("set downstream WebRTC offer: %w", errRemote)
 	}
@@ -427,8 +420,7 @@ func (s *pionMediaSession) AcceptUpstreamAnswer(ctx context.Context, upstreamAns
 	}
 	if errRemote := s.upstream.SetRemoteDescription(webrtc.SessionDescription{
 		Type: webrtc.SDPTypeAnswer,
-		SDP:  answerToApply,
-	}); errRemote != nil {
+		SDP:  answerToApply}); errRemote != nil {
 		errSetRemote := fmt.Errorf("set upstream WebRTC answer: %w", errRemote)
 		if errClose := s.closeCandidateTunnels(); errClose != nil {
 			return "", errors.Join(errSetRemote, fmt.Errorf("close TCP candidate tunnels: %w", errClose))
@@ -493,8 +485,7 @@ func (s *pionMediaSession) SetCallID(callID string) {
 func (s *pionMediaSession) logFields(peer string) log.Fields {
 	fields := log.Fields{
 		"media_session_id": s.mediaSessionID,
-		"peer":             peer,
-	}
+		"peer":             peer}
 	s.handlerMu.Lock()
 	callID := s.callID
 	s.handlerMu.Unlock()
@@ -729,8 +720,7 @@ func newDataChannelPipe(name string, done <-chan struct{}, onError func(error)) 
 		queue:    make(chan dataChannelMessage, mediaDataQueueSize),
 		ready:    make(chan struct{}),
 		writable: make(chan struct{}, 1),
-		onError:  onError,
-	}
+		onError:  onError}
 	go pipe.run()
 	return pipe
 }

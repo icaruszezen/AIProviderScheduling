@@ -93,8 +93,7 @@ func mapCodexWebsocketReadError(err error) error {
 	if errors.As(err, &closeErr) && closeErr.Code == websocket.CloseMessageTooBig {
 		return codexWebsocketMessageTooBigError{statusErr: statusErr{
 			code: http.StatusRequestEntityTooLarge,
-			msg:  `{"error":{"message":"upstream websocket message too big","type":"invalid_request_error","code":"message_too_big"}}`,
-		}}
+			msg:  `{"error":{"message":"upstream websocket message too big","type":"invalid_request_error","code":"message_too_big"}}`}}
 	}
 	return err
 }
@@ -164,9 +163,7 @@ func newProxyAwareWebsocketDialer(cfg *config.Config, auth *cliproxyauth.Auth) *
 		EnableCompression: true,
 		NetDialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-	}
+			KeepAlive: 30 * time.Second}).DialContext}
 
 	proxyURL := ""
 	if auth != nil {

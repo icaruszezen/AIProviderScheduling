@@ -33,7 +33,9 @@ const (
 	gcPruneGracePeriod = 24 * time.Hour
 )
 
-// GitTokenStore persists token records and auth metadata using git as the backing storage.
+// GitTokenStore persists config.yaml (and leftover historical auth metadata) using git.
+// The on-disk/remote "auths/" directory is a workspace name for store compatibility.
+// Runtime scheduling loads provider credentials from config, not those JSON files.
 type GitTokenStore struct {
 	mu        sync.Mutex
 	dirLock   sync.RWMutex
@@ -60,8 +62,7 @@ func NewGitTokenStore(remote, username, password, branch string) *GitTokenStore 
 		remote:   remote,
 		branch:   strings.TrimSpace(branch),
 		username: username,
-		password: password,
-	}
+		password: password}
 }
 
 // SetBaseDir updates the default directory used for auth JSON persistence when no explicit path is provided.
@@ -91,11 +92,6 @@ func (s *GitTokenStore) SetBaseDir(dir string) {
 	s.repoDir = repoDir
 	s.configDir = configDir
 	s.dirLock.Unlock()
-}
-
-// AuthDir returns the directory used for auth persistence.
-func (s *GitTokenStore) AuthDir() string {
-	return s.baseDirSnapshot()
 }
 
 // ConfigPath returns the managed config file path.
@@ -178,8 +174,7 @@ func (s *GitTokenStore) ensureRepositoryLocked() (errResult error) {
 				if _, errRemote := repo.Remote("origin"); errRemote != nil {
 					if _, errCreate := repo.CreateRemote(&config.RemoteConfig{
 						Name: "origin",
-						URLs: []string{s.remote},
-					}); errCreate != nil && !errors.Is(errCreate, git.ErrRemoteExists) {
+						URLs: []string{s.remote}}); errCreate != nil && !errors.Is(errCreate, git.ErrRemoteExists) {
 						s.dirLock.Unlock()
 						return fmt.Errorf("git token store: configure remote: %w", errCreate)
 					}
@@ -202,8 +197,7 @@ func (s *GitTokenStore) ensureRepositoryLocked() (errResult error) {
 				}
 				initPaths = []string{
 					filepath.Join("auths", ".gitkeep"),
-					filepath.Join("config", ".gitkeep"),
-				}
+					filepath.Join("config", ".gitkeep")}
 			} else {
 				s.dirLock.Unlock()
 				return fmt.Errorf("git token store: clone remote: %w", errClone)
@@ -526,7 +520,7 @@ func (s *GitTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
 		if err != nil {
 			return nil
 		}
-		if auth != nil {
+		if auth != nil && !cliproxyauth.IsUnsupportedOAuthAuth(auth) {
 			entries = append(entries, auth)
 		}
 		return nil
@@ -722,14 +716,12 @@ func (s *GitTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, 
 		Status:   cliproxyauth.StatusActive,
 		Attributes: map[string]string{
 			cliproxyauth.AttributePath:          path,
-			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceGit,
-		},
+			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceGit},
 		Metadata:         metadata,
 		CreatedAt:        info.ModTime(),
 		UpdatedAt:        info.ModTime(),
 		LastRefreshedAt:  time.Time{},
-		NextRefreshAfter: time.Time{},
-	}
+		NextRefreshAfter: time.Time{}}
 	if email, ok := metadata["email"].(string); ok && email != "" {
 		auth.Attributes["email"] = email
 	}
@@ -1731,11 +1723,9 @@ func (s *GitTokenStore) commitAndPushWithOptionsLocked(message string, allowMiss
 	signature := &object.Signature{
 		Name:  "CLIProxyAPI",
 		Email: "cliproxy@local",
-		When:  time.Now(),
-	}
+		When:  time.Now()}
 	commitHash, err := worktree.Commit(message, &git.CommitOptions{
-		Author: signature,
-	})
+		Author: signature})
 	if err != nil {
 		if errors.Is(err, git.ErrEmptyCommit) {
 			return nil
@@ -1864,8 +1854,7 @@ func (s *GitTokenStore) pushRepositoryLocked(repo *git.Repository, repoDir strin
 	remoteName := plumbing.NewRemoteReferenceName("origin", branchName.Short())
 	pushOpts := &git.PushOptions{
 		ClientOptions: s.gitClientOptions(),
-		RefSpecs:      []config.RefSpec{config.RefSpec(branchName.String() + ":" + branchName.String())},
-	}
+		RefSpecs:      []config.RefSpec{config.RefSpec(branchName.String() + ":" + branchName.String())}}
 	remoteRef, errRemote := repo.Reference(remoteName, true)
 	switch {
 	case errRemote == nil:
@@ -1902,8 +1891,7 @@ func (s *GitTokenStore) rewriteHeadAsSingleCommit(repo *git.Repository, branch p
 		TreeHash:     commitObj.TreeHash,
 		ParentHashes: nil,
 		Encoding:     commitObj.Encoding,
-		ExtraHeaders: commitObj.ExtraHeaders,
-	}
+		ExtraHeaders: commitObj.ExtraHeaders}
 	mem := &plumbing.MemoryObject{}
 	mem.SetType(plumbing.CommitObject)
 	if err := squashed.Encode(mem); err != nil {
@@ -1939,8 +1927,7 @@ func (s *GitTokenStore) maybeRunGC(repoDir string) {
 
 	pruneOpts := git.PruneOptions{
 		OnlyObjectsOlderThan: now.Add(-gcPruneGracePeriod),
-		Handler:              repo.DeleteObject,
-	}
+		Handler:              repo.DeleteObject}
 	if err := repo.Prune(pruneOpts); err != nil && !errors.Is(err, git.ErrLooseObjectsNotSupported) {
 		return
 	}

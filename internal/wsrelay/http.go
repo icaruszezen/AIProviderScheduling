@@ -186,8 +186,7 @@ func encodeRequest(req *HTTPRequest) map[string]any {
 		"url":     req.URL,
 		"headers": headers,
 		"body":    string(req.Body),
-		"sent_at": time.Now().UTC().Format(time.RFC3339Nano),
-	}
+		"sent_at": time.Now().UTC().Format(time.RFC3339Nano)}
 }
 
 func decodeResponse(payload map[string]any) *HTTPResponse {

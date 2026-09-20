@@ -14,7 +14,7 @@ func TestOpenAIToCodex_PreservesBuiltinTools(t *testing.T) {
 		"model":"gpt-5",
 		"messages":[{"role":"user","content":"hi"}],
 		"tools":[{"type":"web_search","search_context_size":"high"}],
-		"tool_choice":{"type":"web_search"}
+		"tool_choice":{"type":"web_search",}
 	}`)
 
 	out := sdktranslator.TranslateRequest(sdktranslator.FormatOpenAI, sdktranslator.FormatCodex, "gpt-5", in, false)

@@ -82,8 +82,7 @@ func (p *provider) Authenticate(_ context.Context, r *http.Request) (*sdkaccess.
 		{authHeaderGoogle, "x-goog-api-key"},
 		{authHeaderAnthropic, "x-api-key"},
 		{queryKey, "query-key"},
-		{queryAuthToken, "query-auth-token"},
-	}
+		{queryAuthToken, "query-auth-token"}}
 
 	for _, candidate := range candidates {
 		if candidate.value == "" {
@@ -94,9 +93,7 @@ func (p *provider) Authenticate(_ context.Context, r *http.Request) (*sdkaccess.
 				Provider:  p.Identifier(),
 				Principal: candidate.value,
 				Metadata: map[string]string{
-					"source": candidate.source,
-				},
-			}, nil
+					"source": candidate.source}}, nil
 		}
 	}
 

@@ -117,8 +117,7 @@ type Server struct {
 //   - *Server: A new server instance
 func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdkaccess.Manager, configFilePath string, opts ...ServerOption) *Server {
 	optionState := &serverOptionConfig{
-		requestLoggerFactory: defaultRequestLoggerFactory,
-	}
+		requestLoggerFactory: defaultRequestLoggerFactory}
 	for i := range opts {
 		opts[i](optionState)
 	}
@@ -181,8 +180,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 		wsRoutes:            make(map[string]struct{}),
 		pluginHost:          optionState.pluginHost,
 
-		exampleAPIKeySafeModeEnabled: optionState.exampleAPIKeySafeMode,
-	}
+		exampleAPIKeySafeModeEnabled: optionState.exampleAPIKeySafeMode}
 	s.wsAuthEnabled.Store(cfg.WebsocketAuth)
 	s.exampleAPIKeySafeModeActive.Store(s.exampleAPIKeySafeModeRequired(cfg))
 	s.handlers.SetPluginHost(optionState.pluginHost)
@@ -248,8 +246,7 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 	// Create HTTP server
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-		Handler: engine,
-	}
+		Handler: engine}
 
 	return s
 }
@@ -290,8 +287,7 @@ func (s *Server) Start() error {
 
 		tlsConfig := &tls.Config{
 			Certificates: []tls.Certificate{certPair},
-			NextProtos:   []string{"h2", "http/1.1"},
-		}
+			NextProtos:   []string{"h2", "http/1.1"}}
 		s.server.TLSConfig = tlsConfig
 		if errHTTP2 := http2.ConfigureServer(s.server, &http2.Server{}); errHTTP2 != nil {
 			log.Warnf("failed to configure HTTP/2: %v", errHTTP2)

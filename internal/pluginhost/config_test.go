@@ -18,16 +18,14 @@ func TestRuntimeConfigYAMLAddsHostDefaultsToRawPluginConfig(t *testing.T) {
 	}
 	item := config.PluginInstanceConfig{
 		Priority: 3,
-		Raw:      *node.Content[0],
-	}
+		Raw:      *node.Content[0]}
 
 	got := string(runtimeConfigYAML(item, true))
 	for _, want := range []string{
 		"config1: true",
 		"config2: value",
 		"enabled: true",
-		"priority: 3",
-	} {
+		"priority: 3"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("runtimeConfigYAML() missing %q in:\n%s", want, got)
 		}
@@ -36,14 +34,12 @@ func TestRuntimeConfigYAMLAddsHostDefaultsToRawPluginConfig(t *testing.T) {
 
 func TestRuntimeConfigYAMLDefaultsEnabledFalse(t *testing.T) {
 	item := config.PluginInstanceConfig{
-		Priority: 3,
-	}
+		Priority: 3}
 
 	got := string(runtimeConfigYAML(item, false))
 	for _, want := range []string{
 		"enabled: false",
-		"priority: 3",
-	} {
+		"priority: 3"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("runtimeConfigYAML() missing %q in:\n%s", want, got)
 		}
@@ -62,11 +58,7 @@ func TestRuntimeConfigFromConfigExtractsStoreVersion(t *testing.T) {
 			Configs: map[string]config.PluginInstanceConfig{
 				"alpha": {
 					Enabled: &enabled,
-					Raw:     *node.Content[0],
-				},
-			},
-		},
-	}
+					Raw:     *node.Content[0]}}}}
 
 	got, errRuntimeConfig := runtimeConfigFromConfig(cfg)
 	if errRuntimeConfig != nil {
@@ -89,11 +81,7 @@ func TestRuntimeConfigFromConfigDerivesStoreVersionFromReleaseTag(t *testing.T) 
 			Configs: map[string]config.PluginInstanceConfig{
 				"alpha": {
 					Enabled: &enabled,
-					Raw:     *node.Content[0],
-				},
-			},
-		},
-	}
+					Raw:     *node.Content[0]}}}}
 
 	got, errRuntimeConfig := runtimeConfigFromConfig(cfg)
 	if errRuntimeConfig != nil {

@@ -20,8 +20,7 @@ func TestNormalizeCredentialMetadata(t *testing.T) {
 		"request-scoped-errors":     []any{map[string]any{"status": 429}},
 		"hide-no-available-channel": true,
 		"tool-prefix-disabled":      true,
-		"provider_field":            "preserved",
-	}
+		"provider_field":            "preserved"}
 
 	NormalizeCredentialMetadata(metadata)
 
@@ -37,8 +36,7 @@ func TestNormalizeCredentialMetadata(t *testing.T) {
 		"request_scoped_errors":     []any{map[string]any{"status": 429}},
 		"hide_no_available_channel": true,
 		"tool_prefix_disabled":      true,
-		"provider_field":            "preserved",
-	}
+		"provider_field":            "preserved"}
 	if !reflect.DeepEqual(metadata, want) {
 		t.Fatalf("NormalizeCredentialMetadata() = %#v, want %#v", metadata, want)
 	}
@@ -57,9 +55,7 @@ func TestManagerRegisterNormalizesCredentialMetadata(t *testing.T) {
 		Provider: "codex",
 		Metadata: map[string]any{
 			"request-retry": 2,
-			"request_retry": 0,
-		},
-	}
+			"request_retry": 0}}
 
 	registered, errRegister := manager.Register(context.Background(), auth)
 	if errRegister != nil {

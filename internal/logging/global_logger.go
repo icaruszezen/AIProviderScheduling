@@ -37,8 +37,7 @@ var logFieldOrder = []string{
 	"version", "active_version", "retired_version", "overwritten",
 	"mode", "budget", "level", "original_mode", "original_value", "min", "max", "clamped_to", "error",
 	"credential", "connection", "proxy_scheme", "remote_transport",
-	"media_session_id", "call_id", "peer", "state", "reason",
-}
+	"media_session_id", "call_id", "peer", "state", "reason"}
 
 var quotedLogFields = map[string]struct{}{
 	"credential":       {},
@@ -49,8 +48,7 @@ var quotedLogFields = map[string]struct{}{
 	"call_id":          {},
 	"peer":             {},
 	"state":            {},
-	"reason":           {},
-}
+	"reason":           {}}
 
 var pluginPathFieldOrder = []string{"path", "active_path", "retired_path"}
 
@@ -169,13 +167,7 @@ func ResolveLogDirectory(cfg *config.Config) string {
 		return logDir
 	}
 	if !isDirWritable(logDir) {
-		authDir, err := util.ResolveAuthDir(cfg.AuthDir)
-		if err != nil {
-			log.Warnf("Failed to resolve auth-dir %q for log directory: %v", cfg.AuthDir, err)
-		}
-		if authDir != "" {
-			logDir = filepath.Join(authDir, "logs")
-		}
+		log.Warnf("log directory %q is not writable; using it anyway", logDir)
 	}
 	return logDir
 }
@@ -205,8 +197,7 @@ func ConfigureLogOutput(cfg *config.Config) error {
 			MaxSize:    10,
 			MaxBackups: 0,
 			MaxAge:     0,
-			Compress:   false,
-		}
+			Compress:   false}
 		log.SetOutput(logWriter)
 	} else {
 		if logWriter != nil {

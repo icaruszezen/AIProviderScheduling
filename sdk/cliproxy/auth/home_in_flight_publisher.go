@@ -60,8 +60,7 @@ func HomeInFlightPublisherConfigFromConfig(cfg internalconfig.CredentialInFlight
 		MaxRevisionBytes:   cfg.MaxRevisionBytes,
 		MaxAggregateGroups: cfg.MaxAggregateGroups,
 		MaxDetails:         cfg.MaxDetails,
-		MaxStringBytes:     cfg.MaxStringBytes,
-	}, nil
+		MaxStringBytes:     cfg.MaxStringBytes}, nil
 }
 
 // ApplyHomeInFlightPublisherConfig stores an immutable validated publisher config snapshot.
@@ -151,8 +150,7 @@ func encodeHomeInFlightFreeze(freeze executionregistry.Freeze, observedAt time.T
 		key := homeInFlightAggregateKey{
 			CredentialID: observation.CredentialID,
 			Model:        homeInFlightObservationModel(observation),
-			Accounted:    observation.Accounted,
-		}
+			Accounted:    observation.Accounted}
 		if len(key.CredentialID) > cfg.MaxStringBytes || len(key.Model) > cfg.MaxStringBytes {
 			aggregateKeysValid = false
 		}
@@ -164,8 +162,7 @@ func encodeHomeInFlightFreeze(freeze executionregistry.Freeze, observedAt time.T
 			CredentialID: key.CredentialID,
 			Model:        key.Model,
 			Status:       homeInFlightStatus(key.Accounted),
-			Count:        count,
-		})
+			Count:        count})
 	}
 	sort.Slice(aggregates, func(left, right int) bool {
 		if aggregates[left].CredentialID != aggregates[right].CredentialID {
@@ -188,8 +185,7 @@ func encodeHomeInFlightFreeze(freeze executionregistry.Freeze, observedAt time.T
 			CredentialID: observation.CredentialID,
 			Model:        homeInFlightObservationModel(observation),
 			RequestKind:  observation.RequestKind,
-			StartedAt:    observation.StartedAt.UTC(),
-		}, cfg.MaxStringBytes)
+			StartedAt:    observation.StartedAt.UTC()}, cfg.MaxStringBytes)
 		if !validHomeInFlightDetail(detail, cfg.MaxStringBytes) {
 			detailsTruncated = true
 			continue
@@ -361,8 +357,7 @@ func homeInFlightPartFrame(freeze executionregistry.Freeze, observedAt time.Time
 		BarrierRevision:  freeze.BarrierRevision,
 		PartIndex:        &partIndex,
 		PartCount:        &partCount,
-		DetailsTruncated: detailsTruncated,
-	}
+		DetailsTruncated: detailsTruncated}
 }
 
 func homeInFlightFrameWithinPartLimit(frame home.InFlightSnapshotFrame, maxPartBytes int) bool {
@@ -394,6 +389,5 @@ func homeInFlightOverflow(freeze executionregistry.Freeze, observedAt time.Time,
 		Revision:            freeze.Revision,
 		ObservedAt:          observedAt,
 		BarrierRevision:     freeze.BarrierRevision,
-		AggregateGroupCount: aggregateGroupCount,
-	}}
+		AggregateGroupCount: aggregateGroupCount}}
 }

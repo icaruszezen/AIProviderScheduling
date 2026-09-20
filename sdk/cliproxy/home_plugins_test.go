@@ -30,8 +30,7 @@ func TestSyncHomePluginsSkipsUnchangedSignature(t *testing.T) {
 		return sdkpluginstore.PluginSyncResponse{
 			SchemaVersion: sdkpluginstore.PluginSyncSchemaVersion,
 			ExpiresAt:     time.Now().UTC().Add(time.Minute),
-			Items:         []sdkpluginstore.PluginSyncItem{},
-		}, nil
+			Items:         []sdkpluginstore.PluginSyncItem{}}, nil
 	}}
 	report, key, didSync, errSync := service.syncHomePlugins(context.Background(), cfg)
 	if errSync != nil {
@@ -171,13 +170,7 @@ func TestApplyHomeOverlayReturnsRuntimePluginSyncFailureWithoutApplyingConfig(t 
 						Tag:  "!!map",
 						Content: []*yaml.Node{
 							{Kind: yaml.ScalarNode, Tag: "!!str", Value: "id"},
-							{Kind: yaml.ScalarNode, Tag: "!!str", Value: "broken"},
-						},
-					},
-				},
-			},
-		},
-	}
+							{Kind: yaml.ScalarNode, Tag: "!!str", Value: "broken"}}}}}}}
 
 	if errApply := service.applyHomeOverlayContext(context.Background(), remote); errApply == nil {
 		t.Fatal("applyHomeOverlayContext() error = nil, want plugin sync failure")
@@ -285,8 +278,7 @@ func TestFinalizeHomePluginWorkRetriesFailedStatusWithoutMarkingSynced(t *testin
 	work := &homePluginFinalization{
 		statusWork: []homePluginStatusWork{{cfg: cfg, report: homeplugins.CompletedSyncReport(homeplugins.CurrentPlatform(), nil)}},
 		syncKey:    "sync-key",
-		markSynced: true,
-	}
+		markSynced: true}
 	if errFinalize := service.finalizeHomePluginWork(context.Background(), client, work); errFinalize == nil {
 		t.Fatal("first plugin status finalization succeeded, want Home rejection")
 	}
@@ -449,8 +441,7 @@ func TestStageHomeOverlayDoesNotApplyConfigAfterStageFailure(t *testing.T) {
 		cfg: baseCfg,
 		homePluginSyncFetch: func(context.Context, sdkpluginstore.PluginSyncRequest) (sdkpluginstore.PluginSyncResponse, error) {
 			return sdkpluginstore.PluginSyncResponse{}, errors.New("plugin sync unavailable")
-		},
-	}
+		}}
 
 	if _, errStage := service.stageHomeOverlayWithClient(context.Background(), remoteCfg, nil); errStage == nil {
 		t.Fatal("stageHomeOverlayWithClient() error = nil, want plugin sync failure")
@@ -473,8 +464,7 @@ func TestReadyHomePluginFinalizationRetriesUntilStatusSucceeds(t *testing.T) {
 	work := &homePluginFinalization{
 		statusWork: []homePluginStatusWork{{cfg: cfg, report: homeplugins.CompletedSyncReport(homeplugins.CurrentPlatform(), nil)}},
 		syncKey:    "sync-key",
-		markSynced: true,
-	}
+		markSynced: true}
 
 	if errFinalize := service.finalizeHomePluginWorkUntilDone(context.Background(), context.Background(), 1, client, work, nil); errFinalize != nil {
 		t.Fatalf("finalizeHomePluginWorkUntilDone() error = %v", errFinalize)
@@ -507,8 +497,7 @@ func TestReplacementWaitsForHomePluginFinalizationOwnership(t *testing.T) {
 			cancelLifetime()
 			close(cancelled)
 			close(previousDone)
-		}, done: previousDone},
-	}
+		}, done: previousDone}}
 	work := &homePluginFinalization{statusWork: []homePluginStatusWork{{cfg: cfg, report: homeplugins.CompletedSyncReport(homeplugins.CurrentPlatform(), nil)}}}
 	finalized := make(chan error, 1)
 	go func() {
@@ -568,8 +557,7 @@ func TestShutdownCancelsBlockedHomePluginFinalization(t *testing.T) {
 			cancelLifetime()
 			close(cancelled)
 			close(previousDone)
-		}, done: previousDone},
-	}
+		}, done: previousDone}}
 	work := &homePluginFinalization{statusWork: []homePluginStatusWork{{cfg: cfg, report: homeplugins.CompletedSyncReport(homeplugins.CurrentPlatform(), nil)}}}
 	finalized := make(chan error, 1)
 	go func() {
@@ -681,8 +669,7 @@ func TestHomePluginSyncKeyIncludesCredentialRevision(t *testing.T) {
 func TestForceHomeRuntimeConfigClearsStoreAuth(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Plugins.StoreAuth = []sdkpluginstore.AuthConfig{{
-		Match: "https://downloads.example/", Type: sdkpluginstore.AuthTypeBearer, TokenEnv: "PLUGIN_TOKEN",
-	}}
+		Match: "https://downloads.example/", Type: sdkpluginstore.AuthTypeBearer, TokenEnv: "PLUGIN_TOKEN"}}
 	forceHomeRuntimeConfig(cfg)
 	if cfg.Plugins.StoreAuth != nil {
 		t.Fatalf("Plugins.StoreAuth = %#v, want nil in Home mode", cfg.Plugins.StoreAuth)

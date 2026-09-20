@@ -79,7 +79,7 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 			auth: func() *cliproxyauth.Auth {
 				auth := baseAuth.Clone()
 				auth.Attributes[cliproxyauth.AttributeAuthKind] = cliproxyauth.AuthKindOAuth
-				auth.Attributes[cliproxyauth.AttributeAPIKey] = "sk-ant-oat-replay"
+				auth.Attributes[cliproxyauth.AttributeAPIKey] = "sk-ant-api-replay"
 				return auth
 			}(),
 			request:    baseRequest,

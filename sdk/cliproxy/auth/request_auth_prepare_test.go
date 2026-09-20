@@ -145,11 +145,11 @@ func (d *homeRequestPrepareDispatcher) RPopAuth(context.Context, string, string,
 		return json.Marshal(homeErrorEnvelope{Error: &homeErrorDetail{Code: homeRequestRetryExceededErrorCode, Message: "no more Home auths"}})
 	}
 	return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
-		ID:       "same-id",
-		Provider: "antigravity",
-		Status:   StatusActive,
-		Metadata: map[string]any{"access_token": "home-token", "source": "home"},
-	}})
+		ID:         "same-id",
+		Provider:   "antigravity",
+		Status:     StatusActive,
+		Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "home-token"},
+		Metadata:   map[string]any{"source": "home"}}})
 }
 
 func (*homeRequestPrepareDispatcher) AbortAmbiguousDispatch() {}
@@ -162,18 +162,17 @@ func (*homeErrorPriorityDispatcher) RPopAuth(_ context.Context, _ string, _ stri
 	switch count {
 	case 1:
 		return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
-			ID:       "model-error-auth",
-			Provider: "antigravity",
-			Status:   StatusActive,
-			Metadata: map[string]any{"access_token": "model-token", "project_id": "prepared-project"},
-		}})
+			ID:         "model-error-auth",
+			Provider:   "antigravity",
+			Status:     StatusActive,
+			Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "model-token"},
+			Metadata:   map[string]any{"project_id": "prepared-project"}}})
 	case 2:
 		return json.Marshal(homeAuthDispatchResponse{Auth: Auth{
-			ID:       "refresh-error-auth",
-			Provider: "antigravity",
-			Status:   StatusActive,
-			Metadata: map[string]any{"access_token": "refresh-token"},
-		}})
+			ID:         "refresh-error-auth",
+			Provider:   "antigravity",
+			Status:     StatusActive,
+			Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "refresh-token"}}})
 	default:
 		return json.Marshal(homeErrorEnvelope{Error: &homeErrorDetail{Code: homeRequestRetryExceededErrorCode, Message: "no more Home auths"}})
 	}
@@ -191,23 +190,19 @@ func TestHomeModelErrorOutranksLaterRefreshPreparationError(t *testing.T) {
 			run: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "Count",
 			run: func(manager *Manager) error {
 				_, errCount := manager.ExecuteCount(context.Background(), []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "Stream",
 			run: func(manager *Manager) error {
 				_, errStream := manager.ExecuteStream(context.Background(), []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{Stream: true})
 				return errStream
-			},
-		},
-	}
+			}}}
 
 	for _, path := range paths {
 		t.Run(path.name, func(t *testing.T) {
@@ -243,15 +238,13 @@ func TestHomePrepareUsesEphemeralDispatchAuthAcrossExecutionPaths(t *testing.T) 
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errExecute := manager.Execute(ctx, []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "Count",
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "Stream",
 			run: func(manager *Manager, ctx context.Context) error {
@@ -262,9 +255,7 @@ func TestHomePrepareUsesEphemeralDispatchAuthAcrossExecutionPaths(t *testing.T) 
 				for range result.Chunks {
 				}
 				return nil
-			},
-		},
-	} {
+			}}} {
 		t.Run(path.name, func(t *testing.T) {
 			store := &requestPrepareStore{}
 			executor := &requestPrepareExecutor{}
@@ -272,7 +263,7 @@ func TestHomePrepareUsesEphemeralDispatchAuthAcrossExecutionPaths(t *testing.T) 
 			manager.SetConfig(&internalconfig.Config{Home: internalconfig.HomeConfig{Enabled: true}})
 			manager.PublishHomeDispatch(&homeRequestPrepareDispatcher{}, executionregistry.New(), 1)
 			manager.RegisterExecutor(executor)
-			localAuth := &Auth{ID: "same-id", Provider: "antigravity", Status: StatusActive, Metadata: map[string]any{"access_token": "local-token", "source": "local"}}
+			localAuth := &Auth{ID: "same-id", Provider: "antigravity", Status: StatusActive, Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "local-token"}, Metadata: map[string]any{"source": "local"}}
 			if _, errRegister := manager.Register(WithSkipPersist(context.Background()), localAuth); errRegister != nil {
 				t.Fatalf("register local auth: %v", errRegister)
 			}
@@ -283,8 +274,8 @@ func TestHomePrepareUsesEphemeralDispatchAuthAcrossExecutionPaths(t *testing.T) 
 			if observed == nil {
 				t.Fatal("executor did not receive prepared auth")
 			}
-			if got := testStringValue(observed.Metadata["access_token"]); got != "home-token" {
-				t.Fatalf("executor access token = %q, want Home token", got)
+			if got := observed.Attributes[AttributeAPIKey]; got != "home-token" {
+				t.Fatalf("executor API key = %q, want Home token", got)
 			}
 			if got := testStringValue(observed.Metadata["source"]); got != "home" {
 				t.Fatalf("executor source = %q, want Home metadata", got)
@@ -293,8 +284,8 @@ func TestHomePrepareUsesEphemeralDispatchAuthAcrossExecutionPaths(t *testing.T) 
 			if !ok {
 				t.Fatal("local auth disappeared")
 			}
-			if got := testStringValue(current.Metadata["access_token"]); got != "local-token" {
-				t.Fatalf("local access token = %q, want unchanged local token", got)
+			if got := current.Attributes[AttributeAPIKey]; got != "local-token" {
+				t.Fatalf("local API key = %q, want unchanged local token", got)
 			}
 			if got := testStringValue(current.Metadata["source"]); got != "local" {
 				t.Fatalf("local source = %q, want unchanged local metadata", got)
@@ -313,15 +304,13 @@ func TestHomeExecutionResultsDoNotMutateSameIDLocalAuth(t *testing.T) {
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errExecute := manager.Execute(ctx, []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "Count",
 			run: func(manager *Manager, ctx context.Context) error {
 				_, errCount := manager.ExecuteCount(ctx, []string{"antigravity"}, cliproxyexecutor.Request{Model: "test-model"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
+			}},
 		{
 			name: "Stream",
 			run: func(manager *Manager, ctx context.Context) error {
@@ -332,9 +321,7 @@ func TestHomeExecutionResultsDoNotMutateSameIDLocalAuth(t *testing.T) {
 				for range result.Chunks {
 				}
 				return nil
-			},
-		},
-	}
+			}}}
 	outcomes := []struct {
 		name       string
 		prepareErr error
@@ -342,8 +329,7 @@ func TestHomeExecutionResultsDoNotMutateSameIDLocalAuth(t *testing.T) {
 	}{
 		{name: "success"},
 		{name: "execution failure", executeErr: errors.New("upstream failed")},
-		{name: "prepare failure", prepareErr: errors.New("prepare failed")},
-	}
+		{name: "prepare failure", prepareErr: errors.New("prepare failed")}}
 
 	for _, path := range paths {
 		for _, outcome := range outcomes {
@@ -356,17 +342,16 @@ func TestHomeExecutionResultsDoNotMutateSameIDLocalAuth(t *testing.T) {
 				manager.PublishHomeDispatch(&homeRequestPrepareDispatcher{}, executionregistry.New(), 1)
 				manager.RegisterExecutor(executor)
 				localAuth := &Auth{
-					ID:        "same-id",
-					Provider:  "antigravity",
-					Status:    StatusActive,
-					Success:   7,
-					Failed:    4,
-					UpdatedAt: time.Unix(123, 0),
-					Metadata:  map[string]any{"access_token": "local-token", "source": "local"},
+					ID:         "same-id",
+					Provider:   "antigravity",
+					Status:     StatusActive,
+					Success:    7,
+					Failed:     4,
+					UpdatedAt:  time.Unix(123, 0),
+					Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "local-token"},
+					Metadata:   map[string]any{"source": "local"},
 					ModelStates: map[string]*ModelState{
-						"test-model": {Status: StatusError, Unavailable: true, StatusMessage: "local failure", UpdatedAt: time.Unix(122, 0)},
-					},
-				}
+						"test-model": {Status: StatusError, Unavailable: true, StatusMessage: "local failure", UpdatedAt: time.Unix(122, 0)}}}
 				if _, errRegister := manager.Register(WithSkipPersist(context.Background()), localAuth); errRegister != nil {
 					t.Fatalf("register local auth: %v", errRegister)
 				}
@@ -388,8 +373,8 @@ func TestHomeExecutionResultsDoNotMutateSameIDLocalAuth(t *testing.T) {
 					if observed == nil {
 						t.Fatal("executor did not receive prepared auth")
 					}
-					if got := testStringValue(observed.Metadata["access_token"]); got != "home-token" {
-						t.Fatalf("executor access token = %q, want Home token", got)
+					if got := observed.Attributes[AttributeAPIKey]; got != "home-token" {
+						t.Fatalf("executor API key = %q, want Home token", got)
 					}
 				}
 				assertHomeExecutionResultStateUnchanged(t, manager, store, hook, beforeLocal, beforeScheduler, beforeModels)
@@ -441,10 +426,9 @@ func TestManagerExecute_PreparesAndPersistsMissingRequestAuthMetadata(t *testing
 	manager.RegisterExecutor(executor)
 
 	auth := &Auth{
-		ID:       "auth-request-prepare",
-		Provider: "antigravity",
-		Metadata: map[string]any{"access_token": "token"},
-	}
+		ID:         "auth-request-prepare",
+		Provider:   "antigravity",
+		Attributes: map[string]string{"api_key": "token", "auth_kind": "apikey"}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -491,16 +475,14 @@ func TestManagerExecute_PrepareAuth403TriggersCooldown(t *testing.T) {
 	const model = "gemini-3.1-pro"
 	store := &requestPrepareStore{}
 	executor := &requestPrepareExecutor{
-		prepareErr: customStatusError{code: http.StatusForbidden, msg: "forbidden"},
-	}
+		prepareErr: customStatusError{code: http.StatusForbidden, msg: "forbidden"}}
 	manager := NewManager(store, nil, nil)
 	manager.RegisterExecutor(executor)
 
 	auth := &Auth{
-		ID:       "auth-prepare-403",
-		Provider: "antigravity",
-		Metadata: map[string]any{"access_token": "token"},
-	}
+		ID:         "auth-prepare-403",
+		Provider:   "antigravity",
+		Attributes: map[string]string{"api_key": "token", "auth_kind": "apikey"}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}

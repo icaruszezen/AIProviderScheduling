@@ -84,9 +84,10 @@ func TestClaudeExecutorFastHTTPErrorPassesThroughWithoutRetry(t *testing.T) {
 			})
 
 			ctx := context.WithValue(t.Context(), "cliproxy.roundtripper", http.RoundTripper(transport))
-			auth := &cliproxyauth.Auth{ID: "fast-error-test", Metadata: claudeOAuthTestMetadata()}
+			auth := &cliproxyauth.Auth{
+				Attributes: map[string]string{"fingerprint_profile": "claude-code-cli"}, ID: "fast-error-test", Metadata: claudeOAuthTestMetadata()}
 			if testCase.oauth {
-				auth.Attributes = map[string]string{"api_key": "sk-ant-oat-fast-error"}
+				auth.Attributes = map[string]string{"api_key": "sk-ant-api-fast-error", "fingerprint_profile": "claude-code-cli"}
 			} else {
 				auth.Attributes = map[string]string{"api_key": "sk-ant-api03-fast-error"}
 				auth.Metadata = nil
@@ -172,9 +173,10 @@ func TestClaudeExecutorFastSuccessfulHTTPDecodeErrorDoesNotExposeSuccessStatus(t
 			})
 			ctx := context.WithValue(t.Context(), "cliproxy.roundtripper", http.RoundTripper(transport))
 			auth := &cliproxyauth.Auth{
-				ID:         "fast-success-decode-error",
-				Attributes: map[string]string{"api_key": "sk-ant-oat-fast-success-decode-error"},
-				Metadata:   claudeOAuthTestMetadata(),
+				ID: "fast-success-decode-error",
+				Attributes: map[string]string{
+					"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-fast-success-decode-error"},
+				Metadata: claudeOAuthTestMetadata(),
 			}
 			request := cliproxyexecutor.Request{
 				Model:   "claude-opus-5",
@@ -215,9 +217,10 @@ func TestClaudeExecutorFastTransportErrorIsRequestScopedWithoutRetry(t *testing.
 	})
 	ctx := context.WithValue(t.Context(), "cliproxy.roundtripper", http.RoundTripper(transport))
 	auth := &cliproxyauth.Auth{
-		ID:         "fast-transport-error",
-		Attributes: map[string]string{"api_key": "sk-ant-oat-fast-transport"},
-		Metadata:   claudeOAuthTestMetadata(),
+		ID: "fast-transport-error",
+		Attributes: map[string]string{
+			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-fast-transport"},
+		Metadata: claudeOAuthTestMetadata(),
 	}
 	request := cliproxyexecutor.Request{
 		Model:   "claude-opus-5",
@@ -253,9 +256,10 @@ func TestClaudeExecutorNonFastErrorKeepsCredentialScopedBehavior(t *testing.T) {
 	})
 	ctx := context.WithValue(t.Context(), "cliproxy.roundtripper", http.RoundTripper(transport))
 	auth := &cliproxyauth.Auth{
-		ID:         "standard-rate-limit",
-		Attributes: map[string]string{"api_key": "sk-ant-oat-standard-rate-limit"},
-		Metadata:   claudeOAuthTestMetadata(),
+		ID: "standard-rate-limit",
+		Attributes: map[string]string{
+			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-standard-rate-limit"},
+		Metadata: claudeOAuthTestMetadata(),
 	}
 	request := cliproxyexecutor.Request{
 		Model:   "claude-opus-5",

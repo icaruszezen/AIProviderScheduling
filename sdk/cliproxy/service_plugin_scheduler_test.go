@@ -14,7 +14,7 @@ import (
 func TestBuilderBuildInjectsPluginHostScheduler(t *testing.T) {
 	host := pluginhost.New()
 	service, errBuild := NewBuilder().
-		WithConfig(&config.Config{AuthDir: t.TempDir()}).
+		WithConfig(&config.Config{}).
 		WithConfigPath(t.TempDir() + "/config.yaml").
 		WithPluginHost(host).
 		Build()
@@ -33,8 +33,7 @@ func TestServiceSyncPluginRuntimeConfigInjectsPluginHostScheduler(t *testing.T) 
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  host,
-	}
+		pluginHost:  host}
 
 	if ok := service.syncPluginRuntimeConfig(context.Background()); !ok {
 		t.Fatal("syncPluginRuntimeConfig() = false, want true")
@@ -51,8 +50,7 @@ func TestServiceSyncPluginRuntimeConfigClearsPluginSchedulerWithoutHost(t *testi
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  host,
-	}
+		pluginHost:  host}
 	service.coreManager.SetPluginScheduler(host)
 	service.pluginHost = nil
 

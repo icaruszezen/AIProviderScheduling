@@ -29,8 +29,7 @@ func TestHostHTTPClientMarksUpstreamAttempt(t *testing.T) {
 			do: func(ctx context.Context) error {
 				_, errDo := client.Do(ctx, pluginapi.HTTPRequest{URL: server.URL})
 				return errDo
-			},
-		},
+			}},
 		{
 			name: "stream",
 			do: func(ctx context.Context) error {
@@ -41,9 +40,7 @@ func TestHostHTTPClientMarksUpstreamAttempt(t *testing.T) {
 				for range response.Chunks {
 				}
 				return nil
-			},
-		},
-	} {
+			}}} {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
 			if errDo := test.do(ctx); errDo != nil {

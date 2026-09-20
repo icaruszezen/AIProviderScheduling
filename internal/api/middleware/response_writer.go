@@ -66,8 +66,7 @@ func NewResponseWriterWrapper(w gin.ResponseWriter, logger logging.RequestLogger
 		body:           &bytes.Buffer{},
 		logger:         logger,
 		requestInfo:    requestInfo,
-		headers:        make(map[string][]string),
-	}
+		headers:        make(map[string][]string)}
 }
 
 // Write wraps the underlying ResponseWriter's Write method to capture response data.

@@ -4,6 +4,7 @@ package pluginapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"time"
@@ -193,17 +194,16 @@ type ThinkingSupport struct {
 }
 
 // HostConfigSummary describes host configuration relevant to plugin providers.
+//
+// Breaking change: AuthDir, OAuthModelAlias, and ExcludedModels were removed
+// when account OAuth login was dropped. Third-party plugins that still read
+// those fields will not compile against this ABI and must use ProxyURL /
+// ForceModelPrefix only.
 type HostConfigSummary struct {
-	// AuthDir is the resolved directory containing provider auth material.
-	AuthDir string
 	// ProxyURL is the configured upstream proxy URL.
 	ProxyURL string
 	// ForceModelPrefix reports whether model aliases should keep provider prefixes.
 	ForceModelPrefix bool
-	// OAuthModelAlias maps providers to configured model aliases.
-	OAuthModelAlias map[string][]ModelAlias
-	// ExcludedModels maps providers to model names hidden by host configuration.
-	ExcludedModels map[string][]string
 }
 
 // ModelAlias describes one configured provider model alias.
@@ -264,11 +264,20 @@ type AuthParseResponse struct {
 	Auths []AuthData
 }
 
-// AuthProvider parses, logs in, polls, and refreshes plugin provider auths.
+// ErrOAuthLoginUnsupported is returned when a plugin asks the host to start or
+// poll an account OAuth login flow. Those methods remain on AuthProvider only
+// so existing plugin binaries keep compiling.
+var ErrOAuthLoginUnsupported = errors.New("plugin OAuth login is no longer supported")
+
+// AuthProvider parses plugin provider auths and refreshes API-key material.
+// StartLogin and PollLogin are retired: the host returns ErrOAuthLoginUnsupported
+// and does not invoke plugin login RPCs.
 type AuthProvider interface {
 	Identifier() string
 	ParseAuth(context.Context, AuthParseRequest) (AuthParseResponse, error)
+	// StartLogin is deprecated. Hosts must not start account OAuth flows.
 	StartLogin(context.Context, AuthLoginStartRequest) (AuthLoginStartResponse, error)
+	// PollLogin is deprecated. Hosts must not poll account OAuth flows.
 	PollLogin(context.Context, AuthLoginPollRequest) (AuthLoginPollResponse, error)
 	RefreshAuth(context.Context, AuthRefreshRequest) (AuthRefreshResponse, error)
 }

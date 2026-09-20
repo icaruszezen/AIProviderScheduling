@@ -75,8 +75,7 @@ func (p *usageQueuePlugin) HandleUsage(ctx context.Context, record coreusage.Rec
 		CacheReadTokens:        usageDetail.CacheReadTokens,
 		CacheReadTokensPresent: true,
 		CacheCreationTokens:    usageDetail.CacheCreationTokens,
-		TotalTokens:            usageDetail.TotalTokens,
-	}
+		TotalTokens:            usageDetail.TotalTokens}
 
 	failed := record.Failed
 	if !failed {
@@ -104,8 +103,7 @@ func (p *usageQueuePlugin) HandleUsage(ctx context.Context, record coreusage.Rec
 		Generate:        coreusage.GenerateEnabled(record.Generate),
 		Stream:          stream,
 		Fail:            fail,
-		ResponseHeaders: record.ResponseHeaders,
-	}
+		ResponseHeaders: record.ResponseHeaders}
 
 	payload, err := json.Marshal(queuedUsageDetail{
 		requestDetail:       detail,
@@ -121,8 +119,7 @@ func (p *usageQueuePlugin) HandleUsage(ctx context.Context, record coreusage.Rec
 		RequestID:           requestID,
 		ReasoningEffort:     reasoningEffort,
 		ServiceTier:         serviceTier,
-		ResponseServiceTier: responseServiceTier,
-	})
+		ResponseServiceTier: responseServiceTier})
 	if err != nil {
 		return
 	}
@@ -183,8 +180,7 @@ type failDetail struct {
 func resolveFail(ctx context.Context, record coreusage.Record, failed bool) failDetail {
 	fail := failDetail{
 		StatusCode: record.Fail.StatusCode,
-		Body:       strings.TrimSpace(record.Fail.Body),
-	}
+		Body:       strings.TrimSpace(record.Fail.Body)}
 	if !failed {
 		return failDetail{StatusCode: 200}
 	}

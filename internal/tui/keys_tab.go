@@ -22,6 +22,7 @@ type keysTabModel struct {
 	codex        []map[string]any
 	xai          []map[string]any
 	vertex       []map[string]any
+	antigravity  []map[string]any
 	openai       []map[string]any
 	err          error
 	width        int
@@ -46,6 +47,7 @@ type keysDataMsg struct {
 	codex        []map[string]any
 	xai          []map[string]any
 	vertex       []map[string]any
+	antigravity  []map[string]any
 	openai       []map[string]any
 	err          error
 }
@@ -62,8 +64,7 @@ func newKeysTabModel(client *Client) keysTabModel {
 	return keysTabModel{
 		client:    client,
 		confirm:   -1,
-		editInput: ti,
-	}
+		editInput: ti}
 }
 
 func (m keysTabModel) Init() tea.Cmd {
@@ -84,6 +85,7 @@ func (m keysTabModel) fetchKeys() tea.Msg {
 	result.codex, _ = m.client.GetCodexKeys()
 	result.xai, _ = m.client.GetXAIKeys()
 	result.vertex, _ = m.client.GetVertexKeys()
+	result.antigravity, _ = m.client.GetAntigravityKeys()
 	result.openai, _ = m.client.GetOpenAICompat()
 	return result
 }
@@ -105,6 +107,7 @@ func (m keysTabModel) Update(msg tea.Msg) (keysTabModel, tea.Cmd) {
 			m.codex = msg.codex
 			m.xai = msg.xai
 			m.vertex = msg.vertex
+			m.antigravity = msg.antigravity
 			m.openai = msg.openai
 			if m.cursor >= len(m.keys) {
 				m.cursor = max(0, len(m.keys)-1)
@@ -353,6 +356,7 @@ func (m keysTabModel) renderContent() string {
 	renderProviderKeys(&sb, "Codex API Keys", m.codex)
 	renderProviderKeys(&sb, "xAI API Keys", m.xai)
 	renderProviderKeys(&sb, "Vertex API Keys", m.vertex)
+	renderProviderKeys(&sb, "Antigravity API Keys", m.antigravity)
 
 	if len(m.openai) > 0 {
 		renderSection(&sb, "OpenAI Compatibility", len(m.openai))

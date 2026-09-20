@@ -49,8 +49,7 @@ func (c credentialConcurrencyFixtureWireConfig) config() (CredentialConcurrencyC
 		ReleaseMaxBackoff:          hot.ReleaseMaxBackoff,
 		BusyRetryMin:               hot.BusyRetryMin,
 		BusyRetryMax:               hot.BusyRetryMax,
-		MaxLimit:                   c.MaxLimit,
-	}, nil
+		MaxLimit:                   c.MaxLimit}, nil
 }
 
 func credentialConcurrencyWireFixture(cpaHeartbeatTimeout time.Duration) credentialConcurrencyFixtureWireConfig {
@@ -63,8 +62,7 @@ func credentialConcurrencyWireFixture(cpaHeartbeatTimeout time.Duration) credent
 		ReleaseMaxBackoff:    "2s",
 		BusyRetryMin:         "250ms",
 		BusyRetryMax:         "1s",
-		MaxLimit:             1_000_000,
-	}
+		MaxLimit:             1_000_000}
 }
 
 func credentialConcurrencyConfigFixture(cpaHeartbeatTimeout time.Duration) CredentialConcurrencyConfig {
@@ -77,8 +75,7 @@ func credentialConcurrencyConfigFixture(cpaHeartbeatTimeout time.Duration) Crede
 		ReleaseMaxBackoff:    2 * time.Second,
 		BusyRetryMin:         250 * time.Millisecond,
 		BusyRetryMax:         time.Second,
-		MaxLimit:             1_000_000,
-	}
+		MaxLimit:             1_000_000}
 }
 
 func TestCredentialConcurrencyLifecycleFixture(t *testing.T) {
@@ -103,15 +100,13 @@ func TestCredentialConcurrencyLifecycleFixture(t *testing.T) {
 		Config               credentialConcurrencyFixtureWireConfig
 	}{
 		{NodeHeartbeatTimeout: 3 * time.Second, Config: credentialConcurrencyWireFixture(3 * time.Second)},
-		{NodeHeartbeatTimeout: 20 * time.Second, Config: credentialConcurrencyWireFixture(0)},
-	}
+		{NodeHeartbeatTimeout: 20 * time.Second, Config: credentialConcurrencyWireFixture(0)}}
 	expectedInvalid := []struct {
 		nodeHeartbeatTimeout time.Duration
 		config               CredentialConcurrencyConfig
 	}{
 		{nodeHeartbeatTimeout: 3 * time.Second, config: credentialConcurrencyConfigFixture(3 * time.Second)},
-		{nodeHeartbeatTimeout: 20 * time.Second, config: credentialConcurrencyConfigFixture(0)},
-	}
+		{nodeHeartbeatTimeout: 20 * time.Second, config: credentialConcurrencyConfigFixture(0)}}
 	if len(invalidFixtures) != len(expectedInvalid) {
 		t.Fatalf("invalid fixture count = %d, want %d", len(invalidFixtures), len(expectedInvalid))
 	}

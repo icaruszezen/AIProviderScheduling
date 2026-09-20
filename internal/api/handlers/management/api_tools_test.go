@@ -25,9 +25,7 @@ func TestAPICallUsesRequestProxyURL(t *testing.T) {
 
 	h := &Handler{
 		cfg: &config.Config{
-			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://127.0.0.1:1"},
-		},
-	}
+			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://127.0.0.1:1"}}}
 	router := gin.New()
 	router.POST("/", h.APICall)
 
@@ -58,9 +56,7 @@ func TestAPICallTransportDirectBypassesGlobalProxy(t *testing.T) {
 
 	h := &Handler{
 		cfg: &config.Config{
-			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"},
-		},
-	}
+			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"}}}
 
 	transport := h.apiCallTransport(&coreauth.Auth{ProxyURL: "direct"}, "")
 	httpTransport, ok := transport.(*http.Transport)
@@ -77,9 +73,7 @@ func TestAPICallTransportInvalidAuthFallsBackToGlobalProxy(t *testing.T) {
 
 	h := &Handler{
 		cfg: &config.Config{
-			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"},
-		},
-	}
+			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"}}}
 
 	transport := h.apiCallTransport(&coreauth.Auth{ProxyURL: "bad-value"}, "")
 	httpTransport, ok := transport.(*http.Transport)
@@ -106,9 +100,7 @@ func TestAPICallTransportRequestProxyOverridesCredentialAndGlobalProxy(t *testin
 
 	h := &Handler{
 		cfg: &config.Config{
-			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"},
-		},
-	}
+			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"}}}
 	auth := &coreauth.Auth{ProxyURL: "http://credential-proxy.example.com:8080"}
 
 	transport := h.apiCallTransport(auth, " http://request-proxy.example.com:8080 ")
@@ -136,9 +128,7 @@ func TestAPICallTransportInvalidRequestProxyDoesNotFallBack(t *testing.T) {
 
 	h := &Handler{
 		cfg: &config.Config{
-			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"},
-		},
-	}
+			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"}}}
 	auth := &coreauth.Auth{ProxyURL: "http://credential-proxy.example.com:8080"}
 
 	transport := h.apiCallTransport(auth, "bad-value")
@@ -159,30 +149,22 @@ func TestAPICallTransportAPIKeyAuthFallsBackToConfigProxyURL(t *testing.T) {
 			SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"},
 			GeminiKey: []config.GeminiKey{{
 				APIKey:   "gemini-key",
-				ProxyURL: "http://gemini-proxy.example.com:8080",
-			}},
+				ProxyURL: "http://gemini-proxy.example.com:8080"}},
 			ClaudeKey: []config.ClaudeKey{{
 				APIKey:   "claude-key",
-				ProxyURL: "http://claude-proxy.example.com:8080",
-			}},
+				ProxyURL: "http://claude-proxy.example.com:8080"}},
 			CodexKey: []config.CodexKey{{
 				APIKey:   "codex-key",
-				ProxyURL: "http://codex-proxy.example.com:8080",
-			}},
+				ProxyURL: "http://codex-proxy.example.com:8080"}},
 			XAIKey: []config.XAIKey{{
 				APIKey:   "xai-key",
-				ProxyURL: "http://xai-proxy.example.com:8080",
-			}},
+				ProxyURL: "http://xai-proxy.example.com:8080"}},
 			OpenAICompatibility: []config.OpenAICompatibility{{
 				Name:    "bohe",
 				BaseURL: "https://bohe.example.com",
 				APIKeyEntries: []config.OpenAICompatibilityAPIKey{{
 					APIKey:   "compat-key",
-					ProxyURL: "http://compat-proxy.example.com:8080",
-				}},
-			}},
-		},
-	}
+					ProxyURL: "http://compat-proxy.example.com:8080"}}}}}}
 
 	cases := []struct {
 		name      string
@@ -193,34 +175,26 @@ func TestAPICallTransportAPIKeyAuthFallsBackToConfigProxyURL(t *testing.T) {
 			name: "gemini",
 			auth: &coreauth.Auth{
 				Provider:   "gemini",
-				Attributes: map[string]string{"api_key": "gemini-key"},
-			},
-			wantProxy: "http://gemini-proxy.example.com:8080",
-		},
+				Attributes: map[string]string{"api_key": "gemini-key"}},
+			wantProxy: "http://gemini-proxy.example.com:8080"},
 		{
 			name: "claude",
 			auth: &coreauth.Auth{
 				Provider:   "claude",
-				Attributes: map[string]string{"api_key": "claude-key"},
-			},
-			wantProxy: "http://claude-proxy.example.com:8080",
-		},
+				Attributes: map[string]string{"api_key": "claude-key"}},
+			wantProxy: "http://claude-proxy.example.com:8080"},
 		{
 			name: "codex",
 			auth: &coreauth.Auth{
 				Provider:   "codex",
-				Attributes: map[string]string{"api_key": "codex-key"},
-			},
-			wantProxy: "http://codex-proxy.example.com:8080",
-		},
+				Attributes: map[string]string{"api_key": "codex-key"}},
+			wantProxy: "http://codex-proxy.example.com:8080"},
 		{
 			name: "xai",
 			auth: &coreauth.Auth{
 				Provider:   "xai",
-				Attributes: map[string]string{"api_key": "xai-key"},
-			},
-			wantProxy: "http://xai-proxy.example.com:8080",
-		},
+				Attributes: map[string]string{"api_key": "xai-key"}},
+			wantProxy: "http://xai-proxy.example.com:8080"},
 		{
 			name: "openai-compatibility",
 			auth: &coreauth.Auth{
@@ -228,12 +202,8 @@ func TestAPICallTransportAPIKeyAuthFallsBackToConfigProxyURL(t *testing.T) {
 				Attributes: map[string]string{
 					"api_key":      "compat-key",
 					"compat_name":  "bohe",
-					"provider_key": "bohe",
-				},
-			},
-			wantProxy: "http://compat-proxy.example.com:8080",
-		},
-	}
+					"provider_key": "bohe"}},
+			wantProxy: "http://compat-proxy.example.com:8080"}}
 
 	for _, tc := range cases {
 		tc := tc
@@ -270,9 +240,7 @@ func TestAuthByIndexDistinguishesSharedAPIKeysAcrossProviders(t *testing.T) {
 		ID:       "gemini:apikey:123",
 		Provider: "gemini",
 		Attributes: map[string]string{
-			"api_key": "shared-key",
-		},
-	}
+			"api_key": "shared-key"}}
 	compatAuth := &coreauth.Auth{
 		ID:       "openai-compatibility:bohe:456",
 		Provider: "bohe",
@@ -280,9 +248,7 @@ func TestAuthByIndexDistinguishesSharedAPIKeysAcrossProviders(t *testing.T) {
 		Attributes: map[string]string{
 			"api_key":      "shared-key",
 			"compat_name":  "bohe",
-			"provider_key": "bohe",
-		},
-	}
+			"provider_key": "bohe"}}
 
 	if _, errRegister := manager.Register(context.Background(), geminiAuth); errRegister != nil {
 		t.Fatalf("register gemini auth: %v", errRegister)

@@ -66,8 +66,7 @@ func TestIsAIAPIPathIncludesPublicAPIGroups(t *testing.T) {
 		"/v1/alpha/search",
 		"/v1beta/interactions",
 		"/openai/v1/videos",
-		"/backend-api/codex/responses",
-	} {
+		"/backend-api/codex/responses"} {
 		if !isAIAPIPath(path) {
 			t.Fatalf("expected %s to be treated as AI API path", path)
 		}
@@ -76,8 +75,7 @@ func TestIsAIAPIPathIncludesPublicAPIGroups(t *testing.T) {
 		"/v0/management/config",
 		"/v10/models",
 		"/openai/v10/videos",
-		"/backend-api/codex-status",
-	} {
+		"/backend-api/codex-status"} {
 		if isAIAPIPath(path) {
 			t.Fatalf("expected %s not to be treated as AI API path", path)
 		}
@@ -108,8 +106,7 @@ func TestIsAIAPIPathIncludesImages(t *testing.T) {
 func TestIsAIAPIPathIncludesCodexBackend(t *testing.T) {
 	paths := []string{
 		"/backend-api/codex/responses",
-		"/backend-api/codex/responses/compact",
-	}
+		"/backend-api/codex/responses/compact"}
 	for _, path := range paths {
 		if !isAIAPIPath(path) {
 			t.Fatalf("expected %s to be treated as AI API path", path)

@@ -17,23 +17,18 @@ func TestFindAllAntigravityCreditsCandidateAuths_PrefersKnownCreditsThenUnknown(
 		auths: map[string]*Auth{
 			"zz-credits": {ID: "zz-credits", Provider: "antigravity"},
 			"aa-unknown": {ID: "aa-unknown", Provider: "antigravity"},
-			"mm-no":      {ID: "mm-no", Provider: "antigravity"},
-		},
+			"mm-no":      {ID: "mm-no", Provider: "antigravity"}},
 		executors: map[string]ProviderExecutor{
-			"antigravity": schedulerTestExecutor{},
-		},
-	}
+			"antigravity": schedulerTestExecutor{}}}
 
 	SetAntigravityCreditsHint("zz-credits", AntigravityCreditsHint{
 		Known:     true,
 		Available: true,
-		UpdatedAt: time.Now(),
-	})
+		UpdatedAt: time.Now()})
 	SetAntigravityCreditsHint("mm-no", AntigravityCreditsHint{
 		Known:     true,
 		Available: false,
-		UpdatedAt: time.Now(),
-	})
+		UpdatedAt: time.Now()})
 
 	opts := cliproxyexecutor.Options{}
 
@@ -60,8 +55,7 @@ func TestFindAllAntigravityCreditsCandidateAuths_PrefersKnownCreditsThenUnknown(
 	}
 
 	pinnedOpts := cliproxyexecutor.Options{
-		Metadata: map[string]any{cliproxyexecutor.PinnedAuthMetadataKey: "aa-unknown"},
-	}
+		Metadata: map[string]any{cliproxyexecutor.PinnedAuthMetadataKey: "aa-unknown"}}
 	pinned, errPinned := m.findAllAntigravityCreditsCandidateAuths(context.Background(), "claude-sonnet-4-6", pinnedOpts)
 	if errPinned != nil {
 		t.Fatalf("findAllAntigravityCreditsCandidateAuths(pinned) error = %v", errPinned)
@@ -80,12 +74,9 @@ func TestFindAllAntigravityCreditsCandidateAuths_HomeKVUnavailableReturnsError(t
 
 	m := &Manager{
 		auths: map[string]*Auth{
-			"ag-home-kv": {ID: "ag-home-kv", Provider: "antigravity"},
-		},
+			"ag-home-kv": {ID: "ag-home-kv", Provider: "antigravity"}},
 		executors: map[string]ProviderExecutor{
-			"antigravity": schedulerTestExecutor{},
-		},
-	}
+			"antigravity": schedulerTestExecutor{}}}
 
 	candidates, errCandidates := m.findAllAntigravityCreditsCandidateAuths(context.Background(), "claude-sonnet-4-6", cliproxyexecutor.Options{})
 	if errCandidates == nil {

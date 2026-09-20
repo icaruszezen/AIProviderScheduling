@@ -1,6 +1,19 @@
 package auth
 
-import "strings"
+import (
+	"net/http"
+	"strings"
+)
+
+func errOAuthCredentialsUnsupported() error {
+	return &Error{Code: "oauth_unsupported", Message: "OAuth account credentials are no longer supported", HTTPStatus: http.StatusBadRequest}
+}
+
+// IsUnsupportedOAuthAuth reports leftover account-OAuth records that must not
+// enter the scheduler, even if a remote store still lists them.
+func IsUnsupportedOAuthAuth(auth *Auth) bool {
+	return auth != nil && auth.AuthKind() == AuthKindOAuth
+}
 
 const (
 	AuthKindAPIKey = "apikey"
@@ -37,6 +50,9 @@ func (a *Auth) AuthKind() string {
 		return kind
 	}
 	if authAttribute(a, AttributeAPIKey) != "" {
+		return AuthKindAPIKey
+	}
+	if authHasServiceAccountMetadata(a) {
 		return AuthKindAPIKey
 	}
 	if authHasOAuthMetadata(a) {
@@ -106,19 +122,54 @@ func normalizeAuthSourceKind(source string) string {
 	}
 }
 
+func authHasServiceAccountMetadata(auth *Auth) bool {
+	if auth == nil || len(auth.Metadata) == 0 {
+		return false
+	}
+	raw, ok := auth.Metadata["service_account"]
+	if !ok || raw == nil {
+		return false
+	}
+	switch value := raw.(type) {
+	case map[string]any:
+		return len(value) > 0
+	case string:
+		return strings.TrimSpace(value) != ""
+	default:
+		return false
+	}
+}
+
 func authHasOAuthMetadata(auth *Auth) bool {
 	if auth == nil || len(auth.Metadata) == 0 {
 		return false
 	}
-	for _, key := range []string{"access_token", "refresh_token", "id_token", "email", "token_type", "expires_at", "expired"} {
+	if authHasServiceAccountMetadata(auth) {
+		return false
+	}
+	for _, key := range []string{"access_token", "refresh_token", "id_token"} {
 		if authMetadataString(auth, key) != "" {
 			return true
 		}
 	}
 	if token, ok := auth.Metadata["token"].(map[string]any); ok && len(token) > 0 {
-		return true
+		if authMetadataStringFromMap(token, "access_token") != "" || authMetadataStringFromMap(token, "refresh_token") != "" || authMetadataStringFromMap(token, "id_token") != "" {
+			return true
+		}
 	}
 	return false
+}
+
+func authMetadataStringFromMap(metadata map[string]any, key string) string {
+	if metadata == nil {
+		return ""
+	}
+	switch value := metadata[key].(type) {
+	case string:
+		return strings.TrimSpace(value)
+	default:
+		return ""
+	}
 }
 
 func authAttribute(auth *Auth, key string) string {

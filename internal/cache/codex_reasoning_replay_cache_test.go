@@ -177,10 +177,8 @@ func TestCodexReasoningReplayRequiredHomeFailures(t *testing.T) {
 	}{
 		{name: "get", client: &fakeCodexReasoningReplayKVClient{values: make(map[string][]byte), getErr: errors.New("get failed")}},
 		{name: "expire", client: &fakeCodexReasoningReplayKVClient{values: map[string][]byte{
-			codexReasoningReplayKVKey("gpt-5.4", "session-home"): mustCodexReasoningReplayJSON(t, [][]byte{validCodexReasoningReplayItemForTest(4)}),
-		}, expireErr: errors.New("expire failed")}},
-		{name: "delete", client: &fakeCodexReasoningReplayKVClient{values: make(map[string][]byte), delErr: errors.New("delete failed")}},
-	} {
+			codexReasoningReplayKVKey("gpt-5.4", "session-home"): mustCodexReasoningReplayJSON(t, [][]byte{validCodexReasoningReplayItemForTest(4)})}, expireErr: errors.New("expire failed")}},
+		{name: "delete", client: &fakeCodexReasoningReplayKVClient{values: make(map[string][]byte), delErr: errors.New("delete failed")}}} {
 		t.Run(tc.name, func(t *testing.T) {
 			useFakeCodexReasoningReplayKVClient(t, tc.client, true, nil)
 			switch tc.name {
@@ -221,12 +219,10 @@ func TestCodexReasoningReplayAppendPreservesCumulativeTurnsInHome(t *testing.T) 
 
 	first := [][]byte{
 		[]byte(`{"type":"` + CodexReasoningReplayTurnType + `","id":"turn-1","assistant_fingerprint":"answer-1"}`),
-		validCodexReasoningReplayItemForTest(11),
-	}
+		validCodexReasoningReplayItemForTest(11)}
 	second := [][]byte{
 		[]byte(`{"type":"` + CodexReasoningReplayTurnType + `","id":"turn-2","call_ids":["call-2"]}`),
-		validCodexReasoningReplayItemForTest(12),
-	}
+		validCodexReasoningReplayItemForTest(12)}
 	if !AppendCodexReasoningReplayItemsBestEffort(context.Background(), "gpt-5.4", "session-home-append", first) {
 		t.Fatal("first append failed")
 	}
@@ -266,8 +262,7 @@ func TestCodexReasoningReplayAppendHomeCASPreservesConcurrentTurns(t *testing.T)
 			defer waitGroup.Done()
 			items := [][]byte{
 				[]byte(fmt.Sprintf(`{"type":"%s","id":"turn-%d"}`, CodexReasoningReplayTurnType, turnID)),
-				validCodexReasoningReplayItemForTest(byte(30 + turnID)),
-			}
+				validCodexReasoningReplayItemForTest(byte(30 + turnID))}
 			if !AppendCodexReasoningReplayItemsBestEffort(context.Background(), "gpt-5.4", "session-home-concurrent", items) {
 				t.Errorf("append turn %d failed", turnID)
 			}

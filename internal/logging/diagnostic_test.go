@@ -70,8 +70,7 @@ func TestSafeErrorDiagnosticExtractsOnlyAllowlistedSignals(t *testing.T) {
 		{name: "EOF", err: io.EOF, wantParts: []string{"EOF"}},
 		{name: "SOCKS refused", err: errors.New("socks connect with unlabeled-secret: connection refused"), wantParts: []string{"proxy=socks", "connection_refused"}},
 		{name: "OAuth response", err: errors.New(`upstream status 400 error="invalid_request" request_id="req-123" unlabeled-secret`), wantParts: []string{"status=400"}},
-		{name: "unknown", err: errors.New("unlabeled-secret")},
-	}
+		{name: "unknown", err: errors.New("unlabeled-secret")}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := SafeErrorDiagnostic(tt.err)
@@ -91,8 +90,7 @@ func TestSafeErrorDiagnosticDoesNotExtractURLQueryValues(t *testing.T) {
 	err := &url.Error{
 		Op:  "Post",
 		URL: "https://oauth.example/token?code=oauth-secret&error=error-secret&request_id=request-secret",
-		Err: io.EOF,
-	}
+		Err: io.EOF}
 
 	got := SafeErrorDiagnostic(err)
 	if !strings.Contains(got, "EOF") {

@@ -35,12 +35,10 @@ type XAIWebsocketsExecutor struct {
 }
 
 var globalXAIWebsocketSessionStore = &codexWebsocketSessionStore{
-	sessions: make(map[string]*codexWebsocketSession),
-}
+	sessions: make(map[string]*codexWebsocketSession)}
 
 var globalXAIWebsocketIDStates = &xaiWebsocketIDStateStore{
-	sessions: make(map[string]*xaiWebsocketIDState),
-}
+	sessions: make(map[string]*xaiWebsocketIDState)}
 
 type xaiWebsocketIDStateStore struct {
 	mu       sync.Mutex
@@ -69,8 +67,7 @@ func NewXAIWebsocketsExecutor(cfg *config.Config) *XAIWebsocketsExecutor {
 	return &XAIWebsocketsExecutor{
 		XAIExecutor: NewXAIExecutor(cfg),
 		store:       globalXAIWebsocketSessionStore,
-		idStore:     globalXAIWebsocketIDStates,
-	}
+		idStore:     globalXAIWebsocketIDStates}
 }
 
 func getXAIWebsocketIDState(store *xaiWebsocketIDStateStore, sessionID string) *xaiWebsocketIDState {
@@ -87,8 +84,7 @@ func getXAIWebsocketIDState(store *xaiWebsocketIDStateStore, sessionID string) *
 		return state
 	}
 	state := &xaiWebsocketIDState{
-		downstreamToUpstream: make(map[string]string),
-	}
+		downstreamToUpstream: make(map[string]string)}
 	store.sessions[sessionID] = state
 	return state
 }
@@ -116,8 +112,7 @@ func newXAIWebsocketRequestIDMapper(store *xaiWebsocketIDStateStore, sessionID s
 	return &xaiWebsocketRequestIDMapper{
 		state:                state,
 		downstreamPreviousID: downstreamPreviousID,
-		upstreamPreviousID:   upstreamPreviousID,
-	}
+		upstreamPreviousID:   upstreamPreviousID}
 }
 
 func (s *xaiWebsocketIDState) upstreamIDForDownstream(downstreamID string) string {
@@ -523,8 +518,7 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	}
+		AuthValue: authValue}
 	helps.RecordAPIWebsocketRequest(ctx, e.cfg, wsReqLog)
 	logXAIWebsocketRequest(executionSessionID, authID, wsURL, wsReqBody)
 
@@ -635,8 +629,7 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 				AuthID:    authID,
 				AuthLabel: authLabel,
 				AuthType:  authType,
-				AuthValue: authValue,
-			})
+				AuthValue: authValue})
 			logXAIWebsocketRequest(executionSessionID, authID, wsURL, wsReqBodyRetry)
 			recordAPIWebsocketHandshake(ctx, e.cfg, respHSRetry)
 			reporter.StartResponseTTFT()
@@ -1082,8 +1075,7 @@ func (e *XAIWebsocketsExecutor) getOrCreateSession(sessionID string) *codexWebso
 	}
 	sess := &codexWebsocketSession{
 		sessionID:            sessionID,
-		upstreamDisconnectCh: make(chan error, 1),
-	}
+		upstreamDisconnectCh: make(chan error, 1)}
 	store.sessions[sessionID] = sess
 	return sess
 }
@@ -1600,8 +1592,7 @@ type XAIAutoExecutor struct {
 func NewXAIAutoExecutor(cfg *config.Config) *XAIAutoExecutor {
 	return &XAIAutoExecutor{
 		httpExec: NewXAIExecutor(cfg),
-		wsExec:   NewXAIWebsocketsExecutor(cfg),
-	}
+		wsExec:   NewXAIWebsocketsExecutor(cfg)}
 }
 
 func (e *XAIAutoExecutor) Identifier() string { return "xai" }

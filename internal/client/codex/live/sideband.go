@@ -37,8 +37,7 @@ var (
 		WriteBufferSize: 4096,
 		CheckOrigin: func(*http.Request) bool {
 			return true
-		},
-	}
+		}}
 )
 
 type liveSession struct {
@@ -84,8 +83,7 @@ const (
 func newSessionStore() *sessionStore {
 	return &sessionStore{
 		lifetime: sessionLifetime,
-		sessions: make(map[string]*storedSession),
-	}
+		sessions: make(map[string]*storedSession)}
 }
 
 func (s *sessionStore) put(callID string, session liveSession) liveSession {
@@ -370,10 +368,8 @@ func (h *Handler) HandleSideband(c *gin.Context) {
 			Headers: liveSelectionHeaders(c),
 			Metadata: map[string]any{
 				coreexecutor.PinnedAuthMetadataKey:       session.authID,
-				coreexecutor.ExecutionSessionMetadataKey: callID,
-			},
-		}
-		selection, selected, errSelect = h.selectOAuth(ctx, session.model, selectionOpts)
+				coreexecutor.ExecutionSessionMetadataKey: callID}}
+		selection, selected, errSelect = h.selectAPIKey(ctx, session.model, selectionOpts)
 	}
 	if errSelect != nil {
 		writeSelectionError(c, errSelect)
@@ -417,8 +413,7 @@ func (h *Handler) HandleSideband(c *gin.Context) {
 			AuthID:    current.ID,
 			AuthLabel: current.Label,
 			AuthType:  authType,
-			AuthValue: authValue,
-		})
+			AuthValue: authValue})
 		dialer := newProxyAwareSidebandDialer(runtimeConfig, current)
 		dialer.Subprotocols = websocket.Subprotocols(c.Request)
 		return dialer.DialContext(ctx, upstreamURL, req.Header)

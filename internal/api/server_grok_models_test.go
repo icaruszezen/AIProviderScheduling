@@ -17,11 +17,9 @@ func TestModelsDispatchByGrokShellUserAgent(t *testing.T) {
 	modelRegistry := registry.GetGlobalRegistry()
 	clientID := "test-grok-shell-model-list"
 	modelRegistry.RegisterClient(clientID, "openai", []*registry.ModelInfo{
-		{ID: "grok-shell-openai-model", DisplayName: "Grok Shell Model", ContextLength: 256000, Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}},
-	})
+		{ID: "grok-shell-openai-model", DisplayName: "Grok Shell Model", ContextLength: 256000, Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}}})
 	modelRegistry.RegisterClient(clientID+"-claude", "claude", []*registry.ModelInfo{
-		{ID: "grok-shell-claude-model", DisplayName: "Claude Catalog Model", ContextLength: 200000},
-	})
+		{ID: "grok-shell-claude-model", DisplayName: "Claude Catalog Model", ContextLength: 200000}})
 	t.Cleanup(func() {
 		modelRegistry.UnregisterClient(clientID)
 		modelRegistry.UnregisterClient(clientID + "-claude")
@@ -30,8 +28,7 @@ func TestModelsDispatchByGrokShellUserAgent(t *testing.T) {
 	server := newTestServer(t)
 	for _, userAgent := range []string{
 		"grok-shell/0.2.119 (macos; aarch64)",
-		"grok-pager/0.2.119 grok-shell/0.2.119 (macos; aarch64)",
-	} {
+		"grok-pager/0.2.119 grok-shell/0.2.119 (macos; aarch64)"} {
 		t.Run(userAgent, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "https://proxy.example.test/v1/models?client_version", nil)
 			req.Header.Set("Authorization", "Bearer test-key")
@@ -136,8 +133,7 @@ func TestModelsDispatchKeepsOrdinaryOpenAIResponse(t *testing.T) {
 func TestGrokHomeModelAdapterOmitsReasoning(t *testing.T) {
 	models := grokModelsFromHomeEntries([]homeModelEntry{
 		{id: "home-model", displayName: "Home Model", contextLength: 1234},
-		{id: "home-model-without-context", displayName: "No Context Model"},
-	})
+		{id: "home-model-without-context", displayName: "No Context Model"}})
 	if len(models) != 2 {
 		t.Fatalf("Home model count = %d, want 2", len(models))
 	}

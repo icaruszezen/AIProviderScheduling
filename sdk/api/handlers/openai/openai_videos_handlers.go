@@ -68,8 +68,7 @@ type videoAuthBindingStore struct {
 
 func newVideoAuthBindingStore() *videoAuthBindingStore {
 	return &videoAuthBindingStore{
-		entries: make(map[string]videoAuthBinding),
-	}
+		entries: make(map[string]videoAuthBinding)}
 }
 
 func (s *videoAuthBindingStore) set(videoID string, authID string, ttl time.Duration) {
@@ -94,8 +93,7 @@ func (s *videoAuthBindingStore) setWithModel(videoID string, authID string, mode
 	s.entries[videoID] = videoAuthBinding{
 		authID:    authID,
 		model:     strings.TrimSpace(model),
-		expiresAt: now.Add(ttl),
-	}
+		expiresAt: now.Add(ttl)}
 	s.mu.Unlock()
 }
 
@@ -188,9 +186,7 @@ func rejectUnsupportedNativeVideosModel(c *gin.Context, model string) bool {
 	c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 		Error: handlers.ErrorDetail{
 			Message: fmt.Sprintf("Model %s is not supported on %s, %s, or %s. Use %s.", model, xaiVideosGenerationsAPI, xaiVideosEditsAPI, xaiVideosExtensionsAPI, defaultXAIVideosModel),
-			Type:    "invalid_request_error",
-		},
-	})
+			Type:    "invalid_request_error"}})
 	return true
 }
 
@@ -392,8 +388,7 @@ func buildXAIVideosCreateRequest(rawJSON []byte, model string) ([]byte, xaiVideo
 		Prompt:       prompt,
 		Seconds:      seconds,
 		Size:         size,
-		CreatedAt:    time.Now().Unix(),
-	}
+		CreatedAt:    time.Now().Unix()}
 	return req, meta, nil
 }
 
@@ -731,9 +726,7 @@ func (h *OpenAIAPIHandler) handleXAIVideosNativePost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -759,9 +752,7 @@ func (h *OpenAIAPIHandler) XAIVideosRetrieve(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: request_id is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -776,9 +767,7 @@ func (h *OpenAIAPIHandler) VideosRetrieve(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: video_id is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -826,9 +815,7 @@ func (h *OpenAIAPIHandler) VideosContent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: video_id is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -840,9 +827,7 @@ func (h *OpenAIAPIHandler) VideosContent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: variant %q is not available for xAI video downloads", variant),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -890,8 +875,7 @@ func (h *OpenAIAPIHandler) writeVideoContentFromURL(c *gin.Context, contentURL s
 	if err != nil {
 		errMsg := &interfaces.ErrorMessage{
 			StatusCode: clienterror.HTTPStatusFromErrorOr(err, http.StatusBadGateway),
-			Error:      err,
-		}
+			Error:      err}
 		h.WriteErrorResponse(c, errMsg)
 		return err
 	}
@@ -901,8 +885,7 @@ func (h *OpenAIAPIHandler) writeVideoContentFromURL(c *gin.Context, contentURL s
 	if err != nil {
 		errMsg := &interfaces.ErrorMessage{
 			StatusCode: clienterror.HTTPStatusFromErrorOr(err, http.StatusBadGateway),
-			Error:      err,
-		}
+			Error:      err}
 		h.WriteErrorResponse(c, errMsg)
 		return err
 	}

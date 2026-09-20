@@ -35,8 +35,7 @@ func SanitizeClaudeMessagesSignaturesForModel(payload []byte, targetModel string
 	return SanitizeClaudeMessagesSignaturesForTarget(payload, ClaudeMessagesSignatureSanitizeOptions{
 		TargetProvider:    SignatureProviderFromModelName(targetModel),
 		TargetModel:       targetModel,
-		DropEmptyMessages: true,
-	})
+		DropEmptyMessages: true})
 }
 
 // SanitizeClaudeMessagesForClaudeUpstream prepares a Claude /v1/messages body
@@ -52,8 +51,7 @@ func SanitizeClaudeMessagesForClaudeUpstream(payload []byte, targetModel string,
 		DropEmptyMessages:             true,
 		DropToolSignatures:            true,
 		DropEmptyThinkingPlaceholders: !preserveEmpty,
-		PreserveEmptyThinkingBlocks:   preserveEmpty,
-	})
+		PreserveEmptyThinkingBlocks:   preserveEmpty})
 }
 
 // SanitizeClaudeMessagesSignaturesForTarget applies provider-aware signature
@@ -259,8 +257,7 @@ func claudeToolUseSignaturePaths() []string {
 		"signature",
 		"thoughtSignature",
 		"thought_signature",
-		"extra_content.google.thought_signature",
-	}
+		"extra_content.google.thought_signature"}
 }
 
 func claudeToolUseProvenancePaths() []string {

@@ -99,9 +99,7 @@ func BuildErrorResponseBody(status int, errText string) []byte {
 		Error: ErrorDetail{
 			Message: errText,
 			Type:    errType,
-			Code:    code,
-		},
-	})
+			Code:    code}})
 	if err != nil {
 		return []byte(fmt.Sprintf(`{"error":{"message":%q,"type":"server_error","code":"internal_server_error"}}`, errText))
 	}
@@ -301,8 +299,7 @@ type BaseAPIHandler struct {
 func NewBaseAPIHandlers(cfg *config.SDKConfig, authManager *coreauth.Manager) *BaseAPIHandler {
 	return &BaseAPIHandler{
 		Cfg:         cfg,
-		AuthManager: authManager,
-	}
+		AuthManager: authManager}
 }
 
 // UpdateClients updates the handlers' client list and configuration.
@@ -434,8 +431,7 @@ func (h *BaseAPIHandler) GetContextWithCancel(handler interfaces.APIHandler, c *
 		newCtx = logging.WithClientRequestMetadata(newCtx, logging.ClientRequestMetadata{
 			ClientIP:      requestClientIP(c.Request),
 			XForwardedFor: strings.TrimSpace(strings.Join(c.Request.Header.Values("X-Forwarded-For"), ", ")),
-			UserAgent:     strings.TrimSpace(c.Request.UserAgent()),
-		})
+			UserAgent:     strings.TrimSpace(c.Request.UserAgent())})
 	}
 	newCtx = logging.WithResponseStatusHolder(newCtx)
 	newCtx = logging.WithResponseHeadersHolder(newCtx)

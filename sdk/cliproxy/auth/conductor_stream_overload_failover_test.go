@@ -25,8 +25,7 @@ func registerOverloadAuths(t *testing.T, m *Manager, n int) []string {
 			Provider: "codex",
 			Status:   StatusActive,
 			// Higher priority is picked first, so descending values keep the order stable.
-			Attributes: map[string]string{"priority": fmt.Sprintf("%d", 100-i)},
-		}
+			Attributes: map[string]string{"priority": fmt.Sprintf("%d", 100-i)}}
 		reg.RegisterClient(id, "codex", []*registry.ModelInfo{{ID: "gpt-5.6-terra"}})
 		if _, err := m.Register(context.Background(), auth); err != nil {
 			t.Fatalf("register %s: %v", id, err)
@@ -44,8 +43,7 @@ func registerOverloadAuths(t *testing.T, m *Manager, n int) []string {
 func overloadStatusError() customStatusError {
 	return customStatusError{
 		code: http.StatusServiceUnavailable,
-		msg:  `{"error":{"type":"service_unavailable_error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later.","param":null}}`,
-	}
+		msg:  `{"error":{"type":"service_unavailable_error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later.","param":null}}`}
 }
 
 func successStreamResult() *cliproxyexecutor.StreamResult {
@@ -55,8 +53,7 @@ func successStreamResult() *cliproxyexecutor.StreamResult {
 	close(ch)
 	return &cliproxyexecutor.StreamResult{
 		Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-		Chunks:  ch,
-	}
+		Chunks:  ch}
 }
 
 // With stream-bootstrap-buffering enabled the codex executor returns the overload rejection
@@ -86,8 +83,7 @@ func TestExecuteStream_BootstrapOverload_SkipsConsecutiveOverloadedCredentials(t
 				return nil, overloadStatusError()
 			}
 			return successStreamResult(), nil
-		},
-	})
+		}})
 
 	result, err := m.ExecuteStream(context.Background(), []string{"codex"},
 		cliproxyexecutor.Request{Model: "gpt-5.6-terra"}, cliproxyexecutor.Options{})
@@ -139,8 +135,7 @@ func TestExecuteStream_BootstrapOverload_StopsAtCredentialBudget(t *testing.T) {
 			attempts++
 			mu.Unlock()
 			return nil, overloadStatusError()
-		},
-	})
+		}})
 
 	done := make(chan struct{})
 	go func() {

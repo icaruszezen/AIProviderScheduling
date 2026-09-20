@@ -137,8 +137,7 @@ func (p *pprofServer) startServer(addr string, owner uint64) *http.Server {
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
+		ReadHeaderTimeout: 5 * time.Second}
 
 	p.mu.Lock()
 	if !p.enabled || p.addr != addr || p.owner != owner || p.server != nil {

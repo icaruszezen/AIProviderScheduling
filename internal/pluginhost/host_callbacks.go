@@ -119,14 +119,6 @@ func (h *Host) callFromPlugin(ctx context.Context, method string, request []byte
 		return h.callHostStreamClose(request)
 	case pluginabi.MethodHostLog:
 		return h.callHostLog(ctx, request)
-	case pluginabi.MethodHostAuthList:
-		return h.callHostAuthList(ctx, request)
-	case pluginabi.MethodHostAuthGet:
-		return h.callHostAuthGet(ctx, request)
-	case pluginabi.MethodHostAuthGetRuntime:
-		return h.callHostAuthGetRuntime(ctx, request)
-	case pluginabi.MethodHostAuthSave:
-		return h.callHostAuthSave(ctx, request)
 	default:
 		return nil, fmt.Errorf("unsupported host callback %s", method)
 	}
@@ -178,8 +170,7 @@ func (h *Host) callHostHTTPDoStream(ctx context.Context, request []byte) ([]byte
 	return marshalRPCResult(rpcHostHTTPStreamResponse{
 		StatusCode: resp.StatusCode,
 		Headers:    httpHeader(resp.Headers),
-		StreamID:   streamID,
-	})
+		StreamID:   streamID})
 }
 
 func (h *Host) callHostHTTPStreamRead(ctx context.Context, request []byte) ([]byte, error) {
@@ -196,8 +187,7 @@ func (h *Host) callHostHTTPStreamRead(ctx context.Context, request []byte) ([]by
 	}
 	resp := rpcHostHTTPStreamReadResponse{
 		Payload: append([]byte(nil), chunk.Payload...),
-		Done:    done,
-	}
+		Done:    done}
 	if chunk.Err != nil {
 		resp.Error = chunk.Err.Error()
 		resp.Done = true
@@ -231,15 +221,13 @@ func decodeHostHTTPRequestWithCallbackID(raw []byte) (pluginapi.HTTPRequest, str
 			Method:  req.Request.Method,
 			URL:     req.Request.URL,
 			Headers: map[string][]string(req.Request.Headers),
-			Body:    append([]byte(nil), req.Request.Body...),
-		}, req.HostCallbackID, nil
+			Body:    append([]byte(nil), req.Request.Body...)}, req.HostCallbackID, nil
 	}
 	return pluginapi.HTTPRequest{
 		Method:  req.Method,
 		URL:     req.URL,
 		Headers: map[string][]string(req.Headers),
-		Body:    append([]byte(nil), req.Body...),
-	}, req.HostCallbackID, nil
+		Body:    append([]byte(nil), req.Body...)}, req.HostCallbackID, nil
 }
 
 func (h *Host) callHostStreamEmit(ctx context.Context, request []byte) ([]byte, error) {
@@ -287,8 +275,7 @@ func (h *Host) callHostModelExecute(ctx context.Context, request []byte) ([]byte
 	return marshalRPCResult(pluginapi.HostModelExecutionResponse{
 		StatusCode: resp.StatusCode,
 		Headers:    cloneHeader(resp.Headers),
-		Body:       append([]byte(nil), resp.Body...),
-	})
+		Body:       append([]byte(nil), resp.Body...)})
 }
 
 func modelExecutionRequestFromPlugin(req pluginapi.HostModelExecutionRequest, skipPluginID string) handlers.ModelExecutionRequest {
@@ -302,8 +289,7 @@ func modelExecutionRequestFromPlugin(req pluginapi.HostModelExecutionRequest, sk
 		Query:                   cloneValues(req.Query),
 		Alt:                     req.Alt,
 		SkipInterceptorPluginID: skipPluginID,
-		SkipRouterPluginID:      skipPluginID,
-	}
+		SkipRouterPluginID:      skipPluginID}
 }
 
 func modelExecutionError(errMsg *interfaces.ErrorMessage) error {

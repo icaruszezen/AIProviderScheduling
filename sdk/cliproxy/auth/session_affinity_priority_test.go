@@ -22,17 +22,14 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 			pick: func(manager *Manager, ctx context.Context, provider, model string, opts cliproxyexecutor.Options) (*Auth, error) {
 				auth, _, errPick := manager.pickNext(ctx, provider, model, opts, nil)
 				return auth, errPick
-			},
-		},
+			}},
 		{
 			name:           "mixed provider",
 			providerSuffix: "mixed",
 			pick: func(manager *Manager, ctx context.Context, provider, model string, opts cliproxyexecutor.Options) (*Auth, error) {
 				auth, _, _, errPick := manager.pickNextMixed(ctx, []string{provider}, model, opts, nil)
 				return auth, errPick
-			},
-		},
-	} {
+			}}} {
 		t.Run(testCase.name, func(t *testing.T) {
 			ctx := context.Background()
 			provider := "affinity-priority-" + testCase.providerSuffix
@@ -43,16 +40,14 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 			manager := NewManager(nil, nil, nil)
 			affinity := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 				Fallback: &RoundRobinSelector{},
-				TTL:      time.Hour,
-			})
+				TTL:      time.Hour})
 			defer affinity.Stop()
 			manager.SetSelector(affinity)
 			manager.RegisterExecutor(schedulerTestExecutor{provider: provider})
 
 			for _, auth := range []*Auth{
 				{ID: highID, Provider: provider, Status: StatusActive, Attributes: map[string]string{"priority": "1"}},
-				{ID: lowID, Provider: provider, Status: StatusActive, Attributes: map[string]string{"priority": "0"}},
-			} {
+				{ID: lowID, Provider: provider, Status: StatusActive, Attributes: map[string]string{"priority": "0"}}} {
 				if _, errRegister := manager.Register(WithSkipPersist(ctx), auth); errRegister != nil {
 					t.Fatalf("Register(%s): %v", auth.ID, errRegister)
 				}
@@ -61,8 +56,7 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 			}
 
 			opts := cliproxyexecutor.Options{Metadata: map[string]any{
-				cliproxyexecutor.DerivedSessionIDMetadataKey: "stable-session",
-			}}
+				cliproxyexecutor.DerivedSessionIDMetadataKey: "stable-session"}}
 			pick := func(pickOpts cliproxyexecutor.Options) *Auth {
 				t.Helper()
 				auth, errPick := testCase.pick(manager, ctx, provider, model, pickOpts)
@@ -84,8 +78,7 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 				Provider: provider,
 				Model:    model,
 				Success:  false,
-				Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"},
-			})
+				Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"}})
 			if got := pick(opts); got.ID != lowID {
 				t.Fatalf("failover binding = %q, want %q", got.ID, lowID)
 			}
@@ -96,8 +89,7 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 			}
 
 			newSessionOpts := cliproxyexecutor.Options{Metadata: map[string]any{
-				cliproxyexecutor.DerivedSessionIDMetadataKey: "new-session",
-			}}
+				cliproxyexecutor.DerivedSessionIDMetadataKey: "new-session"}}
 			if got := pick(newSessionOpts); got.ID != highID {
 				t.Fatalf("cold binding for new session = %q, want high priority %q", got.ID, highID)
 			}
@@ -107,8 +99,7 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 				Provider: provider,
 				Model:    model,
 				Success:  false,
-				Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"},
-			})
+				Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"}})
 			if got := pick(opts); got.ID != highID {
 				t.Fatalf("binding after bound auth became unavailable = %q, want %q", got.ID, highID)
 			}
@@ -119,16 +110,14 @@ func TestManagerSessionAffinityPreservesBindingAcrossHigherPriorityRecovery(t *t
 func TestSessionAffinityFallbackOnlyReceivesHighestAvailablePriority(t *testing.T) {
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: lastAuthSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer selector.Stop()
 
 	high := &Auth{ID: "a-high", Provider: "test", Status: StatusActive, Attributes: map[string]string{"priority": "1"}}
 	low := &Auth{ID: "z-low", Provider: "test", Status: StatusActive, Attributes: map[string]string{"priority": "0"}}
 	auths := []*Auth{high, low}
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.DerivedSessionIDMetadataKey: "stable-session",
-	}}
+		cliproxyexecutor.DerivedSessionIDMetadataKey: "stable-session"}}
 
 	assertPick := func(label string, pickOpts cliproxyexecutor.Options, wantID string) {
 		t.Helper()

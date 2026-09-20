@@ -58,98 +58,6 @@ func (cfg *Config) SanitizeClaudeHeaderDefaults() {
 	cfg.ClaudeHeaderDefaults.Timezone = strings.TrimSpace(cfg.ClaudeHeaderDefaults.Timezone)
 }
 
-// SanitizeOAuthModelAlias normalizes and deduplicates global OAuth model name aliases.
-// It trims whitespace, normalizes channel keys to lower-case, drops empty entries,
-// allows multiple aliases per upstream name, and ensures aliases are unique within each channel.
-func (cfg *Config) SanitizeOAuthModelAlias() {
-	if cfg == nil || len(cfg.OAuthModelAlias) == 0 {
-		return
-	}
-	out := make(map[string][]OAuthModelAlias, len(cfg.OAuthModelAlias))
-	for rawChannel, aliases := range cfg.OAuthModelAlias {
-		channel := strings.ToLower(strings.TrimSpace(rawChannel))
-		if channel == "" || len(aliases) == 0 {
-			continue
-		}
-		seenAlias := make(map[string]struct{}, len(aliases))
-		clean := make([]OAuthModelAlias, 0, len(aliases))
-		for _, entry := range aliases {
-			name := strings.TrimSpace(entry.Name)
-			alias := strings.TrimSpace(entry.Alias)
-			if name == "" || alias == "" {
-				continue
-			}
-			if strings.EqualFold(name, alias) {
-				continue
-			}
-			aliasKey := strings.ToLower(alias)
-			if _, ok := seenAlias[aliasKey]; ok {
-				continue
-			}
-			seenAlias[aliasKey] = struct{}{}
-			clean = append(clean, OAuthModelAlias{
-				Name:         name,
-				Alias:        alias,
-				Fork:         entry.Fork,
-				DisplayName:  strings.TrimSpace(entry.DisplayName),
-				ForceMapping: entry.ForceMapping,
-			})
-		}
-		if len(clean) > 0 {
-			out[channel] = clean
-		}
-	}
-	cfg.OAuthModelAlias = out
-}
-
-// SanitizeOAuthRequestScopedErrors normalizes and validates global OAuth request-scoped error rules.
-// It trims whitespace, normalizes channel keys to lower-case, validates status/action, and drops invalid rules.
-func (cfg *Config) SanitizeOAuthRequestScopedErrors() {
-	if cfg == nil || len(cfg.OAuthRequestScopedErrors) == 0 {
-		return
-	}
-	out := make(map[string][]RequestScopedErrorRule, len(cfg.OAuthRequestScopedErrors))
-	for rawChannel, rules := range cfg.OAuthRequestScopedErrors {
-		channel := strings.ToLower(strings.TrimSpace(rawChannel))
-		if channel == "" || len(rules) == 0 {
-			continue
-		}
-		clean := make([]RequestScopedErrorRule, 0, len(rules))
-		for _, r := range rules {
-			action := strings.ToLower(strings.TrimSpace(r.Action))
-			match := make([]string, 0, len(r.Match))
-			for _, m := range r.Match {
-				if tm := strings.TrimSpace(m); tm != "" {
-					match = append(match, tm)
-				}
-			}
-			matchRegexr := make([]string, 0, len(r.MatchRegexr))
-			for _, re := range r.MatchRegexr {
-				if tre := strings.TrimSpace(re); tre != "" {
-					matchRegexr = append(matchRegexr, tre)
-				}
-			}
-			if r.Status <= 0 || (len(match) == 0 && len(matchRegexr) == 0) || action == "" {
-				continue
-			}
-			clean = append(clean, RequestScopedErrorRule{
-				Status:      r.Status,
-				Match:       match,
-				MatchRegexr: matchRegexr,
-				Action:      action,
-			})
-		}
-		if len(clean) > 0 {
-			out[channel] = clean
-		}
-	}
-	if len(out) == 0 {
-		cfg.OAuthRequestScopedErrors = nil
-		return
-	}
-	cfg.OAuthRequestScopedErrors = out
-}
-
 // SanitizeOpenAICompatibility removes OpenAI-compatibility provider entries that are
 // not actionable, specifically those missing a BaseURL. It trims whitespace before
 // evaluation and preserves the relative order of remaining entries.
@@ -314,6 +222,36 @@ func (cfg *Config) SanitizeInteractionsKeys() {
 	cfg.InteractionsKey = sanitizeGeminiKeyEntries(cfg.InteractionsKey)
 }
 
+// SanitizeAntigravityKeys deduplicates and normalizes Antigravity API key credentials.
+func (cfg *Config) SanitizeAntigravityKeys() {
+	if cfg == nil {
+		return
+	}
+	seen := make(map[string]struct{}, len(cfg.AntigravityKey))
+	out := cfg.AntigravityKey[:0]
+	for i := range cfg.AntigravityKey {
+		entry := cfg.AntigravityKey[i]
+		entry.APIKey = strings.TrimSpace(entry.APIKey)
+		entry.ProjectID = strings.TrimSpace(entry.ProjectID)
+		entry.Prefix = normalizeModelPrefix(entry.Prefix)
+		entry.BaseURL = strings.TrimSpace(entry.BaseURL)
+		entry.ProxyURL = strings.TrimSpace(entry.ProxyURL)
+		entry.Headers = NormalizeHeaders(entry.Headers)
+		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
+		sanitizeProviderRetryFields(&entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes)
+		if entry.APIKey == "" && entry.BaseURL == "" {
+			continue
+		}
+		uniqueKey := entry.APIKey + "\x00" + entry.BaseURL + "\x00" + entry.ProxyURL + "\x00" + entry.Prefix + "\x00" + entry.ProjectID + "\x00" + FormatSortedHeaders(entry.Headers)
+		if _, exists := seen[uniqueKey]; exists {
+			continue
+		}
+		seen[uniqueKey] = struct{}{}
+		out = append(out, entry)
+	}
+	cfg.AntigravityKey = out
+}
+
 func normalizeModelPrefix(prefix string) string {
 	trimmed := strings.TrimSpace(prefix)
 	trimmed = strings.Trim(trimmed, "/")
@@ -364,30 +302,6 @@ func NormalizeExcludedModels(models []string) []string {
 		}
 		seen[trimmed] = struct{}{}
 		out = append(out, trimmed)
-	}
-	if len(out) == 0 {
-		return nil
-	}
-	return out
-}
-
-// NormalizeOAuthExcludedModels cleans provider -> excluded models mappings by normalizing provider keys
-// and applying model exclusion normalization to each entry.
-func NormalizeOAuthExcludedModels(entries map[string][]string) map[string][]string {
-	if len(entries) == 0 {
-		return nil
-	}
-	out := make(map[string][]string, len(entries))
-	for provider, models := range entries {
-		key := strings.ToLower(strings.TrimSpace(provider))
-		if key == "" {
-			continue
-		}
-		normalized := NormalizeExcludedModels(models)
-		if len(normalized) == 0 {
-			continue
-		}
-		out[key] = normalized
 	}
 	if len(out) == 0 {
 		return nil

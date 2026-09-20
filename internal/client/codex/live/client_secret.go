@@ -69,8 +69,7 @@ type clientSecretCreateResponse struct {
 func newClientSecretStore() *clientSecretStore {
 	return &clientSecretStore{
 		entries: make(map[string]clientSecretEntry),
-		now:     time.Now,
-	}
+		now:     time.Now}
 }
 
 func (s *clientSecretStore) create(session json.RawMessage, lifetime time.Duration, issuerPrincipal, issuerProvider string) (string, ClientSecretAuthorization, time.Time, error) {
@@ -89,8 +88,7 @@ func (s *clientSecretStore) create(session json.RawMessage, lifetime time.Durati
 		Principal:       sessionID,
 		IssuerPrincipal: strings.TrimSpace(issuerPrincipal),
 		IssuerProvider:  strings.TrimSpace(issuerProvider),
-		Session:         append(json.RawMessage(nil), session...),
-	}
+		Session:         append(json.RawMessage(nil), session...)}
 	now := s.currentTime()
 	expiresAt := now.Add(lifetime)
 	s.mu.Lock()
@@ -298,8 +296,7 @@ func (h *Handler) createClientSecret(c *gin.Context, session json.RawMessage, ex
 	c.JSON(http.StatusOK, clientSecretCreateResponse{
 		Value:     token,
 		ExpiresAt: expiresAt.Unix(),
-		Session:   responseSession,
-	})
+		Session:   responseSession})
 }
 
 func clientSecretLifetime(expiresAfter *struct {
@@ -414,6 +411,5 @@ func writeRealtimeError(c *gin.Context, status int, message, errorType, code str
 		"message": message,
 		"type":    errorType,
 		"param":   nil,
-		"code":    code,
-	}})
+		"code":    code}})
 }

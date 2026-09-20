@@ -52,8 +52,7 @@ func parseCodexWebsocketError(payload []byte) (error, bool) {
 	}
 	return statusErrWithHeaders{
 		statusErr: statusError,
-		headers:   headers,
-	}, true
+		headers:   headers}, true
 }
 
 func clearCodexReasoningReplayOnWebsocketError(ctx context.Context, scope codexReasoningReplayScope, payload []byte) error {

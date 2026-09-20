@@ -49,8 +49,7 @@ func TestParse(t *testing.T) {
 		{name: "https", input: "https://proxy.example.com:8443", want: ModeProxy},
 		{name: "socks5", input: "socks5://proxy.example.com:1080", want: ModeProxy},
 		{name: "socks5h", input: "socks5h://proxy.example.com:1080", want: ModeProxy},
-		{name: "invalid", input: "bad-value", want: ModeInvalid, wantErr: true},
-	}
+		{name: "invalid", input: "bad-value", want: ModeInvalid, wantErr: true}}
 
 	for _, tt := range tests {
 		tt := tt
@@ -409,19 +408,15 @@ func TestRedactProxyURL(t *testing.T) {
 		{
 			name:  "with credentials",
 			input: "http://user:pass@proxy.example.com:8080/path?token=secret",
-			want:  "http://redacted@proxy.example.com:8080",
-		},
+			want:  "http://redacted@proxy.example.com:8080"},
 		{
 			name:  "without credentials",
 			input: "socks5://proxy.example.com:1080",
-			want:  "socks5://proxy.example.com:1080",
-		},
+			want:  "socks5://proxy.example.com:1080"},
 		{
 			name:  "invalid",
 			input: "bad-value",
-			want:  "<invalid proxy URL>",
-		},
-	}
+			want:  "<invalid proxy URL>"}}
 
 	for _, tt := range tests {
 		tt := tt
@@ -465,8 +460,7 @@ func newTestCertificate(t *testing.T) tls.Certificate {
 		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
 		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		IsCA:         true,
-	}
+		IsCA:         true}
 	der, errCreate := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
 	if errCreate != nil {
 		t.Fatalf("create test certificate: %v", errCreate)
@@ -489,8 +483,7 @@ func TestBuildHTTPTransportHTTPSProxyH2Negotiation(t *testing.T) {
 	proxyCert := newTestCertificate(t)
 	proxyListener, errListen := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
 		Certificates: []tls.Certificate{proxyCert},
-		NextProtos:   []string{"h2", "http/1.1"},
-	})
+		NextProtos:   []string{"h2", "http/1.1"}})
 	if errListen != nil {
 		t.Fatalf("tls.Listen returned error: %v", errListen)
 	}
@@ -583,8 +576,7 @@ func TestBuildHTTPTransportHTTPSProxyH2Negotiation(t *testing.T) {
 
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   5 * time.Second,
-	}
+		Timeout:   5 * time.Second}
 
 	req, errReq := http.NewRequest(http.MethodGet, targetServer.URL, nil)
 	if errReq != nil {
@@ -624,8 +616,7 @@ func TestBuildHTTPTransportHTTPSProxyHTTPTarget(t *testing.T) {
 	proxyCert := newTestCertificate(t)
 	proxyListener, errListen := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
 		Certificates: []tls.Certificate{proxyCert},
-		NextProtos:   []string{"h2", "http/1.1"},
-	})
+		NextProtos:   []string{"h2", "http/1.1"}})
 	if errListen != nil {
 		t.Fatalf("tls.Listen returned error: %v", errListen)
 	}
@@ -714,8 +705,7 @@ func TestBuildHTTPTransportHTTPSProxyHTTPTarget(t *testing.T) {
 
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   5 * time.Second,
-	}
+		Timeout:   5 * time.Second}
 
 	req, errReq := http.NewRequest(http.MethodGet, targetServer.URL, nil)
 	if errReq != nil {
@@ -750,8 +740,7 @@ func TestBuildDialerHTTPSProxyCONNECT(t *testing.T) {
 	proxyCert := newTestCertificate(t)
 	proxyListener, errListen := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
 		Certificates: []tls.Certificate{proxyCert},
-		NextProtos:   []string{"h2", "http/1.1"},
-	})
+		NextProtos:   []string{"h2", "http/1.1"}})
 	if errListen != nil {
 		t.Fatalf("tls.Listen returned error: %v", errListen)
 	}
@@ -903,8 +892,7 @@ func TestBuildHTTPTransportHTTPSProxyTLSHandshakeTimeout(t *testing.T) {
 
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   2 * time.Second,
-	}
+		Timeout:   2 * time.Second}
 
 	start := time.Now()
 	_, errGet := client.Get("https://example.com/test")
@@ -929,8 +917,7 @@ func TestBuildHTTPTransportHTTPSProxyClonedTransport(t *testing.T) {
 	proxyCert := newTestCertificate(t)
 	proxyListener, errListen := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
 		Certificates: []tls.Certificate{proxyCert},
-		NextProtos:   []string{"h2", "http/1.1"},
-	})
+		NextProtos:   []string{"h2", "http/1.1"}})
 	if errListen != nil {
 		t.Fatalf("tls.Listen returned error: %v", errListen)
 	}
@@ -1016,8 +1003,7 @@ func TestBuildHTTPTransportHTTPSProxyClonedTransport(t *testing.T) {
 
 	client := &http.Client{
 		Transport: clonedTransport,
-		Timeout:   5 * time.Second,
-	}
+		Timeout:   5 * time.Second}
 
 	req, errReq := http.NewRequest(http.MethodGet, targetServer.URL, nil)
 	if errReq != nil {

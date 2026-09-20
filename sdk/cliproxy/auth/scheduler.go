@@ -157,8 +157,7 @@ func newAuthScheduler(selector Selector) *authScheduler {
 		authProviders:       make(map[string]string),
 		authGenerations:     make(map[string]scheduledGenerationMeta),
 		mixedCursors:        make(map[string]int),
-		mixedWeightedStates: make(map[string]*smoothWeightedState),
-	}
+		mixedWeightedStates: make(map[string]*smoothWeightedState)}
 }
 
 // selectorStrategy maps a selector implementation to the scheduler semantics it should emulate.
@@ -245,8 +244,7 @@ func (s *authScheduler) recordRemovalTombstoneLocked(authID string, tombstoneEpo
 	s.authGenerations[authID] = scheduledGenerationMeta{
 		epoch:      tombstoneEpoch,
 		generation: 0,
-		updatedAt:  now,
-	}
+		updatedAt:  now}
 	s.removeAuthFromProvidersLocked(authID)
 }
 
@@ -666,8 +664,7 @@ func (s *authScheduler) upsertAuthLocked(auth *Auth, now time.Time) {
 	s.authGenerations[authID] = scheduledGenerationMeta{
 		epoch:      auth.RegistrationEpoch,
 		generation: auth.Generation,
-		updatedAt:  auth.UpdatedAt,
-	}
+		updatedAt:  auth.UpdatedAt}
 
 	providerKey := executorKeyFromAuth(auth)
 	if providerKey == "" || auth.Disabled || auth.Status == StatusDisabled {
@@ -711,8 +708,7 @@ func (s *authScheduler) removeAuthLocked(authID string) {
 	s.authGenerations[authID] = scheduledGenerationMeta{
 		epoch:      epoch,
 		generation: 0,
-		updatedAt:  now,
-	}
+		updatedAt:  now}
 	s.removeAuthFromProvidersLocked(authID)
 }
 
@@ -726,8 +722,7 @@ func (s *authScheduler) ensureProviderLocked(providerKey string) *providerSchedu
 		providerState = &providerScheduler{
 			providerKey: providerKey,
 			auths:       make(map[string]*scheduledAuthMeta),
-			modelShards: make(map[string]*modelScheduler),
-		}
+			modelShards: make(map[string]*modelScheduler)}
 		s.providers[providerKey] = providerState
 	}
 	return providerState
@@ -746,8 +741,7 @@ func buildScheduledAuthMeta(auth *Auth) *scheduledAuthMeta {
 		priority:          authPriority(auth),
 		weight:            authWeight(auth),
 		websocketEnabled:  authWebsocketsEnabled(auth),
-		supportedModelSet: supportedModelSetForAuth(auth.ID),
-	}
+		supportedModelSet: supportedModelSetForAuth(auth.ID)}
 }
 
 // supportedModelSetForAuth snapshots the registry models currently registered for an auth.
@@ -818,8 +812,7 @@ func (p *providerScheduler) ensureModelLocked(modelKey string, now time.Time) *m
 	shard := &modelScheduler{
 		modelKey:        modelKey,
 		entries:         make(map[string]*scheduledAuth),
-		readyByPriority: make(map[int]*readyBucket),
-	}
+		readyByPriority: make(map[int]*readyBucket)}
 	for _, meta := range p.auths {
 		if meta == nil || !meta.supportsModel(modelKey) {
 			continue
@@ -1162,8 +1155,7 @@ func (m *modelScheduler) rebuildIndexesLocked() {
 		}
 		cursorStates[priority] = readyBucketCursorState{
 			all: snapshotReadyViewCursors(bucket.all),
-			ws:  snapshotReadyViewCursors(bucket.ws),
-		}
+			ws:  snapshotReadyViewCursors(bucket.ws)}
 	}
 
 	m.readyByPriority = make(map[int]*readyBucket)

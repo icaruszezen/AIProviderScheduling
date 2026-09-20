@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	managementHandlers "github.com/router-for-me/CLIProxyAPI/v7/internal/api/handlers/management"
 	claudemodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/claude/models"
 	codexlive "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/live"
 	codexmodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/models"
@@ -32,8 +31,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
 	log "github.com/sirupsen/logrus"
 )
-
-const oauthCallbackSuccessHTML = `<html><head><meta charset="utf-8"><title>Authentication successful</title><script>setTimeout(function(){window.close();},5000);</script></head><body><h1>Authentication successful!</h1><p>You can close this window.</p><p>This window will close automatically in 5 seconds.</p></body></html>`
 
 const codexAlphaSearchSourceFormat = "codex-alpha-search"
 
@@ -134,54 +131,7 @@ func (s *Server) setupRoutes() {
 			"endpoints": []string{
 				"POST /v1/chat/completions",
 				"POST /v1/completions",
-				"GET /v1/models",
-			},
-		})
-	})
-
-	// OAuth callback endpoints (reuse main server port)
-	// These endpoints receive provider redirects and persist
-	// the short-lived code/state for the waiting goroutine.
-	s.engine.GET("/anthropic/callback", func(c *gin.Context) {
-		code := c.Query("code")
-		state := c.Query("state")
-		errStr := c.Query("error")
-		if errStr == "" {
-			errStr = c.Query("error_description")
-		}
-		if state != "" {
-			_, _ = managementHandlers.WriteOAuthCallbackFileForPendingSession(s.cfg.AuthDir, "anthropic", state, code, errStr)
-		}
-		c.Header("Content-Type", "text/html; charset=utf-8")
-		c.String(http.StatusOK, oauthCallbackSuccessHTML)
-	})
-
-	s.engine.GET("/codex/callback", func(c *gin.Context) {
-		code := c.Query("code")
-		state := c.Query("state")
-		errStr := c.Query("error")
-		if errStr == "" {
-			errStr = c.Query("error_description")
-		}
-		if state != "" {
-			_, _ = managementHandlers.WriteOAuthCallbackFileForPendingSession(s.cfg.AuthDir, "codex", state, code, errStr)
-		}
-		c.Header("Content-Type", "text/html; charset=utf-8")
-		c.String(http.StatusOK, oauthCallbackSuccessHTML)
-	})
-
-	s.engine.GET("/antigravity/callback", func(c *gin.Context) {
-		code := c.Query("code")
-		state := c.Query("state")
-		errStr := c.Query("error")
-		if errStr == "" {
-			errStr = c.Query("error_description")
-		}
-		if state != "" {
-			_, _ = managementHandlers.WriteOAuthCallbackFileForPendingSession(s.cfg.AuthDir, "antigravity", state, code, errStr)
-		}
-		c.Header("Content-Type", "text/html; charset=utf-8")
-		c.String(http.StatusOK, oauthCallbackSuccessHTML)
+				"GET /v1/models"}})
 	})
 
 	// Management routes are registered lazily by registerManagementRoutes when a secret is configured.
@@ -217,8 +167,7 @@ func (s *Server) codexAlphaSearchSelectionModel(ctx context.Context, c *gin.Cont
 		}
 	}
 	metadata := map[string]any{
-		coreexecutor.RequestedModelMetadataKey: model,
-	}
+		coreexecutor.RequestedModelMetadataKey: model}
 	if requestPath != "" {
 		metadata[coreexecutor.RequestPathMetadataKey] = requestPath
 	}
@@ -228,8 +177,7 @@ func (s *Server) codexAlphaSearchSelectionModel(ctx context.Context, c *gin.Cont
 		Headers:        headers,
 		Query:          queryValues,
 		Body:           body,
-		Metadata:       metadata,
-	})
+		Metadata:       metadata})
 	if !handled || !resp.Handled {
 		return model, nil
 	}
@@ -429,8 +377,7 @@ func (s *Server) codexAlphaSearch(c *gin.Context) {
 			AuthID:    current.ID,
 			AuthLabel: current.Label,
 			AuthType:  authType,
-			AuthValue: authValue,
-		})
+			AuthValue: authValue})
 		return s.handlers.AuthManager.HttpRequest(ctx, current, req)
 	}
 
@@ -588,8 +535,7 @@ func grokModelsFromHomeEntries(entries []homeModelEntry) []grokbuild.ModelInfo {
 		models = append(models, grokbuild.ModelInfo{
 			ID:            entry.id,
 			DisplayName:   entry.displayName,
-			ContextLength: entry.contextLength,
-		})
+			ContextLength: entry.contextLength})
 	}
 	return models
 }
@@ -603,8 +549,7 @@ func grokModelsFromRegistryInfos(infos []*registry.ModelInfo) []grokbuild.ModelI
 		model := grokbuild.ModelInfo{
 			ID:            info.ID,
 			DisplayName:   info.DisplayName,
-			ContextLength: info.ContextLength,
-		}
+			ContextLength: info.ContextLength}
 		if info.Thinking != nil {
 			model.ReasoningLevels = append([]string(nil), info.Thinking.Levels...)
 		}
@@ -639,8 +584,7 @@ func (s *Server) handleHomeCodexClientModels(c *gin.Context, clientVersion strin
 	for _, entry := range entries {
 		model := map[string]any{
 			"id":     entry.id,
-			"object": "model",
-		}
+			"object": "model"}
 		if entry.created > 0 {
 			model["created"] = entry.created
 		}
@@ -709,8 +653,7 @@ func (s *Server) handleHomeModels(c *gin.Context) {
 	for _, entry := range entries {
 		model := map[string]any{
 			"id":     entry.id,
-			"object": "model",
-		}
+			"object": "model"}
 		if entry.created > 0 {
 			model["created"] = entry.created
 		}
@@ -721,8 +664,7 @@ func (s *Server) handleHomeModels(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"object": "list",
-		"data":   filtered,
-	})
+		"data":   filtered})
 }
 
 func formatHomeClaudeModels(entries []homeModelEntry) []map[string]any {
@@ -753,8 +695,7 @@ func formatHomeClaudeModel(entry homeModelEntry) map[string]any {
 		"type":             "model",
 		"display_name":     displayName,
 		"max_input_tokens": maxInput,
-		"max_tokens":       maxOutput,
-	}
+		"max_tokens":       maxOutput}
 	if entry.created > 0 {
 		model["created_at"] = time.Unix(entry.created, 0).UTC().Format(time.RFC3339)
 	}
@@ -768,8 +709,7 @@ func (s *Server) handleHomeGeminiModels(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"models": formatHomeGeminiModels(entries),
-	})
+		"models": formatHomeGeminiModels(entries)})
 }
 
 func (s *Server) handleHomeGeminiModel(c *gin.Context) {
@@ -790,9 +730,7 @@ func (s *Server) handleHomeGeminiModel(c *gin.Context) {
 	c.JSON(http.StatusNotFound, handlers.ErrorResponse{
 		Error: handlers.ErrorDetail{
 			Message: "Not Found",
-			Type:    "not_found",
-		},
-	})
+			Type:    "not_found"}})
 }
 
 func (s *Server) loadHomeModelEntries(c *gin.Context) ([]homeModelEntry, bool) {
@@ -804,9 +742,7 @@ func (s *Server) loadHomeModelEntries(c *gin.Context) ([]homeModelEntry, bool) {
 		c.JSON(http.StatusServiceUnavailable, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "home control center unavailable",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return nil, false
 	}
 
@@ -815,9 +751,7 @@ func (s *Server) loadHomeModelEntries(c *gin.Context) ([]homeModelEntry, bool) {
 		c.JSON(http.StatusBadGateway, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: errGet.Error(),
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return nil, false
 	}
 
@@ -825,9 +759,7 @@ func (s *Server) loadHomeModelEntries(c *gin.Context) ([]homeModelEntry, bool) {
 		c.JSON(statusCode, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: homeModelsErrorMessage(raw),
-				Type:    "authentication_error",
-			},
-		})
+				Type:    "authentication_error"}})
 		return nil, false
 	}
 
@@ -836,9 +768,7 @@ func (s *Server) loadHomeModelEntries(c *gin.Context) ([]homeModelEntry, bool) {
 		c.JSON(http.StatusBadGateway, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: errDecode.Error(),
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return nil, false
 	}
 
@@ -866,8 +796,7 @@ func formatHomeGeminiModel(entry homeModelEntry) map[string]any {
 		"name":                       name,
 		"displayName":                displayName,
 		"description":                displayName,
-		"supportedGenerationMethods": []string{"generateContent"},
-	}
+		"supportedGenerationMethods": []string{"generateContent"}}
 }
 
 func homeGeminiModelMatches(entry homeModelEntry, action string) bool {
@@ -991,8 +920,7 @@ func decodeHomeModels(raw []byte) ([]homeModelEntry, error) {
 				ownedBy:             ownedBy,
 				displayName:         displayName,
 				contextLength:       int(homeModelInt64Value(model, "context_length", "contextLength", "inputTokenLimit", "max_input_tokens")),
-				maxCompletionTokens: int(homeModelInt64Value(model, "max_completion_tokens", "maxCompletionTokens", "outputTokenLimit", "max_tokens")),
-			})
+				maxCompletionTokens: int(homeModelInt64Value(model, "max_completion_tokens", "maxCompletionTokens", "outputTokenLimit", "max_tokens"))})
 		}
 	}
 

@@ -53,9 +53,7 @@ func TestWriteErrorResponse_AddonHeadersDisabledByDefault(t *testing.T) {
 		Error:      errors.New("rate limit"),
 		Addon: http.Header{
 			"Retry-After":  {"30"},
-			"X-Request-Id": {"req-1"},
-		},
-	})
+			"X-Request-Id": {"req-1"}}})
 
 	if recorder.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
@@ -85,9 +83,7 @@ func TestWriteErrorResponseDirectResponse(t *testing.T) {
 			"Content-Type":                {"application/problem+json"},
 			"X-Plugin-Policy":             {"blocked"},
 			"X-Cpa-Trace-Id":              {"plugin-trace"},
-			"Access-Control-Allow-Origin": {"https://untrusted.example"},
-		},
-	})
+			"Access-Control-Allow-Origin": {"https://untrusted.example"}}})
 
 	if recorder.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusForbidden)
@@ -119,8 +115,7 @@ func TestExecutionErrorMessagePreservesMarkedResponseBodyExactly(t *testing.T) {
 		{name: "json", status: http.StatusBadRequest, body: []byte(`{"error":"invalid_request"}`), contentType: "application/json"},
 		{name: "text", status: http.StatusBadGateway, body: []byte("provider unavailable"), contentType: "text/plain; charset=utf-8"},
 		{name: "multiline", status: http.StatusTooManyRequests, body: []byte("first line\r\nsecond line\n"), contentType: "text/plain; charset=utf-8"},
-		{name: "empty", status: http.StatusUnauthorized, body: []byte{}, contentType: "application/json"},
-	}
+		{name: "empty", status: http.StatusUnauthorized, body: []byte{}, contentType: "application/json"}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
@@ -150,8 +145,7 @@ func TestExecutionErrorMessagePreservesMarkedResponseBodyExactly(t *testing.T) {
 func TestExecutionErrorMessageDoesNotTrustResponseBodyWithoutMarker(t *testing.T) {
 	errUnmarked := responseBodyOnlyTestError{
 		status: http.StatusBadGateway,
-		body:   []byte("unmarked upstream body"),
-	}
+		body:   []byte("unmarked upstream body")}
 	msg := executionErrorMessage(errUnmarked)
 	if msg == nil {
 		t.Fatal("executionErrorMessage() returned nil")
@@ -170,8 +164,7 @@ func TestInternalConcurrencyBusyWritesRetryAfterWithoutPassthrough(t *testing.T)
 	handler := NewBaseAPIHandlers(nil, nil)
 	handler.WriteErrorResponse(c, &interfaces.ErrorMessage{
 		StatusCode: http.StatusTooManyRequests,
-		Error:      coreauth.NewHomeConcurrencyBusyError("busy", 750*time.Millisecond),
-	})
+		Error:      coreauth.NewHomeConcurrencyBusyError("busy", 750*time.Millisecond)})
 
 	if recorder.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
@@ -195,8 +188,7 @@ func TestWriteErrorResponseHomeBusyNormalAndStreamHeaders(t *testing.T) {
 			handler := NewBaseAPIHandlers(nil, nil)
 			handler.WriteErrorResponse(c, &interfaces.ErrorMessage{
 				StatusCode: http.StatusTooManyRequests,
-				Error:      coreauth.NewHomeConcurrencyBusyError("busy", 750*time.Millisecond),
-			})
+				Error:      coreauth.NewHomeConcurrencyBusyError("busy", 750*time.Millisecond)})
 			if recorder.Code != http.StatusTooManyRequests {
 				t.Fatalf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
 			}
@@ -224,9 +216,7 @@ func TestWriteErrorResponse_AddonHeadersEnabled(t *testing.T) {
 			"Retry-After":                   {"30"},
 			"X-Request-Id":                  {"new-1", "new-2"},
 			"x-cpa-trace-id":                {"upstream-trace"},
-			"Access-Control-Expose-Headers": {"upstream-header"},
-		},
-	})
+			"Access-Control-Expose-Headers": {"upstream-header"}}})
 
 	if recorder.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
@@ -262,7 +252,7 @@ func TestEnrichAuthSelectionError_DefaultsTo503WithContext(t *testing.T) {
 	if !strings.Contains(got.Message, "model=claude-sonnet-4-6") {
 		t.Fatalf("message missing model context: %q", got.Message)
 	}
-	if !strings.Contains(got.Message, "/v0/management/auth-files") {
+	if !strings.Contains(got.Message, "/v0/management/claude-api-key") {
 		t.Fatalf("message missing management hint: %q", got.Message)
 	}
 }
@@ -291,8 +281,7 @@ func TestEnrichAuthSelectionError_IgnoresOtherErrors(t *testing.T) {
 func TestEnrichAuthSelectionError_IncludesUpstreamErrorFromCause(t *testing.T) {
 	in := coreauth.WithCause(&coreauth.Error{
 		Code:    "auth_unavailable",
-		Message: "no auth available",
-	}, errors.New(`{"type":"error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later.","sequence_number":0}`))
+		Message: "no auth available"}, errors.New(`{"type":"error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later.","sequence_number":0}`))
 	out := enrichAuthSelectionError(in, []string{"codex"}, "gpt-5.6-sol")
 
 	var got *coreauth.Error
@@ -323,13 +312,10 @@ func TestEnrichAuthSelectionError_DoesNotModifyModelCooldownError(t *testing.T) 
 		Unavailable: true,
 		Quota: coreauth.QuotaState{
 			Exceeded:      true,
-			NextRecoverAt: next,
-		},
+			NextRecoverAt: next},
 		LastError: &coreauth.Error{
 			Code:    "auth_unavailable",
-			Message: "no auth available",
-		},
-	}
+			Message: "no auth available"}}
 	if _, err := manager.Register(context.Background(), auth); err != nil {
 		t.Fatalf("manager.Register: %v", err)
 	}
@@ -368,396 +354,331 @@ func TestExtractUpstreamErrorSummary_SanitizationAndTruncation(t *testing.T) {
 			name:         "authorization header with bearer and topsecret redacted",
 			input:        "authorization: Bearer abcdef+TOPSECRET==",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "authorization header with custom scheme redacted",
 			input:        "authorization: ApiKey SUPERSECRET",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "authorization header with comma separated parameters redacted",
 			input:        "Authorization: ApiKey first,SECONDSECRET",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "SECONDSECRET",
-		},
+			forbiddenRaw: "SECONDSECRET"},
 		{
 			name:         "authorization header with digest parameters redacted",
 			input:        `Authorization: Digest username="Mufasa", realm="myrealm", nonce="NONCE", uri="/dir/index.html", response="SIG"`,
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "NONCE",
-		},
+			forbiddenRaw: "NONCE"},
 		{
 			name:         "double quoted multi word password redacted",
 			input:        `password="correct horse battery staple"`,
 			wantMask:     `[REDACTED]`,
-			forbiddenRaw: "correct horse battery staple",
-		},
+			forbiddenRaw: "correct horse battery staple"},
 		{
 			name:         "double quoted comma containing api key redacted",
 			input:        `api_key="secret,value"`,
 			wantMask:     `[REDACTED]`,
-			forbiddenRaw: "secret,value",
-		},
+			forbiddenRaw: "secret,value"},
 		{
 			name:         "bearer token redacted",
 			input:        "upstream returned error: Bearer abcdef+TOPSECRET==",
 			wantMask:     "Bearer [REDACTED]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "sk key redacted",
 			input:        "invalid key sk-live-secret-key-123456",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "live-secret-key",
-		},
+			forbiddenRaw: "live-secret-key"},
 		{
 			name:         "user path redacted",
 			input:        "open /Users/alice/configs/auth.json: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "kv secret redacted",
 			input:        "failed with api_key=secret-value-123 and token: my-secret-token",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "secret-value-123",
-		},
+			forbiddenRaw: "secret-value-123"},
 		{
 			name:         "unstructured invalid api key redacted",
 			input:        "invalid API key SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unstructured invalid access token redacted",
 			input:        "invalid access token SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unstructured socks5 proxy auth redacted",
 			input:        "proxyconnect tcp: socks5://alice:PASSSECRET@proxy.internal:1080",
 			wantMask:     "[REDACTED_AUTH]",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "unstructured signature url query redacted",
 			input:        "request failed: https://example.com?sig=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:     "json code and message extracted",
 			input:    `{"error":{"type":"service_unavailable_error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later."}}`,
-			wantMask: "Our servers are currently overloaded. Please try again later.",
-		},
+			wantMask: "Our servers are currently overloaded. Please try again later."},
 		{
 			name:     "code prefix with json handled",
 			input:    `auth_unavailable: {"error":{"code":"server_is_overloaded","message":"Overloaded"}}`,
-			wantMask: "Overloaded",
-		},
+			wantMask: "Overloaded"},
 		{
 			name:         "json message containing invalid token secret redacted",
 			input:        `{"code":"oops","message":"invalid token SUPERSECRET"}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "single quoted key kv redacted",
 			input:        `'api_key'=SUPERSECRET`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "authorization equals bearer redacted",
 			input:        `authorization=Bearer SUPERSECRET`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "json message containing invalid token secret with escaped quotes redacted",
 			input:        `{"code":"oops","message":"invalid token \"SUPERSECRET\""}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "json message containing password with escaped quotes redacted",
 			input:        `{"code":"oops","message":"password=\"abc\\\"SUPERSECRET\""}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "natural language api key redacted",
 			input:        "upstream rejected API key: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "natural language password is redacted",
 			input:        "password is SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "mnt unix path redacted",
 			input:        "open /mnt/secrets/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows path with spaces redacted",
 			input:        `open C:\Users\Alice Smith\secret.txt: permission denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "cookie header redacted",
 			input:        "Cookie: sessionid=COOKIESECRET",
 			wantMask:     "Cookie: [REDACTED]",
-			forbiddenRaw: "COOKIESECRET",
-		},
+			forbiddenRaw: "COOKIESECRET"},
 		{
 			name:         "set-cookie header redacted",
 			input:        "Set-Cookie: session=SETCOOKIESECRET",
 			wantMask:     "Cookie: [REDACTED]",
-			forbiddenRaw: "SETCOOKIESECRET",
-		},
+			forbiddenRaw: "SETCOOKIESECRET"},
 		{
 			name:         "private key kv redacted",
 			input:        "private_key=PRIVATEKEYSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "PRIVATEKEYSECRET",
-		},
+			forbiddenRaw: "PRIVATEKEYSECRET"},
 		{
 			name:         "uri userinfo redacted",
 			input:        "https://user:PASSSECRET@example.com/api",
 			wantMask:     "https://[REDACTED_AUTH]@",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "workspace unix path redacted",
 			input:        "/workspace/tenants/alice/oauth-cache",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "opt unix path redacted",
 			input:        `open /opt/cli-proxy/auth/alice.json: failed`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows path redacted",
 			input:        `open C:\Users\alice\secret.txt: failed`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "incorrect api key provided redacted",
 			input:        "Incorrect API key provided: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "plural credentials redacted",
 			input:        "credentials: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "aws secret access key redacted",
 			input:        "AWS_SECRET_ACCESS_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "protocol relative uri userinfo redacted",
 			input:        "//alice:PASSSECRET@example.com/api",
 			wantMask:     "[REDACTED_AUTH]",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "run secrets unix path redacted",
 			input:        "open /run/secrets/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "custom tenant unix path redacted",
 			input:        "open /custom/tenant/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows unc path redacted",
 			input:        `open \\server\share\alice\secret.txt: permission denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "service key kv redacted",
 			input:        "SERVICE_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "openai key kv redacted",
 			input:        "OPENAI_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "x-key query param redacted",
 			input:        "https://example.com?x-key=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unix path with spaces redacted",
 			input:        "open /custom/tenant/Alice Smith/secret.txt: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "Smith",
-		},
+			forbiddenRaw: "Smith"},
 		{
 			name:         "unix path with unicode redacted",
 			input:        "open /custom/租户/alice: denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "single segment unix path redacted",
 			input:        "open /alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "stat single segment unicode path redacted",
 			input:        "stat /客户: no such file or directory",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "客户",
-		},
+			forbiddenRaw: "客户"},
 		{
 			name:         "quoted path with colon and secret redacted",
 			input:        `open "/tmp/customer:TOPSECRET/creds": denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "unquoted multi-word password redacted",
 			input:        "password = correct horse battery staple",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "battery staple",
-		},
+			forbiddenRaw: "battery staple"},
 		{
 			name:         "unquoted multi-word credentials redacted",
 			input:        "credentials: alice secret",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "alice secret",
-		},
+			forbiddenRaw: "alice secret"},
 		{
 			name:         "quoted path containing password assignment redacted",
 			input:        `open "/Users/alice/password=foo/bar": denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "unquoted path with colon and secret redacted",
 			input:        "open /tmp/customer:TOPSECRET/creds: denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "unquoted path with colon in leaf component redacted",
 			input:        "open /tmp/customer:TOPSECRET: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "multiple unquoted unix paths redacted",
 			input:        "rename /Users/alice/source /Users/bob/private-data: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "bob",
-		},
+			forbiddenRaw: "bob"},
 		{
 			name:         "non-terminal space path in multiple unix paths redacted",
 			input:        "rename /Users/Alice Smith/source /Users/bob/private-data: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "leaf filename with space redacted",
 			input:        "open /tmp/Alice Smith.txt: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "multiple paths with leaf filename spaces redacted",
 			input:        "rename /tmp/Alice Smith /tmp/Bob Jones: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "unquoted path with colon space in leaf component redacted",
 			input:        "open /tmp/customer: TOPSECRET: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "parenthesized unquoted path redacted and parens preserved",
 			input:        "open (/tmp/customer): denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open ([REDACTED_PATH]): denied",
-			forbiddenRaw: "customer",
-		},
+			forbiddenRaw: "customer"},
 		{
 			name:         "braced unquoted path redacted and braces preserved",
 			input:        "open {/tmp/customer}: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open {[REDACTED_PATH]}: denied",
-			forbiddenRaw: "customer",
-		},
+			forbiddenRaw: "customer"},
 		{
 			name:         "nested error text preserved after path",
 			input:        "open /tmp/config: permission denied: retry later",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: permission denied: retry later",
-			forbiddenRaw: "config",
-		},
+			forbiddenRaw: "config"},
 		{
 			name:         "nested known error text preserved after path",
 			input:        "open /tmp/config: permission denied: access denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: permission denied: access denied",
-			forbiddenRaw: "config",
-		},
+			forbiddenRaw: "config"},
 		{
 			name:         "uppercase connector between paths preserved",
 			input:        "copy /tmp/a   TO\t/tmp/b: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "copy [REDACTED_PATH]   TO\t[REDACTED_PATH]: denied",
-			forbiddenRaw: "",
-		},
+			forbiddenRaw: ""},
 		{
 			name:         "long connector string bounded to 256 runes",
 			input:        strings.Repeat("a", 300) + " to /tmp/x: denied",
 			wantMask:     "...",
-			forbiddenRaw: "x",
-		},
+			forbiddenRaw: "x"},
 		{
 			name:     "long utf-8 text truncated to 256 runes",
 			input:    strings.Repeat("你好世界🌟", 80),
-			wantMask: "...",
-		},
-	}
+			wantMask: "..."}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -789,15 +710,12 @@ func TestExecutionErrorMessageMapsContextStatuses(t *testing.T) {
 		{
 			name: "url error wraps canceled",
 			err:  &url.Error{Op: "Post", URL: "https://example.com", Err: context.Canceled},
-			want: clienterror.StatusClientClosedRequest,
-		},
+			want: clienterror.StatusClientClosedRequest},
 		{name: "plain error defaults to 500", err: errors.New("boom"), want: http.StatusInternalServerError},
 		{
 			name: "explicit status wins",
 			err:  &coreauth.Error{Code: "rate_limited", Message: "slow down", HTTPStatus: http.StatusTooManyRequests},
-			want: http.StatusTooManyRequests,
-		},
-	}
+			want: http.StatusTooManyRequests}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -840,8 +758,7 @@ func TestWriteErrorResponse_HidesNoAvailableChannel(t *testing.T) {
 	errUpstream := coreauth.MarkHideNoAvailableChannel(directResponseTestError{
 		status: http.StatusServiceUnavailable,
 		body:   []byte(upstream),
-		direct: true,
-	})
+		direct: true})
 	msg := executionErrorMessage(errUpstream)
 	if msg == nil || !msg.HideNoAvailableChannel {
 		t.Fatalf("executionErrorMessage() = %#v, want HideNoAvailableChannel", msg)
@@ -883,8 +800,7 @@ func TestWriteErrorResponse_KeepsNoAvailableChannelWhenUnmarked(t *testing.T) {
 	msg := executionErrorMessage(directResponseTestError{
 		status: http.StatusServiceUnavailable,
 		body:   []byte(upstream),
-		direct: true,
-	})
+		direct: true})
 	if msg != nil && msg.HideNoAvailableChannel {
 		t.Fatal("unmarked error should not hide channel details")
 	}

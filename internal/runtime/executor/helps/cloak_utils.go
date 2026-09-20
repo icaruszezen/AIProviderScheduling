@@ -32,8 +32,7 @@ func generateFakeUserIDWithSessionID(sessionID string) string {
 	value, _ := json.Marshal(claudeMetadataUserID{
 		DeviceID:    hex.EncodeToString(hexBytes),
 		AccountUUID: "",
-		SessionID:   sessionID,
-	})
+		SessionID:   sessionID})
 	return string(value)
 }
 

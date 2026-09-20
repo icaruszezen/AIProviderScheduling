@@ -22,10 +22,8 @@ func TestManager_RegisterCanonicalizesThinkingSuffixModelStates(t *testing.T) {
 				Quota: QuotaState{
 					Exceeded:      true,
 					NextRecoverAt: now.Add(time.Hour),
-					BackoffLevel:  1,
-				},
-				UpdatedAt: now,
-			},
+					BackoffLevel:  1},
+				UpdatedAt: now},
 			"gemini-3.1-pro-preview(low)": {
 				Status:         StatusError,
 				Unavailable:    true,
@@ -33,12 +31,8 @@ func TestManager_RegisterCanonicalizesThinkingSuffixModelStates(t *testing.T) {
 				Quota: QuotaState{
 					Exceeded:      true,
 					NextRecoverAt: laterRetry,
-					BackoffLevel:  2,
-				},
-				UpdatedAt: now.Add(time.Minute),
-			},
-		},
-	})
+					BackoffLevel:  2},
+				UpdatedAt: now.Add(time.Minute)}}})
 	if errRegister != nil {
 		t.Fatalf("Register() error = %v", errRegister)
 	}
@@ -66,18 +60,14 @@ func TestManager_Update_PreservesModelStates(t *testing.T) {
 		Metadata: map[string]any{"k": "v"},
 		ModelStates: map[string]*ModelState{
 			model: {
-				Quota: QuotaState{BackoffLevel: backoffLevel},
-			},
-		},
-	}); errRegister != nil {
+				Quota: QuotaState{BackoffLevel: backoffLevel}}}}); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
 
 	if _, errUpdate := m.Update(context.Background(), &Auth{
 		ID:       "auth-1",
 		Provider: "claude",
-		Metadata: map[string]any{"k": "v2"},
-	}); errUpdate != nil {
+		Metadata: map[string]any{"k": "v2"}}); errUpdate != nil {
 		t.Fatalf("update auth: %v", errUpdate)
 	}
 
@@ -108,10 +98,7 @@ func TestManager_Update_DisabledExistingDoesNotInheritModelStates(t *testing.T) 
 		Status:   StatusDisabled,
 		ModelStates: map[string]*ModelState{
 			"stale-model": {
-				Quota: QuotaState{BackoffLevel: 5},
-			},
-		},
-	}); err != nil {
+				Quota: QuotaState{BackoffLevel: 5}}}}); err != nil {
 		t.Fatalf("register auth: %v", err)
 	}
 
@@ -120,8 +107,7 @@ func TestManager_Update_DisabledExistingDoesNotInheritModelStates(t *testing.T) 
 		ID:       "auth-disabled",
 		Provider: "claude",
 		Disabled: true,
-		Status:   StatusDisabled,
-	}); err != nil {
+		Status:   StatusDisabled}); err != nil {
 		t.Fatalf("update auth: %v", err)
 	}
 
@@ -144,10 +130,7 @@ func TestManager_Update_ActiveToDisabledDoesNotInheritModelStates(t *testing.T) 
 		Status:   StatusActive,
 		ModelStates: map[string]*ModelState{
 			"stale-model": {
-				Quota: QuotaState{BackoffLevel: 9},
-			},
-		},
-	}); err != nil {
+				Quota: QuotaState{BackoffLevel: 9}}}}); err != nil {
 		t.Fatalf("register auth: %v", err)
 	}
 
@@ -157,8 +140,7 @@ func TestManager_Update_ActiveToDisabledDoesNotInheritModelStates(t *testing.T) 
 		ID:       "auth-a2d",
 		Provider: "claude",
 		Disabled: true,
-		Status:   StatusDisabled,
-	}); err != nil {
+		Status:   StatusDisabled}); err != nil {
 		t.Fatalf("update auth: %v", err)
 	}
 
@@ -182,10 +164,7 @@ func TestManager_Update_DisabledToActiveDoesNotInheritStaleModelStates(t *testin
 		Status:   StatusDisabled,
 		ModelStates: map[string]*ModelState{
 			"stale-model": {
-				Quota: QuotaState{BackoffLevel: 4},
-			},
-		},
-	}); err != nil {
+				Quota: QuotaState{BackoffLevel: 4}}}}); err != nil {
 		t.Fatalf("register auth: %v", err)
 	}
 
@@ -193,8 +172,7 @@ func TestManager_Update_DisabledToActiveDoesNotInheritStaleModelStates(t *testin
 	if _, err := m.Update(context.Background(), &Auth{
 		ID:       "auth-d2a",
 		Provider: "claude",
-		Status:   StatusActive,
-	}); err != nil {
+		Status:   StatusActive}); err != nil {
 		t.Fatalf("update auth: %v", err)
 	}
 
@@ -220,10 +198,7 @@ func TestManager_Update_ActiveInheritsModelStates(t *testing.T) {
 		Status:   StatusActive,
 		ModelStates: map[string]*ModelState{
 			model: {
-				Quota: QuotaState{BackoffLevel: backoffLevel},
-			},
-		},
-	}); err != nil {
+				Quota: QuotaState{BackoffLevel: backoffLevel}}}}); err != nil {
 		t.Fatalf("register auth: %v", err)
 	}
 
@@ -231,8 +206,7 @@ func TestManager_Update_ActiveInheritsModelStates(t *testing.T) {
 	if _, err := m.Update(context.Background(), &Auth{
 		ID:       "auth-active",
 		Provider: "claude",
-		Status:   StatusActive,
-	}); err != nil {
+		Status:   StatusActive}); err != nil {
 		t.Fatalf("update auth: %v", err)
 	}
 

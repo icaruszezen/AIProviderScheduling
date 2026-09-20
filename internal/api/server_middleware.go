@@ -27,8 +27,7 @@ var corsExposedResponseHeaders = []string{
 	"Location",
 	"Retry-After",
 	"X-Request-Id",
-	"OpenAI-Request-Id",
-}
+	"OpenAI-Request-Id"}
 
 var corsExposedResponseHeadersJoined = strings.Join(corsExposedResponseHeaders, ", ")
 
@@ -87,8 +86,7 @@ func (s *Server) exampleAPIKeySafeModeMiddleware() gin.HandlerFunc {
 		c.Header("X-CPA-SAFE-MODE", "example-api-key")
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"error":   "unsafe_example_api_key",
-			"message": "Proxy API endpoints are disabled because api-keys contains template values. Open /management.html?safe-mode=configure, update api-keys in Management, then retry.",
-		})
+			"message": "Proxy API endpoints are disabled because api-keys contains template values. Open /management.html?safe-mode=configure, update api-keys in Management, then retry."})
 	}
 }
 
@@ -191,8 +189,7 @@ func accessAuthMiddleware(manager *sdkaccess.Manager, realtimeError bool) gin.Ha
 				"message": err.Message,
 				"type":    errorType,
 				"param":   nil,
-				"code":    code,
-			}})
+				"code":    code}})
 			return
 		}
 		c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Message})
@@ -212,8 +209,7 @@ func realtimeAuthMiddleware(manager *sdkaccess.Manager, handler *codexlive.Handl
 				"message": errAuthenticate.Error(),
 				"type":    "invalid_request_error",
 				"param":   nil,
-				"code":    "invalid_realtime_client_secret",
-			}})
+				"code":    "invalid_realtime_client_secret"}})
 			return
 		}
 		principal := authorization.IssuerPrincipal

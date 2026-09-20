@@ -124,8 +124,7 @@ func enforceLogDirSizeLimit(logDir string, maxBytes int64, protectedPath string)
 		files = append(files, logFile{
 			path:    path,
 			size:    info.Size(),
-			modTime: info.ModTime(),
-		})
+			modTime: info.ModTime()})
 		total += info.Size()
 	}
 

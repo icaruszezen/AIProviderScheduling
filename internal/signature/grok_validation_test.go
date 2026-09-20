@@ -149,8 +149,7 @@ func TestInspectGrokEncryptedContent_RejectsClaudeCAISSignature(t *testing.T) {
 		sample string
 	}{
 		{name: "synthetic unpadded", sample: testUnpaddedClaudeCAISSignature()},
-		{name: "observed fable-5", sample: observedFable5Sample},
-	}
+		{name: "observed fable-5", sample: observedFable5Sample}}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			if strings.Contains(tc.sample, "=") {
@@ -211,8 +210,7 @@ func TestInspectGrokEncryptedContent_RejectsForeignShapes(t *testing.T) {
 		" opaque",
 		"gAAAAABinvalid-gpt-shape",
 		"abcd_efg",
-		base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0xa5}, MinGrokEncryptedContentDecodedLen)),
-	}
+		base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0xa5}, MinGrokEncryptedContentDecodedLen))}
 	for _, sample := range cases {
 		if _, err := InspectGrokEncryptedContent(sample); err == nil {
 			t.Fatalf("expected invalid Grok encrypted_content, got pass for %q", sample)

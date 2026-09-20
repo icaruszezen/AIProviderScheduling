@@ -15,9 +15,7 @@ func TestIsConfigAPIKeyAuth(t *testing.T) {
 		Attributes: map[string]string{
 			"auth_kind": "oauth",
 			"api_key":   "k",
-			"source":    "config:codex[abc]",
-		},
-	}) {
+			"source":    "config:codex[abc]"}}) {
 		t.Fatal("expected explicit oauth auth to be false")
 	}
 	if !IsConfigAPIKeyAuth(&Auth{
@@ -25,9 +23,7 @@ func TestIsConfigAPIKeyAuth(t *testing.T) {
 		Provider: "codex",
 		Attributes: map[string]string{
 			"auth_kind": "apikey",
-			"source":    "config:codex[abc]",
-		},
-	}) {
+			"source":    "config:codex[abc]"}}) {
 		t.Fatal("expected empty api_key with auth_kind=apikey and config source to be true")
 	}
 	if !IsConfigAPIKeyAuth(&Auth{
@@ -35,9 +31,7 @@ func TestIsConfigAPIKeyAuth(t *testing.T) {
 		Provider: "codex",
 		Attributes: map[string]string{
 			"api_key": "k",
-			"source":  "config:codex[abc]",
-		},
-	}) {
+			"source":  "config:codex[abc]"}}) {
 		t.Fatal("expected config api key auth")
 	}
 }

@@ -707,8 +707,7 @@ func recordCodexOpenAIImageRequest(ctx context.Context, cfg *config.Config, prov
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 }
 
 func codexPrepareOpenAIImageRequest(req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (codexOpenAIImagePreparedRequest, error) {
@@ -738,8 +737,7 @@ func codexPrepareOpenAIImageGenerationJSON(rawJSON []byte, routeModel string) (c
 	return codexOpenAIImagePreparedRequest{
 		Body:           body,
 		ResponseFormat: codexOpenAIImageResponseFormatFromJSON(rawJSON),
-		StreamPrefix:   "image_generation",
-	}, nil
+		StreamPrefix:   "image_generation"}, nil
 }
 
 func codexPrepareOpenAIImageEditJSON(rawJSON []byte, routeModel string) (codexOpenAIImagePreparedRequest, error) {
@@ -764,8 +762,7 @@ func codexPrepareOpenAIImageEditJSON(rawJSON []byte, routeModel string) (codexOp
 	return codexOpenAIImagePreparedRequest{
 		Body:           body,
 		ResponseFormat: codexOpenAIImageResponseFormatFromJSON(rawJSON),
-		StreamPrefix:   "image_edit",
-	}, nil
+		StreamPrefix:   "image_edit"}, nil
 }
 
 func codexPrepareOpenAIImageEditMultipart(rawBody []byte, routeModel string, contentType string) (codexOpenAIImagePreparedRequest, error) {
@@ -825,8 +822,7 @@ func codexPrepareOpenAIImageEditMultipart(rawBody []byte, routeModel string, con
 	return codexOpenAIImagePreparedRequest{
 		Body:           body,
 		ResponseFormat: responseFormat,
-		StreamPrefix:   "image_edit",
-	}, nil
+		StreamPrefix:   "image_edit"}, nil
 }
 
 func codexImageContentType(headers http.Header) string {
@@ -985,8 +981,7 @@ func codexExtractImageResults(completed []byte, itemsByIndex map[int64][]byte, f
 			OutputFormat:  strings.TrimSpace(item.Get("output_format").String()),
 			Size:          strings.TrimSpace(item.Get("size").String()),
 			Background:    strings.TrimSpace(item.Get("background").String()),
-			Quality:       strings.TrimSpace(item.Get("quality").String()),
-		}
+			Quality:       strings.TrimSpace(item.Get("quality").String())}
 		if len(results) == 0 {
 			firstMeta = entry
 		}

@@ -103,8 +103,7 @@ func TestKimiThinkingSignatureLengths_MatchDecodedSizes(t *testing.T) {
 		wantRawLen int
 	}{
 		{"non streaming", 9709, KimiThinkingSignatureNonStreamingLen},
-		{"streaming", 3255, KimiThinkingSignatureStreamingLen},
-	}
+		{"streaming", 3255, KimiThinkingSignatureStreamingLen}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			sig := synthesizeKimiSignature(t, tc.decodedLen, 1)
@@ -129,8 +128,7 @@ func TestInspectKimiThinkingSignature_ReportsMode(t *testing.T) {
 		wantMode   KimiThinkingSignatureMode
 	}{
 		{"non streaming", 9709, KimiThinkingSignatureModeNonStreaming},
-		{"streaming", 3255, KimiThinkingSignatureModeStreaming},
-	}
+		{"streaming", 3255, KimiThinkingSignatureModeStreaming}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			info, err := InspectKimiThinkingSignature(synthesizeKimiSignature(t, tc.decodedLen, 7))
@@ -155,8 +153,7 @@ func TestInspectKimiThinkingSignature_RejectsNeighbouringLengths(t *testing.T) {
 			sig  string
 		}{
 			{"one character short", native[:len(native)-1]},
-			{"one character long", native + "A"},
-		} {
+			{"one character long", native + "A"}} {
 			t.Run(tc.name, func(t *testing.T) {
 				if IsValidKimiThinkingSignature(tc.sig) {
 					t.Errorf("length %d accepted as Kimi signature", len(tc.sig))
@@ -178,8 +175,7 @@ func TestInspectKimiThinkingSignature_RejectsMalformedInput(t *testing.T) {
 		{"trailing whitespace", native + " "},
 		{"padded base64", native[:len(native)-2] + "=="},
 		{"non base64 character", native[:len(native)-1] + "!"},
-		{"provider cache prefix", "claude#" + native},
-	}
+		{"provider cache prefix", "claude#" + native}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			if IsValidKimiThinkingSignature(tc.sig) {
@@ -258,8 +254,7 @@ func TestSignatureProviderFromModelName_Kimi(t *testing.T) {
 		{"moonshot-v1-128k", SignatureProviderKimi},
 		{"claude-opus-5", SignatureProviderClaude},
 		{"gemini-3.6-flash", SignatureProviderGemini},
-		{"gpt-5.6-sol", SignatureProviderGPT},
-	}
+		{"gpt-5.6-sol", SignatureProviderGPT}}
 	for _, tc := range tests {
 		t.Run(tc.model, func(t *testing.T) {
 			if got := SignatureProviderFromModelName(tc.model); got != tc.want {

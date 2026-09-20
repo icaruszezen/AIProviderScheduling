@@ -38,8 +38,7 @@ func sanitizePayloadRawRules(rules []PayloadRule, section string) []PayloadRule 
 				log.WithFields(log.Fields{
 					"section":    section,
 					"rule_index": i + 1,
-					"param":      path,
-				}).Warn("payload rule dropped: invalid raw JSON")
+					"param":      path}).Warn("payload rule dropped: invalid raw JSON")
 				invalid = true
 				break
 			}

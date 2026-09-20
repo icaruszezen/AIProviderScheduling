@@ -66,8 +66,7 @@ func TestSummaryIntentTranslation(t *testing.T) {
 		{name: "Native Gemini disabled omits Claude summary", from: sdktranslator.FormatGemini, to: sdktranslator.FormatClaude, body: `{"model":"gemini-3.6-flash","generationConfig":{"thinkingConfig":{"thinkingLevel":"high","includeThoughts":false}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`, path: "thinking.display", want: "omitted", wantExists: true},
 		{name: "Native Gemini absent summary leaves Claude display absent", from: sdktranslator.FormatGemini, to: sdktranslator.FormatClaude, body: `{"model":"gemini-3.6-flash","generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`, path: "thinking.display"},
 		{name: "Native Interactions auto enables Gemini summary", from: sdktranslator.FormatInteractions, to: sdktranslator.FormatGemini, body: `{"model":"gemini-3.6-flash","generation_config":{"thinking_level":"high","thinking_summaries":"auto"},"input":"hi"}`, path: "generationConfig.thinkingConfig.includeThoughts", want: "true", wantExists: true},
-		{name: "Native Interactions none omits Claude summary", from: sdktranslator.FormatInteractions, to: sdktranslator.FormatClaude, body: `{"model":"claude-opus-5","generation_config":{"thinking_level":"high","thinking_summaries":"none"},"input":"hi"}`, path: "thinking.display", want: "omitted", wantExists: true},
-	}
+		{name: "Native Interactions none omits Claude summary", from: sdktranslator.FormatInteractions, to: sdktranslator.FormatClaude, body: `{"model":"claude-opus-5","generation_config":{"thinking_level":"high","thinking_summaries":"none"},"input":"hi"}`, path: "thinking.display", want: "omitted", wantExists: true}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -92,8 +91,7 @@ func TestInvalidInteractionsSummaryDoesNotWriteTargetControl(t *testing.T) {
 	}{
 		{name: "Gemini", to: sdktranslator.FormatGemini, path: "generationConfig.thinkingConfig.includeThoughts"},
 		{name: "Antigravity", to: sdktranslator.FormatAntigravity, path: "request.generationConfig.thinkingConfig.includeThoughts"},
-		{name: "Codex", to: sdktranslator.FormatCodex, path: "reasoning.summary"},
-	} {
+		{name: "Codex", to: sdktranslator.FormatCodex, path: "reasoning.summary"}} {
 		t.Run(test.name, func(t *testing.T) {
 			out := sdktranslator.TranslateRequest(sdktranslator.FormatInteractions, test.to, "model", body, false)
 			if result := gjson.GetBytes(out, test.path); result.Exists() {
@@ -151,8 +149,7 @@ func TestSummaryIntentFinalPipeline(t *testing.T) {
 		{name: "Deprecated Responses detail reaches Codex", from: sdktranslator.FormatOpenAIResponse, to: sdktranslator.FormatCodex, model: "level-model", body: `{"model":"level-model","reasoning":{"effort":"high","generate_summary":"detailed"},"input":"hi"}`, path: "reasoning.summary", want: "detailed", wantExists: true},
 		{name: "Gemini missing includeThoughts stays omitted on Claude", from: sdktranslator.FormatGemini, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`, path: "thinking.display"},
 		{name: "Gemini true includeThoughts reaches Claude", from: sdktranslator.FormatGemini, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","generationConfig":{"thinkingConfig":{"thinkingLevel":"high","includeThoughts":true}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`, path: "thinking.display", want: "summarized", wantExists: true},
-		{name: "Native Antigravity budget keeps visibility omitted", from: sdktranslator.FormatAntigravity, to: sdktranslator.FormatAntigravity, model: "antigravity-budget-model", body: `{"model":"antigravity-budget-model","request":{"generationConfig":{"thinkingConfig":{"thinkingBudget":8192}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`, path: "request.generationConfig.thinkingConfig.includeThoughts"},
-	}
+		{name: "Native Antigravity budget keeps visibility omitted", from: sdktranslator.FormatAntigravity, to: sdktranslator.FormatAntigravity, model: "antigravity-budget-model", body: `{"model":"antigravity-budget-model","request":{"generationConfig":{"thinkingConfig":{"thinkingBudget":8192}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`, path: "request.generationConfig.thinkingConfig.includeThoughts"}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -190,8 +187,7 @@ func TestGeminiSummaryOnlyProducesValidClaudeThinking(t *testing.T) {
 		wantBudget int64
 	}{
 		{name: "adaptive model", model: "claude-sonnet-4-6-model", wantType: "adaptive"},
-		{name: "manual model", model: "claude-budget-model", wantType: "enabled", wantBudget: 1024},
-	}
+		{name: "manual model", model: "claude-budget-model", wantType: "enabled", wantBudget: 1024}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			body := []byte(`{"model":"` + test.model + `","generationConfig":{"thinkingConfig":{"includeThoughts":true}},"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)
@@ -247,8 +243,7 @@ func TestAntigravityIncludeThoughtsPreservesExplicitness(t *testing.T) {
 		{name: "explicit true is preserved", model: "antigravity-budget-model(medium)", body: `{"request":{"generationConfig":{"thinkingConfig":{"includeThoughts":true}},` + contents + `}}`, want: "true", wantExists: true},
 		{name: "explicit false is preserved", model: "antigravity-budget-model(medium)", body: `{"request":{"generationConfig":{"thinkingConfig":{"includeThoughts":false}},` + contents + `}}`, want: "false", wantExists: true},
 		{name: "explicit snake case false is preserved", model: "antigravity-budget-model(medium)", body: `{"request":{"generationConfig":{"thinkingConfig":{"include_thoughts":false}},` + contents + `}}`, want: "false", wantExists: true},
-		{name: "disabled thinking without summary intent stays omitted", model: "antigravity-budget-model(none)", body: `{"request":{` + contents + `}}`},
-	}
+		{name: "disabled thinking without summary intent stays omitted", model: "antigravity-budget-model(none)", body: `{"request":{` + contents + `}}`}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
 	log "github.com/sirupsen/logrus"
 )
@@ -91,17 +90,14 @@ func (h *Host) registerCommandLineFlag(flagSet *flag.FlagSet, pluginID string, i
 			Name:         name,
 			Usage:        item.Usage,
 			Type:         kind,
-			DefaultValue: value,
-		},
-		value: value,
-	}
+			DefaultValue: value},
+		value: value}
 	h.mu.Unlock()
 
 	flagSet.Var(&commandLineFlagValue{
 		host: h,
 		name: name,
-		kind: kind,
-	}, name, item.Usage)
+		kind: kind}, name, item.Usage)
 }
 
 func validCommandLineFlagName(name string) bool {
@@ -264,8 +260,7 @@ func (h *Host) ExecuteCommandLine(ctx context.Context, program string, args []st
 			ConfigPath:     configPath,
 			Host:           h.hostConfigSummary(),
 			Flags:          cloneCommandLineFlagValues(allFlags),
-			TriggeredFlags: cloneCommandLineFlagValues(triggered),
-		})
+			TriggeredFlags: cloneCommandLineFlagValues(triggered)})
 		if errExecute != nil {
 			log.Warnf("pluginhost: command-line plugin %s failed: %v", record.id, errExecute)
 			if exitCode == 0 {
@@ -274,17 +269,7 @@ func (h *Host) ExecuteCommandLine(ctx context.Context, program string, args []st
 			continue
 		}
 		if resp.ExitCode == 0 && len(resp.Auths) > 0 {
-			savedPaths, errPersist := h.persistCommandLineAuths(ctx, resp.Auths)
-			if errPersist != nil {
-				writeCommandLineOutput(os.Stdout, resp.Stdout)
-				writeCommandLineOutput(os.Stderr, resp.Stderr)
-				writeCommandLineOutput(os.Stderr, []byte(errPersist.Error()+"\n"))
-				if exitCode == 0 {
-					exitCode = 1
-				}
-				continue
-			}
-			resp.Stdout = appendCommandLineSavedPaths(resp.Stdout, savedPaths)
+			log.Warnf("pluginhost: command-line plugin %s returned auth records, but account file persistence is no longer supported", record.id)
 		}
 		writeCommandLineOutput(os.Stdout, resp.Stdout)
 		writeCommandLineOutput(os.Stderr, resp.Stderr)
@@ -308,8 +293,7 @@ func (h *Host) commandLineExecutionState(flagSet *flag.FlagSet) (map[string]map[
 				Name:  f.Name,
 				Type:  "",
 				Value: f.Value.String(),
-				Set:   false,
-			}
+				Set:   false}
 		})
 	}
 
@@ -320,8 +304,7 @@ func (h *Host) commandLineExecutionState(flagSet *flag.FlagSet) (map[string]map[
 			Name:  name,
 			Type:  record.flag.Type,
 			Value: record.value,
-			Set:   record.set,
-		}
+			Set:   record.set}
 		if _, set := setFlags[name]; set {
 			value.Set = true
 		}
@@ -360,54 +343,6 @@ func (h *Host) callCommandLineExecutor(ctx context.Context, record capabilityRec
 		}
 	}()
 	return plugin.ExecuteCommandLine(ctx, req)
-}
-
-func (h *Host) persistCommandLineAuths(ctx context.Context, auths []pluginapi.AuthData) ([]string, error) {
-	if len(auths) == 0 {
-		return nil, nil
-	}
-	store := sdkAuth.GetTokenStore()
-	if store == nil {
-		return nil, fmt.Errorf("pluginhost: token store unavailable")
-	}
-	summary := h.hostConfigSummary()
-	if summary.AuthDir != "" {
-		if setter, okSetter := store.(interface{ SetBaseDir(string) }); okSetter {
-			setter.SetBaseDir(summary.AuthDir)
-		}
-	}
-	savedPaths := make([]string, 0, len(auths))
-	for index, authData := range auths {
-		record := h.AuthDataToCoreAuth(authData, "", "")
-		if record == nil {
-			return savedPaths, fmt.Errorf("pluginhost: command-line auth %d is invalid", index+1)
-		}
-		savedPath, errSave := store.Save(ctx, record)
-		if errSave != nil {
-			return savedPaths, fmt.Errorf("pluginhost: save command-line auth %s: %w", record.ID, errSave)
-		}
-		if strings.TrimSpace(savedPath) != "" {
-			savedPaths = append(savedPaths, savedPath)
-		}
-	}
-	return savedPaths, nil
-}
-
-func appendCommandLineSavedPaths(stdout []byte, savedPaths []string) []byte {
-	if len(savedPaths) == 0 {
-		return stdout
-	}
-	out := append([]byte(nil), stdout...)
-	if len(out) > 0 && out[len(out)-1] != '\n' {
-		out = append(out, '\n')
-	}
-	for _, savedPath := range savedPaths {
-		if strings.TrimSpace(savedPath) == "" {
-			continue
-		}
-		out = append(out, []byte(fmt.Sprintf("Authentication saved to %s\n", savedPath))...)
-	}
-	return out
 }
 
 func writeCommandLineOutput(w io.Writer, data []byte) {

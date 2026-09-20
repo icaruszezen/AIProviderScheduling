@@ -15,8 +15,7 @@ func TestGeminiModelsResponseUsesConfiguredDisplayName(t *testing.T) {
 	const modelID = "gemini-display-name-catalog-test"
 	registryRef := registry.GetGlobalRegistry()
 	registryRef.RegisterClient(clientID, "gemini", []*registry.ModelInfo{{
-		ID: modelID, Name: modelID, DisplayName: "Configured Gemini Name",
-	}})
+		ID: modelID, Name: modelID, DisplayName: "Configured Gemini Name"}})
 	t.Cleanup(func() {
 		registryRef.UnregisterClient(clientID)
 	})

@@ -94,33 +94,25 @@ func TestEnsureIndexUsesCredentialIdentity(t *testing.T) {
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key": "shared-key",
-			"source":  "config:gemini[abc123]",
-		},
-	}
+			"source":  "config:gemini[abc123]"}}
 	compatAuth := &Auth{
 		Provider: "bohe",
 		Attributes: map[string]string{
 			"api_key":      "shared-key",
 			"compat_name":  "bohe",
 			"provider_key": "bohe",
-			"source":       "config:bohe[def456]",
-		},
-	}
+			"source":       "config:bohe[def456]"}}
 	geminiAltBase := &Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key":  "shared-key",
 			"base_url": "https://alt.example.com",
-			"source":   "config:gemini[ghi789]",
-		},
-	}
+			"source":   "config:gemini[ghi789]"}}
 	geminiDuplicate := &Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key": "shared-key",
-			"source":  "config:gemini[abc123-1]",
-		},
-	}
+			"source":  "config:gemini[abc123-1]"}}
 
 	geminiIndex := geminiAuth.EnsureIndex()
 	compatIndex := compatAuth.EnsureIndex()
@@ -166,12 +158,9 @@ func TestEnsureIndexUsesOAuthTypeAndAbsolutePath(t *testing.T) {
 	a := &Auth{
 		Provider: "antigravity",
 		Attributes: map[string]string{
-			"path": relPath,
-		},
+			"path": relPath},
 		Metadata: map[string]any{
-			"type": "antigravity",
-		},
-	}
+			"type": "antigravity"}}
 
 	got := a.EnsureIndex()
 	if got == "" {

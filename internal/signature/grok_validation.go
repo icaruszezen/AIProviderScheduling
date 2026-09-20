@@ -106,8 +106,7 @@ func InspectGrokEncryptedContent(raw string) (*GrokEncryptedContentInfo, error) 
 	}
 	return &GrokEncryptedContentInfo{
 		RawLen:     len(sig),
-		DecodedLen: len(decoded),
-	}, nil
+		DecodedLen: len(decoded)}, nil
 }
 
 func IsValidGrokEncryptedContent(raw string) bool {

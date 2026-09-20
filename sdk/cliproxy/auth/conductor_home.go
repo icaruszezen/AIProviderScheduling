@@ -338,8 +338,7 @@ func repeatedHomeAuthError() *Error {
 	return &Error{
 		Code:       homeRequestRetryExceededErrorCode,
 		Message:    "home returned a previously tried auth",
-		HTTPStatus: http.StatusServiceUnavailable,
-	}
+		HTTPStatus: http.StatusServiceUnavailable}
 }
 
 type homeAuthDispatchResponse struct {
@@ -1032,8 +1031,7 @@ func (m *Manager) pickHomeDispatchSelection(ctx context.Context, model string, o
 		RequestID: logging.GetRequestID(ctx),
 		Model:     requestedModel,
 		Kind:      kind,
-		StartedAt: time.Now(),
-	}
+		StartedAt: time.Now()}
 	var scope *executionregistry.Scope
 	if envelope.Present {
 		var errInstall error
@@ -1105,6 +1103,10 @@ func (m *Manager) pickHomeDispatchSelection(ctx context.Context, model string, o
 		endScope()
 		return nil, &Error{Code: "invalid_auth", Message: "home returned auth without id", HTTPStatus: http.StatusBadGateway}
 	}
+	if auth.AuthKind() == AuthKindOAuth {
+		endScope()
+		return nil, errOAuthCredentialsUnsupported()
+	}
 	if pinnedAuthID != "" && strings.TrimSpace(auth.ID) != pinnedAuthID {
 		endScope()
 		return nil, &Error{Code: "auth_not_found", Message: "home returned an auth that does not match the pinned credential", HTTPStatus: http.StatusServiceUnavailable}
@@ -1143,8 +1145,7 @@ func (m *Manager) pickHomeDispatchSelection(ctx context.Context, model string, o
 			CredentialID: strings.TrimSpace(auth.ID),
 			Model:        baseScope.Model,
 			Kind:         baseScope.Kind,
-			StartedAt:    baseScope.StartedAt,
-		})
+			StartedAt:    baseScope.StartedAt})
 		if errInstall != nil {
 			client.AbortAmbiguousDispatch()
 			pending.End()
@@ -1244,8 +1245,7 @@ func (m *Manager) findAllAntigravityCreditsCandidateAuths(ctx context.Context, r
 		candidates = append(candidates, creditsCandidateEntry{
 			auth:     auth.Clone(),
 			executor: executor,
-			provider: providerKey,
-		})
+			provider: providerKey})
 	}
 	m.mu.RUnlock()
 
@@ -1297,8 +1297,7 @@ func shouldAttemptAntigravityCreditsFallback(m *Manager, lastErr error, provider
 	log.WithFields(log.Fields{
 		"lastErr":   errorString(lastErr),
 		"status":    status,
-		"providers": providers,
-	}).Debug("shouldAttemptAntigravityCreditsFallback")
+		"providers": providers}).Debug("shouldAttemptAntigravityCreditsFallback")
 	if m == nil || lastErr == nil || m.HomeEnabled() {
 		return false
 	}

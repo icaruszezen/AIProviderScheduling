@@ -149,8 +149,7 @@ func (e *AntigravityExecutor) buildRequest(ctx context.Context, auth *cliproxyau
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	return httpReq, nil
 }
@@ -360,14 +359,11 @@ func antigravityGenerationSchemaPaths(payloadStr string) []string {
 var (
 	antigravityDeclarationSchemaKeys = []string{
 		"parameters", "parametersJsonSchema", "parameters_json_schema",
-		"response", "responseJsonSchema", "response_json_schema",
-	}
+		"response", "responseJsonSchema", "response_json_schema"}
 	antigravityGenerationConfigContainers = []string{
-		"request.generationConfig", "request.generation_config",
-	}
+		"request.generationConfig", "request.generation_config"}
 	antigravityGenerationSchemaKeys = []string{
-		"responseSchema", "responseJsonSchema", "response_schema", "response_json_schema",
-	}
+		"responseSchema", "responseJsonSchema", "response_schema", "response_json_schema"}
 )
 
 func antigravityRequestNeedsSchemaSanitization(payload []byte) bool {

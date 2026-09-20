@@ -16,18 +16,13 @@ func TestAttachResolvedAPIKeyModelInfoUsesSelectedCredential(t *testing.T) {
 			Prefix: "tenant",
 			Models: []internalconfig.ClaudeModel{{
 				Name: "shared-upstream", Alias: "public-model",
-				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}},
-			}},
-		},
+				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}}}},
 		{
 			APIKey: "key-max",
 			Prefix: "tenant",
 			Models: []internalconfig.ClaudeModel{{
 				Name: "shared-upstream", Alias: "public-model",
-				Thinking: &registry.ThinkingSupport{Levels: []string{"max"}},
-			}},
-		},
-	}})
+				Thinking: &registry.ThinkingSupport{Levels: []string{"max"}}}}}}})
 
 	authHigh := configuredCapabilityTestAuth("auth-high", "key-high")
 	authMax := configuredCapabilityTestAuth("auth-max", "key-max")
@@ -42,16 +37,13 @@ func TestAttachResolvedAPIKeyModelInfoUsesExactDuplicateCredentialConfig(t *test
 	manager := NewManager(nil, nil, nil)
 	highModels := []internalconfig.ClaudeModel{{
 		Name: "shared-upstream", Alias: "public-model",
-		Thinking: &registry.ThinkingSupport{Levels: []string{"high"}},
-	}}
+		Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}}}
 	maxModels := []internalconfig.ClaudeModel{{
 		Name: "shared-upstream", Alias: "public-model",
-		Thinking: &registry.ThinkingSupport{Levels: []string{"max"}},
-	}}
+		Thinking: &registry.ThinkingSupport{Levels: []string{"max"}}}}
 	manager.SetConfig(&internalconfig.Config{ClaudeKey: []internalconfig.ClaudeKey{
 		{APIKey: "shared-key", Prefix: "tenant", Models: highModels},
-		{APIKey: "shared-key", Prefix: "tenant", Models: maxModels},
-	}})
+		{APIKey: "shared-key", Prefix: "tenant", Models: maxModels}}})
 
 	authHigh := configuredCapabilityTestAuth("auth-duplicate-high", "shared-key")
 	authHigh.Attributes[AttributeConfigIndex] = "0"
@@ -74,9 +66,7 @@ func TestAttachResolvedAPIKeyModelInfoPrefersExactConfiguredSuffix(t *testing.T)
 			{Name: "shared-upstream(high)", Alias: "public-high", Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}},
 			{Name: "shared-upstream(low)", Alias: "public-low", Thinking: &registry.ThinkingSupport{Levels: []string{"low"}}},
 			{Name: "alias-upstream", Alias: "public(high)", Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}},
-			{Name: "alias-upstream", Alias: "public(low)", Thinking: &registry.ThinkingSupport{Levels: []string{"low"}}},
-		},
-	}}})
+			{Name: "alias-upstream", Alias: "public(low)", Thinking: &registry.ThinkingSupport{Levels: []string{"low"}}}}}}})
 	registerCapabilityTestAuth(t, manager, auth)
 
 	req := manager.attachResolvedAPIKeyModelInfo(cliproxyexecutor.Request{}, auth, "tenant/public-low", "shared-upstream(low)")
@@ -104,9 +94,7 @@ func TestAPIKeyModelRoutingClonesPublishedConfig(t *testing.T) {
 		Prefix: "tenant",
 		Models: []internalconfig.ClaudeModel{{
 			Name: "shared-upstream", Alias: "public",
-			Thinking: &registry.ThinkingSupport{Levels: []string{"high"}},
-		}},
-	}}}
+			Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}}}}}}
 	manager.SetConfig(cfg)
 	cfg.ClaudeKey[0].Models[0].Alias = "mutated"
 	cfg.ClaudeKey[0].Models[0].Thinking.Levels[0] = "max"
@@ -130,9 +118,7 @@ func TestAPIKeyModelRoutingKeepsOneExecutionSnapshotAcrossReload(t *testing.T) {
 			Prefix: "tenant",
 			Models: []internalconfig.ClaudeModel{{
 				Name: "shared-upstream", Alias: "public",
-				Thinking: &registry.ThinkingSupport{Levels: []string{level}},
-			}},
-		}}}
+				Thinking: &registry.ThinkingSupport{Levels: []string{level}}}}}}}
 	}
 	manager.SetConfig(buildConfig("high"))
 	registerCapabilityTestAuth(t, manager, auth)
@@ -157,14 +143,10 @@ func TestAttachResolvedAPIKeyModelInfoSupportsKeylessOpenAICompatibility(t *test
 		Models: []internalconfig.OpenAICompatibilityModel{
 			{
 				Name: "shared-upstream", Alias: "public-model", ForceMapping: true, IsCompat: true,
-				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}},
-			},
+				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}},
 			{
 				Name: "fallback-upstream", Alias: "public-model",
-				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}},
-			},
-		},
-	}}})
+				Thinking: &registry.ThinkingSupport{Levels: []string{"high"}}}}}}})
 	auth := &Auth{
 		ID:       "auth-keyless",
 		Provider: "openai-compatibility:keyless",
@@ -172,9 +154,7 @@ func TestAttachResolvedAPIKeyModelInfoSupportsKeylessOpenAICompatibility(t *test
 		Attributes: map[string]string{
 			AttributeSource: "config:keyless[0]",
 			"compat_name":   "keyless",
-			"provider_key":  "openai-compatibility:keyless",
-		},
-	}
+			"provider_key":  "openai-compatibility:keyless"}}
 	registerCapabilityTestAuth(t, manager, auth)
 	models, _, aliasResult, routing := manager.executionModelCandidatesWithAlias(auth, "tenant/public-model")
 	if len(models) != 2 || models[0] != "shared-upstream" || models[1] != "fallback-upstream" {
@@ -201,8 +181,7 @@ func TestAttachResolvedAPIKeyModelInfoBindsUnknownConfiguredCapability(t *testin
 	manager.SetConfig(&internalconfig.Config{ClaudeKey: []internalconfig.ClaudeKey{{
 		APIKey: "key-fallback",
 		Prefix: "tenant",
-		Models: []internalconfig.ClaudeModel{{Name: "unknown-upstream", Alias: "unknown-public"}},
-	}}})
+		Models: []internalconfig.ClaudeModel{{Name: "unknown-upstream", Alias: "unknown-public"}}}}})
 	registerCapabilityTestAuth(t, manager, auth)
 
 	req := manager.attachResolvedAPIKeyModelInfo(cliproxyexecutor.Request{}, auth, "tenant/unknown-public", "unknown-upstream")
@@ -235,9 +214,7 @@ func configuredCapabilityTestAuth(id, apiKey string) *Auth {
 		Attributes: map[string]string{
 			AttributeAuthKind: AuthKindAPIKey,
 			AttributeAPIKey:   apiKey,
-			AttributeSource:   "config:claude[0]",
-		},
-	}
+			AttributeSource:   "config:claude[0]"}}
 }
 
 func assertResolvedThinkingLevels(t *testing.T, req cliproxyexecutor.Request, want ...string) {
@@ -262,17 +239,13 @@ func TestCodexAPIKeyModelIsCompat(t *testing.T) {
 		BaseURL: "https://compat.example.com/v1",
 		Models: []internalconfig.CodexModel{
 			{Name: "deepseek-v4-flash", Alias: "deepseek-alias", IsCompat: true},
-			{Name: "gpt-5.4", Alias: "codex-native"},
-		},
-	}}}
+			{Name: "gpt-5.4", Alias: "codex-native"}}}}}
 	auth := &Auth{
 		Provider: "codex",
 		Attributes: map[string]string{
 			AttributeAuthKind: AuthKindAPIKey,
 			AttributeAPIKey:   "codex-key",
-			"base_url":        "https://compat.example.com/v1",
-		},
-	}
+			"base_url":        "https://compat.example.com/v1"}}
 
 	if !CodexAPIKeyModelIsCompat(cfg, auth, "deepseek-v4-flash") {
 		t.Fatal("upstream name IsCompat = false, want true")

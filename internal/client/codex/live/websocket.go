@@ -56,7 +56,7 @@ func (h *Handler) HandleDirectWebsocket(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "gin", c)
 	ctx = coreexecutor.WithDownstreamWebsocket(ctx)
 	selectionOpts := coreexecutor.Options{Headers: liveSelectionHeaders(c)}
-	selection, selected, errSelect := h.selectOAuth(ctx, selectionModel, selectionOpts)
+	selection, selected, errSelect := h.selectAPIKey(ctx, selectionModel, selectionOpts)
 	if errSelect != nil {
 		writeSelectionError(c, errSelect)
 		return
@@ -103,8 +103,7 @@ func (h *Handler) HandleDirectWebsocket(c *gin.Context) {
 			AuthID:    current.ID,
 			AuthLabel: current.Label,
 			AuthType:  authType,
-			AuthValue: authValue,
-		})
+			AuthValue: authValue})
 		dialer := newProxyAwareSidebandDialer(helpersConfig, current)
 		dialer.Subprotocols = websocket.Subprotocols(c.Request)
 		return dialer.DialContext(ctx, upstreamURL, request.Header)

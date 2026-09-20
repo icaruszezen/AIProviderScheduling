@@ -12,12 +12,9 @@ func TestManagerMarkResultRecordsRecentRequests(t *testing.T) {
 		ID:       "auth-1",
 		Provider: "antigravity",
 		Attributes: map[string]string{
-			"runtime_only": "true",
-		},
+			"runtime_only": "true"},
 		Metadata: map[string]any{
-			"type": "antigravity",
-		},
-	}
+			"type": "antigravity"}}
 
 	if _, err := mgr.Register(WithSkipPersist(context.Background()), auth); err != nil {
 		t.Fatalf("Register returned error: %v", err)
@@ -53,9 +50,7 @@ func TestManagerUpdatePreservesRecentRequestsAndTotals(t *testing.T) {
 		ID:       "auth-1",
 		Provider: "antigravity",
 		Metadata: map[string]any{
-			"type": "antigravity",
-		},
-	}
+			"type": "antigravity"}}
 	if _, err := mgr.Register(WithSkipPersist(context.Background()), auth); err != nil {
 		t.Fatalf("Register returned error: %v", err)
 	}
@@ -67,9 +62,7 @@ func TestManagerUpdatePreservesRecentRequestsAndTotals(t *testing.T) {
 		Provider: "antigravity",
 		Metadata: map[string]any{
 			"type": "antigravity",
-			"note": "updated",
-		},
-	}
+			"note": "updated"}}
 	if _, err := mgr.Update(WithSkipPersist(context.Background()), updated); err != nil {
 		t.Fatalf("Update returned error: %v", err)
 	}

@@ -41,8 +41,7 @@ func (s *Service) newOpenAICompatibilityRegistrationCache() *openAICompatibility
 
 	cache := &openAICompatibilityRegistrationCache{
 		byName:  make(map[string]*openAICompatibilityRegistrationEntry, len(cfg.OpenAICompatibility)),
-		byIndex: make(map[int]*openAICompatibilityRegistrationEntry, len(cfg.OpenAICompatibility)),
-	}
+		byIndex: make(map[int]*openAICompatibilityRegistrationEntry, len(cfg.OpenAICompatibility))}
 	for i := range cfg.OpenAICompatibility {
 		compat := &cfg.OpenAICompatibility[i]
 		if compat.Disabled {
@@ -56,8 +55,7 @@ func (s *Service) newOpenAICompatibilityRegistrationCache() *openAICompatibility
 		}
 		entry := &openAICompatibilityRegistrationEntry{
 			providerKey: util.OpenAICompatibleProviderKey(providerName),
-			models:      buildOpenAICompatibilityConfigModels(compat),
-		}
+			models:      buildOpenAICompatibilityConfigModels(compat)}
 		cache.byIndex[i] = entry
 		if _, exists := cache.byName[key]; !exists {
 			cache.byName[key] = entry
@@ -169,8 +167,7 @@ func (s *Service) ensureExecutorsForAuthWithContext(ctx context.Context, a *core
 	}
 	s.registerAvailableExecutors(ctx, executorRegistrationOptions{
 		auths:             []*coreauth.Auth{a},
-		forceReplaceAuths: forceReplace,
-	})
+		forceReplaceAuths: forceReplace})
 }
 
 func (s *Service) registerAvailableExecutors(ctx context.Context, opts executorRegistrationOptions) {
@@ -209,14 +206,12 @@ func baselineExecutorAuths() []*coreauth.Auth {
 		"antigravity",
 		"kimi",
 		"xai",
-		"openai-compatibility",
-	}
+		"openai-compatibility"}
 	auths := make([]*coreauth.Auth, 0, len(providers))
 	for _, provider := range providers {
 		auth := &coreauth.Auth{
 			ID:       provider,
-			Provider: provider,
-		}
+			Provider: provider}
 		if provider == "openai-compatibility" {
 			auth.Attributes = map[string]string{"compat_name": "openai-compatibility"}
 		}

@@ -10,8 +10,7 @@ var defaultClaudeBuiltinToolNames = []string{
 	"web_search",
 	"code_execution",
 	"text_editor",
-	"computer",
-}
+	"computer"}
 
 func newClaudeBuiltinToolRegistry() map[string]bool {
 	registry := make(map[string]bool, len(defaultClaudeBuiltinToolNames))
@@ -36,8 +35,7 @@ func IsClaudeServerToolType(toolType string) bool {
 		"text_editor_",
 		"tool_search_tool_",
 		"web_fetch_",
-		"web_search_",
-	} {
+		"web_search_"} {
 		if strings.HasPrefix(toolType, prefix) {
 			return true
 		}

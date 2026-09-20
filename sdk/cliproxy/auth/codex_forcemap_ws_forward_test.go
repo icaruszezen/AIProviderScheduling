@@ -48,8 +48,7 @@ func TestCodexForceMapPerLineSSE_ForwardsCompleted(t *testing.T) {
 		[]byte("event: response.output_text.delta"),
 		[]byte(`data: {"type":"response.output_text.delta","delta":"OK"}`),
 		[]byte("event: response.completed"),
-		[]byte(`data: {"type":"response.completed","response":{"model":"gpt-5.4","output":[]}}`),
-	}
+		[]byte(`data: {"type":"response.completed","response":{"model":"gpt-5.4","output":[]}}`)}
 	types := replayCodexForceMapLines(t, lines)
 	found := false
 	for _, typ := range types {

@@ -22,8 +22,7 @@ func TestRecordStreamField(t *testing.T) {
 	record := Record{
 		Provider: "openai",
 		Model:    "gpt-5.4",
-		Stream:   true,
-	}
+		Stream:   true}
 	if !record.Stream {
 		t.Fatalf("Record.Stream = false, want true")
 	}
@@ -65,8 +64,7 @@ func TestRecordOmittedGenerateIsEnabled(t *testing.T) {
 	// Omission must remain distinguishable from explicit false and default to true.
 	record := Record{
 		Provider: "openai",
-		Model:    "gpt-5.4",
-	}
+		Model:    "gpt-5.4"}
 	if record.Generate != nil {
 		t.Fatalf("Record.Generate = %v, want nil for omitted field", record.Generate)
 	}

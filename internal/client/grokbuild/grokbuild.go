@@ -61,8 +61,7 @@ func BuildResponse(models []ModelInfo) Response {
 			Name:             name,
 			APIBackend:       "responses",
 			SupportedInAPI:   true,
-			ReasoningEfforts: efforts,
-		}
+			ReasoningEfforts: efforts}
 
 		if m.ContextLength > 0 {
 			entry.ContextWindow = m.ContextLength
@@ -73,6 +72,5 @@ func BuildResponse(models []ModelInfo) Response {
 
 	return Response{
 		Object: "list",
-		Data:   entries,
-	}
+		Data:   entries}
 }

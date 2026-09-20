@@ -22,21 +22,17 @@ func TestGetRequestDetails_PreservesSuffix(t *testing.T) {
 
 	modelRegistry.RegisterClient("test-request-details-gemini", "gemini", []*registry.ModelInfo{
 		{ID: "gemini-2.5-pro", Created: now + 30},
-		{ID: "gemini-2.5-flash", Created: now + 25},
-	})
+		{ID: "gemini-2.5-flash", Created: now + 25}})
 	modelRegistry.RegisterClient("test-request-details-openai", "openai", []*registry.ModelInfo{
-		{ID: "gpt-5.2", Created: now + 20},
-	})
+		{ID: "gpt-5.2", Created: now + 20}})
 	modelRegistry.RegisterClient("test-request-details-claude", "claude", []*registry.ModelInfo{
-		{ID: "claude-sonnet-4-5", Created: now + 5},
-	})
+		{ID: "claude-sonnet-4-5", Created: now + 5}})
 
 	// Ensure cleanup of all test registrations.
 	clientIDs := []string{
 		"test-request-details-gemini",
 		"test-request-details-openai",
-		"test-request-details-claude",
-	}
+		"test-request-details-claude"}
 	for _, clientID := range clientIDs {
 		id := clientID
 		t.Cleanup(func() {
@@ -58,51 +54,43 @@ func TestGetRequestDetails_PreservesSuffix(t *testing.T) {
 			inputModel:    "gemini-2.5-pro(8192)",
 			wantProviders: []string{"gemini"},
 			wantModel:     "gemini-2.5-pro(8192)",
-			wantErr:       false,
-		},
+			wantErr:       false},
 		{
 			name:          "level suffix preserved",
 			inputModel:    "gpt-5.2(high)",
 			wantProviders: []string{"openai"},
 			wantModel:     "gpt-5.2(high)",
-			wantErr:       false,
-		},
+			wantErr:       false},
 		{
 			name:          "no suffix unchanged",
 			inputModel:    "claude-sonnet-4-5",
 			wantProviders: []string{"claude"},
 			wantModel:     "claude-sonnet-4-5",
-			wantErr:       false,
-		},
+			wantErr:       false},
 		{
 			name:          "unknown model with suffix",
 			inputModel:    "unknown-model(8192)",
 			wantProviders: nil,
 			wantModel:     "",
-			wantErr:       true,
-		},
+			wantErr:       true},
 		{
 			name:          "auto suffix resolved",
 			inputModel:    "auto(high)",
 			wantProviders: []string{"gemini"},
 			wantModel:     "gemini-2.5-pro(high)",
-			wantErr:       false,
-		},
+			wantErr:       false},
 		{
 			name:          "special suffix none preserved",
 			inputModel:    "gemini-2.5-flash(none)",
 			wantProviders: []string{"gemini"},
 			wantModel:     "gemini-2.5-flash(none)",
-			wantErr:       false,
-		},
+			wantErr:       false},
 		{
 			name:          "special suffix auto preserved",
 			inputModel:    "claude-sonnet-4-5(auto)",
 			wantProviders: []string{"claude"},
 			wantModel:     "claude-sonnet-4-5(auto)",
-			wantErr:       false,
-		},
-	}
+			wantErr:       false}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -136,8 +124,7 @@ func TestGetRequestDetails_UnknownModelErrorResistsJSONInjection(t *testing.T) {
 		`x","code":"insufficient_quota","x":"`,
 		`x"}}`,
 		`foo\bar`,
-		"foo\nbar",
-	} {
+		"foo\nbar"} {
 		t.Run(model, func(t *testing.T) {
 			_, _, errMsg := handler.getRequestDetails(model)
 			if errMsg == nil || errMsg.Error == nil {
@@ -172,8 +159,7 @@ func TestGetRequestDetails_ImageModelReturns503(t *testing.T) {
 		"grok-imagine-image-quality",
 		"xai/grok-imagine-image-quality",
 		"grok-imagine-image-2.0",
-		"xai/grok-imagine-image-2.0",
-	}
+		"xai/grok-imagine-image-2.0"}
 	for _, model := range imageOnlyModels {
 		t.Run(model, func(t *testing.T) {
 			_, _, errMsg := handler.getRequestDetails(model)
@@ -206,8 +192,7 @@ func TestValidateImageOnlyModel_AllowsImageEndpoints(t *testing.T) {
 		"grok-imagine-image-quality",
 		"xai/grok-imagine-image-quality",
 		"grok-imagine-image-2.0",
-		"xai/grok-imagine-image-2.0",
-	}
+		"xai/grok-imagine-image-2.0"}
 	for _, model := range imageOnlyModels {
 		t.Run(model, func(t *testing.T) {
 			if errMsg := handler.validateImageOnlyModel(model, true); errMsg != nil {
@@ -238,8 +223,7 @@ func TestIsOpenAIImageOnlyModel(t *testing.T) {
 		{model: "xai/grok-imagine-image-2.0", want: true},
 		{model: "grok-3", want: false},
 		{model: "gpt-5.2", want: false},
-		{model: "grok-imagine-video", want: false},
-	}
+		{model: "grok-imagine-video", want: false}}
 	for _, tt := range tests {
 		t.Run(tt.model, func(t *testing.T) {
 			if got := isOpenAIImageOnlyModel(tt.model); got != tt.want {
@@ -259,8 +243,7 @@ func TestExecuteImageWithAuthManager_AllowsImageOnlyModels(t *testing.T) {
 		"grok-imagine-image-quality",
 		"xai/grok-imagine-image-quality",
 		"grok-imagine-image-2.0",
-		"xai/grok-imagine-image-2.0",
-	}
+		"xai/grok-imagine-image-2.0"}
 	for _, model := range imageOnlyModels {
 		t.Run(model, func(t *testing.T) {
 			body := []byte(`{"model":"` + model + `","prompt":"draw"}`)

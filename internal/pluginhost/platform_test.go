@@ -12,8 +12,7 @@ func TestCandidateDirs(t *testing.T) {
 	got := candidateDirs("plugins", "darwin", "arm64")
 	want := []string{
 		filepath.Join("plugins", "darwin", "arm64"),
-		"plugins",
-	}
+		"plugins"}
 	if len(got) != len(want) {
 		t.Fatalf("len(candidateDirs) = %d, want %d", len(got), len(want))
 	}
@@ -32,8 +31,7 @@ func TestPluginExtensionForPlatform(t *testing.T) {
 		{goos: "linux", want: ".so"},
 		{goos: "freebsd", want: ".so"},
 		{goos: "darwin", want: ".dylib"},
-		{goos: "windows", want: ".dll"},
-	}
+		{goos: "windows", want: ".dll"}}
 
 	for _, tc := range cases {
 		if got := pluginExtension(tc.goos); got != tc.want {
@@ -47,8 +45,7 @@ func TestPluginIDFromDynamicLibraryPath(t *testing.T) {
 		"plugins/example.so":     "example",
 		"plugins/example.dylib":  "example",
 		"plugins/example.dll":    "example",
-		"plugins/example.custom": "example.custom",
-	}
+		"plugins/example.custom": "example.custom"}
 
 	for path, want := range cases {
 		if got := pluginIDFromPath(path); got != want {
@@ -71,8 +68,7 @@ func TestSelectPluginFilesFiltersInvalidIDAndDeduplicatesByID(t *testing.T) {
 		filepath.Join(archDir, "bad name"+extension),
 		filepath.Join(archDir, "-bad"+extension),
 		filepath.Join(archDir, "another"+strings.ToUpper(extension)),
-		filepath.Join(archDir, "ignored.txt"),
-	}
+		filepath.Join(archDir, "ignored.txt")}
 	for _, path := range paths {
 		if errWriteFile := os.WriteFile(path, []byte("x"), 0o644); errWriteFile != nil {
 			t.Fatalf("WriteFile(%s) error = %v", path, errWriteFile)
@@ -89,8 +85,7 @@ func TestSelectPluginFilesFiltersInvalidIDAndDeduplicatesByID(t *testing.T) {
 
 	want := []pluginFile{
 		{ID: "another", Path: filepath.Join(archDir, "another"+strings.ToUpper(extension))},
-		{ID: "sample", Path: filepath.Join(archDir, "sample"+extension)},
-	}
+		{ID: "sample", Path: filepath.Join(archDir, "sample"+extension)}}
 	if len(files) != len(want) {
 		t.Fatalf("selectPluginFiles() = %v, want %v", files, want)
 	}

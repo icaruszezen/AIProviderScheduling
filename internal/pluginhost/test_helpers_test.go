@@ -210,8 +210,7 @@ func (l *testSymbolLookup) callLifecycle(request []byte, reload bool) ([]byte, e
 	return marshalRPCResult(rpcRegistration{
 		SchemaVersion: schemaVersion,
 		Metadata:      plugin.Metadata,
-		Capabilities:  rpcCapabilitiesFromPlugin(plugin),
-	})
+		Capabilities:  rpcCapabilitiesFromPlugin(plugin)})
 }
 
 type testPlugin struct {
@@ -245,12 +244,9 @@ func validTestPlugin(name string) pluginapi.Plugin {
 			Name:             name,
 			Version:          "1.0.0",
 			Author:           "test",
-			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-		},
+			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
 		Capabilities: pluginapi.Capabilities{
-			UsagePlugin: testUsageCapability{},
-		},
-	}
+			UsagePlugin: testUsageCapability{}}}
 }
 
 type testUsageCapability struct{}
@@ -387,6 +383,5 @@ func enabledPluginConfigWithStoreVersion(t *testing.T, version string) config.Pl
 	enabled := true
 	return config.PluginInstanceConfig{
 		Enabled: &enabled,
-		Raw:     *node.Content[0],
-	}
+		Raw:     *node.Content[0]}
 }

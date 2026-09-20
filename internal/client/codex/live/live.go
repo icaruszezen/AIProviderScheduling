@@ -41,8 +41,7 @@ var liveProtocolHeaders = []string{
 	"OpenAI-Safety-Identifier",
 	"OpenAI-Organization",
 	"OpenAI-Project",
-	"X-Oai-Attestation",
-}
+	"X-Oai-Attestation"}
 
 // Handler forwards Codex live session requests through the shared auth scheduler.
 type Handler struct {
@@ -66,8 +65,7 @@ func NewHandler(authManager *auth.Manager, cfg *config.Config) *Handler {
 		cfg:                cfg,
 		sessions:           newSessionStore(),
 		clientSecrets:      newClientSecretStore(),
-		sidebandAPIBaseURL: defaultSidebandAPIBaseURL,
-	}
+		sidebandAPIBaseURL: defaultSidebandAPIBaseURL}
 	if errUpdate := handler.UpdateConfig(cfg); errUpdate != nil {
 		log.WithError(errUpdate).Error("failed to configure Codex Live media relay")
 	}
@@ -128,8 +126,7 @@ func liveMediaConfigLogFields(relayConfig config.CodexLiveMediaRelayConfig) log.
 		"public_ip":                  publicIP,
 		"udp_port_min":               relayConfig.UDPPortMin,
 		"udp_port_max":               relayConfig.UDPPortMax,
-		"ice_server_count":           len(relayConfig.ICEServers),
-	}
+		"ice_server_count":           len(relayConfig.ICEServers)}
 }
 
 func (h *Handler) currentRuntime() (*config.Config, mediaRelayFactory, error) {
@@ -216,9 +213,8 @@ func (h *Handler) Handle(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "gin", c)
 	selectionOpts := coreexecutor.Options{
 		Headers:         liveSelectionHeaders(c),
-		OriginalRequest: body,
-	}
-	selection, selected, errSelect := h.selectOAuth(ctx, model, selectionOpts)
+		OriginalRequest: body}
+	selection, selected, errSelect := h.selectAPIKey(ctx, model, selectionOpts)
 	if errSelect != nil {
 		writeSelectionError(c, errSelect)
 		return
@@ -261,8 +257,7 @@ func (h *Handler) Handle(c *gin.Context) {
 		mediaSession, upstreamOffer, errSDP = mediaRelay.NewSession(ctx, clientOffer, mediaSessionRoute{
 			proxyURL:   proxyURLForAuth(runtimeConfig, selected),
 			credential: mediaCredentialName(selected, selectedIndex),
-			authIndex:  selectedIndex,
-		})
+			authIndex:  selectedIndex})
 		if errSDP != nil {
 			writeLiveError(c, clienterror.HTTPStatusFromErrorOr(errSDP, http.StatusBadGateway), errSDP.Error())
 			return
@@ -300,8 +295,7 @@ func (h *Handler) Handle(c *gin.Context) {
 			AuthID:    current.ID,
 			AuthLabel: current.Label,
 			AuthType:  authType,
-			AuthValue: authValue,
-		})
+			AuthValue: authValue})
 		return h.authManager.HttpRequest(ctx, current, req)
 	}
 
@@ -464,17 +458,17 @@ func mediaCredentialName(selected *auth.Auth, authIndex string) string {
 	return strings.TrimSpace(authIndex)
 }
 
-func (h *Handler) selectOAuth(ctx context.Context, model string, opts coreexecutor.Options) (*auth.HomeDispatchSelection, *auth.Auth, error) {
+func (h *Handler) selectAPIKey(ctx context.Context, model string, opts coreexecutor.Options) (*auth.HomeDispatchSelection, *auth.Auth, error) {
 	var selection *auth.HomeDispatchSelection
 	var selected *auth.Auth
 	var errSelect error
 	if h.authManager.HomeEnabled() {
-		selection, errSelect = h.authManager.SelectHomeAuthByKind(ctx, "codex", model, auth.AuthKindOAuth, opts)
+		selection, errSelect = h.authManager.SelectHomeAuthByKind(ctx, "codex", model, auth.AuthKindAPIKey, opts)
 		if selection != nil {
 			selected = selection.CloneAuth()
 		}
 	} else {
-		selected, errSelect = h.authManager.SelectAuthByKind(ctx, "codex", "", auth.AuthKindOAuth, opts)
+		selected, errSelect = h.authManager.SelectAuthByKind(ctx, "codex", "", auth.AuthKindAPIKey, opts)
 	}
 	if errSelect != nil && selection != nil {
 		selection.End("selection_failed")
@@ -657,8 +651,7 @@ func encodeCallRequest(sdp string, session json.RawMessage) ([]byte, error) {
 		Session json.RawMessage `json:"session,omitempty"`
 	}{
 		SDP:     sdp,
-		Session: session,
-	}
+		Session: session}
 	encoded, errMarshal := json.Marshal(payload)
 	if errMarshal != nil {
 		return nil, fmt.Errorf("failed to encode Codex live request: %w", errMarshal)

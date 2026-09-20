@@ -48,22 +48,18 @@ func (e *failOnceStreamExecutor) ExecuteStream(context.Context, *coreauth.Auth, 
 				Code:       "unauthorized",
 				Message:    "unauthorized",
 				Retryable:  false,
-				HTTPStatus: http.StatusUnauthorized,
-			},
-		}
+				HTTPStatus: http.StatusUnauthorized}}
 		close(ch)
 		return &coreexecutor.StreamResult{
 			Headers: http.Header{"X-Upstream-Attempt": {"1"}},
-			Chunks:  ch,
-		}, nil
+			Chunks:  ch}, nil
 	}
 
 	ch <- coreexecutor.StreamChunk{Payload: []byte("ok")}
 	close(ch)
 	return &coreexecutor.StreamResult{
 		Headers: http.Header{"X-Upstream-Attempt": {"2"}},
-		Chunks:  ch,
-	}, nil
+		Chunks:  ch}, nil
 }
 
 func (e *failOnceStreamExecutor) Refresh(ctx context.Context, auth *coreauth.Auth) (*coreauth.Auth, error) {
@@ -78,8 +74,7 @@ func (e *failOnceStreamExecutor) HttpRequest(ctx context.Context, auth *coreauth
 	return nil, &coreauth.Error{
 		Code:       "not_implemented",
 		Message:    "HttpRequest not implemented",
-		HTTPStatus: http.StatusNotImplemented,
-	}
+		HTTPStatus: http.StatusNotImplemented}
 }
 
 func (e *failOnceStreamExecutor) Calls() int {
@@ -161,9 +156,7 @@ func (e *payloadThenErrorStreamExecutor) ExecuteStream(context.Context, *coreaut
 			Code:       "upstream_closed",
 			Message:    "upstream closed",
 			Retryable:  false,
-			HTTPStatus: http.StatusBadGateway,
-		},
-	}
+			HTTPStatus: http.StatusBadGateway}}
 	close(ch)
 	return &coreexecutor.StreamResult{Chunks: ch}, nil
 }
@@ -180,8 +173,7 @@ func (e *payloadThenErrorStreamExecutor) HttpRequest(ctx context.Context, auth *
 	return nil, &coreauth.Error{
 		Code:       "not_implemented",
 		Message:    "HttpRequest not implemented",
-		HTTPStatus: http.StatusNotImplemented,
-	}
+		HTTPStatus: http.StatusNotImplemented}
 }
 
 func (e *payloadThenErrorStreamExecutor) Calls() int {
@@ -225,8 +217,7 @@ func (e *invalidJSONStreamExecutor) HttpRequest(ctx context.Context, auth *corea
 	return nil, &coreauth.Error{
 		Code:       "not_implemented",
 		Message:    "HttpRequest not implemented",
-		HTTPStatus: http.StatusNotImplemented,
-	}
+		HTTPStatus: http.StatusNotImplemented}
 }
 
 func (e *splitResponsesEventStreamExecutor) Identifier() string { return "split-sse" }
@@ -255,8 +246,7 @@ func (e *splitResponsesEventStreamExecutor) HttpRequest(ctx context.Context, aut
 	return nil, &coreauth.Error{
 		Code:       "not_implemented",
 		Message:    "HttpRequest not implemented",
-		HTTPStatus: http.StatusNotImplemented,
-	}
+		HTTPStatus: http.StatusNotImplemented}
 }
 
 func (e *authAwareStreamExecutor) Identifier() string { return "codex" }
@@ -287,9 +277,7 @@ func (e *authAwareStreamExecutor) ExecuteStream(ctx context.Context, auth *corea
 				Code:       "unauthorized",
 				Message:    "unauthorized",
 				Retryable:  false,
-				HTTPStatus: http.StatusUnauthorized,
-			},
-		}
+				HTTPStatus: http.StatusUnauthorized}}
 		close(ch)
 		return &coreexecutor.StreamResult{Chunks: ch}, nil
 	}
@@ -311,8 +299,7 @@ func (e *authAwareStreamExecutor) HttpRequest(ctx context.Context, auth *coreaut
 	return nil, &coreauth.Error{
 		Code:       "not_implemented",
 		Message:    "HttpRequest not implemented",
-		HTTPStatus: http.StatusNotImplemented,
-	}
+		HTTPStatus: http.StatusNotImplemented}
 }
 
 func (e *authAwareStreamExecutor) Calls() int {
@@ -338,8 +325,10 @@ func TestExecuteStreamWithAuthManager_RetriesBeforeFirstByte(t *testing.T) {
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -348,8 +337,10 @@ func TestExecuteStreamWithAuthManager_RetriesBeforeFirstByte(t *testing.T) {
 		ID:       "auth2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -364,9 +355,7 @@ func TestExecuteStreamWithAuthManager_RetriesBeforeFirstByte(t *testing.T) {
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		PassthroughHeaders: true,
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 1,
-		},
-	}, manager)
+			BootstrapRetries: 1}}, manager)
 	dataChan, upstreamHeaders, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "test-model", []byte(`{"model":"test-model"}`), "")
 	if dataChan == nil || errChan == nil {
 		t.Fatalf("expected non-nil channels")
@@ -398,15 +387,14 @@ func TestExecuteStreamWithAuthManager_RetriesBeforeFirstByte(t *testing.T) {
 func TestExecuteStreamWithAuthManager_ResolvesBootstrapRetryHeadersBeforeReturn(t *testing.T) {
 	executor := &blockingRetryStreamExecutor{
 		retryStarted: make(chan struct{}),
-		allowRetry:   make(chan struct{}),
-	}
+		allowRetry:   make(chan struct{})}
 	manager := coreauth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(executor)
-	auth1 := &coreauth.Auth{ID: "auth1", Provider: "codex", Status: coreauth.StatusActive, Metadata: map[string]any{"email": "test1@example.com"}}
+	auth1 := &coreauth.Auth{ID: "auth1", Provider: "codex", Status: coreauth.StatusActive, Attributes: map[string]string{coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey, coreauth.AttributeAPIKey: "test-key"}, Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
-	auth2 := &coreauth.Auth{ID: "auth2", Provider: "codex", Status: coreauth.StatusActive, Metadata: map[string]any{"email": "test2@example.com"}}
+	auth2 := &coreauth.Auth{ID: "auth2", Provider: "codex", Status: coreauth.StatusActive, Attributes: map[string]string{coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey, coreauth.AttributeAPIKey: "test-key"}, Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -496,12 +484,12 @@ func registerBootstrapExecutor(t *testing.T, executor *bootstrapStreamExecutor) 
 	t.Helper()
 	manager := coreauth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(executor)
-	auth := &coreauth.Auth{ID: "bootstrap-auth", Provider: executor.Identifier(), Status: coreauth.StatusActive, Metadata: map[string]any{"email": "bootstrap@example.com"}}
+	auth := &coreauth.Auth{ID: "bootstrap-auth", Provider: executor.Identifier(), Status: coreauth.StatusActive, Attributes: map[string]string{coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey, coreauth.AttributeAPIKey: "test-key"}, Metadata: map[string]any{"email": "bootstrap@example.com"}}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}
 	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: "bootstrap-model"}})
-	authRetry := &coreauth.Auth{ID: "bootstrap-auth-retry", Provider: executor.Identifier(), Status: coreauth.StatusActive, Metadata: map[string]any{"email": "bootstrap-retry@example.com"}}
+	authRetry := &coreauth.Auth{ID: "bootstrap-auth-retry", Provider: executor.Identifier(), Status: coreauth.StatusActive, Attributes: map[string]string{coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey, coreauth.AttributeAPIKey: "test-key"}, Metadata: map[string]any{"email": "bootstrap-retry@example.com"}}
 	if _, errRegister := manager.Register(context.Background(), authRetry); errRegister != nil {
 		t.Fatalf("manager.Register(retry): %v", errRegister)
 	}
@@ -684,8 +672,7 @@ func (d *handlerAccountedHomeDispatcher) RPopAuth(_ context.Context, model strin
 		"concurrency": map[string]any{"accounted": true, "credential_id": "handler-cred", "model": model},
 		"model":       model,
 		"auth_index":  "handler-cred",
-		"auth":        map[string]any{"id": "handler-cred", "provider": "bootstrap-test", "status": coreauth.StatusActive},
-	})
+		"auth":        map[string]any{"id": "handler-cred", "provider": "bootstrap-test", "status": coreauth.StatusActive}})
 }
 func (*handlerAccountedHomeDispatcher) AbortAmbiguousDispatch() {}
 
@@ -733,8 +720,7 @@ func TestExecuteStreamWithAuthManager_HomeBootstrapFailureDoesNotRedispatch(t *t
 	}
 	wantRelease := handlerReleaseNotification{
 		group:    executionregistry.ReleaseGroup{CredentialID: "handler-cred", Model: "home-model"},
-		sequence: 1,
-	}
+		sequence: 1}
 	if got := releaseSink.Notifications(); len(got) != 1 || got[0] != wantRelease {
 		t.Fatalf("release notifications = %#v, want [%#v]", got, wantRelease)
 	}
@@ -755,8 +741,10 @@ func TestExecuteStreamWithAuthManager_HeaderPassthroughDisabledByDefault(t *test
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -765,8 +753,10 @@ func TestExecuteStreamWithAuthManager_HeaderPassthroughDisabledByDefault(t *test
 		ID:       "auth2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -780,9 +770,7 @@ func TestExecuteStreamWithAuthManager_HeaderPassthroughDisabledByDefault(t *test
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 1,
-		},
-	}, manager)
+			BootstrapRetries: 1}}, manager)
 	dataChan, upstreamHeaders, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "test-model", []byte(`{"model":"test-model"}`), "")
 	if dataChan == nil || errChan == nil {
 		t.Fatalf("expected non-nil channels")
@@ -815,8 +803,10 @@ func TestExecuteStreamWithAuthManager_DoesNotRetryAfterFirstByte(t *testing.T) {
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -825,8 +815,10 @@ func TestExecuteStreamWithAuthManager_DoesNotRetryAfterFirstByte(t *testing.T) {
 		ID:       "auth2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -840,9 +832,7 @@ func TestExecuteStreamWithAuthManager_DoesNotRetryAfterFirstByte(t *testing.T) {
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 1,
-		},
-	}, manager)
+			BootstrapRetries: 1}}, manager)
 	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "test-model", []byte(`{"model":"test-model"}`), "")
 	if dataChan == nil || errChan == nil {
 		t.Fatalf("expected non-nil channels")
@@ -885,8 +875,10 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -898,9 +890,7 @@ func TestExecuteStreamWithAuthManager_EnrichesBootstrapRetryAuthUnavailableError
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 1,
-		},
-	}, manager)
+			BootstrapRetries: 1}}, manager)
 	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "test-model", []byte(`{"model":"test-model"}`), "")
 	if dataChan == nil || errChan == nil {
 		t.Fatalf("expected non-nil channels")
@@ -965,8 +955,7 @@ func (e *overloadStreamExecutor) ExecuteStream(context.Context, *coreauth.Auth, 
 	return nil, &coreauth.Error{
 		Code:       "server_is_overloaded",
 		Message:    `{"type":"error","code":"server_is_overloaded","message":"Our servers are currently overloaded. Please try again later.","sequence_number":0}`,
-		HTTPStatus: http.StatusServiceUnavailable,
-	}
+		HTTPStatus: http.StatusServiceUnavailable}
 }
 
 func (e *overloadStreamExecutor) Refresh(ctx context.Context, auth *coreauth.Auth) (*coreauth.Auth, error) {
@@ -990,14 +979,18 @@ func TestExecuteStreamWithAuthManager_ForwardsOverloadErrorWhenAllAuthsOverloade
 		ID:       "auth-overload-1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	auth2 := &coreauth.Auth{
 		ID:       "auth-overload-2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -1054,8 +1047,10 @@ func TestExecuteStreamWithAuthManager_PinnedAuthKeepsSameUpstream(t *testing.T) 
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -1064,8 +1059,10 @@ func TestExecuteStreamWithAuthManager_PinnedAuthKeepsSameUpstream(t *testing.T) 
 		ID:       "auth2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -1079,9 +1076,7 @@ func TestExecuteStreamWithAuthManager_PinnedAuthKeepsSameUpstream(t *testing.T) 
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 1,
-		},
-	}, manager)
+			BootstrapRetries: 1}}, manager)
 	ctx := WithPinnedAuthID(context.Background(), "auth1")
 	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(ctx, "openai", "test-model", []byte(`{"model":"test-model"}`), "")
 	if dataChan == nil || errChan == nil {
@@ -1126,8 +1121,10 @@ func TestExecuteStreamWithAuthManager_SelectedAuthCallbackReceivesAuthID(t *test
 		ID:       "auth2",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test2@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test2@example.com"}}
 	if _, err := manager.Register(context.Background(), auth2); err != nil {
 		t.Fatalf("manager.Register(auth2): %v", err)
 	}
@@ -1139,9 +1136,7 @@ func TestExecuteStreamWithAuthManager_SelectedAuthCallbackReceivesAuthID(t *test
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{
 		Streaming: sdkconfig.StreamingConfig{
-			BootstrapRetries: 0,
-		},
-	}, manager)
+			BootstrapRetries: 0}}, manager)
 
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()
@@ -1194,8 +1189,10 @@ func TestExecuteStreamWithAuthManager_ValidatesOpenAIResponsesStreamDataJSON(t *
 		ID:       "auth1",
 		Provider: "codex",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}
@@ -1246,8 +1243,10 @@ func TestExecuteStreamWithAuthManager_AllowsSplitOpenAIResponsesSSEEventLines(t 
 		ID:       "auth1",
 		Provider: "split-sse",
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "test1@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "test1@example.com"}}
 	if _, err := manager.Register(context.Background(), auth1); err != nil {
 		t.Fatalf("manager.Register(auth1): %v", err)
 	}

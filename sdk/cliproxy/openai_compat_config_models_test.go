@@ -15,15 +15,11 @@ func TestBuildOpenAICompatibilityConfigModels_InputModalities(t *testing.T) {
 				Name:            "upstream-vision",
 				Alias:           "mimo-v2.5-pro",
 				DisplayName:     "Mimo Vision",
-				InputModalities: []string{"TEXT", "image", "image"},
-			},
+				InputModalities: []string{"TEXT", "image", "image"}},
 			{
 				Name:  "upstream-image",
 				Alias: "compat-image",
-				Image: true,
-			},
-		},
-	}
+				Image: true}}}
 
 	models := buildOpenAICompatibilityConfigModels(compat)
 	if len(models) != 2 {

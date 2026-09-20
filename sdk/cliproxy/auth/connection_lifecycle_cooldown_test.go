@@ -37,8 +37,7 @@ func TestManager_MarkResult_ConnectionLifecycleDoesNotCooldown(t *testing.T) {
 		{name: "typed canceled", err: resultErrorFromError(context.Canceled)},
 		{name: "typed deadline", err: resultErrorFromError(context.DeadlineExceeded)},
 		{name: "url canceled", err: resultErrorFromError(&url.Error{Op: "Post", URL: "https://example.com", Err: context.Canceled})},
-		{name: "url deadline", err: resultErrorFromError(&url.Error{Op: "Post", URL: "https://example.com", Err: context.DeadlineExceeded})},
-	}
+		{name: "url deadline", err: resultErrorFromError(&url.Error{Op: "Post", URL: "https://example.com", Err: context.DeadlineExceeded})}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -54,8 +53,7 @@ func TestManager_MarkResult_ConnectionLifecycleDoesNotCooldown(t *testing.T) {
 				Provider: auth.Provider,
 				Model:    model,
 				Success:  false,
-				Error:    tc.err,
-			})
+				Error:    tc.err})
 
 			assertNoCooldown(t, m, auth.ID, model)
 		})
@@ -82,8 +80,7 @@ func TestManager_MarkResult_ConnectionLifecycleAuthLevelDoesNotCooldown(t *testi
 		Provider: auth.Provider,
 		// Empty model exercises the auth-level failure path.
 		Success: false,
-		Error:   &Error{Message: "websocket: close 1006 (abnormal closure): unexpected EOF"},
-	})
+		Error:   &Error{Message: "websocket: close 1006 (abnormal closure): unexpected EOF"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -115,8 +112,7 @@ func TestManager_MarkResult_HTTPStatusWithLifecycleTextStillCooldowns(t *testing
 		{name: "401 unexpected EOF", httpStatus: http.StatusUnauthorized, message: "unexpected EOF", wantAuth: true},
 		{name: "429 context canceled", httpStatus: http.StatusTooManyRequests, message: "context canceled", wantAuth: true},
 		{name: "500 unexpected EOF", httpStatus: http.StatusInternalServerError, message: "unexpected EOF"},
-		{name: "500 websocket 1006 text", httpStatus: http.StatusInternalServerError, message: "websocket: close 1006 (abnormal closure): unexpected EOF"},
-	}
+		{name: "500 websocket 1006 text", httpStatus: http.StatusInternalServerError, message: "websocket: close 1006 (abnormal closure): unexpected EOF"}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -135,9 +131,7 @@ func TestManager_MarkResult_HTTPStatusWithLifecycleTextStillCooldowns(t *testing
 				Success:  false,
 				Error: &Error{
 					HTTPStatus: tc.httpStatus,
-					Message:    tc.message,
-				},
-			})
+					Message:    tc.message}})
 
 			updated, ok := m.GetByID(auth.ID)
 			if !ok || updated == nil {
@@ -185,9 +179,7 @@ func TestManager_MarkResult_NonLifecycleStillCooldowns(t *testing.T) {
 		Error: &Error{
 			HTTPStatus: http.StatusInternalServerError,
 			Message:    "upstream internal failure",
-			Retryable:  true,
-		},
-	})
+			Retryable:  true}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -221,8 +213,7 @@ func TestResultErrorFromError_ConnectionLifecycleDoesNotBecomeRequestScoped(t *t
 		errors.New("websocket: close 1000 (normal)"),
 		errors.New("websocket: close 1006 (abnormal closure): unexpected EOF"),
 		errors.New("context deadline exceeded"),
-		errors.New("unexpected EOF"),
-	}
+		errors.New("unexpected EOF")}
 	for _, err := range cases {
 		if !isConnectionLifecycleError(err) {
 			t.Fatalf("isConnectionLifecycleError(%v) = false, want true", err)
@@ -251,8 +242,7 @@ func TestIsConnectionLifecycleError_StatusBearingErrorsStayCoolable(t *testing.T
 		&statusBearingError{status: http.StatusUnauthorized, msg: "unexpected EOF"},
 		&statusBearingError{status: http.StatusTooManyRequests, msg: "context canceled"},
 		&statusBearingError{status: http.StatusInternalServerError, msg: "unexpected EOF"},
-		&statusBearingError{status: http.StatusBadGateway, msg: "websocket: close 1006 (abnormal closure): unexpected EOF"},
-	}
+		&statusBearingError{status: http.StatusBadGateway, msg: "websocket: close 1006 (abnormal closure): unexpected EOF"}}
 	for _, err := range cases {
 		if isConnectionLifecycleError(err) {
 			t.Fatalf("isConnectionLifecycleError(%v) = true, want false for status-bearing errors", err)
@@ -268,8 +258,7 @@ func TestIsConnectionLifecycleError_TypedCloseWins(t *testing.T) {
 	// Typed websocket close is unambiguous even when an outer status is attached.
 	err := &statusBearingCloseError{
 		status: http.StatusBadGateway,
-		close:  &websocket.CloseError{Code: websocket.CloseAbnormalClosure, Text: "unexpected EOF"},
-	}
+		close:  &websocket.CloseError{Code: websocket.CloseAbnormalClosure, Text: "unexpected EOF"}}
 	if !isConnectionLifecycleError(err) {
 		t.Fatalf("typed CloseError should be lifecycle even with outer status")
 	}
@@ -292,8 +281,7 @@ func TestIsConnectionLifecycleError_TypedCloseWins(t *testing.T) {
 		Provider: auth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    got,
-	})
+		Error:    got})
 	assertNoCooldown(t, m, auth.ID, model)
 }
 

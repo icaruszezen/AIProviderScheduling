@@ -120,8 +120,7 @@ func GetPlatformInfo() map[string]interface{} {
 	info := map[string]interface{}{
 		"os":        runtime.GOOS,
 		"arch":      runtime.GOARCH,
-		"available": IsAvailable(),
-	}
+		"available": IsAvailable()}
 
 	switch runtime.GOOS {
 	case "darwin":

@@ -27,10 +27,7 @@ func TestObserveWebSocketResponseEventInvokesPlugin(t *testing.T) {
 					got = event
 					called = true
 					return nil
-				}),
-			},
-		},
-	})
+				})}}})
 
 	rawPayload := []byte(`{"type":"codex.rate_limits","rate_limits":{"primary":{"used_percent":42}}}`)
 	host.ObserveWebSocketResponseEvent(context.Background(), pluginapi.WebSocketResponseEvent{
@@ -43,8 +40,7 @@ func TestObserveWebSocketResponseEventInvokesPlugin(t *testing.T) {
 		AuthLabel:      "test-auth",
 		AuthType:       "oauth",
 		EventType:      "codex.rate_limits",
-		Payload:        rawPayload,
-	})
+		Payload:        rawPayload})
 
 	if !called {
 		t.Fatal("observer callback was not invoked")
@@ -82,16 +78,12 @@ func TestObserveWebSocketResponseEventClonesPayloadAndMetadata(t *testing.T) {
 					event.Metadata["key"] = "mutated"
 					called = true
 					return nil
-				}),
-			},
-		},
-	})
+				})}}})
 
 	host.ObserveWebSocketResponseEvent(ctx, pluginapi.WebSocketResponseEvent{
 		RequestID: "req-clone",
 		Payload:   originalPayload,
-		Metadata:  originalMetadata,
-	})
+		Metadata:  originalMetadata})
 
 	if !called {
 		t.Fatal("observer callback was not invoked")
@@ -111,10 +103,7 @@ func TestObserveWebSocketResponseEventFusesOnPanic(t *testing.T) {
 			Capabilities: pluginapi.Capabilities{
 				WebSocketResponseObserver: testWebSocketObserverFunc(func(context.Context, pluginapi.WebSocketResponseEvent) error {
 					panic("observer panic")
-				}),
-			},
-		},
-	})
+				})}}})
 
 	if !host.HasWebSocketResponseObservers() {
 		t.Fatal("HasWebSocketResponseObservers() = false, want true")
@@ -122,8 +111,7 @@ func TestObserveWebSocketResponseEventFusesOnPanic(t *testing.T) {
 
 	host.ObserveWebSocketResponseEvent(context.Background(), pluginapi.WebSocketResponseEvent{
 		RequestID: "req-panic",
-		Payload:   []byte(`{"type":"test"}`),
-	})
+		Payload:   []byte(`{"type":"test"}`)})
 
 	if !host.isPluginFused("panicking-observer") {
 		t.Fatal("isPluginFused(panicking-observer) = false, want true")
@@ -142,14 +130,10 @@ func TestObserveWebSocketResponseEventSkipPlugin(t *testing.T) {
 				WebSocketResponseObserver: testWebSocketObserverFunc(func(context.Context, pluginapi.WebSocketResponseEvent) error {
 					calls++
 					return nil
-				}),
-			},
-		},
-	})
+				})}}})
 
 	host.ObserveWebSocketResponseEventExcept(context.Background(), pluginapi.WebSocketResponseEvent{
-		RequestID: "req-skip",
-	}, "skipped-plugin")
+		RequestID: "req-skip"}, "skipped-plugin")
 
 	if calls != 0 {
 		t.Fatalf("observer calls = %d, want 0 when skipped", calls)
@@ -162,10 +146,7 @@ func TestRegisterRPCPluginRegistersWebSocketResponseObserver(t *testing.T) {
 			Capabilities: pluginapi.Capabilities{
 				WebSocketResponseObserver: testWebSocketObserverFunc(func(context.Context, pluginapi.WebSocketResponseEvent) error {
 					return nil
-				}),
-			},
-		},
-	})
+				})}}})
 
 	registered, errRegister := registerRPCPlugin(context.Background(), nil, "rpc-observer", lookup, pluginabi.MethodPluginRegister, nil)
 	if errRegister != nil {
@@ -193,15 +174,13 @@ func TestObserveWebSocketResponseEventRPCSanitizesMetadata(t *testing.T) {
 	client := &rpcObserverRecordingClient{}
 	adapter := &rpcPluginAdapter{
 		id:     "rpc-observer-sanitize",
-		client: client,
-	}
+		client: client}
 
 	rawPayload := []byte(`{"type":"codex.rate_limits","rate_limits":{"primary":{"used_percent":99}}}`)
 	unserializableMetadata := map[string]any{
 		"safe_key":   "safe_value",
 		"func_field": func() {},
-		"chan_field": make(chan int),
-	}
+		"chan_field": make(chan int)}
 
 	err := adapter.ObserveWebSocketResponseEvent(context.Background(), pluginapi.WebSocketResponseEvent{
 		RequestID:      "req-rpc-sanitize",
@@ -214,8 +193,7 @@ func TestObserveWebSocketResponseEventRPCSanitizesMetadata(t *testing.T) {
 		AuthType:       "oauth",
 		EventType:      "codex.rate_limits",
 		Payload:        rawPayload,
-		Metadata:       unserializableMetadata,
-	})
+		Metadata:       unserializableMetadata})
 	if err != nil {
 		t.Fatalf("ObserveWebSocketResponseEvent() error = %v", err)
 	}

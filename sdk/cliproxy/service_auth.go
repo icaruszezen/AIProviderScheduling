@@ -9,21 +9,10 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/wsrelay"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
 	log "github.com/sirupsen/logrus"
 )
-
-// newDefaultAuthManager creates a default authentication manager with supported OAuth providers.
-func newDefaultAuthManager() *sdkAuth.Manager {
-	return sdkAuth.NewManager(
-		sdkAuth.GetTokenStore(),
-		sdkAuth.NewCodexAuthenticator(),
-		sdkAuth.NewClaudeAuthenticator(),
-		sdkAuth.NewXAIAuthenticator(),
-	)
-}
 
 func (s *Service) ensureAuthUpdateQueue(ctx context.Context) {
 	if s == nil {
@@ -123,8 +112,7 @@ func (s *Service) handleAuthUpdates(ctx context.Context, updates []watcher.AuthU
 				category: modelRegistrationCategory(authForRegistration),
 				run: func(compatCache *openAICompatibilityRegistrationCache) {
 					s.completeModelRegistrationForAuthWithCache(registrationCtx, authForRegistration, compatCache)
-				},
-			})
+				}})
 			needsPluginSync = true
 		case watcher.AuthUpdateActionDelete:
 			id := update.ID
@@ -202,8 +190,7 @@ func (s *Service) ensureWebsocketGateway() {
 		OnDisconnected: s.wsOnDisconnected,
 		LogDebugf:      log.Debugf,
 		LogInfof:       log.Infof,
-		LogWarnf:       log.Warnf,
-	}
+		LogWarnf:       log.Warnf}
 	s.wsGateway = wsrelay.NewManager(opts)
 }
 
@@ -223,21 +210,21 @@ func (s *Service) wsOnConnected(channelID string) {
 	}
 	now := time.Now().UTC()
 	auth := &coreauth.Auth{
-		ID:         channelID,  // keep channel identifier as ID
-		Provider:   "aistudio", // logical provider for switch routing
-		Label:      channelID,  // display original channel id
-		Status:     coreauth.StatusActive,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-		Attributes: map[string]string{"runtime_only": "true"},
-		Metadata:   map[string]any{"email": channelID}, // metadata drives logging and usage tracking
-	}
+		ID:        channelID,  // keep channel identifier as ID
+		Provider:  "aistudio", // logical provider for switch routing
+		Label:     channelID,  // display original channel id
+		Status:    coreauth.StatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Attributes: map[string]string{
+			coreauth.AttributeRuntimeOnly: "true",
+			coreauth.AttributeAuthKind:    coreauth.AuthKindAPIKey},
+		Metadata: map[string]any{"email": channelID}}
 	log.Infof("websocket provider connected: %s", channelID)
 	s.emitAuthUpdate(context.Background(), watcher.AuthUpdate{
 		Action: watcher.AuthUpdateActionAdd,
 		ID:     auth.ID,
-		Auth:   auth,
-	})
+		Auth:   auth})
 }
 
 func (s *Service) wsOnDisconnected(channelID string, reason error) {
@@ -256,8 +243,7 @@ func (s *Service) wsOnDisconnected(channelID string, reason error) {
 	ctx := context.Background()
 	s.emitAuthUpdate(ctx, watcher.AuthUpdate{
 		Action: watcher.AuthUpdateActionDelete,
-		ID:     channelID,
-	})
+		ID:     channelID})
 }
 
 func (s *Service) applyCoreAuthAddOrUpdate(ctx context.Context, auth *coreauth.Auth) {
@@ -381,32 +367,10 @@ func (s *Service) configureCooldownStateStoreContext(ctx context.Context, cfg *c
 }
 
 func (s *Service) resolveCooldownStateStore(cfg *config.Config) coreauth.CooldownStateStore {
-	if cfg == nil || !cfg.SaveCooldownStatus || cfg.Home.Enabled {
-		return nil
-	}
 	if s != nil && s.cooldownStateStore != nil {
 		return s.cooldownStateStore
 	}
-	authDir, errResolve := resolveCooldownStateAuthDir(cfg)
-	if errResolve != nil {
-		log.Warnf("failed to resolve cooldown state directory: %v", errResolve)
-		return nil
-	}
-	if authDir == "" {
-		return nil
-	}
-	return coreauth.NewFileCooldownStateStoreWithAuthDir(authDir, authDir)
-}
-
-func resolveCooldownStateAuthDir(cfg *config.Config) (string, error) {
-	if cfg == nil {
-		return "", nil
-	}
-	authDir, errAuthDir := util.ResolveAuthDir(cfg.AuthDir)
-	if errAuthDir != nil {
-		return "", errAuthDir
-	}
-	return authDir, nil
+	return nil
 }
 
 func openAICompatInfoFromAuth(a *coreauth.Auth) (providerKey string, compatName string, ok bool) {

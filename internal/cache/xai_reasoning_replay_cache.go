@@ -123,8 +123,7 @@ func StoreXAIReasoningReplayItems(ctx context.Context, modelName, sessionKey str
 	defer xaiReasoningReplayMu.Unlock()
 	xaiReasoningReplayEntries[key] = xaiReasoningReplayEntry{
 		Items:     normalized,
-		Timestamp: now,
-	}
+		Timestamp: now}
 	if len(xaiReasoningReplayEntries) > XAIReasoningReplayCacheMaxEntries {
 		evictOldestXAIReasoningReplayEntriesLocked(XAIReasoningReplayCacheEvictBatchSize)
 	}

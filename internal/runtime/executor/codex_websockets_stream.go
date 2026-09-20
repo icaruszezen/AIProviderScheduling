@@ -120,8 +120,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	}
+		AuthValue: authValue}
 	helps.RecordAPIWebsocketRequest(ctx, e.cfg, wsReqLog)
 
 	var conn *websocket.Conn
@@ -248,8 +247,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 				AuthID:    authID,
 				AuthLabel: authLabel,
 				AuthType:  authType,
-				AuthValue: authValue,
-			})
+				AuthValue: authValue})
 			recordAPIWebsocketHandshake(ctx, e.cfg, respHSRetry)
 			reporter.StartResponseTTFT()
 			cliproxyexecutor.MarkUpstreamAttempt(ctx)

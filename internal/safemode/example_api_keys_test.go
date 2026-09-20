@@ -13,8 +13,7 @@ func TestExampleAPIKeysDetectsOnlyTemplateValues(t *testing.T) {
 		"change-me",
 		"your-api-key-2",
 		"your-api-key-2",
-		"your-api-key-3",
-	}
+		"your-api-key-3"}
 
 	got := ExampleAPIKeys(keys)
 	want := []string{"your-api-key-1", "your-api-key-2", "your-api-key-3"}

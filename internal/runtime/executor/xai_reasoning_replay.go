@@ -63,8 +63,7 @@ func xaiReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.
 	sessionKey = xaiReasoningReplayIsolateSessionKey(ctx, sessionKey)
 	return xaiReasoningReplayScope{
 		modelName:  thinking.ParseSuffix(req.Model).ModelName,
-		sessionKey: sessionKey,
-	}
+		sessionKey: sessionKey}
 }
 
 // xaiReasoningReplayIsolateSessionKey namespaces client-controlled session keys

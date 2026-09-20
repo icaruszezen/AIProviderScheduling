@@ -156,11 +156,9 @@ func newClaudeFastDirectResponseError(resp *http.Response, body []byte) error {
 		response: &cliproxyexecutor.RequestTerminatedError{
 			HTTPStatus: resp.StatusCode,
 			Header:     headers,
-			Body:       bytes.Clone(body),
-		},
+			Body:       bytes.Clone(body)},
 		retryAfter:       retryAfter,
-		credentialScoped: credentialScoped,
-	}
+		credentialScoped: credentialScoped}
 }
 
 func claudeRequestIsFast(req *http.Request, body []byte) bool {

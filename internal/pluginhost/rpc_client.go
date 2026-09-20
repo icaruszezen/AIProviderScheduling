@@ -61,8 +61,7 @@ func registerRPCPlugin(ctx context.Context, host *Host, id string, client plugin
 	}
 	resp, errCall := callPlugin[rpcRegistration](ctx, client, method, rpcLifecycleRequest{
 		ConfigYAML:    bytes.Clone(configYAML),
-		SchemaVersion: pluginabi.SchemaVersion,
-	})
+		SchemaVersion: pluginabi.SchemaVersion})
 	if errCall != nil {
 		return pluginapi.Plugin{}, errCall
 	}
@@ -82,9 +81,7 @@ func registerRPCPlugin(ctx context.Context, host *Host, id string, client plugin
 			FrontendAuthProviderExclusive: resp.Capabilities.FrontendAuthProvider && resp.Capabilities.FrontendAuthProviderExclusive,
 			ExecutorModelScope:            resp.Capabilities.ExecutorModelScope,
 			ExecutorInputFormats:          append([]string(nil), resp.Capabilities.ExecutorInputFormats...),
-			ExecutorOutputFormats:         append([]string(nil), resp.Capabilities.ExecutorOutputFormats...),
-		},
-	}
+			ExecutorOutputFormats:         append([]string(nil), resp.Capabilities.ExecutorOutputFormats...)}}
 	if resp.Capabilities.ModelRegistrar {
 		plugin.Capabilities.ModelRegistrar = adapter
 	}
@@ -321,8 +318,7 @@ func decodeEnvelopeResult[T any](envelope pluginabi.Envelope) (T, error) {
 			return zero, rpcError{
 				Code:       strings.TrimSpace(envelope.Error.Code),
 				message:    message,
-				statusCode: envelope.Error.HTTPStatus,
-			}
+				statusCode: envelope.Error.HTTPStatus}
 		}
 		return zero, fmt.Errorf("plugin call failed")
 	}
@@ -348,9 +344,7 @@ func marshalRPCError(code, message string) []byte {
 		OK: false,
 		Error: &pluginabi.Error{
 			Code:    code,
-			Message: message,
-		},
-	})
+			Message: message}})
 	return raw
 }
 
@@ -374,8 +368,7 @@ func (a *rpcPluginAdapter) ModelsForAuth(ctx context.Context, req pluginapi.Auth
 	defer closeCallback()
 	return callPlugin[pluginapi.ModelResponse](ctx, a.client, pluginabi.MethodModelForAuth, rpcAuthModelRequest{
 		AuthModelRequest: req,
-		HostCallbackID:   callbackID,
-	})
+		HostCallbackID:   callbackID})
 }
 
 func (a *rpcPluginAdapter) Pick(ctx context.Context, req pluginapi.SchedulerPickRequest) (pluginapi.SchedulerPickResponse, error) {
@@ -387,8 +380,7 @@ func (a *rpcPluginAdapter) RouteModel(ctx context.Context, req pluginapi.ModelRo
 	defer closeCallback()
 	return callPlugin[pluginapi.ModelRouteResponse](ctx, a.client, pluginabi.MethodModelRoute, rpcModelRouteRequest{
 		ModelRouteRequest: req,
-		HostCallbackID:    callbackID,
-	})
+		HostCallbackID:    callbackID})
 }
 
 func callPluginIdentifier(client pluginClient, method string) string {
@@ -419,22 +411,12 @@ func (a *rpcPluginAdapter) ParseAuth(ctx context.Context, req pluginapi.AuthPars
 	return callPlugin[pluginapi.AuthParseResponse](ctx, a.client, pluginabi.MethodAuthParse, req)
 }
 
-func (a *rpcPluginAdapter) StartLogin(ctx context.Context, req pluginapi.AuthLoginStartRequest) (pluginapi.AuthLoginStartResponse, error) {
-	callbackID, closeCallback := a.openHostCallbackContext(ctx)
-	defer closeCallback()
-	return callPlugin[pluginapi.AuthLoginStartResponse](ctx, a.client, pluginabi.MethodAuthLoginStart, rpcAuthLoginStartRequest{
-		AuthLoginStartRequest: req,
-		HostCallbackID:        callbackID,
-	})
+func (a *rpcPluginAdapter) StartLogin(context.Context, pluginapi.AuthLoginStartRequest) (pluginapi.AuthLoginStartResponse, error) {
+	return pluginapi.AuthLoginStartResponse{}, pluginapi.ErrOAuthLoginUnsupported
 }
 
-func (a *rpcPluginAdapter) PollLogin(ctx context.Context, req pluginapi.AuthLoginPollRequest) (pluginapi.AuthLoginPollResponse, error) {
-	callbackID, closeCallback := a.openHostCallbackContext(ctx)
-	defer closeCallback()
-	return callPlugin[pluginapi.AuthLoginPollResponse](ctx, a.client, pluginabi.MethodAuthLoginPoll, rpcAuthLoginPollRequest{
-		AuthLoginPollRequest: req,
-		HostCallbackID:       callbackID,
-	})
+func (a *rpcPluginAdapter) PollLogin(context.Context, pluginapi.AuthLoginPollRequest) (pluginapi.AuthLoginPollResponse, error) {
+	return pluginapi.AuthLoginPollResponse{}, pluginapi.ErrOAuthLoginUnsupported
 }
 
 func (a *rpcPluginAdapter) RefreshAuth(ctx context.Context, req pluginapi.AuthRefreshRequest) (pluginapi.AuthRefreshResponse, error) {
@@ -442,8 +424,7 @@ func (a *rpcPluginAdapter) RefreshAuth(ctx context.Context, req pluginapi.AuthRe
 	defer closeCallback()
 	return callPlugin[pluginapi.AuthRefreshResponse](ctx, a.client, pluginabi.MethodAuthRefresh, rpcAuthRefreshRequest{
 		AuthRefreshRequest: req,
-		HostCallbackID:     callbackID,
-	})
+		HostCallbackID:     callbackID})
 }
 
 func (a *rpcPluginAdapter) Authenticate(ctx context.Context, req pluginapi.FrontendAuthRequest) (pluginapi.FrontendAuthResponse, error) {
@@ -455,8 +436,7 @@ func (a *rpcPluginAdapter) Execute(ctx context.Context, req pluginapi.ExecutorRe
 	defer closeCallback()
 	return callPlugin[pluginapi.ExecutorResponse](ctx, a.client, pluginabi.MethodExecutorExecute, rpcExecutorRequest{
 		ExecutorRequest: req,
-		HostCallbackID:  callbackID,
-	})
+		HostCallbackID:  callbackID})
 }
 
 func (a *rpcPluginAdapter) CountTokens(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
@@ -464,8 +444,7 @@ func (a *rpcPluginAdapter) CountTokens(ctx context.Context, req pluginapi.Execut
 	defer closeCallback()
 	return callPlugin[pluginapi.ExecutorResponse](ctx, a.client, pluginabi.MethodExecutorCountTokens, rpcExecutorRequest{
 		ExecutorRequest: req,
-		HostCallbackID:  callbackID,
-	})
+		HostCallbackID:  callbackID})
 }
 
 func (a *rpcPluginAdapter) HttpRequest(ctx context.Context, req pluginapi.ExecutorHTTPRequest) (pluginapi.ExecutorHTTPResponse, error) {
@@ -473,8 +452,7 @@ func (a *rpcPluginAdapter) HttpRequest(ctx context.Context, req pluginapi.Execut
 	defer closeCallback()
 	return callPlugin[pluginapi.ExecutorHTTPResponse](ctx, a.client, pluginabi.MethodExecutorHTTPRequest, rpcExecutorHTTPRequest{
 		ExecutorHTTPRequest: req,
-		HostCallbackID:      callbackID,
-	})
+		HostCallbackID:      callbackID})
 }
 
 func (a *rpcPluginAdapter) TranslateRequest(ctx context.Context, req pluginapi.RequestTransformRequest) (pluginapi.PayloadResponse, error) {
@@ -490,8 +468,7 @@ func (a *rpcPluginAdapter) InterceptRequestBeforeAuth(ctx context.Context, req p
 	defer closeCallback()
 	return callPlugin[pluginapi.RequestInterceptResponse](ctx, a.client, pluginabi.MethodRequestInterceptBefore, rpcRequestInterceptRequest{
 		RequestInterceptRequest: req,
-		HostCallbackID:          callbackID,
-	})
+		HostCallbackID:          callbackID})
 }
 
 func (a *rpcPluginAdapter) InterceptRequestAfterAuth(ctx context.Context, req pluginapi.RequestInterceptRequest) (pluginapi.RequestInterceptResponse, error) {
@@ -499,8 +476,7 @@ func (a *rpcPluginAdapter) InterceptRequestAfterAuth(ctx context.Context, req pl
 	defer closeCallback()
 	return callPlugin[pluginapi.RequestInterceptResponse](ctx, a.client, pluginabi.MethodRequestInterceptAfter, rpcRequestInterceptRequest{
 		RequestInterceptRequest: req,
-		HostCallbackID:          callbackID,
-	})
+		HostCallbackID:          callbackID})
 }
 
 func (a *rpcPluginAdapter) HandleRequestComplete(ctx context.Context, completion pluginapi.RequestCompletion) error {
@@ -508,8 +484,7 @@ func (a *rpcPluginAdapter) HandleRequestComplete(ctx context.Context, completion
 	defer closeCallback()
 	_, errCall := callPlugin[rpcEmptyResponse](ctx, a.client, pluginabi.MethodRequestComplete, rpcRequestCompletion{
 		RequestCompletion: completion,
-		HostCallbackID:    callbackID,
-	})
+		HostCallbackID:    callbackID})
 	return errCall
 }
 
@@ -526,8 +501,7 @@ func (a *rpcPluginAdapter) InterceptResponse(ctx context.Context, req pluginapi.
 	defer closeCallback()
 	return callPlugin[pluginapi.ResponseInterceptResponse](ctx, a.client, pluginabi.MethodResponseInterceptAfter, rpcResponseInterceptRequest{
 		ResponseInterceptRequest: req,
-		HostCallbackID:           callbackID,
-	})
+		HostCallbackID:           callbackID})
 }
 
 func (a *rpcPluginAdapter) InterceptStreamChunk(ctx context.Context, req pluginapi.StreamChunkInterceptRequest) (pluginapi.StreamChunkInterceptResponse, error) {
@@ -535,8 +509,7 @@ func (a *rpcPluginAdapter) InterceptStreamChunk(ctx context.Context, req plugina
 	defer closeCallback()
 	return callPlugin[pluginapi.StreamChunkInterceptResponse](ctx, a.client, pluginabi.MethodResponseInterceptStreamChunk, rpcStreamChunkInterceptRequest{
 		StreamChunkInterceptRequest: req,
-		HostCallbackID:              callbackID,
-	})
+		HostCallbackID:              callbackID})
 }
 
 func (a *rpcPluginAdapter) ObserveWebSocketResponseEvent(ctx context.Context, event pluginapi.WebSocketResponseEvent) error {
@@ -544,8 +517,7 @@ func (a *rpcPluginAdapter) ObserveWebSocketResponseEvent(ctx context.Context, ev
 	defer closeCallback()
 	_, errCall := callPlugin[rpcEmptyResponse](ctx, a.client, pluginabi.MethodWebSocketResponseEvent, rpcWebSocketResponseEvent{
 		WebSocketResponseEvent: event,
-		HostCallbackID:         callbackID,
-	})
+		HostCallbackID:         callbackID})
 	return errCall
 }
 
@@ -554,8 +526,7 @@ func (a rpcThinkingApplier) ApplyThinking(ctx context.Context, req pluginapi.Thi
 	defer closeCallback()
 	return callPlugin[pluginapi.PayloadResponse](ctx, a.client, pluginabi.MethodThinkingApply, rpcThinkingApplyRequest{
 		ThinkingApplyRequest: req,
-		HostCallbackID:       callbackID,
-	})
+		HostCallbackID:       callbackID})
 }
 
 func (a *rpcPluginAdapter) HandleUsage(ctx context.Context, record pluginapi.UsageRecord) {
@@ -595,8 +566,7 @@ func (a *rpcPluginAdapter) HandleManagement(ctx context.Context, req pluginapi.M
 	defer closeCallback()
 	return callPlugin[pluginapi.ManagementResponse](ctx, a.client, pluginabi.MethodManagementHandle, rpcManagementRequest{
 		ManagementRequest: req,
-		HostCallbackID:    callbackID,
-	})
+		HostCallbackID:    callbackID})
 }
 
 func httpResponseFromPlugin(resp pluginapi.ExecutorHTTPResponse, req *http.Request) *http.Response {
@@ -609,6 +579,5 @@ func httpResponseFromPlugin(resp pluginapi.ExecutorHTTPResponse, req *http.Reque
 		Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
 		Header:     cloneHeader(resp.Headers),
 		Body:       io.NopCloser(bytes.NewReader(bytes.Clone(resp.Body))),
-		Request:    req,
-	}
+		Request:    req}
 }

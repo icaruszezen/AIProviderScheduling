@@ -22,8 +22,7 @@ func TestGetBytesReturnsBodyAndSendsHeaders(t *testing.T) {
 
 	data, errGet := GetBytes(context.Background(), server.Client(), server.URL, map[string]string{
 		"User-Agent": "agent",
-		"Accept":     "application/json",
-	}, 0)
+		"Accept":     "application/json"}, 0)
 	if errGet != nil {
 		t.Fatalf("GetBytes() error = %v", errGet)
 	}

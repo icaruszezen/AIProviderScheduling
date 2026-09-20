@@ -213,8 +213,7 @@ func TestRedisOptionsHomeTLSDisabled(t *testing.T) {
 	client := New(config.HomeConfig{
 		Enabled: true,
 		Host:    "127.0.0.1",
-		Port:    6379,
-	})
+		Port:    6379})
 
 	client.mu.Lock()
 	options, err := client.redisOptionsLocked("127.0.0.1:6379")
@@ -237,9 +236,7 @@ func TestRedisOptionsHomeTLSEnabledUsesSeedHostAsServerName(t *testing.T) {
 		Host:    "home.example.com",
 		Port:    444,
 		TLS: config.HomeTLSConfig{
-			Enable: true,
-		},
-	})
+			Enable: true}})
 	client.homeCfg.Host = "127.0.0.1"
 
 	client.mu.Lock()
@@ -268,9 +265,7 @@ func TestRedisOptionsHomeTLSEnabledUsesExplicitServerName(t *testing.T) {
 		TLS: config.HomeTLSConfig{
 			Enable:             true,
 			ServerName:         "home.example.com",
-			InsecureSkipVerify: true,
-		},
-	})
+			InsecureSkipVerify: true}})
 
 	client.mu.Lock()
 	options, err := client.redisOptionsLocked("127.0.0.1:444")
@@ -295,8 +290,7 @@ func TestRefreshClusterNodesDisabledSkipsRedisCommand(t *testing.T) {
 		Enabled:                 true,
 		Host:                    "127.0.0.1",
 		Port:                    1,
-		DisableClusterDiscovery: true,
-	})
+		DisableClusterDiscovery: true})
 
 	switched, err := client.refreshClusterNodes(context.Background())
 	if err != nil {
@@ -325,8 +319,7 @@ func TestGetConfigSkipsSecondDialAfterClusterTransportFailure(t *testing.T) {
 			dialAttempts++
 			dialMu.Unlock()
 			return nil, errors.New("test Home unavailable")
-		},
-	}
+		}}
 	client.cmdOptions = cloneRedisOptions(options)
 	client.cmd = redis.NewClient(options)
 	t.Cleanup(client.Close)
@@ -349,8 +342,7 @@ func TestGetConfigContinuesAfterClusterDiscoveryResponseError(t *testing.T) {
 		response string
 	}{
 		{name: "protocol error", response: "-ERR cluster command unsupported\r\n"},
-		{name: "response type error", response: ":1\r\n"},
-	}
+		{name: "response type error", response: ":1\r\n"}}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -391,8 +383,7 @@ func TestFailoverAfterReconnectFailureDisabledDoesNotSwitchToClusterNode(t *test
 		Enabled:                 true,
 		Host:                    "seed.example.com",
 		Port:                    8327,
-		DisableClusterDiscovery: true,
-	})
+		DisableClusterDiscovery: true})
 	client.mu.Lock()
 	client.clusterNodes = []clusterNode{{IP: "other.example.com", Port: 8327}}
 	client.reconnectFailures = homeReconnectFailoverThreshold - 1
@@ -418,8 +409,7 @@ func TestNewLifetimePreservesClusterFailoverState(t *testing.T) {
 	client.homeCfg.Host = "failed.example.com"
 	client.clusterNodes = []clusterNode{
 		{IP: "failed.example.com", Port: 8327, ClientCount: 1},
-		{IP: "healthy.example.com", Port: 8327, ClientCount: 2},
-	}
+		{IP: "healthy.example.com", Port: 8327, ClientCount: 2}}
 	client.reconnectFailures = homeReconnectFailoverThreshold - 1
 	client.mu.Unlock()
 	client.Close()
@@ -447,8 +437,7 @@ func TestNewLifetimePreservesClusterFailoverState(t *testing.T) {
 	}
 	if !reflect.DeepEqual(nodes, []clusterNode{
 		{IP: "failed.example.com", Port: 8327, ClientCount: 1},
-		{IP: "healthy.example.com", Port: 8327, ClientCount: 2},
-	}) {
+		{IP: "healthy.example.com", Port: 8327, ClientCount: 2}}) {
 		t.Fatalf("cluster nodes = %#v", nodes)
 	}
 	if failures != homeReconnectFailoverThreshold-1 {
@@ -494,8 +483,7 @@ func TestConcurrencyReleaseDoesNotOpenBeforeMembershipReady(t *testing.T) {
 	}{
 		{name: "takeover pending", state: recoveryStateTakeoverEligible},
 		{name: "target switching", state: recoveryStateSwitching},
-		{name: "target switching with takeover", state: recoveryStateSwitchingTakeover},
-	}
+		{name: "target switching with takeover", state: recoveryStateSwitchingTakeover}}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -782,8 +770,7 @@ func TestKVMSetUsesStableKeyOrder(t *testing.T) {
 
 	if errMSet := client.KVMSet(context.Background(), map[string][]byte{
 		"b": []byte("2"),
-		"a": []byte("1"),
-	}); errMSet != nil {
+		"a": []byte("1")}); errMSet != nil {
 		t.Fatalf("KVMSet() error = %v", errMSet)
 	}
 	got := commands.Last()
@@ -839,8 +826,7 @@ func TestPluginSyncCommandClientUsesDedicatedTimeout(t *testing.T) {
 		Addr:         "127.0.0.1:1",
 		ReadTimeout:  homeRedisOperationTimeout,
 		WriteTimeout: homeRedisOperationTimeout,
-		MaxRetries:   -1,
-	}
+		MaxRetries:   -1}
 	pluginSync := newPluginSyncCommandClient(context.Background(), template)
 	if pluginSync == nil {
 		t.Fatal("newPluginSyncCommandClient() = nil")
@@ -865,14 +851,9 @@ func TestGetPluginSyncUsesDedicatedCommandAndDecodesResponse(t *testing.T) {
 				Version:       "1.0.0",
 				Install: pluginstore.InstallPlan{Type: pluginstore.InstallTypeDirect, Artifacts: []pluginstore.Artifact{{
 					GOOS: "linux", GOARCH: "amd64", URL: "https://downloads.example/sample.zip",
-					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-				}}},
-			},
+					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}}},
 			Auth: []pluginstore.ResolvedAuthConfig{{
-				Match: "https://downloads.example/", Type: pluginstore.AuthTypeBearer, Token: pluginstore.Secret("temporary-token"),
-			}},
-		}},
-	}
+				Match: "https://downloads.example/", Type: pluginstore.AuthTypeBearer, Token: pluginstore.Secret("temporary-token")}}}}}
 	payload, errMarshal := json.Marshal(response)
 	if errMarshal != nil {
 		t.Fatalf("Marshal() error = %v", errMarshal)
@@ -888,9 +869,7 @@ func TestGetPluginSyncUsesDedicatedCommandAndDecodesResponse(t *testing.T) {
 		GOOS:          "linux",
 		GOARCH:        "amd64",
 		InstalledVersions: map[string]string{
-			"sample": "0.9.0",
-		},
-	}
+			"sample": "0.9.0"}}
 
 	gotResponse, errSync := client.GetPluginSync(context.Background(), request)
 	if errSync != nil {
@@ -917,8 +896,7 @@ func TestGetPluginSyncExceedsBaseTimeoutAndKeepsBaseClientUsable(t *testing.T) {
 	response := pluginstore.PluginSyncResponse{
 		SchemaVersion: pluginstore.PluginSyncSchemaVersion,
 		ExpiresAt:     time.Now().UTC().Add(time.Minute),
-		Items:         []pluginstore.PluginSyncItem{},
-	}
+		Items:         []pluginstore.PluginSyncItem{}}
 	payload, errMarshal := json.Marshal(response)
 	if errMarshal != nil {
 		t.Fatalf("Marshal() error = %v", errMarshal)
@@ -939,8 +917,7 @@ func TestGetPluginSyncExceedsBaseTimeoutAndKeepsBaseClientUsable(t *testing.T) {
 	})
 	startedAt := time.Now()
 	got, errSync := client.GetPluginSync(context.Background(), pluginstore.PluginSyncRequest{
-		SchemaVersion: pluginstore.PluginSyncSchemaVersion, GOOS: "linux", GOARCH: "amd64",
-	})
+		SchemaVersion: pluginstore.PluginSyncSchemaVersion, GOOS: "linux", GOARCH: "amd64"})
 	if errSync != nil {
 		t.Fatalf("GetPluginSync() error = %v", errSync)
 	}
@@ -971,8 +948,7 @@ func TestGetPluginSyncCancellationInterruptsRead(t *testing.T) {
 	}()
 	startedAt := time.Now()
 	_, errSync := client.GetPluginSync(ctx, pluginstore.PluginSyncRequest{
-		SchemaVersion: pluginstore.PluginSyncSchemaVersion, GOOS: "linux", GOARCH: "amd64",
-	})
+		SchemaVersion: pluginstore.PluginSyncSchemaVersion, GOOS: "linux", GOARCH: "amd64"})
 	close(release)
 	if !errors.Is(errSync, context.Canceled) {
 		t.Fatalf("GetPluginSync() error = %v, want context.Canceled", errSync)
@@ -1016,8 +992,7 @@ func TestProcessPluginSyncCommandCancellationInterruptsTLSHandshake(t *testing.T
 		ReadTimeout:           homeRedisTestOperationTimeout,
 		WriteTimeout:          homeRedisTestOperationTimeout,
 		MaxRetries:            -1,
-		ContextTimeoutEnabled: true,
-	}
+		ContextTimeoutEnabled: true}
 	command := redis.NewStringCmd(ctx, "get", redisKeyPluginSync, `{}`)
 	startedAt := time.Now()
 	errProcess := processPluginSyncCommand(ctx, options, command)
@@ -1047,8 +1022,7 @@ func newHomeTestCertificate(t *testing.T) tls.Certificate {
 		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
 		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		IsCA:         true,
-	}
+		IsCA:         true}
 	der, errCreate := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
 	if errCreate != nil {
 		t.Fatalf("create test certificate: %v", errCreate)
@@ -1064,8 +1038,7 @@ func TestProcessPluginSyncCommandCancellationUnderTLSBackpressure(t *testing.T) 
 	cert := newHomeTestCertificate(t)
 	serverTLS := &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS12,
-	}
+		MinVersion:   tls.VersionTLS12}
 	rawListener, errListen := net.Listen("tcp", "127.0.0.1:0")
 	if errListen != nil {
 		t.Fatalf("listen: %v", errListen)
@@ -1111,8 +1084,7 @@ func TestProcessPluginSyncCommandCancellationUnderTLSBackpressure(t *testing.T) 
 		ReadTimeout:           homePluginSyncOperationTimeout,
 		WriteTimeout:          homeRedisTestOperationTimeout,
 		MaxRetries:            -1,
-		ContextTimeoutEnabled: true,
-	}
+		ContextTimeoutEnabled: true}
 	options.Dialer = client.trackedRedisDialer(redis.NewDialer(options))
 	client.cmdOptions = cloneRedisOptions(options)
 	client.cmd = redis.NewClient(options)
@@ -1183,24 +1155,19 @@ func TestGetPluginSyncRecognizesUnsupportedHomeProtocol(t *testing.T) {
 			response: func() string {
 				payload := `{"error":{"type":"error","message":"wrong number of arguments for 'get' command"}}`
 				return fmt.Sprintf("$%d\r\n%s\r\n", len(payload), payload)
-			}(),
-		},
+			}()},
 		{
 			name:     "redis unsupported key",
-			response: "-ERR unsupported key\r\n",
-		},
+			response: "-ERR unsupported key\r\n"},
 		{
 			name: "structured unsupported type",
 			response: func() string {
 				payload := `{"error":{"type":"plugin_sync_unsupported","message":"plugin sync is unsupported"}}`
 				return fmt.Sprintf("$%d\r\n%s\r\n", len(payload), payload)
-			}(),
-		},
+			}()},
 		{
 			name:     "redis unsupported code",
-			response: "-ERR plugin_sync_unsupported\r\n",
-		},
-	}
+			response: "-ERR plugin_sync_unsupported\r\n"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1213,8 +1180,7 @@ func TestGetPluginSyncRecognizesUnsupportedHomeProtocol(t *testing.T) {
 			_, errSync := client.GetPluginSync(context.Background(), pluginstore.PluginSyncRequest{
 				SchemaVersion: pluginstore.PluginSyncSchemaVersion,
 				GOOS:          "linux",
-				GOARCH:        "amd64",
-			})
+				GOARCH:        "amd64"})
 			if !errors.Is(errSync, ErrPluginSyncUnsupported) {
 				t.Fatalf("GetPluginSync() error = %v, want ErrPluginSyncUnsupported", errSync)
 			}
@@ -1232,20 +1198,16 @@ func TestGetPluginSyncDoesNotFallbackForOtherHomeErrors(t *testing.T) {
 			response: func() string {
 				payload := `{"error":{"type":"error","message":"runtime not ready"}}`
 				return fmt.Sprintf("$%d\r\n%s\r\n", len(payload), payload)
-			}(),
-		},
+			}()},
 		{
 			name: "unsupported key substring",
 			response: func() string {
 				payload := `{"error":{"type":"error","message":"plugin registry contains unsupported key metadata"}}`
 				return fmt.Sprintf("$%d\r\n%s\r\n", len(payload), payload)
-			}(),
-		},
+			}()},
 		{
 			name:     "wrong arguments substring",
-			response: "-ERR failed to get plugin sync: wrong number of arguments in credential resolver\r\n",
-		},
-	}
+			response: "-ERR failed to get plugin sync: wrong number of arguments in credential resolver\r\n"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1259,8 +1221,7 @@ func TestGetPluginSyncDoesNotFallbackForOtherHomeErrors(t *testing.T) {
 			_, errSync := client.GetPluginSync(context.Background(), pluginstore.PluginSyncRequest{
 				SchemaVersion: pluginstore.PluginSyncSchemaVersion,
 				GOOS:          "linux",
-				GOARCH:        "amd64",
-			})
+				GOARCH:        "amd64"})
 			if errSync == nil {
 				t.Fatal("GetPluginSync() error = nil, want plugin sync failure")
 			}
@@ -1363,8 +1324,7 @@ func newRedisCommandTestClient(t *testing.T, handler func([]string) string) (*Cl
 		Enabled:                 true,
 		Host:                    host,
 		Port:                    port,
-		DisableClusterDiscovery: true,
-	})
+		DisableClusterDiscovery: true})
 	client.testOperationTimeout = homeRedisTestOperationTimeout
 	options := &redis.Options{
 		Addr:                  listener.Addr().String(),
@@ -1374,8 +1334,7 @@ func newRedisCommandTestClient(t *testing.T, handler func([]string) string) (*Cl
 		ReadTimeout:           homeRedisTestOperationTimeout,
 		WriteTimeout:          homeRedisTestOperationTimeout,
 		MaxRetries:            -1,
-		ContextTimeoutEnabled: true,
-	}
+		ContextTimeoutEnabled: true}
 	client.cmdOptions = cloneRedisOptions(options)
 	client.cmd = redis.NewClient(options)
 	client.sub = redis.NewClient(cloneRedisOptions(options))
@@ -1443,8 +1402,7 @@ func newBlockingRPopTestClient(t *testing.T) (*Client, <-chan struct{}, chan str
 		ReadTimeout:           time.Second,
 		WriteTimeout:          time.Second,
 		MaxRetries:            -1,
-		ContextTimeoutEnabled: true,
-	}
+		ContextTimeoutEnabled: true}
 	client := New(config.HomeConfig{Enabled: true, Host: "127.0.0.1", Port: 1, DisableClusterDiscovery: true})
 	options.Dialer = client.trackedRedisDialer(redis.NewDialer(options))
 	client.cmdOptions = cloneRedisOptions(options)
@@ -1525,8 +1483,7 @@ func TestModelsRequestSerializationCarriesCredentials(t *testing.T) {
 	req := modelsRequest{
 		Type:    "models",
 		Headers: headersToLowerMap(http.Header{"Authorization": {"Bearer test-key"}}),
-		Query:   queryToLowerMap(url.Values{"key": {"gemini-key"}}),
-	}
+		Query:   queryToLowerMap(url.Values{"key": {"gemini-key"}})}
 
 	raw, err := json.Marshal(&req)
 	if err != nil {
@@ -1579,8 +1536,7 @@ func TestModelsRequestOmitsEmptyCredentials(t *testing.T) {
 func TestQueryToLowerMap(t *testing.T) {
 	got := queryToLowerMap(url.Values{
 		"Key":   {"v1", "v2"},
-		"Token": {"abc"},
-	})
+		"Token": {"abc"}})
 	if got["key"] != "v1, v2" {
 		t.Fatalf("key = %q, want %q", got["key"], "v1, v2")
 	}
@@ -1614,8 +1570,7 @@ func TestConfigSubscriberUsesAppliedLifecycleRevisionAndRebuildsCommands(t *test
 	if errSet := client.SetLifecycleConfig(config.CredentialConcurrencyConfig{
 		LifecycleConfigRevision: 9,
 		CPAHeartbeatTimeout:     4 * time.Second,
-		CPACancelBound:          5 * time.Second,
-	}); errSet != nil {
+		CPACancelBound:          5 * time.Second}); errSet != nil {
 		t.Fatalf("SetLifecycleConfig() error = %v", errSet)
 	}
 	args, timeout := client.subscriptionParameters()
@@ -1762,8 +1717,7 @@ func TestRunConfigSubscriberLifetimeRejectsInvalidSubscriptionACK(t *testing.T) 
 	for name, ack := range map[string]string{
 		"message":       "*3\r\n$7\r\nmessage\r\n$6\r\nconfig\r\n$2\r\n{}\r\n",
 		"wrong-channel": "*3\r\n$9\r\nsubscribe\r\n$5\r\nother\r\n:1\r\n",
-		"wrong-count":   "*3\r\n$9\r\nsubscribe\r\n$6\r\nconfig\r\n:2\r\n",
-	} {
+		"wrong-count":   "*3\r\n$9\r\nsubscribe\r\n$6\r\nconfig\r\n:2\r\n"} {
 		t.Run(name, func(t *testing.T) {
 			client, commands := newRedisCommandTestClient(t, func(args []string) string {
 				switch {
@@ -1810,8 +1764,7 @@ func TestReceiveSubscriptionACKsForMultipleChannels(t *testing.T) {
 		{name: "missing final ACK", response: firstACK, wantErr: true},
 		{name: "wrong second channel", response: firstACK + "*3\r\n$9\r\nsubscribe\r\n$5\r\nother\r\n:2\r\n", wantErr: true},
 		{name: "wrong second kind", response: firstACK + "*3\r\n$11\r\nunsubscribe\r\n$6\r\nsecond\r\n:2\r\n", wantErr: true},
-		{name: "wrong second count", response: firstACK + "*3\r\n$9\r\nsubscribe\r\n$6\r\nsecond\r\n:1\r\n", wantErr: true},
-	}
+		{name: "wrong second count", response: firstACK + "*3\r\n$9\r\nsubscribe\r\n$6\r\nsecond\r\n:1\r\n", wantErr: true}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client, _ := newRedisCommandTestClient(t, func(args []string) string {
@@ -2028,8 +1981,7 @@ func TestIssuedRPopAuthErrorClassification(t *testing.T) {
 		{name: "tls interruption", err: x509.UnknownAuthorityError{}, ambiguous: true},
 		{name: "write interruption", err: &net.OpError{Op: "write", Err: io.ErrClosedPipe}, ambiguous: true},
 		{name: "partial response", err: io.ErrUnexpectedEOF, ambiguous: true},
-		{name: "unknown transport", err: errors.New("unknown transport state"), ambiguous: true},
-	}
+		{name: "unknown transport", err: errors.New("unknown transport state"), ambiguous: true}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isAmbiguousIssuedRPopAuthError(tt.err); got != tt.ambiguous {

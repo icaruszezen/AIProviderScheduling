@@ -22,18 +22,14 @@ func TestBuiltInSelectorCooldownErrorPreservesRouteModel(t *testing.T) {
 		NextRetryAfter: next,
 		Quota: QuotaState{
 			Exceeded:      true,
-			NextRecoverAt: next,
-		},
+			NextRecoverAt: next},
 		ModelStates: map[string]*ModelState{
-			"other-model": {Status: StatusActive},
-		},
-	}
+			"other-model": {Status: StatusActive}}}
 
 	selectors := map[string]Selector{
 		"round-robin":          &RoundRobinSelector{},
 		"weighted-round-robin": &WeightedRoundRobinSelector{},
-		"fill-first":           &FillFirstSelector{},
-	}
+		"fill-first":           &FillFirstSelector{}}
 	for name, selector := range selectors {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -76,13 +72,11 @@ func TestAvailableAuthsForRouteModel_AttachesUpstreamErrorWhenCandidatesCooling(
 		StatusMessage:  upstreamErrorMsg,
 		Quota: QuotaState{
 			Exceeded:      true,
-			NextRecoverAt: next,
-		},
+			NextRecoverAt: next},
 		LastError: &Error{
 			Code:       "auth_unavailable",
 			Message:    upstreamErrorMsg,
-			HTTPStatus: 503,
-		},
+			HTTPStatus: 503},
 		ModelStates: map[string]*ModelState{
 			routeModel: {
 				Status:         StatusError,
@@ -91,16 +85,11 @@ func TestAvailableAuthsForRouteModel_AttachesUpstreamErrorWhenCandidatesCooling(
 				StatusMessage:  upstreamErrorMsg,
 				Quota: QuotaState{
 					Exceeded:      true,
-					NextRecoverAt: next,
-				},
+					NextRecoverAt: next},
 				LastError: &Error{
 					Code:       "auth_unavailable",
 					Message:    upstreamErrorMsg,
-					HTTPStatus: 503,
-				},
-			},
-		},
-	}
+					HTTPStatus: 503}}}}
 
 	manager := NewManager(nil, nil, nil)
 	_, err := manager.availableAuthsForRouteModel([]*Auth{auth}, "codex", routeModel, time.Now())
@@ -144,10 +133,7 @@ func TestAvailableAuthsForRouteModel_PicksLatestCandidateError(t *testing.T) {
 				Status:        StatusError,
 				Unavailable:   true,
 				StatusMessage: olderErr,
-				UpdatedAt:     now.Add(-10 * time.Minute),
-			},
-		},
-	}
+				UpdatedAt:     now.Add(-10 * time.Minute)}}}
 	auth2 := &Auth{
 		ID:            "codex-auth-2",
 		Provider:      "codex",
@@ -160,10 +146,7 @@ func TestAvailableAuthsForRouteModel_PicksLatestCandidateError(t *testing.T) {
 				Status:        StatusError,
 				Unavailable:   true,
 				StatusMessage: newerErr,
-				UpdatedAt:     now.Add(-10 * time.Second),
-			},
-		},
-	}
+				UpdatedAt:     now.Add(-10 * time.Second)}}}
 
 	manager := NewManager(nil, nil, nil)
 	_, err := manager.availableAuthsForRouteModel([]*Auth{auth1, auth2}, "codex", routeModel, now)
@@ -200,10 +183,7 @@ func TestAvailableAuthsForRouteModel_ModelErrorPrioritizedOverGlobalAuthError(t 
 				Status:        StatusError,
 				Unavailable:   true,
 				StatusMessage: modelErr,
-				UpdatedAt:     now.Add(-10 * time.Minute),
-			},
-		},
-	}
+				UpdatedAt:     now.Add(-10 * time.Minute)}}}
 
 	manager := NewManager(nil, nil, nil)
 	_, err := manager.availableAuthsForRouteModel([]*Auth{auth}, "codex", routeModel, now)
@@ -233,8 +213,7 @@ func TestAvailableAuthsForRouteModel_FallbackToGlobalAuthErrorWhenNoModelState(t
 		Unavailable:   true,
 		Status:        StatusError,
 		StatusMessage: globalErr,
-		UpdatedAt:     now,
-	}
+		UpdatedAt:     now}
 
 	manager := NewManager(nil, nil, nil)
 	_, err := manager.availableAuthsForRouteModel([]*Auth{auth}, "codex", routeModel, now)
@@ -271,10 +250,7 @@ func TestAvailableAuthsForRouteModel_CrossCandidateModelErrorPrioritizedOverNewe
 				Status:        StatusError,
 				Unavailable:   true,
 				StatusMessage: candidateAModelErr,
-				UpdatedAt:     now.Add(-10 * time.Minute),
-			},
-		},
-	}
+				UpdatedAt:     now.Add(-10 * time.Minute)}}}
 
 	authB := &Auth{
 		ID:            "codex-auth-B",
@@ -341,10 +317,7 @@ func TestMixedUnavailableErrorLocked_GlobalModelErrorPriorityAcrossShards(t *tes
 				Status:        StatusError,
 				Unavailable:   true,
 				StatusMessage: codexModelErr,
-				UpdatedAt:     now.Add(-10 * time.Minute),
-			},
-		},
-	}); err != nil {
+				UpdatedAt:     now.Add(-10 * time.Minute)}}}); err != nil {
 		t.Fatalf("manager.Register(codex): %v", err)
 	}
 
@@ -404,381 +377,319 @@ func TestExtractUpstreamErrorSummary_AuthPackageDirectSanitization(t *testing.T)
 			name:         "authorization header with bearer redacted",
 			input:        "authorization: Bearer abcdef+TOPSECRET==",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "authorization header with basic redacted",
 			input:        "authorization: Basic my-secret-basic-auth",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "my-secret-basic-auth",
-		},
+			forbiddenRaw: "my-secret-basic-auth"},
 		{
 			name:         "authorization header with custom scheme redacted",
 			input:        "authorization: ApiKey SUPERSECRET",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "authorization header with comma separated parameters redacted",
 			input:        "Authorization: ApiKey first,SECONDSECRET",
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "SECONDSECRET",
-		},
+			forbiddenRaw: "SECONDSECRET"},
 		{
 			name:         "authorization header with digest parameters redacted",
 			input:        `Authorization: Digest username="Mufasa", realm="myrealm", nonce="NONCE", uri="/dir/index.html", response="SIG"`,
 			wantMask:     "Authorization: [REDACTED]",
-			forbiddenRaw: "NONCE",
-		},
+			forbiddenRaw: "NONCE"},
 		{
 			name:         "double quoted multi word password redacted",
 			input:        `password="correct horse battery staple"`,
 			wantMask:     `[REDACTED]`,
-			forbiddenRaw: "correct horse battery staple",
-		},
+			forbiddenRaw: "correct horse battery staple"},
 		{
 			name:         "double quoted comma containing api key redacted",
 			input:        `api_key="secret,value"`,
 			wantMask:     `[REDACTED]`,
-			forbiddenRaw: "secret,value",
-		},
+			forbiddenRaw: "secret,value"},
 		{
 			name:         "sk key redacted",
 			input:        "invalid key sk-live-secret-key-123456",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "live-secret-key",
-		},
+			forbiddenRaw: "live-secret-key"},
 		{
 			name:         "user path redacted",
 			input:        "open /Users/alice/configs/auth.json: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "json message containing invalid token secret redacted",
 			input:        `{"code":"oops","message":"invalid token SUPERSECRET"}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "single quoted key kv redacted",
 			input:        `'api_key'=SUPERSECRET`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "authorization equals bearer redacted",
 			input:        `authorization=Bearer SUPERSECRET`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unstructured invalid api key redacted",
 			input:        "invalid API key SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unstructured invalid access token redacted",
 			input:        "invalid access token SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unstructured socks5 proxy auth redacted",
 			input:        "proxyconnect tcp: socks5://alice:PASSSECRET@proxy.internal:1080",
 			wantMask:     "[REDACTED_AUTH]",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "unstructured signature url query redacted",
 			input:        "request failed: https://example.com?sig=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "json message containing invalid token secret with escaped quotes redacted",
 			input:        `{"code":"oops","message":"invalid token \"SUPERSECRET\""}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "json message containing password with escaped quotes redacted",
 			input:        `{"code":"oops","message":"password=\"abc\\\"SUPERSECRET\""}`,
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "natural language api key redacted",
 			input:        "upstream rejected API key: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "natural language password is redacted",
 			input:        "password is SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "mnt unix path redacted",
 			input:        "open /mnt/secrets/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows path with spaces redacted",
 			input:        `open C:\Users\Alice Smith\secret.txt: permission denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "cookie header redacted",
 			input:        "Cookie: sessionid=COOKIESECRET",
 			wantMask:     "Cookie: [REDACTED]",
-			forbiddenRaw: "COOKIESECRET",
-		},
+			forbiddenRaw: "COOKIESECRET"},
 		{
 			name:         "set-cookie header redacted",
 			input:        "Set-Cookie: session=SETCOOKIESECRET",
 			wantMask:     "Cookie: [REDACTED]",
-			forbiddenRaw: "SETCOOKIESECRET",
-		},
+			forbiddenRaw: "SETCOOKIESECRET"},
 		{
 			name:         "private key kv redacted",
 			input:        "private_key=PRIVATEKEYSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "PRIVATEKEYSECRET",
-		},
+			forbiddenRaw: "PRIVATEKEYSECRET"},
 		{
 			name:         "uri userinfo redacted",
 			input:        "https://user:PASSSECRET@example.com/api",
 			wantMask:     "https://[REDACTED_AUTH]@",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "workspace unix path redacted",
 			input:        "/workspace/tenants/alice/oauth-cache",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "opt unix path redacted",
 			input:        `open /opt/cli-proxy/auth/alice.json: failed`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows path redacted",
 			input:        `open C:\Users\alice\secret.txt: failed`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "kv secret redacted",
 			input:        "failed with api_key=secret-value-123 and token: my-secret-token",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "secret-value-123",
-		},
+			forbiddenRaw: "secret-value-123"},
 		{
 			name:         "incorrect api key provided redacted",
 			input:        "Incorrect API key provided: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "plural credentials redacted",
 			input:        "credentials: SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "aws secret access key redacted",
 			input:        "AWS_SECRET_ACCESS_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "protocol relative uri userinfo redacted",
 			input:        "//alice:PASSSECRET@example.com/api",
 			wantMask:     "[REDACTED_AUTH]",
-			forbiddenRaw: "PASSSECRET",
-		},
+			forbiddenRaw: "PASSSECRET"},
 		{
 			name:         "run secrets unix path redacted",
 			input:        "open /run/secrets/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "custom tenant unix path redacted",
 			input:        "open /custom/tenant/alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "windows unc path redacted",
 			input:        `open \\server\share\alice\secret.txt: permission denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "service key kv redacted",
 			input:        "SERVICE_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "openai key kv redacted",
 			input:        "OPENAI_KEY=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "x-key query param redacted",
 			input:        "https://example.com?x-key=SUPERSECRET",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "SUPERSECRET",
-		},
+			forbiddenRaw: "SUPERSECRET"},
 		{
 			name:         "unix path with spaces redacted",
 			input:        "open /custom/tenant/Alice Smith/secret.txt: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "Smith",
-		},
+			forbiddenRaw: "Smith"},
 		{
 			name:         "unix path with unicode redacted",
 			input:        "open /custom/租户/alice: denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "single segment unix path redacted",
 			input:        "open /alice: permission denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "stat single segment unicode path redacted",
 			input:        "stat /客户: no such file or directory",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "客户",
-		},
+			forbiddenRaw: "客户"},
 		{
 			name:         "quoted path with colon and secret redacted",
 			input:        `open "/tmp/customer:TOPSECRET/creds": denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "unquoted multi-word password redacted",
 			input:        "password = correct horse battery staple",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "battery staple",
-		},
+			forbiddenRaw: "battery staple"},
 		{
 			name:         "unquoted multi-word credentials redacted",
 			input:        "credentials: alice secret",
 			wantMask:     "[REDACTED]",
-			forbiddenRaw: "alice secret",
-		},
+			forbiddenRaw: "alice secret"},
 		{
 			name:         "quoted path containing password assignment redacted",
 			input:        `open "/Users/alice/password=foo/bar": denied`,
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "alice",
-		},
+			forbiddenRaw: "alice"},
 		{
 			name:         "unquoted path with colon and secret redacted",
 			input:        "open /tmp/customer:TOPSECRET/creds: denied",
 			wantMask:     "[REDACTED_PATH]",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "unquoted path with colon in leaf component redacted",
 			input:        "open /tmp/customer:TOPSECRET: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "multiple unquoted unix paths redacted",
 			input:        "rename /Users/alice/source /Users/bob/private-data: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "bob",
-		},
+			forbiddenRaw: "bob"},
 		{
 			name:         "non-terminal space path in multiple unix paths redacted",
 			input:        "rename /Users/Alice Smith/source /Users/bob/private-data: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "leaf filename with space redacted",
 			input:        "open /tmp/Alice Smith.txt: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "multiple paths with leaf filename spaces redacted",
 			input:        "rename /tmp/Alice Smith /tmp/Bob Jones: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "rename [REDACTED_PATH] [REDACTED_PATH]: denied",
-			forbiddenRaw: "Alice Smith",
-		},
+			forbiddenRaw: "Alice Smith"},
 		{
 			name:         "unquoted path with colon space in leaf component redacted",
 			input:        "open /tmp/customer: TOPSECRET: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: denied",
-			forbiddenRaw: "TOPSECRET",
-		},
+			forbiddenRaw: "TOPSECRET"},
 		{
 			name:         "parenthesized unquoted path redacted and parens preserved",
 			input:        "open (/tmp/customer): denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open ([REDACTED_PATH]): denied",
-			forbiddenRaw: "customer",
-		},
+			forbiddenRaw: "customer"},
 		{
 			name:         "braced unquoted path redacted and braces preserved",
 			input:        "open {/tmp/customer}: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open {[REDACTED_PATH]}: denied",
-			forbiddenRaw: "customer",
-		},
+			forbiddenRaw: "customer"},
 		{
 			name:         "nested error text preserved after path",
 			input:        "open /tmp/config: permission denied: retry later",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: permission denied: retry later",
-			forbiddenRaw: "config",
-		},
+			forbiddenRaw: "config"},
 		{
 			name:         "nested known error text preserved after path",
 			input:        "open /tmp/config: permission denied: access denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "open [REDACTED_PATH]: permission denied: access denied",
-			forbiddenRaw: "config",
-		},
+			forbiddenRaw: "config"},
 		{
 			name:         "uppercase connector between paths preserved",
 			input:        "copy /tmp/a   TO\t/tmp/b: denied",
 			wantMask:     "[REDACTED_PATH]",
 			wantExact:    "copy [REDACTED_PATH]   TO\t[REDACTED_PATH]: denied",
-			forbiddenRaw: "",
-		},
+			forbiddenRaw: ""},
 		{
 			name:         "long connector string bounded to 256 runes",
 			input:        strings.Repeat("a", 300) + " to /tmp/x: denied",
 			wantMask:     "...",
-			forbiddenRaw: "x",
-		},
-	}
+			forbiddenRaw: "x"}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

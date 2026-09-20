@@ -60,10 +60,11 @@ func (*captureExecutor) ExecuteStream(context.Context, *auth.Auth, coreexecutor.
 func (e *captureExecutor) Refresh(_ context.Context, credential *auth.Auth) (*auth.Auth, error) {
 	e.refreshCalls.Add(1)
 	updated := credential.Clone()
-	if updated.Metadata == nil {
-		updated.Metadata = make(map[string]any)
+	if updated.Attributes == nil {
+		updated.Attributes = make(map[string]string)
 	}
-	updated.Metadata["access_token"] = "refreshed-home-live-token"
+	updated.Attributes[auth.AttributeAPIKey] = "refreshed-home-live-token"
+	updated.Attributes[auth.AttributeAuthKind] = auth.AuthKindAPIKey
 	return updated, nil
 }
 
@@ -72,7 +73,10 @@ func (*captureExecutor) CountTokens(context.Context, *auth.Auth, coreexecutor.Re
 }
 
 func (*captureExecutor) PrepareRequest(req *http.Request, credential *auth.Auth) error {
-	token, _ := credential.Metadata["access_token"].(string)
+	token := ""
+	if credential != nil && credential.Attributes != nil {
+		token = credential.Attributes[auth.AttributeAPIKey]
+	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	return nil
 }
@@ -172,10 +176,10 @@ func (d *homeDispatcher) RPopAuth(_ context.Context, model string, _ string, _ h
 		"provider":   "codex",
 		"auth_index": authID,
 		"auth": map[string]any{
-			"id":       authID,
-			"provider": "codex",
-			"status":   "active",
-			"metadata": map[string]any{"access_token": "home-live-token"},
+			"id":         authID,
+			"provider":   "codex",
+			"status":     "active",
+			"attributes": map[string]string{"api_key": "home-live-token", "auth_kind": "apikey"},
 		},
 		"concurrency": map[string]any{
 			"accounted":     true,
@@ -318,19 +322,14 @@ func TestHandlerRewritesLiveCallAndSchedulesOAuth(t *testing.T) {
 	executor := &captureExecutor{responseBody: responseBody}
 	manager.RegisterExecutor(executor)
 	registerCredential(t, manager, &auth.Auth{
-		ID:         "codex-api-key",
-		Provider:   "codex",
-		Status:     auth.StatusActive,
-		Attributes: map[string]string{auth.AttributeAPIKey: "must-not-be-used"},
-	})
-	registerCredential(t, manager, &auth.Auth{
 		ID:       "codex-oauth",
 		Provider: "codex",
 		Status:   auth.StatusActive,
-		Metadata: map[string]any{
-			"access_token": "oauth-token",
-			"account_id":   "account-123",
+		Attributes: map[string]string{
+			auth.AttributeAPIKey:   "oauth-token",
+			auth.AttributeAuthKind: auth.AuthKindAPIKey,
 		},
+		Metadata: map[string]any{"account_id": "account-123"},
 	})
 
 	handler := NewHandler(manager, nil)
@@ -468,12 +467,12 @@ func TestHandlerRelaysWebRTCMediaSDP(t *testing.T) {
 	}
 	manager.RegisterExecutor(executor)
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Label:    "Voice credential",
-		ProxyURL: "socks5://credential-proxy.example:1080",
-		Metadata: map[string]any{"access_token": "oauth-token"},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Label:      "Voice credential",
+		ProxyURL:   "socks5://credential-proxy.example:1080",
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 	})
 	mediaSession := &fakeMediaSession{downstreamSDP: "v=0\r\no=downstream-answer\r\n"}
 	mediaRelay := &fakeMediaRelay{
@@ -570,10 +569,10 @@ func TestHandlerClosesUnretainedMediaSession(t *testing.T) {
 			}
 			manager.RegisterExecutor(executor)
 			registerCredential(t, manager, &auth.Auth{
-				ID:       "codex-oauth",
-				Provider: "codex",
-				Status:   auth.StatusActive,
-				Metadata: map[string]any{"access_token": "oauth-token"},
+				ID:         "codex-oauth",
+				Provider:   "codex",
+				Status:     auth.StatusActive,
+				Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 			})
 			mediaSession := &fakeMediaSession{
 				downstreamSDP: "v=0\r\no=downstream-answer\r\n",
@@ -647,10 +646,10 @@ func TestHandlerClosesMediaWhenResponseWriteFails(t *testing.T) {
 		responseBody: &trackedResponseBody{Reader: strings.NewReader("v=0\r\no=upstream-answer\r\n")},
 	})
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "oauth-token"},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 	})
 	mediaSession := &fakeMediaSession{downstreamSDP: "v=0\r\no=downstream-answer\r\n"}
 	handler := NewHandler(manager, nil)
@@ -916,16 +915,18 @@ func TestHandleSidebandPinsAuthAndRelaysBidirectionally(t *testing.T) {
 	executor := &captureExecutor{}
 	manager.RegisterExecutor(executor)
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "other-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "other-token", "account_id": "other-account"},
+		ID:         "other-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "other-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
+		Metadata:   map[string]any{"account_id": "other-account"},
 	})
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "pinned-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "pinned-token", "account_id": "pinned-account"},
+		ID:         "pinned-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "pinned-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
+		Metadata:   map[string]any{"account_id": "pinned-account"},
 	})
 
 	handler := NewHandler(manager, nil)
@@ -1006,7 +1007,7 @@ func TestHandleSidebandForwardsUnauthorizedHomeHandshakeWithoutRefresh(t *testin
 			manager.PublishHomeDispatch(&homeDispatcher{}, registry, 1)
 			executor := &captureExecutor{}
 			manager.RegisterExecutor(executor)
-			selection, errSelect := manager.SelectHomeAuthByKind(context.Background(), "codex", defaultLiveModel, auth.AuthKindOAuth, coreexecutor.Options{})
+			selection, errSelect := manager.SelectHomeAuthByKind(context.Background(), "codex", defaultLiveModel, auth.AuthKindAPIKey, coreexecutor.Options{})
 			if errSelect != nil {
 				t.Fatalf("SelectHomeAuthByKind() error = %v", errSelect)
 			}

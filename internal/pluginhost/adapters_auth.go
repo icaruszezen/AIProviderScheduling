@@ -33,8 +33,7 @@ func (h *Host) RegisterFrontendAuthProviders() {
 			pluginID: record.id,
 			path:     record.path,
 			version:  record.version,
-			provider: provider,
-		}
+			provider: provider}
 		key := strings.TrimSpace(adapter.Identifier())
 		if key == "" {
 			continue
@@ -45,8 +44,7 @@ func (h *Host) RegisterFrontendAuthProviders() {
 			candidate := exclusiveFrontendAuthCandidate{
 				key:      key,
 				pluginID: record.id,
-				priority: record.priority,
-			}
+				priority: record.priority}
 			if bestExclusive.key == "" ||
 				candidate.priority > bestExclusive.priority ||
 				(candidate.priority == bestExclusive.priority && candidate.pluginID < bestExclusive.pluginID) {
@@ -132,8 +130,7 @@ func (a *accessAdapter) Authenticate(ctx context.Context, r *http.Request) (resu
 		Path:    r.URL.Path,
 		Headers: cloneHeader(r.Header),
 		Query:   cloneValues(r.URL.Query()),
-		Body:    bytes.Clone(body),
-	})
+		Body:    bytes.Clone(body)})
 	if errAuthenticate != nil || !resp.Authenticated {
 		return nil, sdkaccess.NewNotHandledError()
 	}
@@ -144,6 +141,5 @@ func (a *accessAdapter) Authenticate(ctx context.Context, r *http.Request) (resu
 	return &sdkaccess.Result{
 		Provider:  providerID,
 		Principal: resp.Principal,
-		Metadata:  cloneStringMap(resp.Metadata),
-	}, nil
+		Metadata:  cloneStringMap(resp.Metadata)}, nil
 }

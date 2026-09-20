@@ -11,14 +11,11 @@ func TestParseConfigBytesClaudeCodeModelListCloaking(t *testing.T) {
 		{
 			name: "defaults to enabled cloaking",
 			yaml: "port: 8317\n",
-			want: false,
-		},
+			want: false},
 		{
 			name: "disables model list cloaking",
 			yaml: "claude-code:\n  disable-cloaking-model-list: true\n",
-			want: true,
-		},
-	}
+			want: true}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -56,6 +56,8 @@ func (s *ConfigSynthesizer) Synthesize(ctx *SynthesisContext) ([]*coreauth.Auth,
 	out = append(out, s.synthesizeOpenAICompat(ctx)...)
 	// Vertex-compat
 	out = append(out, s.synthesizeVertexCompat(ctx)...)
+	// Antigravity API Keys
+	out = append(out, s.synthesizeAntigravityKeys(ctx)...)
 
 	return out, nil
 }
@@ -88,8 +90,7 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 		id, token := idGen.Next(idKind, key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:%s[%s]", sourceName, token),
-			"config_index": strconv.Itoa(i),
-		}
+			"config_index": strconv.Itoa(i)}
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -122,8 +123,7 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 			Attributes: attrs,
 			Metadata:   metadata,
 			CreatedAt:  now,
-			UpdatedAt:  now,
-		}
+			UpdatedAt:  now}
 		ApplyAuthExcludedModelsMeta(a, cfg, entry.ExcludedModels, "apikey")
 		if len(a.Metadata) == 0 {
 			a.Metadata = nil
@@ -152,8 +152,7 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 		id, token := idGen.Next("claude:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(ck.Headers))
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:claude[%s]", token),
-			"config_index": strconv.Itoa(i),
-		}
+			"config_index": strconv.Itoa(i)}
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -192,8 +191,7 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 			Attributes: attrs,
 			Metadata:   metadata,
 			CreatedAt:  now,
-			UpdatedAt:  now,
-		}
+			UpdatedAt:  now}
 		ApplyAuthExcludedModelsMeta(a, cfg, ck.ExcludedModels, "apikey")
 		if len(a.Metadata) == 0 {
 			a.Metadata = nil
@@ -231,8 +229,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 		id, token := idGen.Next(provider+":apikey", key, baseURL, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:%s[%s]", provider, token),
-			"config_index": strconv.Itoa(i),
-		}
+			"config_index": strconv.Itoa(i)}
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -274,8 +271,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 			Attributes: attrs,
 			Metadata:   metadata,
 			CreatedAt:  now,
-			UpdatedAt:  now,
-		}
+			UpdatedAt:  now}
 		ApplyAuthExcludedModelsMeta(a, cfg, entry.ExcludedModels, "apikey")
 		if len(a.Metadata) == 0 {
 			a.Metadata = nil
@@ -319,8 +315,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				"base_url":     base,
 				"compat_name":  compat.Name,
 				"provider_key": internalProviderKey,
-				"config_index": strconv.Itoa(i),
-			}
+				"config_index": strconv.Itoa(i)}
 			metadata := map[string]any{}
 			if disableCooling != nil {
 				metadata["disable_cooling"] = *disableCooling
@@ -350,8 +345,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				Attributes: attrs,
 				Metadata:   metadata,
 				CreatedAt:  now,
-				UpdatedAt:  now,
-			}
+				UpdatedAt:  now}
 			if len(a.Metadata) == 0 {
 				a.Metadata = nil
 			}
@@ -367,8 +361,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				"base_url":     base,
 				"compat_name":  compat.Name,
 				"provider_key": internalProviderKey,
-				"config_index": strconv.Itoa(i),
-			}
+				"config_index": strconv.Itoa(i)}
 			metadata := map[string]any{}
 			if disableCooling != nil {
 				metadata["disable_cooling"] = *disableCooling
@@ -393,8 +386,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				Attributes: attrs,
 				Metadata:   metadata,
 				CreatedAt:  now,
-				UpdatedAt:  now,
-			}
+				UpdatedAt:  now}
 			if len(a.Metadata) == 0 {
 				a.Metadata = nil
 			}
@@ -420,13 +412,12 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 		prefix := strings.TrimSpace(compat.Prefix)
 		proxyURL := strings.TrimSpace(compat.ProxyURL)
 		idKind := "vertex:apikey"
-		id, token := idGen.Next(idKind, key, base, proxyURL)
+		id, token := idGen.Next(idKind, key, base, proxyURL, config.ServiceAccountIdentity(compat.ServiceAccount))
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:vertex-apikey[%s]", token),
 			"base_url":     base,
 			"provider_key": providerName,
-			"config_index": strconv.Itoa(i),
-		}
+			"config_index": strconv.Itoa(i)}
 		if compat.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(compat.Priority)
 		}
@@ -439,6 +430,26 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 		}
 		addConfigHeadersToAttrs(compat.Headers, attrs)
 		metadata := map[string]any{}
+		if len(compat.ServiceAccount) > 0 {
+			metadata["service_account"] = compat.ServiceAccount
+		}
+		if projectID := strings.TrimSpace(compat.ProjectID); projectID != "" {
+			metadata["project_id"] = projectID
+		} else if projectID := config.ServiceAccountIdentity(compat.ServiceAccount); projectID != "" && projectID != "service-account" {
+			if raw, ok := compat.ServiceAccount["project_id"].(string); ok && strings.TrimSpace(raw) != "" {
+				metadata["project_id"] = strings.TrimSpace(raw)
+			}
+		}
+		if location := strings.TrimSpace(compat.Location); location != "" {
+			metadata["location"] = location
+		}
+		if email := strings.TrimSpace(compat.Email); email != "" {
+			metadata["email"] = email
+		} else if raw, ok := compat.ServiceAccount["client_email"].(string); ok {
+			if email := strings.TrimSpace(raw); email != "" {
+				metadata["email"] = email
+			}
+		}
 		if compat.DisableCooling != nil {
 			metadata["disable_cooling"] = *compat.DisableCooling
 		}
@@ -455,9 +466,68 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 			Attributes: attrs,
 			Metadata:   metadata,
 			CreatedAt:  now,
-			UpdatedAt:  now,
-		}
+			UpdatedAt:  now}
 		ApplyAuthExcludedModelsMeta(a, cfg, compat.ExcludedModels, "apikey")
+		if len(a.Metadata) == 0 {
+			a.Metadata = nil
+		}
+		out = append(out, a)
+	}
+	return out
+}
+
+func (s *ConfigSynthesizer) synthesizeAntigravityKeys(ctx *SynthesisContext) []*coreauth.Auth {
+	cfg := ctx.Config
+	now := ctx.Now
+	idGen := ctx.IDGenerator
+
+	out := make([]*coreauth.Auth, 0, len(cfg.AntigravityKey))
+	for i := range cfg.AntigravityKey {
+		entry := cfg.AntigravityKey[i]
+		key := strings.TrimSpace(entry.APIKey)
+		base := strings.TrimSpace(entry.BaseURL)
+		if key == "" && base == "" {
+			continue
+		}
+		prefix := strings.TrimSpace(entry.Prefix)
+		proxyURL := strings.TrimSpace(entry.ProxyURL)
+		id, token := idGen.Next("antigravity:apikey", key, base, proxyURL, prefix, strings.TrimSpace(entry.ProjectID), config.FormatSortedHeaders(entry.Headers))
+		attrs := map[string]string{
+			"source":       fmt.Sprintf("config:antigravity[%s]", token),
+			"config_index": strconv.Itoa(i)}
+		if key != "" {
+			attrs["api_key"] = key
+		}
+		if base != "" {
+			attrs["base_url"] = base
+		}
+		if entry.Priority != 0 {
+			attrs["priority"] = strconv.Itoa(entry.Priority)
+		}
+		addWeightToAttrs(entry.Weight, attrs)
+		addConfigHeadersToAttrs(entry.Headers, attrs)
+		metadata := map[string]any{}
+		if projectID := strings.TrimSpace(entry.ProjectID); projectID != "" {
+			metadata["project_id"] = projectID
+		}
+		if entry.DisableCooling != nil {
+			metadata["disable_cooling"] = *entry.DisableCooling
+		}
+		addRequestRetryToMetadata(entry.RequestRetry, metadata)
+		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
+		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
+		a := &coreauth.Auth{
+			ID:         id,
+			Provider:   constant.Antigravity,
+			Label:      "antigravity-apikey",
+			Prefix:     prefix,
+			Status:     coreauth.StatusActive,
+			ProxyURL:   proxyURL,
+			Attributes: attrs,
+			Metadata:   metadata,
+			CreatedAt:  now,
+			UpdatedAt:  now}
+		ApplyAuthExcludedModelsMeta(a, cfg, entry.ExcludedModels, "apikey")
 		if len(a.Metadata) == 0 {
 			a.Metadata = nil
 		}

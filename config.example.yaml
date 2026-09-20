@@ -30,12 +30,14 @@ remote-management:
   # disable-auto-update-panel: false
 
   # GitHub repository for the management control panel. Accepts a repository URL or releases API URL.
+  # Do not point this at router-for-me/Cli-Proxy-API-Management-Center: that official panel still
+  # ships Auth Files / OAuth pages that this server no longer implements.
   panel-github-repository: "https://github.com/icaruszezen/AI-Provider-Scheduling-Management-Center"
 
 # Optional master/slave config sync. Independent of Home mode (Home ignores this block).
 # Sync copies provider blocks (including upstream API keys), inbound api-keys, and
-# operational parameters. It does not copy auth-dir files (OAuth accounts).
-# Local identity is never overwritten: host, port, tls, auth-dir, remote-management,
+# operational parameters.
+# Local identity is never overwritten: host, port, tls, remote-management,
 # cluster, pprof, and plugins.dir stay on each node.
 # Protocol endpoints (/v0/management/cluster/register|heartbeat|export|apply) authenticate
 # with cluster.token (or CLUSTER_TOKEN) and do not require allow-remote.
@@ -56,9 +58,6 @@ cluster:
   # Intervals below 5 seconds are raised to 5.
   # sync-interval-seconds: 30
   # heartbeat-interval-seconds: 15
-
-# Authentication directory (supports ~ for home directory)
-auth-dir: "~/.cli-proxy-api"
 
 # API keys for authentication
 api-keys:
@@ -207,19 +206,14 @@ disable-cooling: false
 # A credential local-compact value, when present, overrides this global value.
 local-compact: false
 
-# When true, persist per-auth cooldown status as .cds files next to auth files.
-# Default is false; when false, cooldown status is kept in memory only.
-save-cooldown-status: false
-
 # Cooldown duration in seconds for transient upstream errors (408/500/502/503/504).
 # Set to 0 to keep the legacy 60-second cooldown; set to -1 to disable transient error cooldowns.
 transient-error-cooldown-seconds: 0
 
 # When true, globally disable Claude request cloaking (the Claude Code CLI disguise and
 # system prompt replacement), so the original system prompt is passed through to Claude as-is.
-# Individual credentials can still override this: a claude-api-key entry via its "cloak.mode",
-# or a Claude OAuth/token file via a "cloak_mode" value. Default false keeps the per-client
-# "auto" behavior (cloak only non-Claude-Code clients).
+# Individual claude-api-key entries can still override this via "cloak.mode".
+# Default false keeps the per-client "auto" behavior (cloak only non-Claude-Code clients).
 disable-claude-cloak-mode: false
 
 # Claude Code compatibility settings.
@@ -241,10 +235,6 @@ disable-image-generation: false
 # to the credential that created them. Default: 3h.
 video-result-auth-cache-ttl: "3h"
 
-# Core auth auto-refresh worker pool size (OAuth/file-based auth token refresh).
-# When > 0, overrides the default worker count (16).
-# auth-auto-refresh-workers: 16
-
 # Quota exceeded behavior
 quota-exceeded:
   switch-project: true # Whether to automatically switch to another project when a quota is exceeded
@@ -256,7 +246,7 @@ routing:
   strategy: "round-robin" # round-robin (default), weighted-round-robin, fill-first
   # weighted-round-robin uses each credential's integer weight (default 1, maximum 1,000,000).
   # Non-positive weights exclude the credential while this strategy is active.
-  # For OAuth/file credentials, add a top-level numeric "weight" field to the auth JSON.
+  # Set weight on each *-api-key / openai-compatibility / vertex-api-key / antigravity-api-key entry.
   # Enable universal session-sticky routing for all clients.
   # Explicit Claude Code, Codex, OpenCode, and pi session headers are preferred,
   # followed by prompt_cache_key, Responses conversation IDs, legacy body IDs,
@@ -552,10 +542,8 @@ nonstream-keepalive-interval: 0
 #       mode: "auto"                 # "auto" (default inside this block): cloak only when client is not Claude Code
 #                                    # "always": cloak every unconfirmed client; confirmed native Claude Code still passes through
 #                                    # "never": never apply cloaking
-#       # This "cloak" block applies to this claude-api-key entry only. For Claude OAuth
-#       # credentials, set the same options in the auth/token JSON file via "cloak_mode" /
-#       # "cloak_strict_mode" / "cloak_sensitive_words" / "cloak_cache_user_id". The top-level
-#       # "disable-claude-cloak-mode: true" disables cloaking for all Claude credentials at once.
+#       # This "cloak" block applies to this claude-api-key entry only.
+#       # The top-level "disable-claude-cloak-mode: true" disables cloaking for all Claude credentials at once.
 #       strict-mode: false           # false (default): legacy-model whitelist uses a user system-reminder;
 #                                    # all other and future models use messages[].role=system
 #                                    # true: strip caller prompts and keep only Claude Code billing and identity blocks
@@ -563,31 +551,25 @@ nonstream-keepalive-interval: 0
 #         - "API"
 #         - "proxy"
 #       cache-user-id: true          # optional: default is false; set true to reuse cached user_id per API key instead of generating a random one each request
-#       # Every custom tool on a cloaked OAuth request automatically uses a caller-stable opaque mcp__<server>__<tool> alias.
+#       # Every custom tool on a cloaked request automatically uses a caller-stable opaque mcp__<server>__<tool> alias.
 #
 #     # fingerprint-profile (optional, top-level on this claude-api-key entry; not a cloak sub-field):
-#     # OAuth and API-key fingerprints are different contracts.
-#     #   - Real Claude OAuth stays on the strict Claude Code CLI wire fingerprint.
-#     #   - API keys (official Anthropic, custom gateways, Kimi) stay loose and
-#     #     caller-owned unless this field is set.
-#     #
 #     # Default (omit / empty): keep the caller request fingerprint and headers.
 #     # Official api.anthropic.com API keys do not add extra CLI betas/identity unless
 #     # this field is set. Custom gateways and delegated providers are the same.
 #     #
 #     # Controls request fingerprint only on /v1/messages (and related Claude executor paths).
 #     # Auth scheme stays API key (x-api-key on api.anthropic.com; Bearer on custom base-url).
-#     # Does NOT enable OAuth refresh, profile fetch, or OAuth-cancellation semantics.
+#     # This is wire-protocol disguise only; it does not add account login or token refresh.
 #     #
 #     # Values:
 #     #   omit / empty        = caller-owned API-key fingerprint (respects caller)
-#     #   "claude-code-cli"   = same Messages fingerprint as Claude Code OAuth CLI,
-#     #                         including official Anthropic API keys: OAuth Anthropic-Beta
+#     #   "claude-code-cli"   = same Messages fingerprint as the Claude Code CLI,
+#     #                         including official Anthropic API keys: Anthropic-Beta
 #     #                         set, CCH signing on api.anthropic.com, stable CLI
 #     #                         metadata.user_id / session_id / device identity.
-#     #                         API keys seed identity from the key;
-#     #                         delegated OAuth providers use stable auth ID instead of
-#     #                         rotating access tokens. "oauth-cli" is a legacy alias.
+#     #                         API keys seed identity from the key.
+#     #                         "oauth-cli" is a legacy alias for this profile name.
 #     #
 #     # count_tokens keeps the native model/messages/tools shape for every origin, including
 #     # Kimi opt-in. It does not send billing/CCH, currentDate, metadata, or diagnostics.
@@ -598,8 +580,6 @@ nonstream-keepalive-interval: 0
 #     # so a per-request hash cannot bust that gateway's prompt cache. api.anthropic.com
 #     # strips the block itself (0 tokens, no cache impact). Kimi drops the whole block by
 #     # default and keeps it, unsigned, after an explicit fingerprint opt-in.
-#     # A real Claude OAuth credential always signs, on every upstream: a downstream Claude
-#     # Code pointed at CPA cannot produce that value itself.
 #     #
 #     # Example (official Anthropic or a custom Messages gateway):
 #     #   - api-key: "your-key"
@@ -607,20 +587,10 @@ nonstream-keepalive-interval: 0
 #     #     fingerprint-profile: "claude-code-cli"
 #     #     cloak:
 #     #       mode: "always"   # recommended when upstream rejects non-CLI clients
-#     #
-#     # Delegated Anthropic Messages OAuth files (Kimi, etc.) use "fingerprint_profile"
-#     # in the auth JSON. Refresh keeps it. Example:
-#     #   {
-#     #     "type": "kimi",
-#     #     "access_token": "...",
-#     #     "refresh_token": "...",
-#     #     "fingerprint_profile": "claude-code-cli"
-#     #   }
-#     #   Legacy "fingerprint-profile" credentials remain supported and are normalized at load time.
 #     # fingerprint-profile: "claude-code-cli" # optional claude-api-key provider field; default is empty (caller-owned); uncomment to opt in
 #     experimental-cch-signing: false # deprecated compatibility field; CCH is generated automatically
-#                                     # for real Claude OAuth on any upstream, and for claude-code-cli profiles
-#                                     # only on api.anthropic.com; Vertex keeps provider-native signing
+#                                     # for claude-code-cli profiles on api.anthropic.com;
+#                                     # Vertex keeps provider-native signing
 
 # Anthropic-Beta is assembled per request rather than sent as a fixed list, matching
 # Claude Code 2.1.220: context-1m sits right after claude-code, mid-conversation-system
@@ -646,13 +616,14 @@ nonstream-keepalive-interval: 0
 #   os: "MacOS"
 #   arch: "arm64"
 #   timeout: "600"
-#   timezone: "Asia/Singapore"  # fallback IANA timezone for cloaked currentDate; a credential JSON "timezone" takes priority
+#   timezone: "Asia/Singapore"  # fallback IANA timezone for cloaked currentDate; a per-key timezone takes priority when set
 #   stabilize-device-profile: false  # optional, default false; set true to enable per-auth/API-key fingerprint pinning
 
-# Default headers for Codex OAuth model requests.
-# These are used only for file-backed/OAuth Codex requests when the client
-# does not send the header. `user-agent` applies to HTTP and websocket requests;
-# `beta-features` only applies to websocket requests. They do not apply to codex-api-key entries.
+# Default headers for Codex wire-protocol disguise.
+# These are unused for local `codex-api-key` entries. They only apply when a
+# non-API-key Codex credential is injected at runtime and the client omits the
+# header. `user-agent` applies to HTTP and websocket requests; `beta-features`
+# only applies to websocket requests.
 # codex-header-defaults:
 #   user-agent: "codex_cli_rs/0.114.0 (Mac OS 14.2.0; x86_64) vscode/1.111.0"
 #   beta-features: "multi_agent"
@@ -712,9 +683,23 @@ nonstream-keepalive-interval: 0
 #       - name: "kimi-k2.5"
 #         alias: "claude-opus-4.66"
 
-# Vertex API keys (Vertex-compatible endpoints, base-url is optional)
+# Antigravity API keys. Account OAuth is not supported; use provider API keys.
+# antigravity-api-key:
+#   - api-key: "ag-123..."
+#     project-id: "my-gcp-project"                 # required for Antigravity request routing
+#     prefix: "ag"                                 # optional model prefix
+#     excluded-models: []
+
+# Vertex API keys (Vertex-compatible endpoints, base-url is optional).
+# Official Google Vertex service accounts can be supplied via service-account instead of api-key.
 # vertex-api-key:
-#   - api-key: "vk-123..."                        # x-goog-api-key header
+#   - api-key: "vk-123..."                        # x-goog-api-key header; omit when using service-account
+#     # service-account:                            # optional official GCP service-account JSON
+#     #   client_email: "sa@project.iam.gserviceaccount.com"
+#     #   project_id: "my-gcp-project"
+#     #   private_key: "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+#     # project-id: "my-gcp-project"                # optional override
+#     # location: "us-central1"                     # optional Vertex region
 #     weight: 5                                    # optional: weighted-round-robin share; omitted defaults to 1; maximum 1,000,000
 #     prefix: "test"                              # optional: require calls like "test/vertex-pro" to target this credential
 #     disable-cooling: false                       # optional override: true disables cooling, false enables it; omit to inherit global
@@ -740,118 +725,6 @@ nonstream-keepalive-interval: 0
 #     excluded-models:                            # optional: models to exclude from listing
 #       - "imagen-3.0-generate-002"
 #       - "imagen-*"
-
-# Global OAuth model name aliases (per channel)
-# These aliases rename model IDs for both model listing and request routing.
-# Supported channels: vertex, aistudio, antigravity, claude, codex, kimi, xai.
-# NOTE: Aliases do not apply to gemini-api-key, interactions-api-key, codex-api-key, xai-api-key, claude-api-key, openai-compatibility, or vertex-api-key.
-# NOTE: Because aliases affect the merged /v1 model list and merged request routing, overlapping
-# client-visible names can become ambiguous across providers. For strict backend pinning, use
-# unique aliases/prefixes or avoid overlapping names.
-# You can repeat the same name with different aliases to expose multiple client model names.
-# Optional per-entry fields:
-#   fork: true                  # keep the upstream model and also expose the alias as a separate client-visible model
-#   display-name: "Model Name" # override the human-readable name shown in model catalogs
-#   force-mapping: true         # rewrite upstream response model fields back to the client-visible alias (example below uses antigravity only)
-# Per-auth OAuth aliases can also be stored in an OAuth auth JSON file as "model_aliases".
-# Legacy "model-aliases" credentials remain supported and are normalized at load time.
-# They apply only to that selected auth and take precedence over global aliases for the same client-visible alias.
-# Example auth JSON:
-# {
-#   "type": "codex",
-#   "email": "user@example.com",
-#   "model_aliases": [
-#     {"name": "gpt-5.3-codex-spark", "alias": "gpt-5.5"},
-#     {"name": "gpt-5.3-codex-spark", "alias": "gpt-5.4"}
-#   ]
-# }
-# oauth-model-alias:
-#   vertex:
-#     - name: "gemini-2.5-pro"
-#       alias: "g2.5p"
-#   aistudio:
-#     - name: "gemini-2.5-pro"
-#       alias: "g2.5p"
-#   antigravity:
-#     - name: "gemini-pro-agent"                   # upstream Antigravity model id
-#       alias: "gemini-3.1-pro-preview"            # client-visible id (Gemini 3.1 Pro Preview)
-#       display-name: "Antigravity Gemini 3.1 Pro" # optional catalog display name
-#       fork: true
-#       force-mapping: true
-#   claude:
-#     - name: "claude-sonnet-4-5-20250929"
-#       alias: "cs4.5"
-#   codex:
-#     - name: "gpt-5"
-#       alias: "g5"
-#   kimi:
-#     - name: "kimi-k2.5"
-#       alias: "k2.5"
-#   xai:
-#     - name: "grok-4.3"
-#       alias: "grok-latest"
-#   sample-provider:                  # plugin provider keys are supported for OAuth plugins
-#     - name: "sample-model-latest"
-#       alias: "sample-latest"
-
-# OAuth provider excluded models
-# oauth-excluded-models:
-#   vertex:
-#     - "gemini-3-pro-preview"
-#   aistudio:
-#     - "gemini-3-pro-preview"
-#   antigravity:
-#     - "gemini-3-pro-preview"
-#   claude:
-#     - "claude-3-5-haiku-20241022"
-#   codex:
-#     - "gpt-5-codex-mini"
-#   kimi:
-#     - "kimi-k2-thinking"
-#   xai:
-#     - "grok-3-mini"
-
-# OAuth provider request-scoped error rules (custom error classification for OAuth credentials)
-# oauth-request-scoped-errors:
-#   vertex:
-#     - status: 400
-#       match:
-#         - "maximum_context_length"
-#         - "context_length_exceeded"
-#       match-regexr:
-#         - "maximum_context_length$"
-#         - "^context_length_exceeded"
-#       action: "stop" # options: "stop", "stop-and-cooldown", "continue", "continue-and-cooldown"
-#   aistudio:
-#     - status: 400
-#       match:
-#         - "invalid_argument"
-#       action: "stop"
-#   antigravity:
-#     - status: 500
-#       match:
-#         - "internal_server_error"
-#       action: "stop-and-cooldown"
-#   claude:
-#     - status: 400
-#       match:
-#         - "prompt is too long"
-#       action: "stop"
-#   codex:
-#     - status: 400
-#       match:
-#         - "context_window_exceeded"
-#       action: "stop"
-#   kimi:
-#     - status: 400
-#       match:
-#         - "length_limit"
-#       action: "stop"
-#   xai:
-#     - status: 400
-#       match:
-#         - "max_tokens_exceeded"
-#       action: "stop"
 
 # Optional payload configuration
 # payload:

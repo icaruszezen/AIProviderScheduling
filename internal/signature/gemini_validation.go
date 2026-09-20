@@ -187,8 +187,7 @@ func InspectGeminiThoughtSignature(rawSignature string, opts ...GeminiThoughtSig
 		}
 		return &GeminiThoughtSignatureInfo{
 			IsBypassSentinel: true,
-			BypassSentinel:   sig,
-		}, nil
+			BypassSentinel:   sig}, nil
 	}
 
 	decoded, err := decodeGeminiThoughtSignature(sig)
@@ -202,8 +201,7 @@ func InspectGeminiThoughtSignature(rawSignature string, opts ...GeminiThoughtSig
 	info := &GeminiThoughtSignatureInfo{
 		DecodedLen:        len(decoded),
 		FirstByte:         decoded[0],
-		HasObservedMarker: decoded[0] == 0x12,
-	}
+		HasObservedMarker: decoded[0] == 0x12}
 	info.Envelope, info.KnownEnvelope = classifyGeminiThoughtSignatureEnvelope(decoded)
 	info.RecordCount, info.OpaquePayloadLen = inspectGeminiEnvelope(decoded, info.Envelope)
 	if opt.RequireKnownEnvelope && !info.KnownEnvelope {
@@ -319,14 +317,12 @@ func ValidateGeminiFunctionCallPairing(inputRawJSON []byte) error {
 				calls = append(calls, geminiFunctionCallRef{
 					id:   call.Get("id").String(),
 					name: call.Get("name").String(),
-					path: partPath,
-				})
+					path: partPath})
 			}
 			if response := part.Get("functionResponse"); response.Exists() {
 				responses = append(responses, geminiFunctionResponseRef{
 					part: part,
-					path: partPath,
-				})
+					path: partPath})
 			}
 			return true
 		})
@@ -470,8 +466,7 @@ func inspectGeminiField2Envelope(decoded []byte) (geminiEnvelopeInfo, bool) {
 	}
 	return geminiEnvelopeInfo{
 		RecordCount:      1,
-		OpaquePayloadLen: len(value),
-	}, true
+		OpaquePayloadLen: len(value)}, true
 }
 
 func consumeGeminiField2Field1Value(decoded []byte) ([]byte, bool) {

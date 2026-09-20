@@ -246,9 +246,7 @@ func convertCodexResponseToCompaction(payload []byte, clientModel string) ([]byt
 		"encrypted_content": encrypted,
 		"summary": []any{map[string]any{
 			"type": "summary_text",
-			"text": summary,
-		}},
-	})
+			"text": summary}}})
 	if err != nil {
 		return nil, fmt.Errorf("codex local compact: encode compaction item: %w", err)
 	}

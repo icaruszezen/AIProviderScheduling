@@ -70,9 +70,7 @@ func TestEnsureDeviceIDPoolRepairsAndStabilizesCredentialMetadata(t *testing.T) 
 		ClaudeDeviceIDsMetadataKey: []any{
 			first,
 			first,
-			"INVALID",
-		},
-	}
+			"INVALID"}}
 
 	deviceIDs, changed, errEnsure := EnsureDeviceIDPool(metadata)
 	if errEnsure != nil {
@@ -124,8 +122,7 @@ func TestEnsureDeviceIDPoolMigratesFiveSlotsToOne(t *testing.T) {
 		"1111111111111111111111111111111111111111111111111111111111111111",
 		"2222222222222222222222222222222222222222222222222222222222222222",
 		"3333333333333333333333333333333333333333333333333333333333333333",
-		"4444444444444444444444444444444444444444444444444444444444444444",
-	}}
+		"4444444444444444444444444444444444444444444444444444444444444444"}}
 
 	deviceIDs, changed, errEnsure := EnsureDeviceIDPool(metadata)
 	if errEnsure != nil {
@@ -178,8 +175,7 @@ func TestEnsureDeviceIDPoolConcurrentInitialization(t *testing.T) {
 
 func TestSelectDeviceIDUsesOneDeviceAcrossSessions(t *testing.T) {
 	deviceIDs := []string{
-		"0000000000000000000000000000000000000000000000000000000000000000",
-	}
+		"0000000000000000000000000000000000000000000000000000000000000000"}
 
 	first, errFirst := SelectDeviceID(deviceIDs, "11111111-2222-4333-8444-555555555555")
 	if errFirst != nil {

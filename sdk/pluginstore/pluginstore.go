@@ -66,16 +66,14 @@ type Client struct {
 func NewClient(httpClient HTTPDoer, registryURL string) Client {
 	return Client{inner: internalpluginstore.Client{
 		HTTPClient:  httpClient,
-		RegistryURL: strings.TrimSpace(registryURL),
-	}}
+		RegistryURL: strings.TrimSpace(registryURL)}}
 }
 
 func NewClientWithAuth(httpClient HTTPDoer, registryURL string, auth []AuthConfig) Client {
 	return Client{inner: internalpluginstore.Client{
 		HTTPClient:  httpClient,
 		RegistryURL: strings.TrimSpace(registryURL),
-		Auth:        internalpluginstore.NormalizeAuthConfigs(auth),
-	}}
+		Auth:        internalpluginstore.NormalizeAuthConfigs(auth)}}
 }
 
 func NewClientWithResolvedAuth(httpClient HTTPDoer, registryURL string, auth []ResolvedAuthConfig) Client {
@@ -87,8 +85,7 @@ func NewClientWithResolvedAuthExpiry(httpClient HTTPDoer, registryURL string, au
 		HTTPClient:            httpClient,
 		RegistryURL:           strings.TrimSpace(registryURL),
 		ResolvedAuth:          auth,
-		ResolvedAuthExpiresAt: expiresAt,
-	}}
+		ResolvedAuthExpiresAt: expiresAt}}
 }
 
 func (c *Client) ClearAuth() {

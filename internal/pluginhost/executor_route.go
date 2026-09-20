@@ -52,8 +52,7 @@ func (h *Host) executorPluginReady(pluginID string, routeReq pluginapi.ModelRout
 				ResponseFormat:  sdktranslator.FromString(routeReq.SourceFormat),
 				Headers:         cloneHeader(routeReq.Headers),
 				Query:           cloneValues(routeReq.Query),
-				Metadata:        cloneInterceptorMetadata(routeReq.Metadata),
-			},
+				Metadata:        cloneInterceptorMetadata(routeReq.Metadata)},
 		)
 	}
 	return false

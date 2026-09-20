@@ -23,7 +23,6 @@
 - `cli/`：只演示命令行扩展能力。
 - `management-api/`：只演示 Management API 和资源扩展能力。
 - `host-callback/`：使用最小插件资源演示宿主回调。
-- `host-callback-auth-files/`：仅 Go 实现的插件资源，演示 host 凭证文件回调。
 - `host-model-callback/`：仅 Go 实现的插件资源，演示调用宿主模型执行回调。
 
 多数标准能力示例都包含 `go/`、`c/` 和 `rust/` 三个子目录。专用示例可能只提供所需的实现语言。
@@ -56,20 +55,6 @@ plugins:
 ```
 
 构建方式和生命周期语义详见 `request-lifecycle/README.md`。
-
-## Host Auth Files 回调
-
-`host-callback-auth-files` 声明 Management API 能力，并暴露名为 `Host Auth Files` 的浏览器资源，演示 `host.auth.list`、`host.auth.get`（物理 JSON 文件）、`host.auth.get_runtime` 与 `host.auth.save`。
-
-```yaml
-plugins:
-  configs:
-    host-callback-auth-files:
-      enabled: true
-      priority: 1
-```
-
-详见 `host-callback-auth-files/README.md`。
 
 ## Host Model Callback
 

@@ -456,8 +456,7 @@ type OpenAIResponsesAPIHandler struct {
 //   - *OpenAIResponsesAPIHandler: A new OpenAIResponses API handlers instance
 func NewOpenAIResponsesAPIHandler(apiHandlers *handlers.BaseAPIHandler) *OpenAIResponsesAPIHandler {
 	return &OpenAIResponsesAPIHandler{
-		BaseAPIHandler: apiHandlers,
-	}
+		BaseAPIHandler: apiHandlers}
 }
 
 // HandlerType returns the identifier for this handler implementation.
@@ -478,8 +477,7 @@ func (h *OpenAIResponsesAPIHandler) Models() []map[string]any {
 func (h *OpenAIResponsesAPIHandler) OpenAIResponsesModels(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"object": "list",
-		"data":   h.Models(),
-	})
+		"data":   h.Models()})
 }
 
 func (h *OpenAIResponsesAPIHandler) prepareCodexMultiAgentV2Tools(c *gin.Context, payload []byte) []byte {
@@ -524,9 +522,7 @@ func (h *OpenAIResponsesAPIHandler) Responses(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -548,9 +544,7 @@ func (h *OpenAIResponsesAPIHandler) Compact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -559,9 +553,7 @@ func (h *OpenAIResponsesAPIHandler) Compact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported for compact responses",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 	if streamResult.Exists() {
@@ -626,9 +618,7 @@ func (h *OpenAIResponsesAPIHandler) handleStreamingResponse(c *gin.Context, rawJ
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -900,8 +890,7 @@ func (h *OpenAIResponsesAPIHandler) logResponsesStreamError(c *gin.Context, fram
 	errText := responsesStreamErrorText(errMsg, status)
 	h.LoggingAPIResponseError(context.WithValue(context.Background(), "gin", c), &interfaces.ErrorMessage{
 		StatusCode: status,
-		Error:      fmt.Errorf("responses stream terminated after %s: %s", lastEvent, errText),
-	})
+		Error:      fmt.Errorf("responses stream terminated after %s: %s", lastEvent, errText)})
 }
 
 func (h *OpenAIResponsesAPIHandler) forwardResponsesStream(c *gin.Context, flusher http.Flusher, cancel func(error), data <-chan []byte, errs <-chan *interfaces.ErrorMessage, framer *responsesSSEFramer) {
@@ -967,12 +956,10 @@ func (h *OpenAIResponsesAPIHandler) forwardResponsesStream(c *gin.Context, flush
 			}
 			return &interfaces.ErrorMessage{
 				StatusCode: http.StatusBadGateway,
-				Error:      fmt.Errorf("upstream stream closed before a terminal event (last event: %s)", lastEvent),
-			}
+				Error:      fmt.Errorf("upstream stream closed before a terminal event (last event: %s)", lastEvent)}
 		},
 		WriteDone: func() {
 			framer.Flush(c.Writer)
 			_, _ = c.Writer.Write([]byte("\n"))
-		},
-	})
+		}})
 }

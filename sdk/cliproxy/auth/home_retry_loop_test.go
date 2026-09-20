@@ -25,12 +25,11 @@ func (d *repeatedHomeAuthDispatcher) RPopAuth(context.Context, string, string, h
 	d.calls.Add(1)
 	raw, _ := json.Marshal(homeAuthDispatchResponse{
 		Auth: Auth{
-			ID:       "home-auth-1",
-			Provider: "home-loop-test",
-			Status:   StatusActive,
-			Metadata: map[string]any{"email": "loop@example.com"},
-		},
-	})
+			ID:         "home-auth-1",
+			Provider:   "home-loop-test",
+			Status:     StatusActive,
+			Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "loop-key"},
+			Metadata:   map[string]any{"email": "loop@example.com"}}})
 	return raw, nil
 }
 

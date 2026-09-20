@@ -100,8 +100,7 @@ func TestCredentialInFlightConfigFixtureRejectsInvalidJSON(t *testing.T) {
 		raw  []byte
 	}{
 		{name: "unknown config field", raw: bytes.Replace(raw, []byte(`"snapshot-interval": "2s"`), []byte(`"snapshot-interval": "2s", "secret": "secret"`), 1)},
-		{name: "trailing JSON", raw: append(append([]byte{}, raw...), []byte(` {"config": {}}`)...)},
-	} {
+		{name: "trailing JSON", raw: append(append([]byte{}, raw...), []byte(` {"config": {}}`)...)}} {
 		t.Run(test.name, func(t *testing.T) {
 			if _, errDecode := decodeCredentialInFlightConfigFixture(test.raw); errDecode == nil {
 				t.Fatal("decodeCredentialInFlightConfigFixture() error = nil")
@@ -119,8 +118,7 @@ func TestCredentialInFlightConfigDurationBounds(t *testing.T) {
 	}{
 		{name: "exact three intervals", every: "1s", stale: "3s", valid: true},
 		{name: "below three intervals", every: "1s", stale: "2999999999ns", valid: false},
-		{name: "near duration maximum", every: time.Duration(math.MaxInt64 / 2).String(), stale: time.Duration(math.MaxInt64).String(), valid: false},
-	} {
+		{name: "near duration maximum", every: time.Duration(math.MaxInt64 / 2).String(), stale: time.Duration(math.MaxInt64).String(), valid: false}} {
 		t.Run(test.name, func(t *testing.T) {
 			cfg := DefaultCredentialInFlightConfig()
 			cfg.SnapshotInterval = test.every
@@ -198,8 +196,7 @@ func assertCredentialInFlightConfigFields(t *testing.T) {
 		{name: "MaxAggregateGroups", tag: "max-aggregate-groups"},
 		{name: "MaxDetails", tag: "max-details"},
 		{name: "MaxStringBytes", tag: "max-string-bytes"},
-		{name: "StagingRetention", tag: "staging-retention"},
-	})
+		{name: "StagingRetention", tag: "staging-retention"}})
 }
 
 type jsonField struct {

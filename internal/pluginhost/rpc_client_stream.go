@@ -19,8 +19,7 @@ func (a *rpcPluginAdapter) ExecuteStream(ctx context.Context, req pluginapi.Exec
 	rpcReq := rpcExecutorRequest{
 		ExecutorRequest: req,
 		StreamID:        streamID,
-		HostCallbackID:  callbackID,
-	}
+		HostCallbackID:  callbackID}
 	resp, errCall := callPlugin[rpcExecutorStreamResponse](ctx, a.client, pluginabi.MethodExecutorExecuteStream, rpcReq)
 	if errCall != nil {
 		cleanup()
@@ -38,8 +37,7 @@ func (a *rpcPluginAdapter) ExecuteStream(ctx context.Context, req pluginapi.Exec
 	// Async streaming plugins can return before they finish emitting chunks, so keep callbacks alive until the stream ends.
 	return pluginapi.ExecutorStreamResponse{
 		Headers: resp.Headers,
-		Chunks:  cleanupWhenStreamDone(ctx, chunks, cleanup),
-	}, nil
+		Chunks:  cleanupWhenStreamDone(ctx, chunks, cleanup)}, nil
 }
 
 func combinedCleanup(cleanups ...func()) func() {

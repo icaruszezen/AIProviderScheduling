@@ -90,29 +90,24 @@ func TestTranslateRequest_FallbackNormalizesModel(t *testing.T) {
 			name:      "prefixed model is rewritten",
 			model:     "gpt-5-mini",
 			payload:   `{"model":"copilot/gpt-5-mini","input":"ping"}`,
-			wantModel: "gpt-5-mini",
-		},
+			wantModel: "gpt-5-mini"},
 		{
 			name:          "matching model is left unchanged",
 			model:         "gpt-5-mini",
 			payload:       `{"model":"gpt-5-mini","input":"ping"}`,
 			wantModel:     "gpt-5-mini",
-			wantUnchanged: true,
-		},
+			wantUnchanged: true},
 		{
 			name:          "empty model leaves payload unchanged",
 			model:         "",
 			payload:       `{"model":"copilot/gpt-5-mini","input":"ping"}`,
 			wantModel:     "copilot/gpt-5-mini",
-			wantUnchanged: true,
-		},
+			wantUnchanged: true},
 		{
 			name:      "deeply prefixed model is rewritten",
 			model:     "gpt-5.3-codex",
 			payload:   `{"model":"team/gpt-5.3-codex","stream":true}`,
-			wantModel: "gpt-5.3-codex",
-		},
-	}
+			wantModel: "gpt-5.3-codex"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -209,13 +204,11 @@ func TestHasResponseTransformerChecksConcreteResponseKinds(t *testing.T) {
 	r.Register(from, streamOnlyTo, nil, ResponseTransform{
 		Stream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) [][]byte {
 			return [][]byte{rawJSON}
-		},
-	})
+		}})
 	r.Register(from, nonStreamOnlyTo, nil, ResponseTransform{
 		NonStream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) []byte {
 			return rawJSON
-		},
-	})
+		}})
 
 	if !r.HasResponseTransformer(from, streamOnlyTo) {
 		t.Fatal("stream response transform was not reported as a response transformer")
@@ -250,8 +243,7 @@ func TestTranslateRequest_PluginTranslatorOnlyWhenNativeMissing(t *testing.T) {
 	missingNative := NewRegistry()
 	missingHooks := &fakePluginHooks{
 		requestTranslateBody: []byte(`{"model":"plugin-request"}`),
-		requestTranslateOK:   true,
-	}
+		requestTranslateOK:   true}
 	missingNative.SetPluginHooks(missingHooks)
 
 	gotMissing := missingNative.TranslateRequest(from, to, "resolved", []byte(`{"model":"prefixed/resolved"}`), false)
@@ -265,8 +257,7 @@ func TestTranslateRequest_PluginTranslatorOnlyWhenNativeMissing(t *testing.T) {
 	withNative := NewRegistry()
 	nativeHooks := &fakePluginHooks{
 		requestTranslateBody: []byte(`{"model":"plugin-request"}`),
-		requestTranslateOK:   true,
-	}
+		requestTranslateOK:   true}
 	withNative.SetPluginHooks(nativeHooks)
 	withNative.Register(from, to, func(model string, rawJSON []byte, stream bool) []byte {
 		return []byte(`{"model":"native-request"}`)
@@ -289,8 +280,7 @@ func TestTranslateNonStream_PluginTranslatorOnlyWhenNativeMissing(t *testing.T) 
 	missingNative := NewRegistry()
 	missingHooks := &fakePluginHooks{
 		responseTranslateBody: []byte(`{"output":"plugin-response"}`),
-		responseTranslateOK:   true,
-	}
+		responseTranslateOK:   true}
 	missingNative.SetPluginHooks(missingHooks)
 
 	gotMissing := missingNative.TranslateNonStream(ctx, from, to, "model", nil, nil, []byte(`{"output":"raw"}`), nil)
@@ -304,14 +294,12 @@ func TestTranslateNonStream_PluginTranslatorOnlyWhenNativeMissing(t *testing.T) 
 	withNative := NewRegistry()
 	nativeHooks := &fakePluginHooks{
 		responseTranslateBody: []byte(`{"output":"plugin-response"}`),
-		responseTranslateOK:   true,
-	}
+		responseTranslateOK:   true}
 	withNative.SetPluginHooks(nativeHooks)
 	withNative.Register(to, from, nil, ResponseTransform{
 		NonStream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) []byte {
 			return []byte(`{"output":"native-response"}`)
-		},
-	})
+		}})
 
 	gotNative := withNative.TranslateNonStream(ctx, from, to, "model", nil, nil, []byte(`{"output":"raw"}`), nil)
 	if gjson.GetBytes(gotNative, "output").String() != "native-response" {
@@ -331,8 +319,7 @@ func TestTranslateStream_NativeEmptyOutputSuppressesRawFallback(t *testing.T) {
 	r.Register(to, from, nil, ResponseTransform{
 		Stream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) [][]byte {
 			return nil
-		},
-	})
+		}})
 
 	got := r.TranslateStream(ctx, from, to, "model", nil, nil, []byte(`data: {"raw":true}`), nil)
 	if len(got) != 0 {
@@ -348,14 +335,12 @@ func TestTranslateStream_PluginTranslatorUsedWhenNativeStreamMissing(t *testing.
 	r := NewRegistry()
 	hooks := &fakePluginHooks{
 		responseTranslateBody: []byte(`data: {"plugin":true}`),
-		responseTranslateOK:   true,
-	}
+		responseTranslateOK:   true}
 	r.SetPluginHooks(hooks)
 	r.Register(to, from, nil, ResponseTransform{
 		NonStream: func(ctx context.Context, model string, originalRequestRawJSON, requestRawJSON, rawJSON []byte, param *any) []byte {
 			return []byte(`{"native-non-stream":true}`)
-		},
-	})
+		}})
 
 	got := r.TranslateStream(ctx, from, to, "model", nil, nil, []byte(`data: {"raw":true}`), nil)
 	if len(got) != 1 || string(got[0]) != `data: {"plugin":true}` {
@@ -389,8 +374,7 @@ func TestPluginNormalizersChainAfterNative(t *testing.T) {
 				t.Fatalf("response after normalizer saw %s", body)
 			}
 			return []byte(`{"stage":"after-response"}`)
-		},
-	}
+		}}
 	r.SetPluginHooks(hooks)
 	r.Register(from, to, func(model string, rawJSON []byte, stream bool) []byte {
 		return []byte(`{"stage":"native-request"}`)
@@ -401,8 +385,7 @@ func TestPluginNormalizersChainAfterNative(t *testing.T) {
 				t.Fatalf("native response transformer saw %s", rawJSON)
 			}
 			return []byte(`{"stage":"native-response"}`)
-		},
-	})
+		}})
 
 	gotRequest := r.TranslateRequest(from, to, "model", []byte(`{"stage":"raw-request"}`), false)
 	if string(gotRequest) != `{"stage":"normalized-request"}` {

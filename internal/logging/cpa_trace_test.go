@@ -24,8 +24,7 @@ func TestFormatCPATraceID(t *testing.T) {
 	}{
 		{name: "zero time", authIndex: "auth-index", requestID: "request1"},
 		{name: "empty auth index", selectedAt: selectedAt, requestID: "request1"},
-		{name: "empty request ID", selectedAt: selectedAt, authIndex: "auth-index"},
-	} {
+		{name: "empty request ID", selectedAt: selectedAt, authIndex: "auth-index"}} {
 		t.Run(test.name, func(t *testing.T) {
 			if gotEmpty := FormatCPATraceID(test.selectedAt, test.authIndex, test.requestID); gotEmpty != "" {
 				t.Fatalf("FormatCPATraceID() = %q, want empty", gotEmpty)

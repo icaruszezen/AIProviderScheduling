@@ -18,7 +18,6 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/google/uuid"
 	"github.com/klauspost/compress/zstd"
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/misc"
@@ -63,8 +62,7 @@ var claudeCodeCLIConstantBetas = []string{
 	claudeRedactThinkingBeta,
 	"thinking-token-count-2026-05-13",
 	"context-management-2025-06-27",
-	"prompt-caching-scope-2026-01-05",
-}
+	"prompt-caching-scope-2026-01-05"}
 
 // claudeCodeTrailingBetas are caller-supplied betas that real Claude Code emits
 // after effort-2025-11-24, in that relative order. They are forwarded when the
@@ -72,8 +70,7 @@ var claudeCodeCLIConstantBetas = []string{
 var claudeCodeTrailingBetas = []string{
 	claudeServerSideFallbackBeta,
 	claudeFallbackCreditBeta,
-	claudeStructuredOutputsBeta,
-}
+	claudeStructuredOutputsBeta}
 
 // claudeCodeCLIBetas assembles the Anthropic-Beta baseline the way Claude Code
 // 2.1.220 does: the list is per-request, not a fixed string. requested holds the
@@ -203,8 +200,7 @@ var claudeCountTokensBetas = []string{
 	claudeCodeBeta,
 	"interleaved-thinking-2025-05-14",
 	"context-management-2025-06-27",
-	claudeTokenCountingBeta,
-}
+	claudeTokenCountingBeta}
 
 func claudeCountTokensBetasForCredential(oauthToken bool) string {
 	betas := make([]string, 0, len(claudeCountTokensBetas)+1)
@@ -563,9 +559,7 @@ func decodeResponseBody(body io.ReadCloser, contentEncoding string) (io.ReadClos
 					Reader: gzipReader,
 					closers: []func() error{
 						gzipReader.Close,
-						pb.Close,
-					},
-				}, nil
+						pb.Close}}, nil
 			case len(magic) >= 4 && magic[0] == 0x28 && magic[1] == 0xb5 && magic[2] == 0x2f && magic[3] == 0xfd:
 				decoder, zdErr := zstd.NewReader(pb)
 				if zdErr != nil {
@@ -576,9 +570,7 @@ func decodeResponseBody(body io.ReadCloser, contentEncoding string) (io.ReadClos
 					Reader: decoder,
 					closers: []func() error{
 						func() error { decoder.Close(); return nil },
-						pb.Close,
-					},
-				}, nil
+						pb.Close}}, nil
 			}
 		}
 		return pb, nil
@@ -666,15 +658,9 @@ func isZlibHeader(header []byte) bool {
 // claudeCredentialUsesOAuth classifies the selected upstream credential. It is the
 // single authority for every decision that has to agree with the OAuth beta
 // profile, including the extended-cache-ttl beta and the matching body cache ttl.
-func claudeCredentialUsesOAuth(auth *cliproxyauth.Auth, apiKey string) bool {
-	if isClaudeOAuthToken(apiKey) {
-		return true
-	}
-	if auth != nil && auth.AuthKind() == cliproxyauth.AuthKindAPIKey {
-		return false
-	}
-	hasAPIKeyAttr := auth != nil && auth.Attributes != nil && strings.TrimSpace(auth.Attributes["api_key"]) != ""
-	return !hasAPIKeyAttr
+func claudeCredentialUsesOAuth(_ *cliproxyauth.Auth, _ string) bool {
+	// Account OAuth tokens are not accepted as credentials.
+	return false
 }
 
 func copyClaudeCallerFingerprintHeaders(dst, src http.Header) {
@@ -971,8 +957,7 @@ func applyClaudeHeadersWithNativeProfile(
 		"X-Claude-Remote-Container-Id",
 		"X-Claude-Remote-Session-Id",
 		"X-Client-App",
-		"X-Anthropic-Additional-Protection",
-	} {
+		"X-Anthropic-Additional-Protection"} {
 		if val := helps.HeaderValueCaseInsensitive(incomingHeaders, hdr); val != "" {
 			r.Header.Set(hdr, val)
 		}
@@ -1062,8 +1047,7 @@ var claudeWireHeaderCasing = map[string]string{
 	"X-App":               "x-app",
 	"X-Client-Request-Id": "x-client-request-id",
 
-	"Anthropic-Dangerous-Direct-Browser-Access": "anthropic-dangerous-direct-browser-access",
-}
+	"Anthropic-Dangerous-Direct-Browser-Access": "anthropic-dangerous-direct-browser-access"}
 
 // applyClaudeWireHeaderCasing restores the header name casing of the real client.
 //
@@ -1104,9 +1088,6 @@ func claudeCreds(a *cliproxyauth.Auth) (apiKey, baseURL string) {
 	if a.Attributes != nil {
 		apiKey = a.Attributes["api_key"]
 		baseURL = a.Attributes["base_url"]
-	}
-	if apiKey == "" {
-		apiKey = claudeauth.ReadMetadataString(&a.Metadata, "access_token")
 	}
 	return
 }
@@ -1796,8 +1777,7 @@ func newClaudeMCPAliasResolver(reverseMap map[string]string) claudeMCPAliasResol
 	resolver := claudeMCPAliasResolver{
 		exact:   reverseMap,
 		aliases: make([]claudeMCPAliasEntry, 0, len(reverseMap)),
-		servers: make(map[string]struct{}),
-	}
+		servers: make(map[string]struct{})}
 	for alias, original := range reverseMap {
 		if alias == original {
 			// Caller-owned MCP tool recorded for exact passthrough only. It must not
@@ -1811,8 +1791,7 @@ func newClaudeMCPAliasResolver(reverseMap map[string]string) claudeMCPAliasResol
 		resolver.aliases = append(resolver.aliases, claudeMCPAliasEntry{
 			alias:    alias,
 			original: original,
-			parts:    parts,
-		})
+			parts:    parts})
 		resolver.servers[parts.server] = struct{}{}
 	}
 	return resolver

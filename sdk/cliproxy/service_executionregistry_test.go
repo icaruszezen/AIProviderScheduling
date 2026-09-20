@@ -50,8 +50,7 @@ func TestConfigCommitDoesNotHoldCommitMutexDuringCooldownPersistence(t *testing.
 	}
 	manager.MarkResult(context.Background(), coreauth.Result{
 		AuthID: auth.ID, Provider: auth.Provider, Model: "grok-4", Success: false,
-		Error: &coreauth.Error{Message: "rate limited", HTTPStatus: http.StatusTooManyRequests},
-	})
+		Error: &coreauth.Error{Message: "rate limited", HTTPStatus: http.StatusTooManyRequests}})
 	store := &blockingServiceCooldownStore{started: make(chan struct{})}
 	manager.SetCooldownStateStore(store)
 	service := &Service{cfg: &config.Config{}, coreManager: manager}
@@ -122,8 +121,7 @@ func TestServiceConcurrentReplacementWaitsForInFlightDrain(t *testing.T) {
 		homeCancel:     oldCancel,
 		homeClient:     home.New(internalconfig.HomeConfig{Enabled: true}),
 		homeRegistry:   registry,
-		homeDrainBound: time.Second,
-	}
+		homeDrainBound: time.Second}
 
 	firstReturned := make(chan struct{})
 	go func() {
@@ -371,8 +369,7 @@ func TestHomeConfigWorkerSkipsStagedConfigWhenReplacementCancels(t *testing.T) {
 		homeSupervisor: &homeSubscriberSupervisor{cancel: func() {
 			cancelLifetime()
 			close(cancelled)
-		}, done: workerDone},
-	}
+		}, done: workerDone}}
 	queue := newHomeConfigWorkQueue()
 	queue.enqueue([]byte("routing:\n  strategy: fill-first\n"))
 	ready := make(chan struct{})
@@ -446,8 +443,7 @@ func TestHomeConfigWorkerCommitCompletesBeforeReplacementCancellation(t *testing
 		homeSupervisor: &homeSubscriberSupervisor{cancel: func() {
 			cancelLifetime()
 			close(cancelled)
-		}, done: workerDone},
-	}
+		}, done: workerDone}}
 	queue := newHomeConfigWorkQueue()
 	queue.enqueue([]byte("routing:\n  strategy: fill-first\n"))
 	ready := make(chan struct{})
@@ -505,8 +501,7 @@ func TestHomeConfigWorkerCancellationAtPostCommitBoundarySkipsRuntimePublish(t *
 		cancel func(context.CancelFunc, context.CancelFunc)
 	}{
 		{name: "parent", cancel: func(cancelParent, _ context.CancelFunc) { cancelParent() }},
-		{name: "transport", cancel: func(_, cancelLifetime context.CancelFunc) { cancelLifetime() }},
-	} {
+		{name: "transport", cancel: func(_, cancelLifetime context.CancelFunc) { cancelLifetime() }}} {
 		t.Run(testCase.name, func(t *testing.T) {
 			client, _ := newHomePluginTaskTestClient(t, nil, 0)
 			baseCfg := &config.Config{}
@@ -528,8 +523,7 @@ func TestHomeConfigWorkerCancellationAtPostCommitBoundarySkipsRuntimePublish(t *
 				homeConfigRuntimeHook: func() {
 					close(runtimePaused)
 					<-releaseRuntime
-				},
-			}
+				}}
 			queue := newHomeConfigWorkQueue()
 			queue.enqueue([]byte("routing:\n  strategy: fill-first\n"))
 			ready := make(chan struct{})
@@ -577,15 +571,12 @@ func TestHomeConfigWorkerShutdownCancelsBlockedRuntimeUpdatesBeforePublish(t *te
 			name: "pprof",
 			apply: func(service *Service, blocked func(context.Context, *config.Config) bool) {
 				service.applyPprofConfigContextFn = blocked
-			},
-		},
+			}},
 		{
 			name: "server",
 			apply: func(service *Service, blocked func(context.Context, *config.Config) bool) {
 				service.updateServerClientsContextFn = blocked
-			},
-		},
-	} {
+			}}} {
 		t.Run(testCase.name, func(t *testing.T) {
 			client, _ := newHomePluginTaskTestClient(t, nil, 0)
 			baseCfg := &config.Config{}
@@ -602,8 +593,7 @@ func TestHomeConfigWorkerShutdownCancelsBlockedRuntimeUpdatesBeforePublish(t *te
 			service := &Service{
 				cfg:            baseCfg,
 				homeGeneration: 1,
-				homeSupervisor: &homeSubscriberSupervisor{cancel: cancelLifetime, done: workerDone},
-			}
+				homeSupervisor: &homeSubscriberSupervisor{cancel: cancelLifetime, done: workerDone}}
 			testCase.apply(service, func(ctx context.Context, _ *config.Config) bool {
 				close(started)
 				<-ctx.Done()
@@ -667,13 +657,9 @@ func TestHomeConfigWorkerCancelsBlockedAntigravityModelRefreshBeforePublish(t *t
 	baseCfg.Home.Enabled = true
 	manager := coreauth.NewManager(nil, nil, nil)
 	auth := &coreauth.Auth{
-		ID:       "blocked-antigravity-refresh",
-		Provider: "antigravity",
-		Metadata: map[string]any{"access_token": "test-token"},
-		Attributes: map[string]string{
-			"base_url": modelServer.URL,
-		},
-	}
+		ID:         "blocked-antigravity-refresh",
+		Provider:   "antigravity",
+		Attributes: map[string]string{"api_key": "test-token", "auth_kind": "apikey", "base_url": modelServer.URL}}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatal(errRegister)
 	}
@@ -689,8 +675,7 @@ func TestHomeConfigWorkerCancelsBlockedAntigravityModelRefreshBeforePublish(t *t
 		cfg:            baseCfg,
 		coreManager:    manager,
 		pluginHost:     pluginhost.New(),
-		homeGeneration: 1,
-	}
+		homeGeneration: 1}
 	queue := newHomeConfigWorkQueue()
 	queue.enqueue([]byte("routing:\n  strategy: fill-first\n"))
 	ready := make(chan struct{})
@@ -742,10 +727,8 @@ func TestHomeConfigWorkerRetriesStageFailureForSameQueuedConfig(t *testing.T) {
 			}
 			return sdkpluginstore.PluginSyncResponse{
 				SchemaVersion: sdkpluginstore.PluginSyncSchemaVersion,
-				ExpiresAt:     time.Now().Add(time.Minute),
-			}, nil
-		},
-	}
+				ExpiresAt:     time.Now().Add(time.Minute)}, nil
+		}}
 	queue := newHomeConfigWorkQueue()
 	queue.enqueue([]byte("plugins:\n  enabled: true\nrouting:\n  strategy: fill-first\n"))
 	ready := make(chan struct{})
@@ -840,8 +823,7 @@ func TestServiceInitialOverlayStagesPluginWritesUntilReady(t *testing.T) {
 	for name, observed := range map[string]<-chan struct{}{
 		"plugin sync":   pluginSync,
 		"plugin tasks":  pluginTasks,
-		"plugin status": pluginStatus,
-	} {
+		"plugin status": pluginStatus} {
 		select {
 		case <-observed:
 			t.Fatalf("initial overlay staged %s before subscription ACK and fresh command probe", name)
@@ -867,8 +849,7 @@ func TestServiceInitialOverlayStagesPluginWritesUntilReady(t *testing.T) {
 	}
 	for name, observed := range map[string]<-chan struct{}{
 		"plugin sync":  pluginSync,
-		"plugin tasks": pluginTasks,
-	} {
+		"plugin tasks": pluginTasks} {
 		select {
 		case <-observed:
 		case <-time.After(time.Second):
@@ -2241,8 +2222,7 @@ func TestDetachHomeSubscriberLifetimeKeepsNewForwarderForStaleClient(t *testing.
 		homeClient:             currentClient,
 		homeRegistry:           currentRegistry,
 		homeLogForwarder:       currentForwarder,
-		homeLogForwarderClient: currentClient,
-	}
+		homeLogForwarderClient: currentClient}
 
 	staleForwarder.Stop()
 	service.detachHomeSubscriberLifetime(staleClient, staleRegistry)
@@ -2806,13 +2786,10 @@ func TestServiceAppliesSameValueNewestSelectorCommit(t *testing.T) {
 
 func TestBuilderPreservesInitialSelectorForSameRouting(t *testing.T) {
 	cfg := &config.Config{
-		AuthDir: t.TempDir(),
 		Routing: internalconfig.RoutingConfig{
 			Strategy:           "fill-first",
 			SessionAffinity:    true,
-			SessionAffinityTTL: "1h",
-		},
-	}
+			SessionAffinityTTL: "1h"}}
 	service, errBuild := NewBuilder().
 		WithConfig(cfg).
 		WithConfigPath(t.TempDir() + "/config.yaml").
@@ -2843,8 +2820,7 @@ func TestServiceApplyConfigRuntimePreservesSelectorForUnchangedRouting(t *testin
 	initial := service.commitConfigUpdate(&config.Config{Routing: internalconfig.RoutingConfig{
 		Strategy:           "fill-first",
 		SessionAffinity:    true,
-		SessionAffinityTTL: "1h",
-	}})
+		SessionAffinityTTL: "1h"}})
 	if !service.applyConfigRuntime(context.Background(), initial, false) {
 		t.Fatal("initial config runtime apply failed")
 	}
@@ -2858,16 +2834,13 @@ func TestServiceApplyConfigRuntimePreservesSelectorForUnchangedRouting(t *testin
 	older := service.commitConfigUpdate(&config.Config{Routing: internalconfig.RoutingConfig{
 		Strategy:           " FILLFIRST ",
 		SessionAffinity:    true,
-		SessionAffinityTTL: "60m",
-	}})
+		SessionAffinityTTL: "60m"}})
 	newer := service.commitConfigUpdate(&config.Config{
 		Routing: internalconfig.RoutingConfig{
 			Strategy:           "fill-first",
 			SessionAffinity:    true,
-			SessionAffinityTTL: "1h",
-		},
-		UsageStatisticsEnabled: true,
-	})
+			SessionAffinityTTL: "1h"},
+		UsageStatisticsEnabled: true})
 	if !service.applyConfigRuntime(context.Background(), newer, false) {
 		t.Fatal("newest same-routing config runtime apply failed")
 	}
@@ -2884,8 +2857,7 @@ func TestServiceApplyConfigRuntimePreservesSelectorForUnchangedRouting(t *testin
 	changed := service.commitConfigUpdate(&config.Config{Routing: internalconfig.RoutingConfig{
 		Strategy:           "round-robin",
 		SessionAffinity:    true,
-		SessionAffinityTTL: "1h",
-	}})
+		SessionAffinityTTL: "1h"}})
 	if !service.applyConfigRuntime(context.Background(), changed, false) {
 		t.Fatal("changed-routing config runtime apply failed")
 	}
@@ -2903,10 +2875,8 @@ func TestServiceApplyConfigRuntimePreservesSelectorForUnchangedRouting(t *testin
 		Routing: internalconfig.RoutingConfig{
 			Strategy:           "round-robin",
 			SessionAffinity:    true,
-			SessionAffinityTTL: "1h",
-		},
-		UsageStatisticsEnabled: false,
-	})
+			SessionAffinityTTL: "1h"},
+		UsageStatisticsEnabled: false})
 	if !service.applyConfigRuntime(context.Background(), unrelated, false) {
 		t.Fatal("unrelated config runtime apply failed")
 	}

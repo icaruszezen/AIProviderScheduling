@@ -45,9 +45,7 @@ func TestMetadataConfigFieldsExposePluginSchema(t *testing.T) {
 			Name:        "mode",
 			Type:        ConfigFieldTypeEnum,
 			EnumValues:  []string{"safe", "fast"},
-			Description: "Execution mode.",
-		}},
-	}
+			Description: "Execution mode."}}}
 	if meta.Logo == "" || len(meta.ConfigFields) != 1 {
 		t.Fatalf("metadata missing logo or config fields: %#v", meta)
 	}
@@ -58,13 +56,10 @@ func TestAuthParseResponseSupportsMultipleAuths(t *testing.T) {
 		Handled: true,
 		Auth: AuthData{
 			Provider: "gemini-cli",
-			ID:       "primary.json",
-		},
+			ID:       "primary.json"},
 		Auths: []AuthData{
 			{Provider: "gemini-cli", ID: "primary.json"},
-			{Provider: "gemini-cli", ID: "primary-project-a.json"},
-		},
-	}
+			{Provider: "gemini-cli", ID: "primary-project-a.json"}}}
 
 	raw, errMarshal := json.Marshal(resp)
 	if errMarshal != nil {
@@ -87,13 +82,10 @@ func TestAuthLoginPollResponseSupportsMultipleAuths(t *testing.T) {
 		Status: AuthLoginStatusSuccess,
 		Auth: AuthData{
 			Provider: "gemini-cli",
-			ID:       "primary.json",
-		},
+			ID:       "primary.json"},
 		Auths: []AuthData{
 			{Provider: "gemini-cli", ID: "primary.json"},
-			{Provider: "gemini-cli", ID: "primary-project-a.json"},
-		},
-	}
+			{Provider: "gemini-cli", ID: "primary-project-a.json"}}}
 
 	raw, errMarshal := json.Marshal(resp)
 	if errMarshal != nil {
@@ -113,8 +105,7 @@ func TestResourceRouteMenuFieldsExposeManagementUIHints(t *testing.T) {
 		Path:        "/status",
 		Menu:        "Example Status",
 		Description: "Shows example plugin status.",
-		Handler:     compileTimePlugin{},
-	}
+		Handler:     compileTimePlugin{}}
 	if route.Menu == "" || route.Description == "" {
 		t.Fatalf("resource route missing menu fields: %#v", route)
 	}
@@ -129,34 +120,27 @@ func TestHostInjectedHTTPClientIsNotEncodedInPluginJSON(t *testing.T) {
 		{
 			name: "auth login start",
 			req:  AuthLoginStartRequest{Provider: "plugin-example", HTTPClient: compileTimePlugin{}},
-			dst:  &AuthLoginStartRequest{},
-		},
+			dst:  &AuthLoginStartRequest{}},
 		{
 			name: "auth login poll",
 			req:  AuthLoginPollRequest{Provider: "plugin-example", HTTPClient: compileTimePlugin{}},
-			dst:  &AuthLoginPollRequest{},
-		},
+			dst:  &AuthLoginPollRequest{}},
 		{
 			name: "auth refresh",
 			req:  AuthRefreshRequest{AuthID: "auth-1", HTTPClient: compileTimePlugin{}},
-			dst:  &AuthRefreshRequest{},
-		},
+			dst:  &AuthRefreshRequest{}},
 		{
 			name: "auth model",
 			req:  AuthModelRequest{AuthID: "auth-1", HTTPClient: compileTimePlugin{}},
-			dst:  &AuthModelRequest{},
-		},
+			dst:  &AuthModelRequest{}},
 		{
 			name: "executor request",
 			req:  ExecutorRequest{Model: "model-1", HTTPClient: compileTimePlugin{}},
-			dst:  &ExecutorRequest{},
-		},
+			dst:  &ExecutorRequest{}},
 		{
 			name: "executor http request",
 			req:  ExecutorHTTPRequest{AuthID: "auth-1", HTTPClient: compileTimePlugin{}},
-			dst:  &ExecutorHTTPRequest{},
-		},
-	}
+			dst:  &ExecutorHTTPRequest{}}}
 
 	for _, tt := range requests {
 		raw, errMarshal := json.Marshal(tt.req)
@@ -182,8 +166,7 @@ func TestHostModelTypesPreserveFields(t *testing.T) {
 		Body:          []byte(`{"input":"hello"}`),
 		Headers:       http.Header{"X-Test": []string{"one", "two"}},
 		Query:         url.Values{"alt": []string{"beta"}},
-		Alt:           "chat",
-	}
+		Alt:           "chat"}
 	rawRequest, errMarshalRequest := json.Marshal(request)
 	if errMarshalRequest != nil {
 		t.Fatalf("marshal HostModelExecutionRequest: %v", errMarshalRequest)
@@ -215,8 +198,7 @@ func TestHostModelTypesPreserveFields(t *testing.T) {
 	response := HostModelExecutionResponse{
 		StatusCode: http.StatusAccepted,
 		Headers:    http.Header{"Content-Type": []string{"application/json"}},
-		Body:       []byte(`{"ok":true}`),
-	}
+		Body:       []byte(`{"ok":true}`)}
 	rawResponse, errMarshalResponse := json.Marshal(response)
 	if errMarshalResponse != nil {
 		t.Fatalf("marshal HostModelExecutionResponse: %v", errMarshalResponse)
@@ -240,8 +222,7 @@ func TestHostModelTypesPreserveFields(t *testing.T) {
 	streamResponse := HostModelStreamResponse{
 		StatusCode: http.StatusOK,
 		Headers:    http.Header{"Content-Type": []string{"text/event-stream"}},
-		StreamID:   "stream-1",
-	}
+		StreamID:   "stream-1"}
 	rawStreamResponse, errMarshalStreamResponse := json.Marshal(streamResponse)
 	if errMarshalStreamResponse != nil {
 		t.Fatalf("marshal HostModelStreamResponse: %v", errMarshalStreamResponse)
@@ -281,8 +262,7 @@ func TestHostModelTypesPreserveFields(t *testing.T) {
 	readResponse := HostModelStreamReadResponse{
 		Payload: []byte("data: test\n\n"),
 		Error:   "temporary stream error",
-		Done:    true,
-	}
+		Done:    true}
 	rawReadResponse, errMarshalReadResponse := json.Marshal(readResponse)
 	if errMarshalReadResponse != nil {
 		t.Fatalf("marshal HostModelStreamReadResponse: %v", errMarshalReadResponse)
@@ -329,22 +309,18 @@ func TestSchedulerTypesExposeRoutingFields(t *testing.T) {
 		Stream:    true,
 		Options: SchedulerOptions{
 			Headers:  map[string][]string{"X-Test": []string{"1"}},
-			Metadata: map[string]any{"tenant": "demo"},
-		},
+			Metadata: map[string]any{"tenant": "demo"}},
 		Candidates: []SchedulerAuthCandidate{{
 			ID:         "auth-1",
 			Provider:   "openai",
 			Priority:   10,
 			Status:     "ready",
 			Attributes: map[string]string{"region": "us"},
-			Metadata:   map[string]any{"load": float64(0.5)},
-		}},
-	}
+			Metadata:   map[string]any{"load": float64(0.5)}}}}
 	response := SchedulerPickResponse{
 		AuthID:          request.Candidates[0].ID,
 		DelegateBuiltin: SchedulerBuiltinRoundRobin,
-		Handled:         true,
-	}
+		Handled:         true}
 
 	if request.Plugin.Name != "scheduler-plugin" {
 		t.Fatalf("Plugin.Name = %q", request.Plugin.Name)
@@ -395,14 +371,12 @@ func TestModelRouteTypesExposeRoutingFields(t *testing.T) {
 		Headers:        http.Header{"X-Test": []string{"1"}},
 		Query:          url.Values{"beta": []string{"true"}},
 		Body:           []byte(`{"model":"claude-sonnet"}`),
-		Metadata:       map[string]any{"tenant": "demo"},
-	}
+		Metadata:       map[string]any{"tenant": "demo"}}
 	response := ModelRouteResponse{
 		Handled:    true,
 		TargetKind: ModelRouteTargetExecutor,
 		Target:     "claude-websearch-plugin",
-		Reason:     "typed websearch",
-	}
+		Reason:     "typed websearch"}
 
 	if request.Plugin.Name != "router-plugin" {
 		t.Fatalf("Plugin.Name = %q", request.Plugin.Name)

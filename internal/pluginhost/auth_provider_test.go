@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
@@ -19,22 +18,16 @@ func TestAuthProviderDiscovery(t *testing.T) {
 			id:       "high",
 			priority: 20,
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
-				AuthProvider: fakeAuthProvider{identifier: " High-Provider "},
-			}},
-		},
+				AuthProvider: fakeAuthProvider{identifier: " High-Provider "}}}},
 		capabilityRecord{
 			id:       "low",
 			priority: 10,
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
-				AuthProvider: fakeAuthProvider{identifier: "low-provider"},
-			}},
-		},
+				AuthProvider: fakeAuthProvider{identifier: "low-provider"}}}},
 		capabilityRecord{
 			id: "missing-auth-provider",
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
-				ModelRegistrar: staticModelRegistrar("provider", "model"),
-			}},
-		},
+				ModelRegistrar: staticModelRegistrar("provider", "model")}}},
 	)
 
 	identifiers := host.AuthProviderIdentifiers()
@@ -60,14 +53,8 @@ func TestParseAuthDefaultsProviderFromRequest(t *testing.T) {
 						return pluginapi.AuthParseResponse{
 							Handled: true,
 							Auth: pluginapi.AuthData{
-								ID: "auth-1",
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
+								ID: "auth-1"}}, nil
+					}}}}})
 
 	auth, handled, errParse := host.ParseAuth(context.Background(), pluginapi.AuthParseRequest{Provider: "plugin-provider"})
 	if errParse != nil {
@@ -94,14 +81,8 @@ func TestParseAuthDefaultsProviderFromAuthProviderIdentifier(t *testing.T) {
 						return pluginapi.AuthParseResponse{
 							Handled: true,
 							Auth: pluginapi.AuthData{
-								ID: "auth-1",
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
+								ID: "auth-1"}}, nil
+					}}}}})
 
 	auth, handled, errParse := host.ParseAuth(context.Background(), pluginapi.AuthParseRequest{})
 	if errParse != nil {
@@ -133,23 +114,15 @@ func TestParseAuthsExpandsMultiplePluginAuths(t *testing.T) {
 									Provider:    "gemini-cli",
 									ID:          "user.json",
 									FileName:    "user.json",
-									StorageJSON: []byte(`{"type":"gemini-cli"}`),
-								},
+									StorageJSON: []byte(`{"type":"gemini-cli"}`)},
 								{
 									Provider:    "gemini-cli",
 									ID:          "user-project-a.json",
 									FileName:    "user-project-a.json",
 									StorageJSON: []byte(`{"type":"gemini-cli","project_id":"project-a"}`),
-									Metadata:    map[string]any{"project_id": "project-a"},
-								},
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
-	host.runtimeConfig = &config.Config{AuthDir: t.TempDir()}
+									Metadata:    map[string]any{"project_id": "project-a"}}}}, nil
+					}}}}})
+	host.runtimeConfig = &config.Config{}
 
 	auths, handled, errParse := host.ParseAuths(context.Background(), pluginapi.AuthParseRequest{Provider: "gemini-cli"})
 	if errParse != nil {
@@ -160,111 +133,6 @@ func TestParseAuthsExpandsMultiplePluginAuths(t *testing.T) {
 	}
 	if auths[1].Provider != "gemini-cli" || auths[1].Metadata["project_id"] != "project-a" {
 		t.Fatalf("second auth = %#v, want project-a virtual auth", auths[1])
-	}
-}
-
-func TestStartLoginPassesProviderBaseURLHostAndHTTPClient(t *testing.T) {
-	authDir := t.TempDir()
-	expiresAt := time.Now().Add(time.Minute).UTC()
-	called := false
-	host := newHostWithRecords(capabilityRecord{
-		id: "auth-plugin",
-		plugin: pluginapi.Plugin{
-			Capabilities: pluginapi.Capabilities{
-				AuthProvider: fakeAuthProvider{
-					identifier: "plugin-provider",
-					startLogin: func(ctx context.Context, req pluginapi.AuthLoginStartRequest) (pluginapi.AuthLoginStartResponse, error) {
-						called = true
-						if req.Provider != "plugin-provider" || req.BaseURL != "http://localhost:8080/login" {
-							t.Fatalf("StartLogin request = %#v, want provider/baseURL", req)
-						}
-						if req.Host.AuthDir != authDir || req.Host.ProxyURL != "http://proxy.local" || !req.Host.ForceModelPrefix {
-							t.Fatalf("StartLogin host = %#v, want configured summary", req.Host)
-						}
-						if req.HTTPClient == nil {
-							t.Fatal("StartLogin HTTPClient = nil, want host HTTP bridge")
-						}
-						return pluginapi.AuthLoginStartResponse{
-							Provider:  req.Provider,
-							URL:       "http://provider/login",
-							State:     "state-1",
-							ExpiresAt: expiresAt,
-						}, nil
-					},
-				},
-			},
-		},
-	})
-	host.runtimeConfig = &config.Config{
-		SDKConfig: config.SDKConfig{
-			ProxyURL:         "http://proxy.local",
-			ForceModelPrefix: true,
-		},
-		AuthDir: authDir,
-	}
-
-	resp, handled, errStart := host.StartLogin(context.Background(), " Plugin-Provider ", "http://localhost:8080/login")
-	if errStart != nil {
-		t.Fatalf("StartLogin() error = %v", errStart)
-	}
-	if !handled || !called {
-		t.Fatalf("StartLogin() handled=%t called=%t, want handled call", handled, called)
-	}
-	if resp.Provider != "plugin-provider" || resp.URL != "http://provider/login" || resp.State != "state-1" || !resp.ExpiresAt.Equal(expiresAt) {
-		t.Fatalf("StartLogin() response = %#v, want plugin response", resp)
-	}
-}
-
-func TestPollLoginPassesProviderStateHostAndHTTPClient(t *testing.T) {
-	authDir := t.TempDir()
-	called := false
-	host := newHostWithRecords(capabilityRecord{
-		id: "auth-plugin",
-		plugin: pluginapi.Plugin{
-			Capabilities: pluginapi.Capabilities{
-				AuthProvider: fakeAuthProvider{
-					identifier: "plugin-provider",
-					pollLogin: func(ctx context.Context, req pluginapi.AuthLoginPollRequest) (pluginapi.AuthLoginPollResponse, error) {
-						called = true
-						if req.Provider != "plugin-provider" || req.State != "state-1" {
-							t.Fatalf("PollLogin request = %#v, want provider/state", req)
-						}
-						if req.Host.AuthDir != authDir || req.Host.ProxyURL != "http://proxy.local" || !req.Host.ForceModelPrefix {
-							t.Fatalf("PollLogin host = %#v, want configured summary", req.Host)
-						}
-						if req.HTTPClient == nil {
-							t.Fatal("PollLogin HTTPClient = nil, want host HTTP bridge")
-						}
-						return pluginapi.AuthLoginPollResponse{
-							Status:  pluginapi.AuthLoginStatusSuccess,
-							Message: "done",
-							Auth: pluginapi.AuthData{
-								Provider: "plugin-provider",
-								ID:       "auth-1",
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
-	host.runtimeConfig = &config.Config{
-		SDKConfig: config.SDKConfig{
-			ProxyURL:         "http://proxy.local",
-			ForceModelPrefix: true,
-		},
-		AuthDir: authDir,
-	}
-
-	resp, handled, errPoll := host.PollLogin(context.Background(), " Plugin-Provider ", " state-1 ")
-	if errPoll != nil {
-		t.Fatalf("PollLogin() error = %v", errPoll)
-	}
-	if !handled || !called {
-		t.Fatalf("PollLogin() handled=%t called=%t, want handled call", handled, called)
-	}
-	if resp.Status != pluginapi.AuthLoginStatusSuccess || resp.Message != "done" || resp.Auth.ID != "auth-1" {
-		t.Fatalf("PollLogin() response = %#v, want plugin response", resp)
 	}
 }
 
@@ -281,20 +149,13 @@ func TestRefreshAuthPreservesAuthIndex(t *testing.T) {
 						}
 						return pluginapi.AuthRefreshResponse{
 							Auth: pluginapi.AuthData{
-								Metadata: map[string]any{"access_token": "new-token"},
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
+								Attributes: map[string]string{"api_key": "new-token", "auth_kind": "apikey"}}}, nil
+					}}}}})
 
 	auth := host.AuthDataToCoreAuth(pluginapi.AuthData{
-		Provider: "plugin-provider",
-		ID:       "auth-1",
-		Metadata: map[string]any{"access_token": "old-token"},
-	}, "", "")
+		Provider:   "plugin-provider",
+		ID:         "auth-1",
+		Attributes: map[string]string{"api_key": "old-token", "auth_kind": "apikey"}}, "", "")
 	if auth == nil {
 		t.Fatal("AuthDataToCoreAuth() = nil, want auth")
 	}
@@ -310,15 +171,15 @@ func TestRefreshAuthPreservesAuthIndex(t *testing.T) {
 	if refreshed.Index != "home-index-1" {
 		t.Fatalf("RefreshAuth() index = %q, want home-index-1", refreshed.Index)
 	}
-	if got := refreshed.Metadata["access_token"]; got != "new-token" {
-		t.Fatalf("RefreshAuth() access_token = %q, want new-token", got)
+	if got := refreshed.Attributes["api_key"]; got != "new-token" && refreshed.Metadata["access_token"] != "new-token" {
+		t.Fatalf("RefreshAuth() credential = attributes=%#v metadata=%#v, want new-token", refreshed.Attributes, refreshed.Metadata)
 	}
 }
 
-func TestHostAuthDataToCoreAuthRejectsMissingProviderAndUsesAuthDir(t *testing.T) {
+func TestHostAuthDataToCoreAuthRejectsMissingProvider(t *testing.T) {
 	authDir := t.TempDir()
 	host := New()
-	host.runtimeConfig = &config.Config{AuthDir: authDir}
+	host.runtimeConfig = &config.Config{}
 	path := filepath.Join(authDir, "nested", "auth.json")
 
 	if auth := host.AuthDataToCoreAuth(pluginapi.AuthData{ID: "auth-1"}, path, "auth.json"); auth != nil {
@@ -328,8 +189,8 @@ func TestHostAuthDataToCoreAuthRejectsMissingProviderAndUsesAuthDir(t *testing.T
 	if auth == nil {
 		t.Fatal("AuthDataToCoreAuth() = nil, want auth")
 	}
-	if auth.Provider != "plugin-provider" || auth.ID != "nested/auth.json" {
-		t.Fatalf("AuthDataToCoreAuth() auth = %#v, want normalized provider and relative ID", auth)
+	if auth.Provider != "plugin-provider" {
+		t.Fatalf("AuthDataToCoreAuth() auth = %#v, want normalized provider", auth)
 	}
 	if auth.Metadata["type"] != "plugin-provider" || auth.Attributes["path"] != path || auth.Attributes["source"] != path {
 		t.Fatalf("AuthDataToCoreAuth() metadata=%#v attributes=%#v, want path/source/type", auth.Metadata, auth.Attributes)
@@ -339,12 +200,10 @@ func TestHostAuthDataToCoreAuthRejectsMissingProviderAndUsesAuthDir(t *testing.T
 func TestPluginTokenStorageMergesRawMetadataAndProviderType(t *testing.T) {
 	storage := &pluginTokenStorage{
 		provider: "plugin-provider",
-		rawJSON:  []byte(`{"old":"value","type":"old-provider"}`),
-	}
+		rawJSON:  []byte(`{"old":"value","type":"old-provider"}`)}
 	storage.SetMetadata(map[string]any{
 		"new": "value",
-		"old": "override",
-	})
+		"old": "override"})
 
 	raw := storage.RawJSON()
 	var decoded map[string]any
@@ -386,35 +245,27 @@ func TestPluginTokenStorageNormalizesCredentialMetadataKeys(t *testing.T) {
 				"request_retry":         float64(2),
 				"disable_cooling":       true,
 				"provider-specific-key": "preserved",
-				"type":                  "plugin-provider",
-			},
-		},
+				"type":                  "plugin-provider"}},
 		{
 			name:    "canonical metadata wins",
 			rawJSON: []byte(`{"request-retry":2,"disable-cooling":true}`),
 			metadata: map[string]any{
 				"request_retry":   0,
-				"disable_cooling": false,
-			},
+				"disable_cooling": false},
 			want: map[string]any{
 				"request_retry":   float64(0),
 				"disable_cooling": false,
-				"type":            "plugin-provider",
-			},
-		},
-	}
+				"type":            "plugin-provider"}}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			storage := &pluginTokenStorage{
 				provider: "plugin-provider",
-				rawJSON:  test.rawJSON,
-			}
+				rawJSON:  test.rawJSON}
 			storage.SetMetadata(test.metadata)
 
 			outputs := map[string][]byte{
-				"RawJSON": storage.RawJSON(),
-			}
+				"RawJSON": storage.RawJSON()}
 			path := filepath.Join(t.TempDir(), "auth.json")
 			if errSave := storage.SaveTokenToFile(path); errSave != nil {
 				t.Fatalf("SaveTokenToFile() error = %v", errSave)
@@ -455,8 +306,7 @@ func TestPluginTokenStorageSkipsUnchangedFile(t *testing.T) {
 	}
 	storage := &pluginTokenStorage{
 		provider: "plugin-provider",
-		rawJSON:  []byte(`{"token":"secret"}`),
-	}
+		rawJSON:  []byte(`{"token":"secret"}`)}
 	storage.SetMetadata(map[string]any{"disabled": false})
 
 	if errSave := storage.SaveTokenToFile(path); errSave != nil {

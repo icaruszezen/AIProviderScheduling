@@ -62,7 +62,5 @@ func (m *Manager) reportHomeUnauthorized(ctx context.Context, auth *Auth, provid
 		Failed:            true,
 		Fail: coreusage.Failure{
 			StatusCode: http.StatusUnauthorized,
-			Body:       failureBody,
-		},
-	})
+			Body:       failureBody}})
 }

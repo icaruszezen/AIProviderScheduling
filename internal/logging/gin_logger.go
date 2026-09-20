@@ -21,8 +21,7 @@ var aiAPIPrefixes = []string{
 	"/v1",
 	"/v1beta",
 	"/openai/v1",
-	"/backend-api/codex",
-}
+	"/backend-api/codex"}
 
 const (
 	skipGinLogKey  = "__gin_skip_request_logging__"
@@ -125,8 +124,7 @@ func GinLogrusRecovery() gin.HandlerFunc {
 		log.WithFields(log.Fields{
 			"panic": recovered,
 			"stack": string(debug.Stack()),
-			"path":  c.Request.URL.Path,
-		}).Error("recovered from panic")
+			"path":  c.Request.URL.Path}).Error("recovered from panic")
 
 		c.AbortWithStatus(http.StatusInternalServerError)
 	})

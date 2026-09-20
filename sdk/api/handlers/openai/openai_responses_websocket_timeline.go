@@ -43,15 +43,13 @@ func newWebsocketTimelineLog(enabled bool, source *requestlogging.FileBodySource
 	}
 	return &websocketTimelineLog{
 		enabled: true,
-		source:  source,
-	}
+		source:  source}
 }
 
 func newInMemoryWebsocketTimelineLog() *websocketTimelineLog {
 	return &websocketTimelineLog{
 		enabled: true,
-		builder: &strings.Builder{},
-	}
+		builder: &strings.Builder{}}
 }
 
 func websocketTimelineSourceFromContext(c *gin.Context) *requestlogging.FileBodySource {
@@ -255,9 +253,7 @@ func responsesWebsocketErrorMessageFromPayload(payload []byte) *interfaces.Error
 			StatusCode: status,
 			Error: &responsesWebsocketPayloadError{
 				status:  status,
-				payload: bytes.Clone(trimmedPayload),
-			},
-		}
+				payload: bytes.Clone(trimmedPayload)}}
 	}
 	return &interfaces.ErrorMessage{StatusCode: status, Error: fmt.Errorf("%s", http.StatusText(status))}
 }

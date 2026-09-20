@@ -26,15 +26,12 @@ func TestCodexModelIsCompatConfigDecoding(t *testing.T) {
 			name: "YAML",
 			decode: func(cfg *Config) error {
 				return yaml.Unmarshal([]byte(yamlConfig), cfg)
-			},
-		},
+			}},
 		{
 			name: "JSON",
 			decode: func(cfg *Config) error {
 				return json.Unmarshal([]byte(jsonConfig), cfg)
-			},
-		},
-	} {
+			}}} {
 		t.Run(testCase.name, func(t *testing.T) {
 			var cfg Config
 			if errDecode := testCase.decode(&cfg); errDecode != nil {

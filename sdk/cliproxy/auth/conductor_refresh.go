@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	internalconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,8 +20,6 @@ type RefreshEvaluator interface {
 }
 
 const (
-	refreshCheckInterval  = 5 * time.Second
-	refreshMaxConcurrency = 16
 	refreshPendingBackoff = time.Minute
 	refreshFailureBackoff = 5 * time.Minute
 	// refreshIneffectiveBackoff throttles refresh attempts when an executor returns
@@ -35,82 +32,20 @@ const (
 	transientErrorCooldown    = time.Minute
 )
 
-// StartAutoRefresh launches a background loop that evaluates auth freshness
-// every few seconds and triggers refresh operations when required.
-// Only one loop is kept alive; starting a new one cancels the previous run.
-func (m *Manager) StartAutoRefresh(parent context.Context, interval time.Duration) {
-	if interval <= 0 {
-		interval = refreshCheckInterval
-	}
+// StartAutoRefresh is a no-op. Account OAuth auto-refresh has been removed.
+func (m *Manager) StartAutoRefresh(context.Context, time.Duration) {}
 
-	m.mu.Lock()
-	cancelPrev := m.refreshCancel
-	m.refreshCancel = nil
-	m.refreshLoop = nil
-	m.mu.Unlock()
-	if cancelPrev != nil {
-		cancelPrev()
-	}
-
-	ctx, cancelCtx := context.WithCancel(parent)
-	workers := refreshMaxConcurrency
-	if cfg, ok := m.runtimeConfig.Load().(*internalconfig.Config); ok && cfg != nil && cfg.AuthAutoRefreshWorkers > 0 {
-		workers = cfg.AuthAutoRefreshWorkers
-	}
-	loop := newAuthAutoRefreshLoop(m, interval, workers)
-
-	m.mu.Lock()
-	m.refreshCancel = cancelCtx
-	m.refreshLoop = loop
-	m.mu.Unlock()
-
-	loop.rebuild(time.Now())
-	go loop.run(ctx)
-}
-
-// StopAutoRefresh cancels the background refresh loop, if running.
-// It also stops the selector if it implements StoppableSelector.
+// StopAutoRefresh stops the selector if it implements StoppableSelector.
 func (m *Manager) StopAutoRefresh() {
-	m.mu.Lock()
-	cancel := m.refreshCancel
-	m.refreshCancel = nil
-	m.refreshLoop = nil
-	m.mu.Unlock()
-	if cancel != nil {
-		cancel()
-	}
-	// Stop selector if it implements StoppableSelector (e.g., SessionAffinitySelector)
 	sel := m.Selector()
 	if stoppable, ok := sel.(StoppableSelector); ok && stoppable != nil {
 		stoppable.Stop()
 	}
 }
 
-func (m *Manager) queueRefreshReschedule(authID string) {
-	if m == nil || authID == "" {
-		return
-	}
-	m.mu.RLock()
-	loop := m.refreshLoop
-	m.mu.RUnlock()
-	if loop == nil {
-		return
-	}
-	loop.queueReschedule(authID)
-}
+func (m *Manager) queueRefreshReschedule(string) {}
 
-func (m *Manager) queueRefreshUnschedule(authID string) {
-	if m == nil || authID == "" {
-		return
-	}
-	m.mu.RLock()
-	loop := m.refreshLoop
-	m.mu.RUnlock()
-	if loop == nil {
-		return
-	}
-	loop.remove(authID)
-}
+func (m *Manager) queueRefreshUnschedule(string) {}
 
 func (m *Manager) shouldRefresh(a *Auth, now time.Time) bool {
 	if a == nil {

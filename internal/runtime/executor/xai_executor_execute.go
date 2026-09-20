@@ -327,8 +327,7 @@ func xaiBuildCompactionTriggerStreamChunks(prepared *xaiPreparedRequest, compact
 		xaiBuildSSEFrame("response.output_item.added", addedPayload),
 		xaiBuildSSEFrame("keepalive", keepalivePayload),
 		xaiBuildSSEFrame("response.output_item.done", donePayload),
-		xaiBuildSSEFrame("response.completed", completedPayload),
-	}
+		xaiBuildSSEFrame("response.completed", completedPayload)}
 }
 
 func xaiBuildCompactionBaseResponse(prepared *xaiPreparedRequest, compactData []byte, responseID string, createdAt int64, status string) []byte {
@@ -360,8 +359,7 @@ func xaiBuildCompactionBaseResponse(prepared *xaiPreparedRequest, compactData []
 		"top_p",
 		"truncation",
 		"user",
-		"metadata",
-	} {
+		"metadata"} {
 		if value := gjson.GetBytes(prepared.body, field); value.Exists() {
 			response, _ = sjson.SetRawBytes(response, field, []byte(value.Raw))
 		}

@@ -27,16 +27,14 @@ func TestRegistryTranslateRequestAppliesSummaryIntent(t *testing.T) {
 			translated: `{"thinking":{"type":"adaptive"}}`,
 			path:       "thinking.display",
 			want:       "summarized",
-			wantExists: true,
-		},
+			wantExists: true},
 		{
 			name:       "responses effort alone leaves Claude display absent",
 			from:       FormatOpenAIResponse,
 			to:         FormatClaude,
 			input:      `{"reasoning":{"effort":"high"}}`,
 			translated: `{"thinking":{"type":"adaptive"}}`,
-			path:       "thinking.display",
-		},
+			path:       "thinking.display"},
 		{
 			name:       "responses summary enables Claude summary",
 			from:       FormatOpenAIResponse,
@@ -45,8 +43,7 @@ func TestRegistryTranslateRequestAppliesSummaryIntent(t *testing.T) {
 			translated: `{"thinking":{"type":"adaptive"}}`,
 			path:       "thinking.display",
 			want:       "summarized",
-			wantExists: true,
-		},
+			wantExists: true},
 		{
 			name:       "responses null summary disables Gemini summaries",
 			from:       FormatOpenAIResponse,
@@ -55,8 +52,7 @@ func TestRegistryTranslateRequestAppliesSummaryIntent(t *testing.T) {
 			translated: `{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}}}`,
 			path:       "generationConfig.thinkingConfig.includeThoughts",
 			want:       "false",
-			wantExists: true,
-		},
+			wantExists: true},
 		{
 			name:       "Google Chat extension overrides effort",
 			from:       FormatOpenAI,
@@ -65,9 +61,7 @@ func TestRegistryTranslateRequestAppliesSummaryIntent(t *testing.T) {
 			translated: `{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high","includeThoughts":true}}}`,
 			path:       "generationConfig.thinkingConfig.includeThoughts",
 			want:       "false",
-			wantExists: true,
-		},
-	}
+			wantExists: true}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -163,8 +157,7 @@ func TestRegistryTranslateRequestAppliesSummaryAfterPluginTranslation(t *testing
 	registry := NewRegistry()
 	hooks := &fakePluginHooks{
 		requestTranslateBody: []byte(`{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}}}`),
-		requestTranslateOK:   true,
-	}
+		requestTranslateOK:   true}
 	registry.SetPluginHooks(hooks)
 	out := registry.TranslateRequest(
 		FormatOpenAIResponse,
@@ -190,8 +183,7 @@ func TestRegistryTranslateRequestPluginNormalizerOwnsSourceSummaryIntent(t *test
 			normalize: func(body []byte) []byte {
 				out, _ := sjson.DeleteBytes(body, "reasoning.summary")
 				return out
-			},
-		},
+			}},
 		{
 			name: "disabled summary replaces enabled intent",
 			normalize: func(body []byte) []byte {
@@ -199,9 +191,7 @@ func TestRegistryTranslateRequestPluginNormalizerOwnsSourceSummaryIntent(t *test
 				return out
 			},
 			wantExists: true,
-			want:       false,
-		},
-	}
+			want:       false}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -209,8 +199,7 @@ func TestRegistryTranslateRequestPluginNormalizerOwnsSourceSummaryIntent(t *test
 			hooks := &fakePluginHooks{
 				normalizeRequest:     test.normalize,
 				requestTranslateBody: []byte(`{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}}}`),
-				requestTranslateOK:   true,
-			}
+				requestTranslateOK:   true}
 			registry.SetPluginHooks(hooks)
 
 			out := registry.TranslateRequest(

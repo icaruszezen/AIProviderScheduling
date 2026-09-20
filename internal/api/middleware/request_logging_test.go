@@ -28,53 +28,41 @@ func TestShouldSkipMethodForRequestLogging(t *testing.T) {
 		{
 			name: "nil request",
 			req:  nil,
-			skip: true,
-		},
+			skip: true},
 		{
 			name: "post request should not skip",
 			req: &http.Request{
 				Method: http.MethodPost,
-				URL:    &url.URL{Path: "/v1/responses"},
-			},
-			skip: false,
-		},
+				URL:    &url.URL{Path: "/v1/responses"}},
+			skip: false},
 		{
 			name: "plain get should skip",
 			req: &http.Request{
 				Method: http.MethodGet,
 				URL:    &url.URL{Path: "/v1/models"},
-				Header: http.Header{},
-			},
-			skip: true,
-		},
+				Header: http.Header{}},
+			skip: true},
 		{
 			name: "responses websocket upgrade should not skip",
 			req: &http.Request{
 				Method: http.MethodGet,
 				URL:    &url.URL{Path: "/v1/responses"},
-				Header: http.Header{"Upgrade": []string{"websocket"}},
-			},
-			skip: false,
-		},
+				Header: http.Header{"Upgrade": []string{"websocket"}}},
+			skip: false},
 		{
 			name: "codex responses websocket upgrade should not skip",
 			req: &http.Request{
 				Method: http.MethodGet,
 				URL:    &url.URL{Path: "/backend-api/codex/responses"},
-				Header: http.Header{"Upgrade": []string{"websocket"}},
-			},
-			skip: false,
-		},
+				Header: http.Header{"Upgrade": []string{"websocket"}}},
+			skip: false},
 		{
 			name: "responses get without upgrade should skip",
 			req: &http.Request{
 				Method: http.MethodGet,
 				URL:    &url.URL{Path: "/v1/responses"},
-				Header: http.Header{},
-			},
-			skip: true,
-		},
-	}
+				Header: http.Header{}},
+			skip: true}}
 
 	for i := range tests {
 		got := shouldSkipMethodForRequestLogging(tests[i].req)
@@ -97,57 +85,45 @@ func TestShouldCaptureRequestBody(t *testing.T) {
 			req: &http.Request{
 				Body:          io.NopCloser(strings.NewReader("{}")),
 				ContentLength: -1,
-				Header:        http.Header{"Content-Type": []string{"application/json"}},
-			},
-			want: true,
-		},
+				Header:        http.Header{"Content-Type": []string{"application/json"}}},
+			want: true},
 		{
 			name:          "nil request",
 			loggerEnabled: false,
 			req:           nil,
-			want:          false,
-		},
+			want:          false},
 		{
 			name:          "small known size json in error-only mode",
 			loggerEnabled: false,
 			req: &http.Request{
 				Body:          io.NopCloser(strings.NewReader("{}")),
 				ContentLength: 2,
-				Header:        http.Header{"Content-Type": []string{"application/json"}},
-			},
-			want: true,
-		},
+				Header:        http.Header{"Content-Type": []string{"application/json"}}},
+			want: true},
 		{
 			name:          "large known size skipped in error-only mode",
 			loggerEnabled: false,
 			req: &http.Request{
 				Body:          io.NopCloser(strings.NewReader("x")),
 				ContentLength: maxErrorOnlyCapturedRequestBodyBytes + 1,
-				Header:        http.Header{"Content-Type": []string{"application/json"}},
-			},
-			want: false,
-		},
+				Header:        http.Header{"Content-Type": []string{"application/json"}}},
+			want: false},
 		{
 			name:          "unknown size skipped in error-only mode",
 			loggerEnabled: false,
 			req: &http.Request{
 				Body:          io.NopCloser(strings.NewReader("x")),
 				ContentLength: -1,
-				Header:        http.Header{"Content-Type": []string{"application/json"}},
-			},
-			want: false,
-		},
+				Header:        http.Header{"Content-Type": []string{"application/json"}}},
+			want: false},
 		{
 			name:          "multipart skipped in error-only mode",
 			loggerEnabled: false,
 			req: &http.Request{
 				Body:          io.NopCloser(strings.NewReader("x")),
 				ContentLength: 1,
-				Header:        http.Header{"Content-Type": []string{"multipart/form-data; boundary=abc"}},
-			},
-			want: false,
-		},
-	}
+				Header:        http.Header{"Content-Type": []string{"multipart/form-data; boundary=abc"}}},
+			want: false}}
 
 	for i := range tests {
 		got := shouldCaptureRequestBody(tests[i].loggerEnabled, tests[i].req)
@@ -220,8 +196,7 @@ func TestRequestLoggingMiddlewareCapturesLargeErrorRequestAndDeferredAPIRequest(
 			URL:     "https://api.example.com/v1/responses",
 			Method:  http.MethodPost,
 			Headers: http.Header{"Content-Type": []string{"application/json"}},
-			Body:    upstreamBody,
-		})
+			Body:    upstreamBody})
 		c.JSON(http.StatusBadRequest, gin.H{"error": "upstream rejected request"})
 	})
 
@@ -277,8 +252,7 @@ func TestAttachRequestLogSourcesUsesLoggerLogsDir(t *testing.T) {
 
 	for _, key := range []string{
 		logging.WebsocketTimelineSourceContextKey,
-		logging.APIWebsocketTimelineSourceContextKey,
-	} {
+		logging.APIWebsocketTimelineSourceContextKey} {
 		value, exists := c.Get(key)
 		if !exists {
 			t.Fatalf("expected %s source to be attached", key)
@@ -307,8 +281,7 @@ func cleanupFileBodySourcesFromContext(c *gin.Context) {
 	}
 	for _, key := range []string{
 		logging.WebsocketTimelineSourceContextKey,
-		logging.APIWebsocketTimelineSourceContextKey,
-	} {
+		logging.APIWebsocketTimelineSourceContextKey} {
 		value, exists := c.Get(key)
 		if !exists {
 			continue

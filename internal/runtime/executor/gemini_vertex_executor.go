@@ -75,9 +75,7 @@ func convertImagenToGeminiResponse(data []byte, model string) []byte {
 			parts = append(parts, map[string]any{
 				"inlineData": map[string]any{
 					"mimeType": mimeType,
-					"data":     imageData,
-				},
-			})
+					"data":     imageData}})
 		}
 	}
 
@@ -88,19 +86,15 @@ func convertImagenToGeminiResponse(data []byte, model string) []byte {
 		"candidates": []map[string]any{{
 			"content": map[string]any{
 				"parts": parts,
-				"role":  "model",
-			},
-			"finishReason": "STOP",
-		}},
+				"role":  "model"},
+			"finishReason": "STOP"}},
 		"responseId":   responseId,
 		"modelVersion": model,
 		// Imagen API doesn't return token counts, set to 0 for tracking purposes
 		"usageMetadata": map[string]any{
 			"promptTokenCount":     0,
 			"candidatesTokenCount": 0,
-			"totalTokenCount":      0,
-		},
-	}
+			"totalTokenCount":      0}}
 
 	result, err := json.Marshal(response)
 	if err != nil {
@@ -150,13 +144,9 @@ func convertToImagenRequest(payload []byte) ([]byte, error) {
 	imagenReq := map[string]any{
 		"instances": []map[string]any{
 			{
-				"prompt": prompt,
-			},
-		},
+				"prompt": prompt}},
 		"parameters": map[string]any{
-			"sampleCount": 1,
-		},
-	}
+			"sampleCount": 1}}
 
 	// Extract optional parameters
 	if aspectRatio := gjson.GetBytes(payload, "aspectRatio"); aspectRatio.Exists() {
@@ -394,8 +384,7 @@ func (e *GeminiVertexExecutor) executeWithServiceAccount(ctx context.Context, au
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -524,8 +513,7 @@ func (e *GeminiVertexExecutor) executeWithAPIKey(ctx context.Context, auth *clip
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -643,8 +631,7 @@ func (e *GeminiVertexExecutor) executeStreamWithServiceAccount(ctx context.Conte
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -792,8 +779,7 @@ func (e *GeminiVertexExecutor) executeStreamWithAPIKey(ctx context.Context, auth
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -922,8 +908,7 @@ func (e *GeminiVertexExecutor) countTokensWithServiceAccount(ctx context.Context
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	cliproxyexecutor.MarkUpstreamAttempt(ctx)
@@ -1016,8 +1001,7 @@ func (e *GeminiVertexExecutor) countTokensWithAPIKey(ctx context.Context, auth *
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	cliproxyexecutor.MarkUpstreamAttempt(ctx)

@@ -258,9 +258,7 @@ func rejectUnsupportedImagesModel(c *gin.Context, model string) bool {
 	c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 		Error: handlers.ErrorDetail{
 			Message: fmt.Sprintf("Model %s is not supported on %s or %s. Use %s, %s, %s, %s, %s, or a configured openai-compatibility image model.", model, imagesGenerationsPath, imagesEditsPath, gptImage15Model, defaultImagesToolModel, defaultXAIImagesModel, xaiImagesQualityModel, xaiImages20Model),
-			Type:    "invalid_request_error",
-		},
-	})
+			Type:    "invalid_request_error"}})
 	return true
 }
 
@@ -606,18 +604,14 @@ func (h *OpenAIAPIHandler) ImagesGenerations(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 	if !json.Valid(rawJSON) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: body must be valid JSON",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -634,9 +628,7 @@ func (h *OpenAIAPIHandler) ImagesGenerations(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: prompt is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -718,9 +710,7 @@ func (h *OpenAIAPIHandler) ImagesEdits(c *gin.Context) {
 	c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 		Error: handlers.ErrorDetail{
 			Message: fmt.Sprintf("Invalid request: unsupported Content-Type %q", contentType),
-			Type:    "invalid_request_error",
-		},
-	})
+			Type:    "invalid_request_error"}})
 }
 
 func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
@@ -729,9 +719,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -748,9 +736,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: prompt is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -764,9 +750,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: image is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -777,9 +761,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 				Error: handlers.ErrorDetail{
 					Message: fmt.Sprintf("Invalid request: %v", err),
-					Type:    "invalid_request_error",
-				},
-			})
+					Type:    "invalid_request_error"}})
 			return
 		}
 		images = append(images, dataURL)
@@ -797,9 +779,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 				Error: handlers.ErrorDetail{
 					Message: fmt.Sprintf("Invalid request: %v", errBuild),
-					Type:    "invalid_request_error",
-				},
-			})
+					Type:    "invalid_request_error"}})
 			return
 		}
 		c.Request.Header.Set("Content-Type", contentType)
@@ -821,9 +801,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 				Error: handlers.ErrorDetail{
 					Message: fmt.Sprintf("Invalid request: %v", errBuild),
-					Type:    "invalid_request_error",
-				},
-			})
+					Type:    "invalid_request_error"}})
 			return
 		}
 		c.Request.Header.Set("Content-Type", contentType)
@@ -838,9 +816,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromMultipart(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 				Error: handlers.ErrorDetail{
 					Message: fmt.Sprintf("Invalid request: %v", err),
-					Type:    "invalid_request_error",
-				},
-			})
+					Type:    "invalid_request_error"}})
 			return
 		}
 		maskDataURL = &dataURL
@@ -893,18 +869,14 @@ func (h *OpenAIAPIHandler) imagesEditsFromJSON(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 	if !json.Valid(rawJSON) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: body must be valid JSON",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -921,9 +893,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromJSON(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: prompt is required",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -944,9 +914,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromJSON(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 				Error: handlers.ErrorDetail{
 					Message: "Invalid request: image is required",
-					Type:    "invalid_request_error",
-				},
-			})
+					Type:    "invalid_request_error"}})
 			return
 		}
 		aspectRatio, resolution, n := xaiImagesEditOptionsFromJSON(rawJSON)
@@ -975,9 +943,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromJSON(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: images[].image_url is required (file_id is not supported)",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -991,9 +957,7 @@ func (h *OpenAIAPIHandler) imagesEditsFromJSON(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Invalid request: mask.file_id is not supported (use mask.image_url instead)",
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -1077,8 +1041,7 @@ func extractXAIImagesResponse(payload []byte) (results []xaiImageResult, created
 				B64JSON:       strings.TrimSpace(item.Get("b64_json").String()),
 				URL:           strings.TrimSpace(item.Get("url").String()),
 				RevisedPrompt: strings.TrimSpace(item.Get("revised_prompt").String()),
-				MimeType:      strings.TrimSpace(item.Get("mime_type").String()),
-			}
+				MimeType:      strings.TrimSpace(item.Get("mime_type").String())}
 			if result.MimeType == "" {
 				result.MimeType = mimeTypeFromOutputFormat(strings.TrimSpace(item.Get("output_format").String()))
 			}
@@ -1193,9 +1156,7 @@ func (h *OpenAIAPIHandler) streamRoutedImages(c *gin.Context, imageReq []byte, i
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -1340,9 +1301,7 @@ func (h *OpenAIAPIHandler) streamOpenAICompatImages(c *gin.Context, compatReq []
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -1424,8 +1383,7 @@ func (h *OpenAIAPIHandler) streamOpenAICompatImages(c *gin.Context, compatReq []
 				},
 				WriteTerminalError: func(errMsg *interfaces.ErrorMessage) {
 					writeImagesStreamErrorEvent(c, errMsg)
-				},
-			})
+				}})
 			return
 		case <-keepAliveC:
 			setImagesSSEHeaders(c)
@@ -1484,9 +1442,7 @@ func (h *OpenAIAPIHandler) streamImagesWithModel(c *gin.Context, imageReq []byte
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -1652,8 +1608,7 @@ func collectImagesFromResponsesStream(ctx context.Context, data <-chan []byte, e
 			errCtx := ctx.Err()
 			return nil, &interfaces.ErrorMessage{
 				StatusCode: clienterror.HTTPStatusFromErrorOr(errCtx, http.StatusRequestTimeout),
-				Error:      errCtx,
-			}
+				Error:      errCtx}
 		case errMsg, ok := <-errs:
 			if ok && errMsg != nil {
 				return nil, errMsg
@@ -1710,8 +1665,7 @@ func extractImagesFromResponsesCompleted(payload []byte) (results []imageCallRes
 				OutputFormat:  strings.TrimSpace(item.Get("output_format").String()),
 				Size:          strings.TrimSpace(item.Get("size").String()),
 				Background:    strings.TrimSpace(item.Get("background").String()),
-				Quality:       strings.TrimSpace(item.Get("quality").String()),
-			}
+				Quality:       strings.TrimSpace(item.Get("quality").String())}
 			if len(results) == 0 {
 				firstMeta = entry
 			}
@@ -1775,9 +1729,7 @@ func (h *OpenAIAPIHandler) streamImagesFromResponses(c *gin.Context, responsesRe
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 

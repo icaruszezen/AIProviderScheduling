@@ -255,8 +255,7 @@ func DecideSignatureCompatibilityForModel(targetProvider SignatureProvider, targ
 	decision := SignatureCompatibilityDecision{
 		TargetProvider:   targetProvider,
 		DetectedProvider: detected,
-		BlockKind:        blockKind,
-	}
+		BlockKind:        blockKind}
 
 	if signatureProviderMatchesTarget(targetProvider, detected) {
 		decision.Compatible = true

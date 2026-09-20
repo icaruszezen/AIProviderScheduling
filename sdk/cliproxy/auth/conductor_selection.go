@@ -196,8 +196,7 @@ func (m *Manager) ReconcileRegistryModelStates(ctx context.Context, authID strin
 				ID:          auth.ID,
 				Provider:    auth.Provider,
 				Attributes:  auth.Attributes,
-				ModelStates: cloneModelStates(auth.ModelStates),
-			}
+				ModelStates: cloneModelStates(auth.ModelStates)}
 			candidateChanged := normalizeModelStates(candidateAuth)
 
 			// Historical alias migration:
@@ -634,8 +633,7 @@ func schedulerAttributeSensitive(key string) bool {
 		"storage",
 		"authorization",
 		"auth_header",
-		"proxy_url",
-	} {
+		"proxy_url"} {
 		if strings.Contains(key, fragment) || strings.Contains(normalized, fragment) || strings.Contains(compact, fragment) {
 			return true
 		}
@@ -699,8 +697,7 @@ func schedulerAuthCandidates(auths []*Auth) []pluginapi.SchedulerAuthCandidate {
 			Provider:   strings.ToLower(strings.TrimSpace(auth.Provider)),
 			Priority:   authPriority(auth),
 			Status:     string(auth.Status),
-			Attributes: schedulerSafeAttributes(auth.Attributes),
-		})
+			Attributes: schedulerSafeAttributes(auth.Attributes)})
 	}
 	return out
 }
@@ -729,8 +726,7 @@ func schedulerProviders(provider string, providers []string) []string {
 func schedulerOptions(opts cliproxyexecutor.Options) pluginapi.SchedulerOptions {
 	return pluginapi.SchedulerOptions{
 		Headers:  cloneHTTPHeader(opts.Headers),
-		Metadata: cloneSchedulerAnyMap(opts.Metadata),
-	}
+		Metadata: cloneSchedulerAnyMap(opts.Metadata)}
 }
 
 func pickSchedulerAuthByID(candidates []*Auth, authID string) *Auth {
@@ -801,8 +797,7 @@ func (m *Manager) pickViaPluginScheduler(ctx context.Context, scheduler PluginSc
 		Model:      model,
 		Stream:     opts.Stream,
 		Options:    schedulerOptions(opts),
-		Candidates: schedulerAuthCandidates(candidates),
-	}
+		Candidates: schedulerAuthCandidates(candidates)}
 	resp, handled, errPick := scheduler.PickAuth(ctx, req)
 	if errPick != nil {
 		return nil, true, errPick
@@ -1520,6 +1515,9 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 		}
 		m.mu.Unlock()
 	}
+	if authCopy.AuthKind() == AuthKindOAuth {
+		return nil, nil, errOAuthCredentialsUnsupported()
+	}
 	return authCopy, executor, nil
 }
 
@@ -1548,6 +1546,9 @@ func (m *Manager) SelectAuthByKind(ctx context.Context, provider, model, require
 	requiredKind = normalizeAuthKind(requiredKind)
 	if requiredKind == "" {
 		return nil, &Error{Code: "invalid_auth_kind", Message: "required auth kind is invalid", HTTPStatus: http.StatusBadRequest}
+	}
+	if requiredKind == AuthKindOAuth {
+		return nil, errOAuthCredentialsUnsupported()
 	}
 
 	selectionCtx := withRequiredAuthKind(ctx, requiredKind)
@@ -1645,6 +1646,9 @@ func (m *Manager) SelectHomeAuthByKind(ctx context.Context, provider string, mod
 	requiredKind = normalizeAuthKind(requiredKind)
 	if requiredKind == "" {
 		return nil, &Error{Code: "invalid_auth_kind", Message: "required auth kind is invalid", HTTPStatus: http.StatusBadRequest}
+	}
+	if requiredKind == AuthKindOAuth {
+		return nil, errOAuthCredentialsUnsupported()
 	}
 	if m == nil || !m.HomeEnabled() {
 		return nil, &Error{Code: "home_unavailable", Message: "home control center unavailable", HTTPStatus: http.StatusServiceUnavailable}

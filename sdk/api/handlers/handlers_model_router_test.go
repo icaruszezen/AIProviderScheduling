@@ -291,8 +291,7 @@ func TestHandlerModelRouterRequiresPluginExecutorHost(t *testing.T) {
 				t.Fatalf("requested model = %q, want %q", req.RequestedModel, originalModel)
 			}
 			return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: "websearch-plugin"}, true
-		},
-	})
+		}})
 
 	_, _, errMsg := handler.ExecuteWithAuthManager(context.Background(), "openai", originalModel, []byte(fmt.Sprintf(`{"model":%q}`, originalModel)), "")
 	if errMsg == nil || errMsg.StatusCode != http.StatusBadGateway {
@@ -533,8 +532,7 @@ func TestExecuteModelStreamDoesNotReusePreparedRouteWhenRouterPluginSkipped(t *t
 		Model:              mappedModel,
 		Stream:             true,
 		Body:               []byte(`{"model":"mapped-upstream-model","stream":true}`),
-		SkipRouterPluginID: originPluginID,
-	})
+		SkipRouterPluginID: originPluginID})
 	if host.routeSkip != originPluginID {
 		t.Fatalf("router skip id = %q, want %q", host.routeSkip, originPluginID)
 	}
@@ -559,8 +557,7 @@ func TestExecuteModelPropagatesRouterSkipPluginID(t *testing.T) {
 		ExitProtocol:       "openai",
 		Model:              model,
 		Body:               requestBody,
-		SkipRouterPluginID: "origin-plugin",
-	})
+		SkipRouterPluginID: "origin-plugin"})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModel() error = %+v", errMsg)
 	}
@@ -637,19 +634,15 @@ func TestHandlerProvidersForExecutionRejectsImageOnlyModelOnProviderRoute(t *tes
 		{
 			name:          "target-model",
 			originalModel: "original-model",
-			decision:      modelRouteDecision{Provider: "claude", Model: "gpt-image-2"},
-		},
+			decision:      modelRouteDecision{Provider: "claude", Model: "gpt-image-2"}},
 		{
 			name:          "target-model-thinking-suffix",
 			originalModel: "original-model",
-			decision:      modelRouteDecision{Provider: "claude", Model: "gpt-image-2(auto)"},
-		},
+			decision:      modelRouteDecision{Provider: "claude", Model: "gpt-image-2(auto)"}},
 		{
 			name:          "original-model-thinking-suffix",
 			originalModel: "gpt-image-2(auto)",
-			decision:      modelRouteDecision{Provider: "claude"},
-		},
-	}
+			decision:      modelRouteDecision{Provider: "claude"}}}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, _, errMsg := handler.providersForExecution("ignored", tc.originalModel, false, tc.decision, modelExecutionOptions{})
@@ -669,8 +662,7 @@ func TestExecuteCountWithAuthManagerPropagatesRouterSkipAndQuery(t *testing.T) {
 	ctx := contextWithQuery(url.Values{"session": []string{"abc"}})
 
 	_, _, errMsg := handler.executeCountWithAuthManager(ctx, "openai", model, requestBody, "", modelExecutionOptions{
-		SkipRouterPluginID: "origin-plugin",
-	})
+		SkipRouterPluginID: "origin-plugin"})
 	if errMsg == nil {
 		t.Fatal("executeCountWithAuthManager() error = nil, want auth selection error on empty manager")
 	}
@@ -780,8 +772,7 @@ func TestStreamWithPluginExecutorReturnedHeadersImmutableAfterReturn(t *testing.
 				headers.Set("X-Body", "plugin")
 			}
 			return pluginapi.StreamChunkInterceptResponse{Headers: headers, Body: cloneBytes(req.Body)}
-		},
-	})
+		}})
 
 	dataChan, upstreamHeaders, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", originalModel, []byte(fmt.Sprintf(`{"model":%q,"stream":true}`, originalModel)), "")
 	dataDone := make(chan struct{})

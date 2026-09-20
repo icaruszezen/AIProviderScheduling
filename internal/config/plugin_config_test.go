@@ -186,9 +186,7 @@ func TestSaveConfigPreserveComments_PrunesDefaultPluginsDir(t *testing.T) {
 		Debug: true,
 		Plugins: PluginsConfig{
 			Dir:     "plugins",
-			Configs: map[string]PluginInstanceConfig{},
-		},
-	}
+			Configs: map[string]PluginInstanceConfig{}}}
 	if errSave := SaveConfigPreserveComments(configPath, cfg); errSave != nil {
 		t.Fatalf("SaveConfigPreserveComments() error = %v", errSave)
 	}
@@ -247,8 +245,7 @@ plugins:
 		"priority: 7",
 		"config1: value1",
 		"config2:",
-		"nested: value2",
-	} {
+		"nested: value2"} {
 		if !strings.Contains(rawText, want) {
 			t.Fatalf("Raw YAML missing %q in:\n%s", want, rawText)
 		}

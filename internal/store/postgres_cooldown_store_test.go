@@ -153,9 +153,7 @@ func TestPostgresCooldownStateStore_SaveLoad(t *testing.T) {
 		cfg: PostgresStoreConfig{
 			ConfigTable:   defaultConfigTable,
 			AuthTable:     defaultAuthTable,
-			CooldownTable: defaultCooldownTable,
-		},
-	}
+			CooldownTable: defaultCooldownTable}}
 	cooldownStore := &postgresCooldownStateStore{store: postgresStore}
 	postgresStore.cooldownStore = cooldownStore
 
@@ -175,9 +173,7 @@ func TestPostgresCooldownStateStore_SaveLoad(t *testing.T) {
 			Status:         string(cliproxyauth.StatusError),
 			NextRetryAfter: nextRetry,
 			Reason:         "rate limited",
-			UpdatedAt:      nextRetry.Add(-time.Minute),
-		},
-	}
+			UpdatedAt:      nextRetry.Add(-time.Minute)}}
 	if errSave := cooldownStore.Save(context.Background(), records); errSave != nil {
 		t.Fatalf("Save() error = %v", errSave)
 	}
@@ -235,8 +231,7 @@ func TestPostgresCooldownStateStore_MergesConcurrentInstances(t *testing.T) {
 	})
 	postgresStore := &PostgresStore{
 		db:  db,
-		cfg: PostgresStoreConfig{CooldownTable: defaultCooldownTable},
-	}
+		cfg: PostgresStoreConfig{CooldownTable: defaultCooldownTable}}
 	storeA := &postgresCooldownStateStore{store: postgresStore}
 	storeB := &postgresCooldownStateStore{store: postgresStore}
 	staleStore := &postgresCooldownStateStore{store: postgresStore}

@@ -25,8 +25,7 @@ func TestWithSkipPersist_DisablesUpdatePersistence(t *testing.T) {
 	auth := &Auth{
 		ID:       "auth-1",
 		Provider: "antigravity",
-		Metadata: map[string]any{"type": "antigravity"},
-	}
+		Metadata: map[string]any{"type": "antigravity"}}
 
 	if _, err := mgr.Register(WithSkipPersist(context.Background()), auth); err != nil {
 		t.Fatalf("Register(skipPersist) returned error: %v", err)
@@ -57,8 +56,7 @@ func TestWithSkipPersist_DisablesRegisterPersistence(t *testing.T) {
 	auth := &Auth{
 		ID:       "auth-1",
 		Provider: "antigravity",
-		Metadata: map[string]any{"type": "antigravity"},
-	}
+		Metadata: map[string]any{"type": "antigravity"}}
 
 	if _, err := mgr.Register(WithSkipPersist(context.Background()), auth); err != nil {
 		t.Fatalf("Register(skipPersist) returned error: %v", err)
@@ -76,10 +74,8 @@ func TestPersist_SkipsConfigAPIKeyAuth(t *testing.T) {
 		Provider: "codex",
 		Attributes: map[string]string{
 			"api_key": "secret",
-			"source":  "config:codex[abc]",
-		},
-		Metadata: map[string]any{"disable_cooling": true},
-	}
+			"source":  "config:codex[abc]"},
+		Metadata: map[string]any{"disable_cooling": true}}
 	if _, err := mgr.Register(context.Background(), auth); err != nil {
 		t.Fatalf("Register returned error: %v", err)
 	}

@@ -206,8 +206,7 @@ func ReplaceClaudeThinkingReplayIfUnchanged(ctx context.Context, modelFamily, se
 	claudeThinkingReplayEntries[key] = claudeThinkingReplayEntry{
 		Contents:   contents,
 		Timestamp:  time.Now(),
-		Generation: uuid.NewString(),
-	}
+		Generation: uuid.NewString()}
 	enforceClaudeThinkingReplayLimitsLocked()
 	return true, nil
 }

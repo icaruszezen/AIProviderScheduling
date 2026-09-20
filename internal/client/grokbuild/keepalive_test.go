@@ -22,8 +22,7 @@ func TestIsGrokClientUserAgent(t *testing.T) {
 		{"GROK-SHELL/1.0", true},
 		{"curl/8.7.1", false},
 		{"openai-python/1.0.0", false},
-		{"", false},
-	}
+		{"", false}}
 	for _, tc := range tests {
 		if got := IsGrokClientUserAgent(tc.ua); got != tc.want {
 			t.Errorf("IsGrokClientUserAgent(%q) = %v, want %v", tc.ua, got, tc.want)
@@ -40,24 +39,19 @@ func TestIsGrokClientHeaders(t *testing.T) {
 		{
 			name:    "User-Agent with grok-pager",
 			headers: http.Header{"User-Agent": []string{"grok-pager/1.0.5"}},
-			want:    true,
-		},
+			want:    true},
 		{
 			name:    "case insensitive header name",
 			headers: http.Header{"user-agent": []string{"grok-shell/0.2"}},
-			want:    true,
-		},
+			want:    true},
 		{
 			name:    "unrelated user agent",
 			headers: http.Header{"User-Agent": []string{"curl/8.7.1"}},
-			want:    false,
-		},
+			want:    false},
 		{
 			name:    "nil headers",
 			headers: nil,
-			want:    false,
-		},
-	}
+			want:    false}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := IsGrokClientHeaders(tc.headers); got != tc.want {
@@ -95,8 +89,7 @@ func TestIsKeepalivePayload(t *testing.T) {
 		{[]byte(`{"type":"keepalive"}`), true},
 		{[]byte(`{"type":"response.created"}`), false},
 		{[]byte(`{"type":"response.reasoning.delta"}`), false},
-		{[]byte(``), false},
-	}
+		{[]byte(``), false}}
 	for _, tc := range tests {
 		if got := IsKeepalivePayload(tc.payload); got != tc.want {
 			t.Errorf("IsKeepalivePayload(%s) = %v, want %v", string(tc.payload), got, tc.want)
@@ -117,8 +110,7 @@ func TestIsKeepaliveSSELine(t *testing.T) {
 		{[]byte("event: response.created"), false},
 		{[]byte("event: keepalive-other"), false},
 		{[]byte(`data: {"type":"response.created"}`), false},
-		{[]byte(""), false},
-	}
+		{[]byte(""), false}}
 	for _, tc := range tests {
 		if got := IsKeepaliveSSELine(tc.line); got != tc.want {
 			t.Errorf("IsKeepaliveSSELine(%s) = %v, want %v", string(tc.line), got, tc.want)

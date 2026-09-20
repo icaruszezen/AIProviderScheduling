@@ -30,8 +30,7 @@ type xaiInternalXSearchResponseFilter struct {
 func newXAIInternalXSearchResponseFilter(enabled bool, clientDeclaredTools map[xaiClientToolKey]struct{}) *xaiInternalXSearchResponseFilter {
 	filter := &xaiInternalXSearchResponseFilter{
 		enabled:             enabled,
-		clientDeclaredTools: clientDeclaredTools,
-	}
+		clientDeclaredTools: clientDeclaredTools}
 	if enabled {
 		filter.droppedOutputIndexes = make(map[int64]struct{})
 		filter.droppedItemIDs = make(map[string]struct{})
@@ -316,8 +315,7 @@ func normalizeXAIInputNamespaceToolCallsWithFold(body []byte, shouldFold bool) [
 			argsPath := fmt.Sprintf("input.%d.arguments", index)
 
 			dispatcherArgs := map[string]any{
-				"name": toolName,
-			}
+				"name": toolName}
 			if rawArgs := item.Get("arguments").String(); rawArgs != "" {
 				if gjson.Valid(rawArgs) {
 					dispatcherArgs["arguments"] = json.RawMessage(rawArgs)
@@ -372,8 +370,7 @@ type xaiNamespaceRestorer struct {
 func newXAINamespaceRestorer(refs map[string]xaiNamespaceToolRef) *xaiNamespaceRestorer {
 	return &xaiNamespaceRestorer{
 		refs:              refs,
-		dispatcherItemIDs: make(map[string]string),
-	}
+		dispatcherItemIDs: make(map[string]string)}
 }
 
 func (r *xaiNamespaceRestorer) restore(data []byte) []byte {
@@ -691,8 +688,7 @@ func sanitizeXAIInputEncryptedContent(body []byte) []byte {
 			"component":       "xai_encrypted_content_sanitizer",
 			"dropped":         dropCount,
 			"first_item_type": firstItemType,
-			"first_reason":    firstReason,
-		}).Debug("xai executor: removed invalid encrypted_content before upstream")
+			"first_reason":    firstReason}).Debug("xai executor: removed invalid encrypted_content before upstream")
 	}
 	return mergeAdjacentXAIInputReasoningSummaries(updated)
 }

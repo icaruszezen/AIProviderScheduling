@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
 )
@@ -23,12 +22,8 @@ func (h *Host) hostConfigSummaryLocked() pluginapi.HostConfigSummary {
 	}
 	cfg := h.runtimeConfig
 	return pluginapi.HostConfigSummary{
-		AuthDir:          strings.TrimSpace(cfg.AuthDir),
 		ProxyURL:         strings.TrimSpace(cfg.ProxyURL),
-		ForceModelPrefix: cfg.ForceModelPrefix,
-		OAuthModelAlias:  pluginOAuthModelAliases(cfg.OAuthModelAlias),
-		ExcludedModels:   cloneStringSliceMap(cfg.OAuthExcludedModels),
-	}
+		ForceModelPrefix: cfg.ForceModelPrefix}
 }
 
 func (h *Host) hostConfigSummary() pluginapi.HostConfigSummary {
@@ -38,31 +33,6 @@ func (h *Host) hostConfigSummary() pluginapi.HostConfigSummary {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	return h.hostConfigSummaryLocked()
-}
-
-func pluginOAuthModelAliases(in map[string][]config.OAuthModelAlias) map[string][]pluginapi.ModelAlias {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make(map[string][]pluginapi.ModelAlias, len(in))
-	for provider, aliases := range in {
-		key := normalizeProviderID(provider)
-		if key == "" {
-			continue
-		}
-		for _, alias := range aliases {
-			name := strings.TrimSpace(alias.Name)
-			value := strings.TrimSpace(alias.Alias)
-			if name == "" || value == "" {
-				continue
-			}
-			out[key] = append(out[key], pluginapi.ModelAlias{Name: name, Alias: value})
-		}
-	}
-	if len(out) == 0 {
-		return nil
-	}
-	return out
 }
 
 func cloneStringSliceMap(in map[string][]string) map[string][]string {
@@ -212,9 +182,7 @@ func (h *Host) callParseAuths(ctx context.Context, record capabilityRecord, req 
 			err = fmt.Errorf("auth provider panic: %v", recovered)
 		}
 	}()
-	if req.Host.AuthDir == "" {
-		req.Host = h.hostConfigSummary()
-	}
+	req.Host = h.hostConfigSummary()
 	req.Provider = normalizeProviderID(req.Provider)
 	if req.Provider == "" {
 		req.Provider = normalizeProviderID(provider.Identifier())
@@ -255,79 +223,6 @@ func pluginAuthParseResponseAuths(resp pluginapi.AuthParseResponse) []pluginapi.
 	return []pluginapi.AuthData{resp.Auth}
 }
 
-func (h *Host) StartLogin(ctx context.Context, provider string, baseURL string) (pluginapi.AuthLoginStartResponse, bool, error) {
-	record := h.authProviderRecord(provider)
-	if record == nil {
-		return pluginapi.AuthLoginStartResponse{}, false, nil
-	}
-	return h.callStartLogin(ctx, *record, provider, baseURL)
-}
-
-func (h *Host) callStartLogin(ctx context.Context, record capabilityRecord, provider string, baseURL string) (resp pluginapi.AuthLoginStartResponse, handled bool, err error) {
-	authProvider := record.plugin.Capabilities.AuthProvider
-	if h == nil || authProvider == nil || h.isPluginFused(record.id) || !h.recordCurrent(record) {
-		return pluginapi.AuthLoginStartResponse{}, false, nil
-	}
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			h.fusePlugin(record.id, "AuthProvider.StartLogin", recovered)
-			resp = pluginapi.AuthLoginStartResponse{}
-			handled = false
-			err = fmt.Errorf("auth provider start login panic: %v", recovered)
-		}
-	}()
-	req := pluginapi.AuthLoginStartRequest{
-		Provider:   normalizeProviderID(provider),
-		BaseURL:    strings.TrimSpace(baseURL),
-		Host:       h.hostConfigSummary(),
-		HTTPClient: h.newHTTPClient(nil),
-	}
-	resp, errStart := authProvider.StartLogin(ctx, req)
-	if errStart != nil {
-		return pluginapi.AuthLoginStartResponse{}, true, errStart
-	}
-	return resp, true, nil
-}
-
-func (h *Host) PollLogin(ctx context.Context, provider, state string, metadata ...map[string]any) (pluginapi.AuthLoginPollResponse, bool, error) {
-	record := h.authProviderRecord(provider)
-	if record == nil {
-		return pluginapi.AuthLoginPollResponse{}, false, nil
-	}
-	var pollMetadata map[string]any
-	if len(metadata) > 0 {
-		pollMetadata = metadata[0]
-	}
-	return h.callPollLogin(ctx, *record, provider, state, pollMetadata)
-}
-
-func (h *Host) callPollLogin(ctx context.Context, record capabilityRecord, provider, state string, metadata map[string]any) (resp pluginapi.AuthLoginPollResponse, handled bool, err error) {
-	authProvider := record.plugin.Capabilities.AuthProvider
-	if h == nil || authProvider == nil || h.isPluginFused(record.id) || !h.recordCurrent(record) {
-		return pluginapi.AuthLoginPollResponse{}, false, nil
-	}
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			h.fusePlugin(record.id, "AuthProvider.PollLogin", recovered)
-			resp = pluginapi.AuthLoginPollResponse{}
-			handled = false
-			err = fmt.Errorf("auth provider poll login panic: %v", recovered)
-		}
-	}()
-	req := pluginapi.AuthLoginPollRequest{
-		Provider:   normalizeProviderID(provider),
-		State:      strings.TrimSpace(state),
-		Host:       h.hostConfigSummary(),
-		HTTPClient: h.newHTTPClient(nil),
-		Metadata:   cloneAnyMap(metadata),
-	}
-	resp, errPoll := authProvider.PollLogin(ctx, req)
-	if errPoll != nil {
-		return pluginapi.AuthLoginPollResponse{}, true, errPoll
-	}
-	return resp, true, nil
-}
-
 func (h *Host) RefreshAuth(ctx context.Context, auth *coreauth.Auth) (refreshed *coreauth.Auth, handled bool, err error) {
 	if h == nil || auth == nil {
 		return nil, false, nil
@@ -355,8 +250,7 @@ func (h *Host) RefreshAuth(ctx context.Context, auth *coreauth.Auth) (refreshed 
 		Metadata:     cloneAnyMap(authMetadata(auth)),
 		Attributes:   authAttributes(auth),
 		Host:         h.hostConfigSummary(),
-		HTTPClient:   h.newHTTPClient(auth),
-	})
+		HTTPClient:   h.newHTTPClient(auth)})
 	if errRefresh != nil {
 		return nil, true, errRefresh
 	}
@@ -404,11 +298,7 @@ func (h *Host) RefreshAuth(ctx context.Context, auth *coreauth.Auth) (refreshed 
 }
 
 func (h *Host) AuthDataToCoreAuth(data pluginapi.AuthData, path, fileName string) *coreauth.Auth {
-	authDir := ""
-	if h != nil {
-		authDir = h.hostConfigSummary().AuthDir
-	}
-	return pluginAuthDataToCoreAuth(data, path, fileName, authDir)
+	return pluginAuthDataToCoreAuth(data, path, fileName, "")
 }
 
 type pluginTokenStorage struct {
@@ -584,8 +474,7 @@ func pluginAuthDataToCoreAuth(data pluginapi.AuthData, path, fileName string, au
 		Attributes:       attributes,
 		CreatedAt:        now,
 		UpdatedAt:        now,
-		NextRefreshAfter: data.NextRefreshAfter,
-	}
+		NextRefreshAfter: data.NextRefreshAfter}
 	return auth
 }
 

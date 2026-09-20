@@ -38,9 +38,7 @@ func TestHostRouteModelUsesHighestPriorityFirstMatch(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					lowCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "high",
 			priority: 10,
@@ -52,9 +50,7 @@ func TestHostRouteModelUsesHighestPriorityFirstMatch(t *testing.T) {
 						t.Fatalf("Plugin metadata = %#v, want High Router", req.Plugin)
 					}
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf, Reason: "match"}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -77,9 +73,7 @@ func TestHostRouteModelContinuesAfterUnhandled(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					lowCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "high",
 			priority: 10,
@@ -87,9 +81,7 @@ func TestHostRouteModelContinuesAfterUnhandled(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: false}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -106,9 +98,7 @@ func TestHostRouteModelAllowsExplicitExecutorPluginTarget(t *testing.T) {
 		capabilityRecord{
 			id: "executor",
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
-				Executor: &fakeExecutor{identifier: "fake-provider"},
-			}},
-		},
+				Executor: &fakeExecutor{identifier: "fake-provider"}}}},
 		capabilityRecord{
 			id:       "router",
 			priority: 10,
@@ -118,9 +108,7 @@ func TestHostRouteModelAllowsExplicitExecutorPluginTarget(t *testing.T) {
 						t.Fatalf("PluginID = %q, want router", req.PluginID)
 					}
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: "executor"}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -136,16 +124,13 @@ func TestHostExecutePluginExecutorByPluginIDPreservesModel(t *testing.T) {
 		execute: func(ctx context.Context, req pluginapi.ExecutorRequest) (pluginapi.ExecutorResponse, error) {
 			gotReq = req
 			return pluginapi.ExecutorResponse{Payload: []byte("plugin-ok")}, nil
-		},
-	}
+		}}
 	host := newRouteModelHostWithRecords(capabilityRecord{
 		id: "executor",
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
 			Executor:              executor,
 			ExecutorInputFormats:  []string{"openai"},
-			ExecutorOutputFormats: []string{"openai"},
-		}},
-	})
+			ExecutorOutputFormats: []string{"openai"}}}})
 
 	resp, errExecute := host.ExecutePluginExecutor(context.Background(), "executor", coreexecutor.Request{Model: "client-model", Payload: []byte(`{"model":"client-model"}`)}, coreexecutor.Options{OriginalRequest: []byte(`{"model":"client-model"}`)})
 	if errExecute != nil {
@@ -169,9 +154,7 @@ func TestHostRouteModelDefaultsHandledRouterToOwnExecutor(t *testing.T) {
 			Executor: &fakeExecutor{identifier: "fake-provider"},
 			ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 				return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-			}),
-		}},
-	})
+			})}}})
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
 	if !ok || resp.Target != "router" {
@@ -190,9 +173,7 @@ func TestHostRouteModelSkipsUnavailableExecutorTargets(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					calls++
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "missing-target",
 			priority: 20,
@@ -201,9 +182,7 @@ func TestHostRouteModelSkipsUnavailableExecutorTargets(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					calls++
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetExecutor, Target: "missing"}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "no-executor",
 			priority: 10,
@@ -211,9 +190,7 @@ func TestHostRouteModelSkipsUnavailableExecutorTargets(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					calls++
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -234,9 +211,7 @@ func TestHostRouteModelErrorAndPanicDoNotBreakFallback(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "panic",
 			priority: 20,
@@ -244,9 +219,7 @@ func TestHostRouteModelErrorAndPanicDoNotBreakFallback(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					panic("router panic")
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "error",
 			priority: 10,
@@ -254,9 +227,7 @@ func TestHostRouteModelErrorAndPanicDoNotBreakFallback(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{}, errors.New("temporary route failure")
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -275,9 +246,7 @@ func TestHostHasModelRoutersReportsAvailableRouters(t *testing.T) {
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{id: "other"},
 	)
 
@@ -296,18 +265,14 @@ func TestHostRouteModelClonesPluginMetadata(t *testing.T) {
 			Name: "Router",
 			ConfigFields: []pluginapi.ConfigField{{
 				Name:       "mode",
-				EnumValues: []string{"safe", "fast"},
-			}},
-		},
+				EnumValues: []string{"safe", "fast"}}}},
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
 			Executor: &fakeExecutor{identifier: "fake-provider"},
 			ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 				req.Plugin.ConfigFields[0].Name = "mutated"
 				req.Plugin.ConfigFields[0].EnumValues[0] = "mutated"
 				return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-			}),
-		}},
-	})
+			})}}})
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original"})
 	if !ok || resp.Target != "router" {
@@ -330,9 +295,7 @@ func TestHostRouteModelSkipsOriginatingPlugin(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					originCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "other",
 			priority: 1,
@@ -340,9 +303,7 @@ func TestHostRouteModelSkipsOriginatingPlugin(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModelExcept(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"}, "origin")
@@ -376,9 +337,7 @@ func TestHostRouteModelRoutesToBuiltinProvider(t *testing.T) {
 		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
 			ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 				return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetProvider, Target: "claude", TargetModel: "claude-sonnet-4"}, nil
-			}),
-		}},
-	})
+			})}}})
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
 	if !ok || !resp.Handled || resp.Target != "claude" {
@@ -403,18 +362,14 @@ func TestHostRouteModelSkipsUnavailableBuiltinProvider(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					fallbackCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "missing-provider",
 			priority: 10,
 			plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetProvider, Target: "unknown-provider"}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -437,9 +392,7 @@ func TestHostRouteModelRejectsProviderAndExecutorBothSet(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					fallbackCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "both",
 			priority: 10,
@@ -447,9 +400,7 @@ func TestHostRouteModelRejectsProviderAndExecutorBothSet(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "fake-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetKind("both"), Target: "claude"}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -470,9 +421,7 @@ func TestHostRouteModelPropagatesAvailableProviders(t *testing.T) {
 			ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 				gotProviders = append([]string(nil), req.AvailableProviders...)
 				return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-			}),
-		}},
-	})
+			})}}})
 
 	if _, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original"}); !ok {
 		t.Fatal("RouteModel() not handled")
@@ -508,9 +457,7 @@ func TestHostRouteModelSkipsExecutorWithoutProviderIdentifier(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					fallbackCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "no-provider",
 			priority: 10,
@@ -520,9 +467,7 @@ func TestHostRouteModelSkipsExecutorWithoutProviderIdentifier(t *testing.T) {
 				Executor: &fakeExecutor{identifierFunc: func() string { return "" }},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model"})
@@ -547,9 +492,7 @@ func TestHostRouteModelSkipsExecutorWithUnsupportedFormats(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					fallbackCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "unsupported-formats",
 			priority: 10,
@@ -557,9 +500,7 @@ func TestHostRouteModelSkipsExecutorWithUnsupportedFormats(t *testing.T) {
 				Executor: &fakeExecutor{identifier: "unsupported-provider"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model", SourceFormat: "openai"})
@@ -585,9 +526,7 @@ func TestHostRouteModelSkipsOAuthOnlyExecutorTargets(t *testing.T) {
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					fallbackCalled = true
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 		capabilityRecord{
 			id:       "oauth-only",
 			priority: 10,
@@ -598,9 +537,7 @@ func TestHostRouteModelSkipsOAuthOnlyExecutorTargets(t *testing.T) {
 				ExecutorOutputFormats: []string{"openai"},
 				ModelRouter: modelRouterFunc(func(ctx context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, error) {
 					return pluginapi.ModelRouteResponse{Handled: true, TargetKind: pluginapi.ModelRouteTargetSelf}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	resp, ok := host.RouteModel(context.Background(), pluginapi.ModelRouteRequest{RequestedModel: "original-model", SourceFormat: "openai"})

@@ -71,8 +71,7 @@ func buildErrorEventPayload(result Result, authSnapshot *Auth) ([]byte, bool) {
 		AuthIndex:  strings.TrimSpace(authSnapshot.Index),
 		StatusCode: errorEventStatusCode(result.Error),
 		Body:       errorEventBody(result.Error),
-		AuthStatus: buildErrorEventAuthStatus(result.Model, authSnapshot),
-	}
+		AuthStatus: buildErrorEventAuthStatus(result.Model, authSnapshot)}
 	if result.Error != nil {
 		event.Code = strings.TrimSpace(result.Error.Code)
 		event.Retryable = result.Error.Retryable
@@ -91,8 +90,7 @@ func buildErrorEventAuthStatus(model string, authSnapshot *Auth) errorEventAuthS
 		Disabled:       authSnapshot.Disabled,
 		Unavailable:    authSnapshot.Unavailable,
 		NextRetryAfter: timePtrIfSet(authSnapshot.NextRetryAfter),
-		Quota:          errorEventQuotaStatusFrom(authSnapshot.Quota),
-	}
+		Quota:          errorEventQuotaStatusFrom(authSnapshot.Quota)}
 	if modelState := errorEventModelStatusFrom(model, authSnapshot); modelState != nil {
 		status.Model = modelState
 	}
@@ -114,8 +112,7 @@ func errorEventModelStatusFrom(model string, authSnapshot *Auth) *errorEventMode
 		StatusMessage:  strings.TrimSpace(state.StatusMessage),
 		Unavailable:    state.Unavailable,
 		NextRetryAfter: timePtrIfSet(state.NextRetryAfter),
-		Quota:          errorEventQuotaStatusFrom(state.Quota),
-	}
+		Quota:          errorEventQuotaStatusFrom(state.Quota)}
 }
 
 func errorEventQuotaStatusFrom(quota QuotaState) *errorEventQuotaStatus {
@@ -126,8 +123,7 @@ func errorEventQuotaStatusFrom(quota QuotaState) *errorEventQuotaStatus {
 		Exceeded:      quota.Exceeded,
 		Reason:        strings.TrimSpace(quota.Reason),
 		NextRecoverAt: timePtrIfSet(quota.NextRecoverAt),
-		BackoffLevel:  quota.BackoffLevel,
-	}
+		BackoffLevel:  quota.BackoffLevel}
 }
 
 func errorEventStatusCode(err *Error) int {

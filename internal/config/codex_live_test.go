@@ -55,8 +55,7 @@ func TestCodexLiveMediaRelayConfigMigratesLegacyPrivateIPSetting(t *testing.T) {
 	for name, raw := range map[string]string{
 		"legacy allow true":  "allow-private-remote-ips: true\n",
 		"legacy allow false": "allow-private-remote-ips: false\n",
-		"new default":        "enabled: true\n",
-	} {
+		"new default":        "enabled: true\n"} {
 		t.Run(name, func(t *testing.T) {
 			var relay CodexLiveMediaRelayConfig
 			if errUnmarshal := yaml.Unmarshal([]byte(raw), &relay); errUnmarshal != nil {
@@ -80,36 +79,28 @@ func TestCodexLiveMediaRelayConfigRejectsInvalidValues(t *testing.T) {
 	for name, relay := range map[string]CodexLiveMediaRelayConfig{
 		"negative session limit": {
 			Enabled:     true,
-			MaxSessions: -1,
-		},
+			MaxSessions: -1},
 		"invalid public IP": {
 			Enabled:  true,
-			PublicIP: "not-an-ip",
-		},
+			PublicIP: "not-an-ip"},
 		"partial UDP range": {
 			Enabled:    true,
-			UDPPortMin: 40000,
-		},
+			UDPPortMin: 40000},
 		"reversed UDP range": {
 			Enabled:    true,
 			UDPPortMin: 40100,
-			UDPPortMax: 40000,
-		},
+			UDPPortMax: 40000},
 		"undersized UDP range": {
 			Enabled:     true,
 			MaxSessions: 2,
 			UDPPortMin:  40000,
-			UDPPortMax:  40002,
-		},
+			UDPPortMax:  40002},
 		"missing ICE URLs": {
 			Enabled:    true,
-			ICEServers: []CodexLiveICEServer{{Username: "user"}},
-		},
+			ICEServers: []CodexLiveICEServer{{Username: "user"}}},
 		"unsupported ICE URL": {
 			Enabled:    true,
-			ICEServers: []CodexLiveICEServer{{URLs: []string{"https://example.com"}}},
-		},
-	} {
+			ICEServers: []CodexLiveICEServer{{URLs: []string{"https://example.com"}}}}} {
 		t.Run(name, func(t *testing.T) {
 			if errValidate := relay.Validate(); errValidate == nil {
 				t.Fatal("Validate() accepted invalid media relay config")

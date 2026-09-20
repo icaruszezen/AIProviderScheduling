@@ -9,8 +9,7 @@ func TestEnvelopeRoundTrip(t *testing.T) {
 	payload := json.RawMessage(`{"name":"example"}`)
 	env := Envelope{
 		OK:     true,
-		Result: payload,
-	}
+		Result: payload}
 
 	raw, errMarshal := json.Marshal(env)
 	if errMarshal != nil {

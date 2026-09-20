@@ -63,20 +63,11 @@ func TestPluginRefreshCompatExecutorDelegatesExecuteAndRefresh(t *testing.T) {
 							Auth: pluginapi.AuthData{
 								ID:       "auth-1",
 								Provider: "plugin-provider",
-								Metadata: map[string]any{
-									"access_token":  "new-token",
-									"refresh_token": "refresh-1",
-								},
 								Attributes: map[string]string{
-									"base_url": "https://compat.example.com/v1",
-								},
-							},
-						}, nil
-					},
-				},
-			},
-		},
-	})
+									"auth_kind": "apikey",
+									"api_key":   "new-token",
+									"base_url":  "https://compat.example.com/v1"}}}, nil
+					}}}}})
 
 	inner := &stubCompatExecutor{id: "plugin-provider"}
 	wrapped := NewPluginRefreshCompatExecutor(inner, host, &config.Config{})
@@ -98,12 +89,9 @@ func TestPluginRefreshCompatExecutorDelegatesExecuteAndRefresh(t *testing.T) {
 		Provider: "plugin-provider",
 		Metadata: map[string]any{
 			"access_token":  "old-token",
-			"refresh_token": "refresh-1",
-		},
+			"refresh_token": "refresh-1"},
 		Attributes: map[string]string{
-			"base_url": "https://compat.example.com/v1",
-		},
-	}
+			"base_url": "https://compat.example.com/v1"}}
 
 	if _, errExecute := wrapped.Execute(context.Background(), auth, cliproxyexecutor.Request{}, cliproxyexecutor.Options{}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
@@ -122,8 +110,8 @@ func TestPluginRefreshCompatExecutorDelegatesExecuteAndRefresh(t *testing.T) {
 	if inner.refreshCalls != 0 {
 		t.Fatalf("inner Refresh calls = %d, want 0", inner.refreshCalls)
 	}
-	if refreshed == nil || refreshed.Metadata["access_token"] != "new-token" {
-		t.Fatalf("Refresh() auth = %#v, want updated access_token", refreshed)
+	if refreshed == nil || refreshed.Attributes["api_key"] != "new-token" {
+		t.Fatalf("Refresh() auth = %#v, want updated api_key", refreshed)
 	}
 	if refreshed.Attributes["base_url"] != "https://compat.example.com/v1" {
 		t.Fatalf("Refresh() base_url = %q, want preserved", refreshed.Attributes["base_url"])
@@ -138,9 +126,7 @@ func TestPluginRefreshCompatExecutorErrorsWhenRefreshUnavailable(t *testing.T) {
 		Provider: "plugin-provider",
 		Metadata: map[string]any{
 			"access_token":  "old-token",
-			"refresh_token": "refresh-1",
-		},
-	}
+			"refresh_token": "refresh-1"}}
 
 	_, errRefresh := wrapped.Refresh(context.Background(), auth)
 	if errRefresh == nil {
@@ -162,9 +148,7 @@ func TestPluginRefreshCompatExecutorNoOpForAPIKeyAuth(t *testing.T) {
 		Provider: "plugin-provider",
 		Attributes: map[string]string{
 			"api_key":  "sk-test",
-			"base_url": "https://compat.example.com/v1",
-		},
-	}
+			"base_url": "https://compat.example.com/v1"}}
 
 	refreshed, errRefresh := wrapped.Refresh(context.Background(), auth)
 	if errRefresh != nil {

@@ -56,8 +56,7 @@ var nonRoutableProxyTargetPrefixes = []netip.Prefix{
 	netip.MustParsePrefix("fc00::/7"),
 	netip.MustParsePrefix("fe80::/10"),
 	netip.MustParsePrefix("fec0::/10"),
-	netip.MustParsePrefix("ff00::/8"),
-}
+	netip.MustParsePrefix("ff00::/8")}
 
 type iceCredentials struct {
 	ufrag    string
@@ -214,8 +213,7 @@ func proxiedTCPCandidatePlan(rawCandidate string) (tcpCandidatePlan, bool, error
 	}
 	return tcpCandidatePlan{
 		fields: fields,
-		target: netip.AddrPortFrom(address, uint16(candidate.Port())),
-	}, true, nil
+		target: netip.AddrPortFrom(address, uint16(candidate.Port()))}, true, nil
 }
 
 func isPublicProxyTarget(address netip.Addr) bool {
@@ -313,8 +311,7 @@ func newTCPCandidateTunnel(target netip.AddrPort, dialer proxy.ContextDialer, ex
 		connections:     make(map[net.Conn]struct{}),
 		validationSlots: make(chan struct{}, maxUnauthenticatedTCPConns),
 		ctx:             tunnelContext,
-		cancel:          cancelTunnel,
-	}
+		cancel:          cancelTunnel}
 	go tunnel.accept()
 	return tunnel, nil
 }

@@ -21,10 +21,8 @@ func TestHostModelExecuteStreamDetachesFromCallbackParentCancel(t *testing.T) {
 			ctxSeen <- ctx
 			return handlers.ModelExecutionStream{
 				StatusCode: http.StatusOK,
-				Chunks:     make(chan handlers.ModelExecutionChunk),
-			}, nil
-		},
-	})
+				Chunks:     make(chan handlers.ModelExecutionChunk)}, nil
+		}})
 	parentCtx, cancelParent := context.WithCancel(context.Background())
 	callbackID, closeCallback := host.openCallbackContext(parentCtx)
 	defer closeCallback()
@@ -35,10 +33,8 @@ func TestHostModelExecuteStreamDetachesFromCallbackParentCancel(t *testing.T) {
 			ExitProtocol:  "openai",
 			Model:         "model-1",
 			Stream:        true,
-			Body:          []byte(`{"stream":true}`),
-		},
-		HostCallbackID: callbackID,
-	})
+			Body:          []byte(`{"stream":true}`)},
+		HostCallbackID: callbackID})
 	if errMarshal != nil {
 		t.Fatalf("marshal request: %v", errMarshal)
 	}

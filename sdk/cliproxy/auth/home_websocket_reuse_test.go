@@ -24,11 +24,11 @@ func TestPickNextViaHomeDoesNotReusePinnedWebsocketAuthWithoutSelection(t *testi
 		Provider: "test",
 		Status:   StatusActive,
 		Attributes: map[string]string{
+			AttributeAuthKind:             AuthKindAPIKey,
+			AttributeAPIKey:               "home-key",
 			"websockets":                  "true",
-			homeUpstreamModelAttributeKey: "upstream-model",
-		},
-		Metadata: map[string]any{"email": "home@example.com"},
-	}
+			homeUpstreamModelAttributeKey: "upstream-model"},
+		Metadata: map[string]any{"email": "home@example.com"}}
 	auth.EnsureIndex()
 	manager.rememberHomeRuntimeAuth("session-1", auth)
 	cachedAuth, ok := manager.GetExecutionSessionAuthByID("session-1", "home-auth-1")
@@ -40,10 +40,8 @@ func TestPickNextViaHomeDoesNotReusePinnedWebsocketAuthWithoutSelection(t *testi
 	opts := cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-		Headers: http.Header{"Authorization": {"Bearer client-key"}},
-	}
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"},
+		Headers: http.Header{"Authorization": {"Bearer client-key"}}}
 
 	got, executor, provider, errPick := manager.pickNextViaHome(ctx, "gpt-5.4", opts, nil)
 	if errPick == nil {
@@ -65,32 +63,24 @@ func TestPickNextViaHomeRejectsSessionScopedAuthCache(t *testing.T) {
 		Status:   StatusActive,
 		Attributes: map[string]string{
 			"websockets":                  "true",
-			homeUpstreamModelAttributeKey: "upstream-model-a",
-		},
-	})
+			homeUpstreamModelAttributeKey: "upstream-model-a"}})
 	manager.rememberHomeRuntimeAuth("session-2", &Auth{
 		ID:       "home-auth-1",
 		Provider: "test",
 		Status:   StatusActive,
 		Attributes: map[string]string{
 			"websockets":                  "true",
-			homeUpstreamModelAttributeKey: "upstream-model-b",
-		},
-	})
+			homeUpstreamModelAttributeKey: "upstream-model-b"}})
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	optsSession1 := cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-	}
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"}}
 	optsSession2 := cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-2",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-	}
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"}}
 
 	if _, _, _, errSession1 := manager.pickNextViaHome(ctx, "gpt-5.4", optsSession1, nil); errSession1 == nil {
 		t.Fatal("pickNextViaHome(session-1) unexpectedly reused a session auth cache")
@@ -110,18 +100,14 @@ func TestPickNextViaHomeDoesNotReuseTriedPinnedWebsocketAuth(t *testing.T) {
 		Provider: "test",
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	}
+			"websockets": "true"}}
 	manager.rememberHomeRuntimeAuth("session-1", auth)
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-	}
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"}}
 	tried := map[string]struct{}{"home-auth-1": {}}
 
 	got, executor, provider, errPick := manager.pickNextViaHome(ctx, "gpt-5.4", opts, tried)
@@ -147,18 +133,14 @@ func TestPickNextViaHomeDoesNotReusePinnedWebsocketAuthAfterFirstHomeAttempt(t *
 		Provider: "test",
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	}
+			"websockets": "true"}}
 	manager.rememberHomeRuntimeAuth("session-1", auth)
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := withHomeAuthCount(cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-	}, 2)
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"}}, 2)
 
 	got, executor, provider, errPick := manager.pickNextViaHome(ctx, "gpt-5.4", opts, nil)
 	if errPick == nil {
@@ -183,19 +165,15 @@ func TestPickNextViaHomeDoesNotReusePinnedNonWebsocketAuth(t *testing.T) {
 		"home-auth-1": &Auth{
 			ID:       "home-auth-1",
 			Provider: "test",
-			Status:   StatusActive,
-		},
-	}
+			Status:   StatusActive}}
 	manager.mu.Unlock()
 
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{
 		Metadata: map[string]any{
 			cliproxyexecutor.ExecutionSessionMetadataKey: "session-1",
-			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1",
-		},
-		Headers: http.Header{"Authorization": {"Bearer client-key"}},
-	}
+			cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth-1"},
+		Headers: http.Header{"Authorization": {"Bearer client-key"}}}
 
 	got, executor, provider, errPick := manager.pickNextViaHome(ctx, "gpt-5.4", opts, nil)
 	if errPick == nil {
@@ -273,8 +251,7 @@ func TestPickNextViaHomeAbortsBeforeEndingPendingDispatch(t *testing.T) {
 			cancelledCtx, cancel := context.WithCancel(context.Background())
 			cancel()
 			abortSawPending <- errors.Is(registry.Drain(cancelledCtx), context.Canceled)
-		},
-	}
+		}}
 	oldCurrentHomeDispatcher := currentHomeDispatcher
 	currentHomeDispatcher = func() homeAuthDispatcher {
 		return dispatcher
@@ -356,9 +333,7 @@ func TestHomeRuntimeAuthsClearWhenHomeDisabled(t *testing.T) {
 		ID:       "home-auth-1",
 		Provider: "test",
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	})
+			"websockets": "true"}})
 
 	if _, ok := manager.GetExecutionSessionAuthByID("session-1", "home-auth-1"); !ok {
 		t.Fatal("expected remembered home auth before disabling home")
@@ -376,9 +351,7 @@ func TestCloseExecutionSessionClearsHomeRuntimeAuthForSession(t *testing.T) {
 		ID:       "home-auth-1",
 		Provider: "test",
 		Attributes: map[string]string{
-			"websockets": "true",
-		},
-	}
+			"websockets": "true"}}
 
 	manager.rememberHomeRuntimeAuth("session-1", auth)
 	manager.rememberHomeRuntimeAuth("session-2", auth)

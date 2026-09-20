@@ -65,42 +65,31 @@ func TestFileCooldownStateStore_StateRelativePath(t *testing.T) {
 			name: "absolute auth file under auth dir",
 			record: CooldownStateRecord{
 				AuthID:   "auth-1",
-				AuthFile: filepath.Join(authDir, "nested", "xai.json"),
-			},
-			want: filepath.Join("nested", "xai.cds"),
-		},
+				AuthFile: filepath.Join(authDir, "nested", "xai.json")},
+			want: filepath.Join("nested", "xai.cds")},
 		{
 			name: "relative auth file",
 			record: CooldownStateRecord{
 				AuthID:   "auth-2",
-				AuthFile: filepath.Join("team", "xai.json"),
-			},
-			want: filepath.Join("team", "xai.cds"),
-		},
+				AuthFile: filepath.Join("team", "xai.json")},
+			want: filepath.Join("team", "xai.cds")},
 		{
 			name: "absolute auth file outside auth dir",
 			record: CooldownStateRecord{
 				AuthID:   "auth-3",
-				AuthFile: filepath.Join(t.TempDir(), "outside.json"),
-			},
-			want: "outside.cds",
-		},
+				AuthFile: filepath.Join(t.TempDir(), "outside.json")},
+			want: "outside.cds"},
 		{
 			name: "relative parent escape is rejected",
 			record: CooldownStateRecord{
 				AuthID:   "auth-4",
-				AuthFile: filepath.Join("..", "escape.json"),
-			},
-			want: "",
-		},
+				AuthFile: filepath.Join("..", "escape.json")},
+			want: ""},
 		{
 			name: "auth id fallback",
 			record: CooldownStateRecord{
-				AuthID: "auth/id 5",
-			},
-			want: "auth_id_5.cds",
-		},
-	}
+				AuthID: "auth/id 5"},
+			want: "auth_id_5.cds"}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -135,11 +124,9 @@ func TestFileCooldownStateStore_SaveLoadAndCleanStale(t *testing.T) {
 			Exceeded:      true,
 			Reason:        "quota",
 			NextRecoverAt: nextRetry,
-			BackoffLevel:  1,
-		},
+			BackoffLevel:  1},
 		LastError: &Error{Message: "rate limited", HTTPStatus: 429},
-		UpdatedAt: updatedAt,
-	}
+		UpdatedAt: updatedAt}
 
 	if errSave := store.Save(ctx, []CooldownStateRecord{record}); errSave != nil {
 		t.Fatalf("Save() returned error: %v", errSave)
@@ -194,9 +181,7 @@ func TestFileCooldownStateStore_ConcurrentSave(t *testing.T) {
 					Model:          "grok-4",
 					Status:         "cooling",
 					NextRetryAfter: nextRetry.Add(time.Duration(i) * time.Second),
-					UpdatedAt:      nextRetry,
-				},
-			})
+					UpdatedAt:      nextRetry}})
 		}()
 	}
 	wg.Wait()
@@ -244,8 +229,7 @@ func TestManager_MarkResult_PersistsCooldownOnlyWhenStateChanges(t *testing.T) {
 		Provider: "xai",
 		Model:    "grok-4",
 		Success:  false,
-		Error:    &Error{Message: "upstream unavailable", HTTPStatus: 500},
-	})
+		Error:    &Error{Message: "upstream unavailable", HTTPStatus: 500}})
 	if got := store.saveCount.Load(); got != 1 {
 		t.Fatalf("cooldown failure saved cooldown state %d times, want 1", got)
 	}
@@ -274,8 +258,7 @@ func TestManagerSetConfigSnapshotDefersCooldownPersistence(t *testing.T) {
 		Provider: auth.Provider,
 		Model:    "grok-4",
 		Success:  false,
-		Error:    &Error{Message: "rate limited", HTTPStatus: 429},
-	})
+		Error:    &Error{Message: "rate limited", HTTPStatus: 429}})
 	store.saveCount.Store(0)
 
 	if changed := manager.SetConfigSnapshot(&internalconfig.Config{DisableCooling: true}); !changed {
@@ -324,8 +307,7 @@ func TestManagerSwapCooldownStateStorePersistsOldStoreBeforeSwap(t *testing.T) {
 	}
 	manager.MarkResult(context.Background(), Result{
 		AuthID: auth.ID, Provider: auth.Provider, Model: "grok-4", Success: false,
-		Error: &Error{Message: "rate limited", HTTPStatus: 429},
-	})
+		Error: &Error{Message: "rate limited", HTTPStatus: 429}})
 	oldStore.saveCount.Store(0)
 	if changed := manager.SetConfigSnapshot(&internalconfig.Config{DisableCooling: true}); !changed {
 		t.Fatal("SetConfigSnapshot() = false, want cleared cooldown state")
@@ -359,8 +341,7 @@ func TestManagerApplyConfigWithCooldownStoreSerializesTransitions(t *testing.T) 
 	}
 	manager.MarkResult(context.Background(), Result{
 		AuthID: auth.ID, Provider: auth.Provider, Model: "grok-4", Success: false,
-		Error: &Error{Message: "rate limited", HTTPStatus: 429},
-	})
+		Error: &Error{Message: "rate limited", HTTPStatus: 429}})
 	manager.SetCooldownStateStore(oldStore)
 
 	firstDone := make(chan bool, 1)
@@ -465,13 +446,9 @@ func TestManager_RestoreCooldownStates(t *testing.T) {
 				Quota: QuotaState{
 					Exceeded:      true,
 					Reason:        "quota",
-					NextRecoverAt: nextRetry,
-				},
+					NextRecoverAt: nextRetry},
 				LastError: &Error{Message: "rate limited", HTTPStatus: 429},
-				UpdatedAt: nextRetry.Add(-time.Minute),
-			},
-		},
-	}
+				UpdatedAt: nextRetry.Add(-time.Minute)}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetCooldownStateStore(store)
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), &Auth{ID: "auth-1", Provider: "xai"}); errRegister != nil {
@@ -514,10 +491,8 @@ func TestManager_RestoreCooldownStatesCanonicalizesThinkingSuffixes(t *testing.T
 				Quota: QuotaState{
 					Exceeded:      true,
 					Reason:        "quota",
-					NextRecoverAt: now.Add(time.Hour),
-				},
-				UpdatedAt: now,
-			},
+					NextRecoverAt: now.Add(time.Hour)},
+				UpdatedAt: now},
 			{
 				Provider:       "gemini",
 				AuthID:         "auth-thinking",
@@ -526,12 +501,8 @@ func TestManager_RestoreCooldownStatesCanonicalizesThinkingSuffixes(t *testing.T
 				Quota: QuotaState{
 					Exceeded:      true,
 					Reason:        "quota",
-					NextRecoverAt: laterRetry,
-				},
-				UpdatedAt: now.Add(time.Minute),
-			},
-		},
-	}
+					NextRecoverAt: laterRetry},
+				UpdatedAt: now.Add(time.Minute)}}}
 	manager := NewManager(nil, nil, nil)
 	manager.SetCooldownStateStore(store)
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), &Auth{ID: "auth-thinking", Provider: "gemini"}); errRegister != nil {
@@ -592,8 +563,7 @@ func TestManagerResultSaveWaitsForCooldownStoreTransition(t *testing.T) {
 	go func() {
 		manager.MarkResult(context.Background(), Result{
 			AuthID: auth.ID, Provider: auth.Provider, Model: "grok-4", Success: false,
-			Error: &Error{Message: "rate limited", HTTPStatus: 429},
-		})
+			Error: &Error{Message: "rate limited", HTTPStatus: 429}})
 		close(resultDone)
 	}()
 	select {

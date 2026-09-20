@@ -30,16 +30,14 @@ func TestProviderRetryCountAndStatus(t *testing.T) {
 
 	auth = &Auth{Metadata: map[string]any{
 		"provider_retry_count":        2,
-		"provider_retry_status_codes": []int{},
-	}}
+		"provider_retry_status_codes": []int{}}}
 	if auth.IsProviderRetryableStatus(http.StatusTooManyRequests) {
 		t.Fatal("explicit empty codes should disable status-code retry")
 	}
 
 	auth = &Auth{Metadata: map[string]any{
 		"provider-retry-count":        12,
-		"provider-retry-status-codes": []any{500, 502},
-	}}
+		"provider-retry-status-codes": []any{500, 502}}}
 	if auth.ProviderRetryCount() != 10 {
 		t.Fatalf("clamped count = %d, want 10", auth.ProviderRetryCount())
 	}
@@ -105,8 +103,7 @@ func TestExecuteRetriesSameCredentialBeforeFailover(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 2},
-		status:  http.StatusTooManyRequests,
-	}
+		status:  http.StatusTooManyRequests}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{"provider_retry_count": 2}, model)
@@ -128,8 +125,7 @@ func TestExecuteSkipsSameCredentialRetryForUnlistedStatus(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 1},
-		status:  http.StatusServiceUnavailable,
-	}
+		status:  http.StatusServiceUnavailable}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-skip"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{"provider_retry_count": 3}, model)
@@ -147,8 +143,7 @@ func TestExecuteSameCredentialRetryThenNextAuth(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 100},
-		status:  http.StatusTooManyRequests,
-	}
+		status:  http.StatusTooManyRequests}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-next"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{"provider_retry_count": 1}, model)
@@ -168,20 +163,17 @@ func TestExecuteRetriesSameCredentialOnConfiguredHardcodedStopStatus(t *testing.
 		http.StatusConflict,
 		http.StatusRequestEntityTooLarge,
 		http.StatusUnprocessableEntity,
-		http.StatusNotFound,
-	} {
+		http.StatusNotFound} {
 		t.Run(fmt.Sprintf("%d", status), func(t *testing.T) {
 			manager := NewManager(nil, providerRetrySelector{}, nil)
 			executor := &providerRetryExecutor{
 				failFor: map[string]int{"auth-a": 2},
-				status:  status,
-			}
+				status:  status}
 			manager.RegisterExecutor(executor)
 			model := fmt.Sprintf("gpt-provider-retry-configured-%d", status)
 			registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
 				"provider_retry_count":        2,
-				"provider_retry_status_codes": []int{status},
-			}, model)
+				"provider_retry_status_codes": []int{status}}, model)
 			registerProviderRetryAuth(t, manager, "auth-b", nil, model)
 
 			resp, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
@@ -202,14 +194,12 @@ func TestExecuteSameCredentialRetryThenNextAuthOnConfigured422(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 100},
-		status:  http.StatusUnprocessableEntity,
-	}
+		status:  http.StatusUnprocessableEntity}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-422-next"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
 		"provider_retry_count":        1,
-		"provider_retry_status_codes": []int{http.StatusUnprocessableEntity},
-	}, model)
+		"provider_retry_status_codes": []int{http.StatusUnprocessableEntity}}, model)
 	registerProviderRetryAuth(t, manager, "auth-b", nil, model)
 
 	if _, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{}); errExecute != nil {
@@ -224,8 +214,7 @@ func TestExecuteDoesNotRetryUnconfigured422(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 100, "auth-b": 100},
-		status:  http.StatusUnprocessableEntity,
-	}
+		status:  http.StatusUnprocessableEntity}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-422-default"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{"provider_retry_count": 2}, model)
@@ -243,14 +232,12 @@ func TestExecuteRetriesSameCredentialOnConfigured404Compact(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 2},
-		status:  http.StatusNotFound,
-	}
+		status:  http.StatusNotFound}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-404-compact"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
 		"provider_retry_count":        2,
-		"provider_retry_status_codes": []int{http.StatusNotFound},
-	}, model)
+		"provider_retry_status_codes": []int{http.StatusNotFound}}, model)
 	registerProviderRetryAuth(t, manager, "auth-b", nil, model)
 
 	resp, errExecute := manager.Execute(
@@ -274,14 +261,12 @@ func TestExecuteSameCredentialRetryThenNextAuthOnConfigured404Compact(t *testing
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 100},
-		status:  http.StatusNotFound,
-	}
+		status:  http.StatusNotFound}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-404-compact-next"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
 		"provider_retry_count":        1,
-		"provider_retry_status_codes": []int{http.StatusNotFound},
-	}, model)
+		"provider_retry_status_codes": []int{http.StatusNotFound}}, model)
 	registerProviderRetryAuth(t, manager, "auth-b", nil, model)
 
 	if _, errExecute := manager.Execute(
@@ -301,8 +286,7 @@ func TestExecuteRequestScopedStopSkipsSameCredentialRetry(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &providerRetryExecutor{
 		failFor: map[string]int{"auth-a": 100},
-		status:  http.StatusTooManyRequests,
-	}
+		status:  http.StatusTooManyRequests}
 	manager.RegisterExecutor(executor)
 	model := "gpt-provider-retry-stop"
 	registerProviderRetryAuth(t, manager, "auth-a", map[string]any{
@@ -310,9 +294,7 @@ func TestExecuteRequestScopedStopSkipsSameCredentialRetry(t *testing.T) {
 		"request_scoped_errors": []any{map[string]any{
 			"status": http.StatusTooManyRequests,
 			"match":  []string{"upstream failed"},
-			"action": "stop",
-		}},
-	}, model)
+			"action": "stop"}}}, model)
 	registerProviderRetryAuth(t, manager, "auth-b", nil, model)
 
 	if _, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{}); errExecute == nil {
@@ -329,8 +311,7 @@ func registerProviderRetryAuth(t *testing.T, manager *Manager, id string, metada
 		ID:       id,
 		Provider: "codex",
 		Status:   StatusActive,
-		Metadata: metadata,
-	}); errRegister != nil {
+		Metadata: metadata}); errRegister != nil {
 		t.Fatalf("Register(%s) error = %v", id, errRegister)
 	}
 	registry.GetGlobalRegistry().RegisterClient(id, "codex", []*registry.ModelInfo{{ID: model}})

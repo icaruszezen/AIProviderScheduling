@@ -118,8 +118,7 @@ func validateNativeInteractionsExecution(entryProtocol string, execOptions model
 func nativeInteractionsExecutionError() *interfaces.ErrorMessage {
 	return &interfaces.ErrorMessage{
 		StatusCode: http.StatusBadRequest,
-		Error:      fmt.Errorf("agent is only supported for native interactions execution"),
-	}
+		Error:      fmt.Errorf("agent is only supported for native interactions execution")}
 }
 
 // providersForExecution resolves the providers and normalized model for a request. When a model
@@ -214,8 +213,7 @@ func (h *BaseAPIHandler) getRequestDetailsWithOptions(modelName string, allowIma
 		}
 		return nil, "", &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      errors.New(body),
-		}
+			Error:      errors.New(body)}
 	}
 
 	// The thinking suffix is preserved in the model name itself, so no
@@ -231,8 +229,7 @@ func (h *BaseAPIHandler) validateImageOnlyModel(modelName string, allowImageMode
 	if isOpenAIImageOnlyModel(baseModel) && !allowImageModel {
 		return &interfaces.ErrorMessage{
 			StatusCode: http.StatusServiceUnavailable,
-			Error:      fmt.Errorf("model %s is only supported on /v1/images/generations and /v1/images/edits", routeModelBaseName(baseModel)),
-		}
+			Error:      fmt.Errorf("model %s is only supported on /v1/images/generations and /v1/images/edits", routeModelBaseName(baseModel))}
 	}
 	return nil
 }
@@ -338,8 +335,7 @@ func (h *BaseAPIHandler) applyModelRouter(ctx context.Context, handlerType, mode
 		Headers:        modelExecutionHeaders(ctx, execOptions.Headers),
 		Query:          modelExecutionQuery(ctx, execOptions.Query),
 		Body:           cloneBytes(rawJSON),
-		Metadata:       meta,
-	}, execOptions.SkipRouterPluginID)
+		Metadata:       meta}, execOptions.SkipRouterPluginID)
 	if !ok || !resp.Handled {
 		return decision
 	}

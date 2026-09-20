@@ -63,32 +63,28 @@ func (h *modelExecutionSkipHost) InterceptRequestBeforeAuthExcept(ctx context.Co
 	h.beforeSkip = skipPluginID
 	return pluginapi.RequestInterceptResponse{
 		Headers: cloneHeader(req.Headers),
-		Body:    cloneBytes(req.Body),
-	}
+		Body:    cloneBytes(req.Body)}
 }
 
 func (h *modelExecutionSkipHost) InterceptRequestAfterAuthExcept(ctx context.Context, req pluginapi.RequestInterceptRequest, skipPluginID string) pluginapi.RequestInterceptResponse {
 	h.afterSkip = skipPluginID
 	return pluginapi.RequestInterceptResponse{
 		Headers: cloneHeader(req.Headers),
-		Body:    cloneBytes(req.Body),
-	}
+		Body:    cloneBytes(req.Body)}
 }
 
 func (h *modelExecutionSkipHost) InterceptResponseExcept(ctx context.Context, req pluginapi.ResponseInterceptRequest, skipPluginID string) pluginapi.ResponseInterceptResponse {
 	h.respSkip = skipPluginID
 	return pluginapi.ResponseInterceptResponse{
 		Headers: cloneHeader(req.ResponseHeaders),
-		Body:    cloneBytes(req.Body),
-	}
+		Body:    cloneBytes(req.Body)}
 }
 
 func (h *modelExecutionSkipHost) InterceptStreamChunkExcept(ctx context.Context, req pluginapi.StreamChunkInterceptRequest, skipPluginID string) pluginapi.StreamChunkInterceptResponse {
 	h.streamSkip = append(h.streamSkip, skipPluginID)
 	return pluginapi.StreamChunkInterceptResponse{
 		Headers: cloneHeader(req.ResponseHeaders),
-		Body:    cloneBytes(req.Body),
-	}
+		Body:    cloneBytes(req.Body)}
 }
 
 func (e modelExecutionStatusHeaderError) Error() string {
@@ -147,8 +143,7 @@ func (e *modelExecutionCaptureExecutor) capture(req coreexecutor.Request, opts c
 		Model:    req.Model,
 		Payload:  cloneBytes(req.Payload),
 		Format:   req.Format,
-		Metadata: req.Metadata,
-	}
+		Metadata: req.Metadata}
 	e.lastOptions = coreexecutor.Options{
 		Stream:          opts.Stream,
 		Alt:             opts.Alt,
@@ -157,8 +152,7 @@ func (e *modelExecutionCaptureExecutor) capture(req coreexecutor.Request, opts c
 		OriginalRequest: cloneBytes(opts.OriginalRequest),
 		SourceFormat:    opts.SourceFormat,
 		ResponseFormat:  opts.ResponseFormat,
-		Metadata:        opts.Metadata,
-	}
+		Metadata:        opts.Metadata}
 }
 
 func (e *modelExecutionCaptureExecutor) captured() (coreexecutor.Request, coreexecutor.Options) {
@@ -175,8 +169,10 @@ func newModelExecutionHandler(t *testing.T, model string, executor *modelExecuti
 		ID:       "model-execution-" + model,
 		Provider: executor.Identifier(),
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": model + "@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": model + "@example.com"}}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}
@@ -195,11 +191,8 @@ func TestExecuteModelCarriesEntryAndExitProtocols(t *testing.T) {
 			return coreexecutor.Response{
 				Payload: []byte(`{"ok":true}`),
 				Headers: http.Header{
-					"X-Upstream": []string{"nonstream"},
-				},
-			}, nil
-		},
-	}
+					"X-Upstream": []string{"nonstream"}}}, nil
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{PassthroughHeaders: true})
 
 	resp, errMsg := handler.ExecuteModel(context.Background(), ModelExecutionRequest{
@@ -208,8 +201,7 @@ func TestExecuteModelCarriesEntryAndExitProtocols(t *testing.T) {
 		Model:         model,
 		Body:          requestBody,
 		Headers:       http.Header{"X-Callback": []string{"nonstream"}},
-		Query:         url.Values{"q": []string{"callback"}},
-	})
+		Query:         url.Values{"q": []string{"callback"}}})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModel() error = %+v", errMsg)
 	}
@@ -266,8 +258,7 @@ func TestExecuteModelSkipsOriginatingPluginInterceptors(t *testing.T) {
 		ExitProtocol:            "openai",
 		Model:                   model,
 		Body:                    requestBody,
-		SkipInterceptorPluginID: "origin-plugin",
-	})
+		SkipInterceptorPluginID: "origin-plugin"})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModel() error = %+v", errMsg)
 	}
@@ -289,10 +280,8 @@ func TestExecuteModelStream(t *testing.T) {
 			close(chunks)
 			return &coreexecutor.StreamResult{
 				Headers: http.Header{"X-Upstream": []string{"stream"}},
-				Chunks:  chunks,
-			}, nil
-		},
-	}
+				Chunks:  chunks}, nil
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{PassthroughHeaders: true})
 
 	stream, errMsg := handler.ExecuteModelStream(context.Background(), ModelExecutionRequest{
@@ -301,8 +290,7 @@ func TestExecuteModelStream(t *testing.T) {
 		Model:         model,
 		Stream:        true,
 		Body:          requestBody,
-		Headers:       http.Header{"X-Callback": []string{"stream"}},
-	})
+		Headers:       http.Header{"X-Callback": []string{"stream"}}})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModelStream() error = %+v", errMsg)
 	}
@@ -362,8 +350,7 @@ func TestExecuteModelStreamSkipsOriginatingPluginInterceptors(t *testing.T) {
 			chunks <- coreexecutor.StreamChunk{Payload: []byte("stream-one")}
 			close(chunks)
 			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		},
-	}
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
 	skipHost := &modelExecutionSkipHost{}
 	handler.SetPluginHost(skipHost)
@@ -374,8 +361,7 @@ func TestExecuteModelStreamSkipsOriginatingPluginInterceptors(t *testing.T) {
 		Model:                   model,
 		Stream:                  true,
 		Body:                    requestBody,
-		SkipInterceptorPluginID: "origin-plugin",
-	})
+		SkipInterceptorPluginID: "origin-plugin"})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModelStream() error = %+v", errMsg)
 	}
@@ -408,8 +394,7 @@ func TestExecuteModelStreamStartupError(t *testing.T) {
 			chunks <- coreexecutor.StreamChunk{Err: fmt.Errorf("startup failed")}
 			close(chunks)
 			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		},
-	}
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
 
 	stream, errMsg := handler.ExecuteModelStream(context.Background(), ModelExecutionRequest{
@@ -417,8 +402,7 @@ func TestExecuteModelStreamStartupError(t *testing.T) {
 		ExitProtocol:  "claude",
 		Model:         model,
 		Stream:        true,
-		Body:          requestBody,
-	})
+		Body:          requestBody})
 	if errMsg == nil {
 		t.Fatal("ExecuteModelStream() error = nil, want startup error")
 	}
@@ -444,12 +428,10 @@ func TestExecuteModelStreamTerminalError(t *testing.T) {
 			chunks <- coreexecutor.StreamChunk{Err: modelExecutionStatusHeaderError{
 				statusCode: http.StatusTooManyRequests,
 				message:    "rate limited",
-				headers:    errorHeaders,
-			}}
+				headers:    errorHeaders}}
 			close(chunks)
 			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		},
-	}
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
 
 	stream, errMsg := handler.ExecuteModelStream(context.Background(), ModelExecutionRequest{
@@ -457,8 +439,7 @@ func TestExecuteModelStreamTerminalError(t *testing.T) {
 		ExitProtocol:  "claude",
 		Model:         model,
 		Stream:        true,
-		Body:          requestBody,
-	})
+		Body:          requestBody})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModelStream() error = %+v", errMsg)
 	}
@@ -528,8 +509,7 @@ func TestExecuteProtocolWithAuthManagerUsesForcedProvider(t *testing.T) {
 		provider: "gemini",
 		execute: func(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (coreexecutor.Response, error) {
 			return coreexecutor.Response{Payload: []byte(`{"id":"interaction_1"}`)}, nil
-		},
-	}
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
 
 	resp, errMsg := handler.ExecuteProtocolWithAuthManager(context.Background(), ProtocolExecutionRequest{
@@ -537,8 +517,7 @@ func TestExecuteProtocolWithAuthManagerUsesForcedProvider(t *testing.T) {
 		ExitProtocol:   "interactions",
 		ForcedProvider: "gemini",
 		Model:          model,
-		Body:           requestBody,
-	})
+		Body:           requestBody})
 	if errMsg != nil {
 		t.Fatalf("ExecuteProtocolWithAuthManager() error = %+v", errMsg)
 	}
@@ -614,8 +593,7 @@ func TestExecuteModelStreamKeepsInteractionsProviderForOpenAIEntry(t *testing.T)
 			chunks <- coreexecutor.StreamChunk{Payload: []byte(`{"id":"chunk_1","object":"chat.completion.chunk","choices":[]}`)}
 			close(chunks)
 			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		},
-	}
+		}}
 	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
 
 	stream, errMsg := handler.ExecuteModelStream(context.Background(), ModelExecutionRequest{
@@ -623,8 +601,7 @@ func TestExecuteModelStreamKeepsInteractionsProviderForOpenAIEntry(t *testing.T)
 		ExitProtocol:  constant.OpenAI,
 		Model:         model,
 		Stream:        true,
-		Body:          requestBody,
-	})
+		Body:          requestBody})
 	if errMsg != nil {
 		t.Fatalf("ExecuteModelStream() error = %+v", errMsg)
 	}
@@ -647,16 +624,17 @@ func TestExecuteProtocolWithAuthManagerAgentUsesSelectionModelForAuth(t *testing
 		provider: constant.GeminiInteractions,
 		execute: func(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (coreexecutor.Response, error) {
 			return coreexecutor.Response{Payload: []byte(`{"id":"interaction_1"}`)}, nil
-		},
-	}
+		}}
 	manager := coreauth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(executor)
 	auth := &coreauth.Auth{
 		ID:       "model-execution-agent-selection",
 		Provider: constant.GeminiInteractions,
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "agent-selection@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "agent-selection@example.com"}}
 	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: selectionModel}, {ID: agentModel}})
 	t.Cleanup(func() {
 		registry.GetGlobalRegistry().UnregisterClient(auth.ID)
@@ -673,8 +651,7 @@ func TestExecuteProtocolWithAuthManagerAgentUsesSelectionModelForAuth(t *testing
 		ForcedProvider:     constant.GeminiInteractions,
 		AuthSelectionModel: selectionModel,
 		Model:              agentModel,
-		Body:               requestBody,
-	})
+		Body:               requestBody})
 	if errMsg != nil {
 		t.Fatalf("ExecuteProtocolWithAuthManager() error = %+v", errMsg)
 	}
@@ -704,16 +681,17 @@ func TestExecuteProtocolStreamWithAuthManagerAgentUsesSelectionModelForAuth(t *t
 			chunks <- coreexecutor.StreamChunk{Payload: []byte(`{"id":"interaction_1"}`)}
 			close(chunks)
 			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		},
-	}
+		}}
 	manager := coreauth.NewManager(nil, nil, nil)
 	manager.RegisterExecutor(executor)
 	auth := &coreauth.Auth{
 		ID:       "model-execution-agent-stream-selection",
 		Provider: constant.GeminiInteractions,
 		Status:   coreauth.StatusActive,
-		Metadata: map[string]any{"email": "agent-stream-selection@example.com"},
-	}
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": "agent-stream-selection@example.com"}}
 	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: selectionModel}, {ID: agentModel}})
 	t.Cleanup(func() {
 		registry.GetGlobalRegistry().UnregisterClient(auth.ID)
@@ -731,8 +709,7 @@ func TestExecuteProtocolStreamWithAuthManagerAgentUsesSelectionModelForAuth(t *t
 		AuthSelectionModel: selectionModel,
 		Model:              agentModel,
 		Stream:             true,
-		Body:               requestBody,
-	})
+		Body:               requestBody})
 	if errMsg != nil {
 		t.Fatalf("ExecuteProtocolStreamWithAuthManager() error = %+v", errMsg)
 	}

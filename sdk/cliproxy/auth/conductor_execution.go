@@ -331,8 +331,7 @@ func applyRequestAfterAuthInterceptor(ctx context.Context, executor ProviderExec
 		Stream:         opts.Stream,
 		Headers:        cloneRequestHeaders(opts.Headers),
 		Body:           bytes.Clone(req.Payload),
-		Metadata:       opts.Metadata,
-	})
+		Metadata:       opts.Metadata})
 	opts.Headers = mergeRequestHeaders(opts.Headers, resp.Headers, resp.ClearHeaders)
 	if len(resp.Body) > 0 {
 		req.Payload = bytes.Clone(resp.Body)
@@ -342,8 +341,7 @@ func applyRequestAfterAuthInterceptor(ctx context.Context, executor ProviderExec
 		return req, opts, &cliproxyexecutor.RequestTerminatedError{
 			HTTPStatus: resp.StatusCode,
 			Header:     cloneRequestHeaders(resp.ResponseHeaders),
-			Body:       bytes.Clone(resp.ResponseBody),
-		}
+			Body:       bytes.Clone(resp.ResponseBody)}
 	}
 	return req, opts, nil
 }
@@ -1772,8 +1770,7 @@ func warnLogHomeCredentialFailure(ctx context.Context, operation, provider strin
 	fields := log.Fields{
 		"auth":      formatAuthIdentity(auth, provider),
 		"operation": operation,
-		"provider":  provider,
-	}
+		"provider":  provider}
 	if statusCode := statusCodeFromError(err); statusCode != 0 {
 		fields["status"] = statusCode
 	}

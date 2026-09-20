@@ -33,8 +33,7 @@ func TestStreamBridgeCloseUnblocksPendingEmit(t *testing.T) {
 
 	emitCtx := &streamBridgeNotifyContext{
 		Context: context.Background(),
-		ready:   make(chan struct{}),
-	}
+		ready:   make(chan struct{})}
 	emitDone := make(chan error, 1)
 	go func() {
 		emitDone <- bridge.emit(emitCtx, streamID, pluginapi.ExecutorStreamChunk{Payload: []byte("blocked")})
@@ -76,8 +75,7 @@ func TestStreamBridgeEmitUsesAcceptedPumpResultAfterContextCancellation(t *testi
 		ctx, cancel := context.WithCancel(context.Background())
 		stream := &streamBridgeStream{
 			emits:  make(chan streamBridgeEmit),
-			closed: make(chan struct{}),
-		}
+			closed: make(chan struct{})}
 		go func() {
 			request := <-stream.emits
 			cancel()

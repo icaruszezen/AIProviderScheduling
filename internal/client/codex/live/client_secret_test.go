@@ -87,10 +87,10 @@ func TestStandardRealtimeCallMapsModelAndLocation(t *testing.T) {
 	executor := &captureExecutor{responseBody: io.NopCloser(strings.NewReader("v=0\r\n"))}
 	manager.RegisterExecutor(executor)
 	if _, errRegister := manager.Register(context.Background(), &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "oauth-token"},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 	}); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}

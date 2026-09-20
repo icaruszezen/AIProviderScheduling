@@ -85,8 +85,7 @@ func buildInteractionsExecutionRequest(target interactionsRequestTarget, modelNa
 		Model:              modelName,
 		Stream:             target.Stream,
 		Body:               rawJSON,
-		Alt:                alt,
-	}
+		Alt:                alt}
 }
 
 // Interactions handles POST /v1beta/interactions.
@@ -189,6 +188,5 @@ func (h *GeminiAPIHandler) forwardInteractionsStream(c *gin.Context, flusher htt
 			}
 			_, body := handlers.DownstreamErrorStatusAndBody(errMsg)
 			_, _ = fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", string(body))
-		},
-	})
+		}})
 }

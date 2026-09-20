@@ -23,8 +23,7 @@ func TestDynamicLibraryClientCallSurvivesReentrantCallbackStackGrowth(t *testing
 	testReentrantHostCallback = syscall.NewCallback(testGrowHostCallbackStack)
 	client := newGuardedPluginClient(&dynamicLibraryClient{api: windowsPluginAPI{
 		call:       syscall.NewCallback(testReentrantPluginCall),
-		freeBuffer: syscall.NewCallback(testReentrantPluginFree),
-	}})
+		freeBuffer: syscall.NewCallback(testReentrantPluginFree)}})
 	t.Cleanup(client.Shutdown)
 
 	got, errCall := client.Call(context.Background(), "model.route", []byte(`{}`))

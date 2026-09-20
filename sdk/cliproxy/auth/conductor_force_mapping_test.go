@@ -192,32 +192,27 @@ func forceMappingStreamUpstreamChunks(provider, upstreamModel string) [][]byte {
 			[]byte("\n"),
 			[]byte("event: response.completed\n"),
 			[]byte("data: " + completed + "\n"),
-			[]byte("\n"),
-		}
+			[]byte("\n")}
 	case "kimi":
 		msg := strings.Replace(liveKimiMessagesStartUpstream, "kimi-k2.5", upstreamModel, 1)
 		chat := strings.Replace(liveKimiChatChunkUpstream, "kimi-k2.5", upstreamModel, 1)
 		return [][]byte{
 			[]byte("event:message_start\n"),
 			[]byte("data:" + msg + "\n\n"),
-			[]byte("data: " + chat + "\n\n"),
-		}
+			[]byte("data: " + chat + "\n\n")}
 	case "xai":
 		msg := strings.Replace(liveXAIMessagesStartUpstream, "grok-4.3", upstreamModel, 1)
 		return [][]byte{
 			[]byte("event: message_start\n"),
-			[]byte("data: " + msg + "\n\n"),
-		}
+			[]byte("data: " + msg + "\n\n")}
 	case "antigravity":
 		msg := strings.Replace(liveAntigravityMessagesStartUpstream, "gemini-3-flash", upstreamModel, 1)
 		return [][]byte{
 			[]byte("event: message_start\n"),
-			[]byte("data: " + msg + "\n\n"),
-		}
+			[]byte("data: " + msg + "\n\n")}
 	default:
 		return [][]byte{
-			[]byte(`data: {"type":"response.created","response":{"model":"` + upstreamModel + `"}}` + "\n\n"),
-		}
+			[]byte(`data: {"type":"response.created","response":{"model":"` + upstreamModel + `"}}` + "\n\n")}
 	}
 }
 
@@ -231,15 +226,12 @@ func setupForceMappingManager(t *testing.T, provider, upstreamModel, aliasModel 
 			Name:         upstreamModel,
 			Alias:        aliasModel,
 			Fork:         true,
-			ForceMapping: true,
-		}},
-	})
+			ForceMapping: true}}})
 
 	auth := &Auth{
 		ID:       provider + "-force-mapping-auth",
 		Provider: provider,
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -259,8 +251,7 @@ func setupForceMappingCreditsFallbackManager(t *testing.T, upstreamModel, aliasM
 	const provider = "antigravity"
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
-		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true},
-	})
+		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true}})
 	manager.SetRetryConfig(0, 0, 1)
 	executor := &forceMappingCreditsFallbackExecutor{id: provider}
 	manager.RegisterExecutor(executor)
@@ -269,15 +260,12 @@ func setupForceMappingCreditsFallbackManager(t *testing.T, upstreamModel, aliasM
 			Name:         upstreamModel,
 			Alias:        aliasModel,
 			Fork:         true,
-			ForceMapping: true,
-		}},
-	})
+			ForceMapping: true}}})
 
 	auth := &Auth{
 		ID:       provider + "-force-mapping-credits-auth",
 		Provider: provider,
-		Status:   StatusActive,
-	}
+		Status:   StatusActive}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -378,8 +366,7 @@ func TestManagerExecute_OAuthAliasForceMappingRewritesKimiAndXAIResponses(t *tes
 		aliasModel    string
 	}{
 		{provider: "kimi", upstreamModel: "kimi-k2.5", aliasModel: "k2.5"},
-		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"},
-	}
+		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"}}
 	for _, tc := range cases {
 		t.Run(tc.provider, func(t *testing.T) {
 			manager, executor := setupForceMappingManager(t, tc.provider, tc.upstreamModel, tc.aliasModel)
@@ -405,8 +392,7 @@ func TestManagerExecuteStream_OAuthAliasForceMappingRewritesKimiAndXAIResponses(
 		aliasModel    string
 	}{
 		{provider: "kimi", upstreamModel: "kimi-k2.5", aliasModel: "k2.5"},
-		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"},
-	}
+		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"}}
 	for _, tc := range cases {
 		t.Run(tc.provider, func(t *testing.T) {
 			manager, executor := setupForceMappingManager(t, tc.provider, tc.upstreamModel, tc.aliasModel)
@@ -442,8 +428,7 @@ func TestManagerExecute_LiveDerivedForceMapping_AllProviders(t *testing.T) {
 		{provider: "codex", upstreamModel: "gpt-5.4", aliasModel: "gpt-5.4-fast"},
 		{provider: "antigravity", upstreamModel: "gemini-3-flash", aliasModel: "claude-haiku-4-5-20251001"},
 		{provider: "kimi", upstreamModel: "kimi-k2.5", aliasModel: "k2.5"},
-		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"},
-	}
+		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"}}
 	for _, tc := range cases {
 		t.Run(tc.provider, func(t *testing.T) {
 			manager, executor := setupForceMappingManager(t, tc.provider, tc.upstreamModel, tc.aliasModel)
@@ -471,8 +456,7 @@ func TestManagerExecuteStream_LiveDerivedForceMapping_AllProviders(t *testing.T)
 		{provider: "codex", upstreamModel: "gpt-5.4", aliasModel: "gpt-5.4-fast"},
 		{provider: "antigravity", upstreamModel: "gemini-3-flash", aliasModel: "claude-haiku-4-5-20251001"},
 		{provider: "kimi", upstreamModel: "kimi-k2.5", aliasModel: "k2.5"},
-		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"},
-	}
+		{provider: "xai", upstreamModel: "grok-4.3", aliasModel: "grok-latest"}}
 	for _, tc := range cases {
 		t.Run(tc.provider, func(t *testing.T) {
 			manager, executor := setupForceMappingManager(t, tc.provider, tc.upstreamModel, tc.aliasModel)
@@ -569,45 +553,35 @@ func setupAPIKeyForceMappingManager(t *testing.T, provider, upstreamModel, alias
 			Models: []internalconfig.ClaudeModel{{
 				Name:         upstreamModel,
 				Alias:        aliasModel,
-				ForceMapping: true,
-			}},
-		}}
+				ForceMapping: true}}}}
 	case "codex":
 		cfg.CodexKey = []internalconfig.CodexKey{{
 			APIKey: apiKey,
 			Models: []internalconfig.CodexModel{{
 				Name:         upstreamModel,
 				Alias:        aliasModel,
-				ForceMapping: true,
-			}},
-		}}
+				ForceMapping: true}}}}
 	case "xai":
 		cfg.XAIKey = []internalconfig.XAIKey{{
 			APIKey: apiKey,
 			Models: []internalconfig.XAIModel{{
 				Name:         upstreamModel,
 				Alias:        aliasModel,
-				ForceMapping: true,
-			}},
-		}}
+				ForceMapping: true}}}}
 	case "vertex":
 		cfg.VertexCompatAPIKey = []internalconfig.VertexCompatKey{{
 			APIKey: apiKey,
 			Models: []internalconfig.VertexCompatModel{{
 				Name:         upstreamModel,
 				Alias:        aliasModel,
-				ForceMapping: true,
-			}},
-		}}
+				ForceMapping: true}}}}
 	case "openai-compatibility":
 		cfg.OpenAICompatibility = []internalconfig.OpenAICompatibility{{
 			Name: provider,
 			Models: []internalconfig.OpenAICompatibilityModel{{
 				Name:         upstreamModel,
 				Alias:        aliasModel,
-				ForceMapping: true,
-			}},
-		}}
+				ForceMapping: true}}}}
 	default:
 		t.Fatalf("unsupported provider %q", provider)
 	}
@@ -616,8 +590,7 @@ func setupAPIKeyForceMappingManager(t *testing.T, provider, upstreamModel, alias
 	auth := &Auth{
 		ID:         provider + "-api-key-force-mapping-auth",
 		Provider:   provider,
-		Attributes: map[string]string{"api_key": apiKey},
-	}
+		Attributes: map[string]string{"api_key": apiKey}}
 	if provider == "openai-compatibility" {
 		auth.Attributes["compat_name"] = provider
 		auth.Attributes["provider_key"] = provider
@@ -646,8 +619,7 @@ func TestManagerExecute_APIKeyAliasForceMappingRewritesResponse(t *testing.T) {
 		{provider: "codex", upstreamModel: "gpt-5.5", aliasModel: "claude-sonnet-4-5"},
 		{provider: "xai", upstreamModel: "grok-4.5", aliasModel: "grok-latest"},
 		{provider: "vertex", upstreamModel: "gemini-3-pro", aliasModel: "claude-opus-4-5"},
-		{provider: "openai-compatibility", upstreamModel: "deepseek-v3.1", aliasModel: "claude-opus-4.66"},
-	}
+		{provider: "openai-compatibility", upstreamModel: "deepseek-v3.1", aliasModel: "claude-opus-4.66"}}
 	for _, tt := range tests {
 		t.Run(tt.provider, func(t *testing.T) {
 			manager, executor := setupAPIKeyForceMappingManager(t, tt.provider, tt.upstreamModel, tt.aliasModel)
@@ -677,8 +649,7 @@ func TestManagerExecuteStream_APIKeyAliasForceMappingRewritesResponse(t *testing
 		{provider: "codex", upstreamModel: "gpt-5.5", aliasModel: "claude-sonnet-4-5"},
 		{provider: "xai", upstreamModel: "grok-4.5", aliasModel: "grok-latest"},
 		{provider: "vertex", upstreamModel: "gemini-3-pro", aliasModel: "claude-opus-4-5"},
-		{provider: "openai-compatibility", upstreamModel: "deepseek-v3.1", aliasModel: "claude-opus-4.66"},
-	}
+		{provider: "openai-compatibility", upstreamModel: "deepseek-v3.1", aliasModel: "claude-opus-4.66"}}
 	for _, tt := range tests {
 		t.Run(tt.provider, func(t *testing.T) {
 			manager, executor := setupAPIKeyForceMappingManager(t, tt.provider, tt.upstreamModel, tt.aliasModel)

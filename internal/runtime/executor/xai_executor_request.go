@@ -145,8 +145,7 @@ func (e *XAIExecutor) prepareResponsesRequestTo(ctx context.Context, req cliprox
 		clientDeclaredTools:   clientDeclaredTools,
 		sessionID:             sessionID,
 		replayScope:           replayScope,
-		filterInternalXSearch: xaiRequestHasNativeXSearch(body),
-	}, nil
+		filterInternalXSearch: xaiRequestHasNativeXSearch(body)}, nil
 }
 
 func (e *XAIExecutor) recordXAIRequest(ctx context.Context, auth *cliproxyauth.Auth, url string, headers http.Header, body []byte) {
@@ -165,8 +164,7 @@ func (e *XAIExecutor) recordXAIRequest(ctx context.Context, auth *cliproxyauth.A
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 }
 
 func xaiCreds(auth *cliproxyauth.Auth) (token, baseURL string) {
@@ -177,13 +175,8 @@ func xaiCreds(auth *cliproxyauth.Auth) (token, baseURL string) {
 		token = strings.TrimSpace(auth.Attributes["api_key"])
 		baseURL = strings.TrimSpace(auth.Attributes["base_url"])
 	}
-	if auth.Metadata != nil {
-		if token == "" {
-			token = xaiMetadataString(auth.Metadata, "access_token")
-		}
-		if baseURL == "" {
-			baseURL = xaiMetadataString(auth.Metadata, "base_url")
-		}
+	if baseURL == "" && auth.Metadata != nil {
+		baseURL = xaiMetadataString(auth.Metadata, "base_url")
 	}
 	return token, baseURL
 }
@@ -392,7 +385,7 @@ func xaiImageEndpointPath(opts cliproxyexecutor.Options) string {
 // normalizeXAIImageRefs rewrites OpenAI-style image object fields to the xAI
 // image API shape before the payload is sent upstream:
 //
-//	{"image":{"image_url":"https://..."}} → {"image":{"url":"https://..."}}
+//	{"image":{"image_url":"https://..."}} → {"image":{"url":"https://...",}}
 //
 // Applies to image / images / reference_images anywhere in the JSON tree,
 // including nested objects and array items. Does not rewrite chat content
@@ -1046,8 +1039,7 @@ func buildXAINamespaceDispatcherTool(tool gjson.Result) []byte {
 
 	nameProp := map[string]any{
 		"type":        "string",
-		"description": fmt.Sprintf("Child tool name to execute in namespace %s", namespaceName),
-	}
+		"description": fmt.Sprintf("Child tool name to execute in namespace %s", namespaceName)}
 	if len(toolNames) > 0 {
 		nameProp["enum"] = toolNames
 	}
@@ -1063,12 +1055,8 @@ func buildXAINamespaceDispatcherTool(tool gjson.Result) []byte {
 				"arguments": map[string]any{
 					"type":                 "object",
 					"description":          "Arguments object matching the parameter schema of the selected child tool",
-					"additionalProperties": true,
-				},
-			},
-			"required": []string{"name"},
-		},
-	}
+					"additionalProperties": true}},
+			"required": []string{"name"}}}
 
 	raw, errMarshal := json.Marshal(dispatcher)
 	if errMarshal != nil {

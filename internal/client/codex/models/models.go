@@ -35,8 +35,7 @@ var codexClientAllowedReasoningLevels = map[string]struct{}{
 	"high":    {},
 	"xhigh":   {},
 	"max":     {},
-	"ultra":   {},
-}
+	"ultra":   {}}
 
 var codexClientLegacyAllowedReasoningLevels = map[string]struct{}{
 	"none":    {},
@@ -44,8 +43,7 @@ var codexClientLegacyAllowedReasoningLevels = map[string]struct{}{
 	"low":     {},
 	"medium":  {},
 	"high":    {},
-	"xhigh":   {},
-}
+	"xhigh":   {}}
 
 // BuildResponse builds a Codex client model response from available models.
 func BuildResponse(availableModels []map[string]any, providersForModel ProvidersForModelFunc, optimizeMultiAgentV2 bool) map[string]any {
@@ -56,8 +54,7 @@ func BuildResponse(availableModels []map[string]any, providersForModel Providers
 // tailored for a specific client version.
 func BuildResponseForClient(availableModels []map[string]any, providersForModel ProvidersForModelFunc, optimizeMultiAgentV2 bool, clientVersion string) map[string]any {
 	return map[string]any{
-		"models": buildCodexClientModels(availableModels, providersForModel, optimizeMultiAgentV2, clientVersion),
-	}
+		"models": buildCodexClientModels(availableModels, providersForModel, optimizeMultiAgentV2, clientVersion)}
 }
 
 func buildCodexClientModels(models []map[string]any, providersForModel ProvidersForModelFunc, optimizeMultiAgentV2 bool, clientVersion string) []map[string]any {
@@ -142,8 +139,7 @@ func applyCodexClientNonTemplatePriorities(result []map[string]any, templates ma
 		pending = append(pending, nonTemplateEntry{
 			index:       index,
 			displayName: displayName,
-			slug:        slug,
-		})
+			slug:        slug})
 	}
 
 	sort.SliceStable(pending, func(i, j int) bool {
@@ -368,8 +364,7 @@ func applyCodexClientThinkingMetadata(entry map[string]any, thinking *registry.T
 		}
 		levels = append(levels, map[string]any{
 			"effort":      level,
-			"description": codexClientReasoningDescription(level),
-		})
+			"description": codexClientReasoningDescription(level)})
 	}
 	if len(levels) == 0 {
 		return

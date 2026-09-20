@@ -21,9 +21,7 @@ func TestManagerMarkResultPublishesErrorEventAfterAuthStateUpdate(t *testing.T) 
 		ID:       "auth-error-event",
 		Provider: "codex",
 		Metadata: map[string]any{
-			"type": "codex",
-		},
-	}
+			"type": "codex"}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("Register returned error: %v", errRegister)
 	}
@@ -37,9 +35,7 @@ func TestManagerMarkResultPublishesErrorEventAfterAuthStateUpdate(t *testing.T) 
 			Code:       "rate_limit",
 			Message:    `{"error":"quota"}`,
 			Retryable:  true,
-			HTTPStatus: http.StatusTooManyRequests,
-		},
-	})
+			HTTPStatus: http.StatusTooManyRequests}})
 
 	payload := requireErrorSubscriberPayload(t, subscriber)
 
@@ -111,9 +107,7 @@ func TestManagerMarkResultSkipsErrorEventInHomeMode(t *testing.T) {
 		ID:       "home-auth-error-event",
 		Provider: "codex",
 		Metadata: map[string]any{
-			"type": "codex",
-		},
-	}
+			"type": "codex"}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("Register returned error: %v", errRegister)
 	}
@@ -125,9 +119,7 @@ func TestManagerMarkResultSkipsErrorEventInHomeMode(t *testing.T) {
 		Success:  false,
 		Error: &Error{
 			Message:    "unauthorized",
-			HTTPStatus: http.StatusUnauthorized,
-		},
-	})
+			HTTPStatus: http.StatusUnauthorized}})
 
 	select {
 	case got := <-subscriber:

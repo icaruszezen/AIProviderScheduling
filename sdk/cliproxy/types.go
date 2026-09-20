@@ -70,14 +70,17 @@ type APIKeyClientResult struct {
 
 	// OpenAICompatCount is the number of OpenAI compatibility API keys loaded
 	OpenAICompatCount int
+
+	// AntigravityKeyCount is the number of Antigravity API keys loaded
+	AntigravityKeyCount int
 }
 
-// WatcherFactory creates a watcher for configuration and token changes.
+// WatcherFactory creates a watcher for configuration changes.
 // The reload callback receives the updated configuration when changes are detected.
 //
 // Parameters:
 //   - configPath: The path to the configuration file to watch
-//   - authDir: The directory containing authentication tokens to watch
+//   - authDir: Unused compatibility argument; account JSON files are not loaded
 //   - reload: The callback function to call when changes are detected
 //
 // Returns:

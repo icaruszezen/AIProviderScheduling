@@ -65,8 +65,7 @@ func NewFileCooldownStateStore(dir string) *FileCooldownStateStore {
 func NewFileCooldownStateStoreWithAuthDir(dir, authDir string) *FileCooldownStateStore {
 	return &FileCooldownStateStore{
 		dir:     strings.TrimSpace(dir),
-		authDir: strings.TrimSpace(authDir),
-	}
+		authDir: strings.TrimSpace(authDir)}
 }
 
 // Load reads all cooldown state files. A missing directory is treated as empty state.
@@ -187,8 +186,7 @@ func writeCooldownStateGroup(ctx context.Context, path string, records []Cooldow
 	envelope := cooldownStateFile{
 		Version:   1,
 		UpdatedAt: time.Now().UTC(),
-		Records:   records,
-	}
+		Records:   records}
 	if len(records) > 0 {
 		envelope.AuthID = records[0].AuthID
 		envelope.Provider = records[0].Provider

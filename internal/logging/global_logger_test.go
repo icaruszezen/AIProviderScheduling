@@ -54,8 +54,7 @@ func TestLogFormatterPrintsMediaForwardingFields(t *testing.T) {
 		`media_session_id="media-session-id"`,
 		`call_id="call-id"`,
 		`peer="remote"`,
-		`state="connected"`,
-	} {
+		`state="connected"`} {
 		if !strings.Contains(line, want) {
 			t.Fatalf("formatted line %q missing %s", line, want)
 		}
@@ -93,8 +92,7 @@ func TestLogFormatterPrintsPluginFields(t *testing.T) {
 		"retired_version=0.2.0",
 		"path=plugins/windows/amd64/sample-provider-v0.2.0.dll",
 		"active_path=plugins/windows/amd64/sample-provider-v0.1.0.dll",
-		"retired_path=plugins/windows/amd64/sample-provider-v0.2.0.dll",
-	} {
+		"retired_path=plugins/windows/amd64/sample-provider-v0.2.0.dll"} {
 		if !strings.Contains(line, want) {
 			t.Fatalf("formatted line %q missing %s", line, want)
 		}

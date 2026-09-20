@@ -97,15 +97,6 @@ func (w *Watcher) dispatchPersistedAuthUpdate(update AuthUpdate) bool {
 	}
 	clone := update.Auth.Clone()
 	w.clientsMutex.Lock()
-	if w.fileAuthsByPath == nil {
-		w.fileAuthsByPath = make(map[string]map[string]*coreauth.Auth)
-	}
-	pathAuths := w.fileAuthsByPath[normalized]
-	if pathAuths == nil {
-		pathAuths = make(map[string]*coreauth.Auth)
-		w.fileAuthsByPath[normalized] = pathAuths
-	}
-	pathAuths[clone.ID] = nil
 	if w.currentAuths == nil {
 		w.currentAuths = make(map[string]*coreauth.Auth)
 	}
@@ -125,10 +116,8 @@ func (w *Watcher) dispatchPersistedAuthUpdate(update AuthUpdate) bool {
 func (w *Watcher) refreshAuthState(force bool) {
 	w.clientsMutex.RLock()
 	cfg := w.config
-	authDir := w.authDir
-	parser := w.pluginAuthParser
 	w.clientsMutex.RUnlock()
-	auths := snapshotCoreAuthsFunc(cfg, authDir, parser)
+	auths := snapshotCoreAuthsFunc(cfg)
 	w.clientsMutex.Lock()
 	if len(w.runtimeAuths) > 0 {
 		for _, a := range w.runtimeAuths {
@@ -313,26 +302,16 @@ func normalizeAuth(a *coreauth.Auth) *coreauth.Auth {
 	return clone
 }
 
-func snapshotCoreAuths(cfg *config.Config, authDir string, parser synthesizer.PluginAuthParser) []*coreauth.Auth {
+func snapshotCoreAuths(cfg *config.Config) []*coreauth.Auth {
 	ctx := &synthesizer.SynthesisContext{
-		Config:           cfg,
-		AuthDir:          authDir,
-		Now:              time.Now(),
-		IDGenerator:      synthesizer.NewStableIDGenerator(),
-		PluginAuthParser: parser,
-	}
+		Config:      cfg,
+		Now:         time.Now(),
+		IDGenerator: synthesizer.NewStableIDGenerator()}
 
 	var out []*coreauth.Auth
-
 	configSynth := synthesizer.NewConfigSynthesizer()
 	if auths, err := configSynth.Synthesize(ctx); err == nil {
 		out = append(out, auths...)
 	}
-
-	fileSynth := synthesizer.NewFileSynthesizer()
-	if auths, err := fileSynth.Synthesize(ctx); err == nil {
-		out = append(out, auths...)
-	}
-
 	return out
 }

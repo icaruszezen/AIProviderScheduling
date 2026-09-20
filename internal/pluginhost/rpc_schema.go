@@ -160,8 +160,7 @@ func rpcCapabilitiesFromPlugin(plugin pluginapi.Plugin) rpcCapabilities {
 		ThinkingApplier:               caps.ThinkingApplier != nil,
 		UsagePlugin:                   caps.UsagePlugin != nil,
 		CommandLinePlugin:             caps.CommandLinePlugin != nil,
-		ManagementAPI:                 caps.ManagementAPI != nil,
-	}
+		ManagementAPI:                 caps.ManagementAPI != nil}
 }
 
 func marshalRPCResult(v any) ([]byte, error) {

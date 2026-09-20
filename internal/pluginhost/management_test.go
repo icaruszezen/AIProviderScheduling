@@ -19,9 +19,7 @@ func TestRegisterManagementRoutesSkipsReservedAndUsesPriority(t *testing.T) {
 			})},
 			{Method: http.MethodGet, Path: "/plugins/shared/status", Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 				return pluginapi.ManagementResponse{Body: []byte("high")}, nil
-			})},
-		},
-	}
+			})}}}
 	low := &managementPluginDouble{
 		routes: []pluginapi.ManagementRoute{
 			{Method: http.MethodGet, Path: "/plugins/shared/status", Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
@@ -29,16 +27,13 @@ func TestRegisterManagementRoutesSkipsReservedAndUsesPriority(t *testing.T) {
 			})},
 			{Method: http.MethodPost, Path: "plugins/low/run", Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 				return pluginapi.ManagementResponse{StatusCode: http.StatusAccepted, Body: []byte("low-only")}, nil
-			})},
-		},
-	}
+			})}}}
 	host := newHostWithRecords(
 		capabilityRecord{id: "low", priority: 1, plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{ManagementAPI: low}}},
 		capabilityRecord{id: "high", priority: 10, plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{ManagementAPI: high}}},
 	)
 	host.RegisterManagementRoutes(context.Background(), map[string]struct{}{
-		"GET /v0/management/config": {},
-	})
+		"GET /v0/management/config": {}})
 
 	req := httptest.NewRequest(http.MethodGet, "/v0/management/plugins/shared/status", nil)
 	rec := httptest.NewRecorder()
@@ -79,12 +74,8 @@ func TestServeManagementHTMLEscapesJSONResponseStrings(t *testing.T) {
 							"title": "<script>alert(1)</script>",
 							"items": ["<b>first</b>", {"description": "safe & sound"}],
 							"count": 1
-						}`),
-					}, nil
-				}),
-			}}},
-		}},
-	})
+						}`)}, nil
+				})}}}}}})
 	host.RegisterManagementRoutes(context.Background(), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v0/management/plugins/json/status", nil)
@@ -131,10 +122,7 @@ func TestManagementHandlerPanicFusesPlugin(t *testing.T) {
 				Path:   "/plugins/panic",
 				Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 					panic("boom")
-				}),
-			}}},
-		}},
-	})
+				})}}}}}})
 	host.RegisterManagementRoutes(context.Background(), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v0/management/plugins/panic", nil)
@@ -164,12 +152,8 @@ func TestServeResourceHTTPDispatchesPluginResource(t *testing.T) {
 					}
 					return pluginapi.ManagementResponse{
 						Headers: http.Header{"Content-Type": []string{"text/html; charset=utf-8"}},
-						Body:    []byte("<!doctype html><title>resource</title>"),
-					}, nil
-				}),
-			}}},
-		}},
-	})
+						Body:    []byte("<!doctype html><title>resource</title>")}, nil
+				})}}}}}})
 	host.RegisterManagementRoutes(context.Background(), nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v0/resource/plugins/resource/status", nil)
@@ -196,10 +180,7 @@ func TestLegacyGETManagementMenuRegistersAsResource(t *testing.T) {
 				Description: "Shows legacy plugin status.",
 				Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 					return pluginapi.ManagementResponse{Body: []byte("legacy")}, nil
-				}),
-			}}},
-		}},
-	})
+				})}}}}}})
 	host.RegisterManagementRoutes(context.Background(), nil)
 
 	managementReq := httptest.NewRequest(http.MethodGet, "/v0/management/plugins/legacy/status", nil)
@@ -226,9 +207,7 @@ func TestRegisteredPluginsIncludesResourceMenus(t *testing.T) {
 				Path:   "/plugins/menu/hidden",
 				Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 					return pluginapi.ManagementResponse{}, nil
-				}),
-			},
-		},
+				})}},
 		resources: []pluginapi.ResourceRoute{
 			{
 				Path:        "/status",
@@ -236,15 +215,11 @@ func TestRegisteredPluginsIncludesResourceMenus(t *testing.T) {
 				Description: "Shows plugin status.",
 				Handler: managementHandlerFunc(func(context.Context, pluginapi.ManagementRequest) (pluginapi.ManagementResponse, error) {
 					return pluginapi.ManagementResponse{}, nil
-				}),
-			},
-		},
-	}
+				})}}}
 	host := newHostWithRecords(capabilityRecord{
 		id:     "menu",
 		meta:   pluginapi.Metadata{Name: "menu", Version: "1.0.0", Author: "test", GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
-		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{ManagementAPI: plugin}},
-	})
+		plugin: pluginapi.Plugin{Capabilities: pluginapi.Capabilities{ManagementAPI: plugin}}})
 	host.RegisterManagementRoutes(context.Background(), nil)
 
 	plugins := host.RegisteredPlugins()

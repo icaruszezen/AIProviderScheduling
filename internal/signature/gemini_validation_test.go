@@ -271,14 +271,11 @@ func TestValidateGeminiThoughtSignatures_RejectsSentinelOutsideFirstFunctionCall
 			name: "parallel sibling",
 			parts: `[
 				{"functionCall":{"name":"first","args":{}},"thoughtSignature":"skip_thought_signature_validator"},
-				{"functionCall":{"name":"second","args":{}},"thoughtSignature":"skip_thought_signature_validator"}
-			]`,
-		},
+				{"functionCall":{"name":"second","args":{}},"thoughtSignature":"skip_thought_signature_validator",}
+			]`},
 		{
 			name:  "thought part",
-			parts: `[{"text":"hidden","thought":true,"thoughtSignature":"skip_thought_signature_validator"}]`,
-		},
-	}
+			parts: `[{"text":"hidden","thought":true,"thoughtSignature":"skip_thought_signature_validator"}]`}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			input := []byte(`{"contents":[{"role":"model","parts":` + tt.parts + `}]}`)
@@ -326,7 +323,7 @@ func TestValidateGeminiThoughtSignatures_RejectsInvalidTextPartSignature(t *test
 		"contents": [{
 				"role": "model",
 				"parts": [
-				{"text": "previous answer", "thoughtSignature": "bad!!!"}
+				{"text": "previous answer", "thoughtSignature": "bad!!!",}
 			]
 		}]
 	}`)
@@ -347,14 +344,14 @@ func TestValidateGeminiFunctionCallPairing_ValidParallelGroup(t *testing.T) {
 				"role": "model",
 				"parts": [
 					{"functionCall": {"id": "call-1", "name": "weather", "args": {"city": "Paris"}}},
-					{"functionCall": {"id": "call-2", "name": "weather", "args": {"city": "London"}}}
+					{"functionCall": {"id": "call-2", "name": "weather", "args": {"city": "London",}}}
 				]
 			},
 			{
 				"role": "user",
 				"parts": [
 					{"functionResponse": {"id": "call-1", "name": "weather", "response": {"temp": "15C"}}},
-					{"functionResponse": {"id": "call-2", "name": "weather", "response": {"temp": "12C"}}}
+					{"functionResponse": {"id": "call-2", "name": "weather", "response": {"temp": "12C",}}}
 				]
 			}
 		]
@@ -376,8 +373,7 @@ func TestValidateGeminiFunctionCallPairing_RejectsEmptyContentBoundaryBeforeResp
 	for _, boundary := range []string{
 		`{"role":"user","parts":[]}`,
 		`{"role":"user"}`,
-		`{"role":"user","parts":null}`,
-	} {
+		`{"role":"user","parts":null}`} {
 		payload := []byte(`{"contents":[{"role":"model","parts":[{"functionCall":{"id":"call-1","name":"run","args":{}}}]},` + boundary + `,{"role":"model","parts":[{"functionResponse":{"id":"call-1","name":"run","response":{"result":"ok"}}}]}]}`)
 		if err := ValidateGeminiFunctionCallPairing(payload); err == nil {
 			t.Fatalf("content boundary %s before function response was accepted", boundary)

@@ -27,9 +27,7 @@ func quotaResult(authID, model string) Result {
 			Code:       "rate_limit",
 			Message:    "quota",
 			Retryable:  true,
-			HTTPStatus: http.StatusTooManyRequests,
-		},
-	}
+			HTTPStatus: http.StatusTooManyRequests}}
 }
 
 func TestMarkResultQuotaBackoffEscalatesOncePerWindow(t *testing.T) {
@@ -39,8 +37,7 @@ func TestMarkResultQuotaBackoffEscalatesOncePerWindow(t *testing.T) {
 	auth := &Auth{
 		ID:       "auth-quota-window",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex"},
-	}
+		Metadata: map[string]any{"type": "codex"}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("Register returned error: %v", errRegister)
 	}
@@ -90,10 +87,7 @@ func TestMarkResultQuotaBackoffEscalatesAfterWindowExpiry(t *testing.T) {
 				Status:         StatusError,
 				Unavailable:    true,
 				NextRetryAfter: expired,
-				Quota:          QuotaState{Exceeded: true, Reason: "quota", NextRecoverAt: expired, BackoffLevel: 3},
-			},
-		},
-	}
+				Quota:          QuotaState{Exceeded: true, Reason: "quota", NextRecoverAt: expired, BackoffLevel: 3}}}}
 	if _, errRegister := manager.Register(WithSkipPersist(context.Background()), auth); errRegister != nil {
 		t.Fatalf("Register returned error: %v", errRegister)
 	}
@@ -167,8 +161,7 @@ func TestRecoverableUnknownFailuresHaveFiniteCooldown(t *testing.T) {
 		resultErr *Error
 	}{
 		{name: "model failure without error details", model: "gpt-5"},
-		{name: "auth transport failure without status", resultErr: &Error{Message: "connection reset"}},
-	}
+		{name: "auth transport failure without status", resultErr: &Error{Message: "connection reset"}}}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)
@@ -182,8 +175,7 @@ func TestRecoverableUnknownFailuresHaveFiniteCooldown(t *testing.T) {
 				Provider: auth.Provider,
 				Model:    testCase.model,
 				Success:  false,
-				Error:    testCase.resultErr,
-			})
+				Error:    testCase.resultErr})
 
 			updated, ok := manager.GetByID(auth.ID)
 			if !ok || updated == nil {
@@ -240,8 +232,7 @@ func TestSchedulerPromotesUnknownFailureAfterRetryDeadline(t *testing.T) {
 		Provider: provider,
 		Model:    model,
 		Success:  false,
-		Error:    &Error{Message: "transport closed"},
-	})
+		Error:    &Error{Message: "transport closed"}})
 
 	manager.scheduler.mu.Lock()
 	defer manager.scheduler.mu.Unlock()
@@ -277,8 +268,7 @@ func TestJitteredCooldownWaitBounds(t *testing.T) {
 		{8 * time.Second, 0, 2 * time.Second},
 		{30 * time.Second, 0, 2 * time.Second},
 		{time.Second, 30 * time.Second, 250 * time.Millisecond},
-		{29 * time.Second, 30 * time.Second, time.Second},
-	}
+		{29 * time.Second, 30 * time.Second, time.Second}}
 	for _, tc := range cases {
 		for i := 0; i < 200; i++ {
 			got := jitteredCooldownWait(tc.wait, tc.maxWait)

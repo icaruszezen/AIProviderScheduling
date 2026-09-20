@@ -37,8 +37,7 @@ func NewPluginRefreshCompatExecutor(inner coreauth.ProviderExecutor, host *Host,
 		inner:    inner,
 		host:     host,
 		cfg:      cfg,
-		provider: provider,
-	}
+		provider: provider}
 }
 
 // IsPluginRefreshCompatExecutor reports whether executor is a plugin-refresh wrapper.

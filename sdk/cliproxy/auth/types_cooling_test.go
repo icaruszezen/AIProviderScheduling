@@ -14,8 +14,7 @@ func TestDisableCoolingOverrideSupportsExplicitFalse(t *testing.T) {
 		{name: "canonical false", auth: &Auth{Metadata: map[string]any{"disable_cooling": false}}, wantPresent: true},
 		{name: "legacy false", auth: &Auth{Metadata: map[string]any{"disable-cooling": false}}, wantPresent: true},
 		{name: "string false", auth: &Auth{Metadata: map[string]any{"disable_cooling": "false"}}, wantPresent: true},
-		{name: "invalid", auth: &Auth{Metadata: map[string]any{"disable_cooling": "invalid"}}},
-	}
+		{name: "invalid", auth: &Auth{Metadata: map[string]any{"disable_cooling": "invalid"}}}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

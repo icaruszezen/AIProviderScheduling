@@ -26,8 +26,7 @@ func TestGetAvailableModelsClaudeIncludesTokenLimits(t *testing.T) {
 	r := newTestModelRegistry()
 	r.RegisterClient("client-1", "Claude", []*ModelInfo{
 		{ID: "claude-sonnet-4-6", OwnedBy: "anthropic", Type: "claude", Created: 1771372800, ContextLength: 200000, MaxCompletionTokens: 64000},
-		{ID: "claude-no-limits", OwnedBy: "anthropic", Type: "claude"},
-	})
+		{ID: "claude-no-limits", OwnedBy: "anthropic", Type: "claude"}})
 
 	models := r.GetAvailableModels("claude")
 	byID := make(map[string]map[string]any, len(models))

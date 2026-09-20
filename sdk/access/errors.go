@@ -58,8 +58,7 @@ func newAuthError(code AuthErrorCode, message string, statusCode int, cause erro
 		Code:       code,
 		Message:    message,
 		StatusCode: statusCode,
-		Cause:      cause,
-	}
+		Cause:      cause}
 }
 
 func NewNoCredentialsError() *AuthError {

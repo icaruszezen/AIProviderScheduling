@@ -29,8 +29,7 @@ type runtimeItemConfig struct {
 func runtimeConfigFromConfig(cfg *config.Config) (runtimeConfig, error) {
 	out := runtimeConfig{
 		Dir:   "plugins",
-		Items: make(map[string]runtimeItemConfig),
-	}
+		Items: make(map[string]runtimeItemConfig)}
 	if cfg == nil {
 		return out, nil
 	}
@@ -63,8 +62,7 @@ func runtimeConfigFromConfig(cfg *config.Config) (runtimeConfig, error) {
 			Enabled:    enabled,
 			Priority:   item.Priority,
 			Version:    pluginConfigDesiredVersion(item),
-			ConfigYAML: runtimeConfigYAML(item, enabled),
-		}
+			ConfigYAML: runtimeConfigYAML(item, enabled)}
 	}
 	return out, nil
 }
@@ -74,8 +72,7 @@ func defaultRuntimeItemConfig(id string) runtimeItemConfig {
 		ID:         id,
 		Enabled:    false,
 		Priority:   0,
-		ConfigYAML: append([]byte(nil), defaultRuntimeConfigYAML...),
-	}
+		ConfigYAML: append([]byte(nil), defaultRuntimeConfigYAML...)}
 }
 
 func runtimeConfigYAML(item config.PluginInstanceConfig, enabled bool) []byte {
@@ -175,9 +172,7 @@ func defaultRuntimeConfigNode(enabled bool, priority int) *yaml.Node {
 			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "enabled"},
 			{Kind: yaml.ScalarNode, Tag: "!!bool", Value: boolYAMLValue(enabled)},
 			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "priority"},
-			{Kind: yaml.ScalarNode, Tag: "!!int", Value: intYAMLValue(priority)},
-		},
-	}
+			{Kind: yaml.ScalarNode, Tag: "!!int", Value: intYAMLValue(priority)}}}
 }
 
 func ensureMappingScalar(node *yaml.Node, key, value, tag string) {

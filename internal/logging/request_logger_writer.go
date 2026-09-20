@@ -246,8 +246,7 @@ func (l *FileRequestLogger) LogStreamingRequest(url, method string, headers map[
 		responseBodyFile: responseBodyFile,
 		chunkChan:        make(chan []byte, 100), // Buffered channel for async writes
 		closeChan:        make(chan struct{}),
-		errorChan:        make(chan error, 1),
-	}
+		errorChan:        make(chan error, 1)}
 
 	// Start async writer goroutine
 	go writer.asyncWriter()

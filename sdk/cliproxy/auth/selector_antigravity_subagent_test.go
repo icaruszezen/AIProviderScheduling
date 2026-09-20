@@ -14,21 +14,18 @@ func TestSessionAffinityAntigravitySubagentDoesNotInheritParentBinding(t *testin
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-ag-1", Provider: "antigravity"},
-		{ID: "auth-ag-2", Provider: "antigravity"},
-	}
+		{ID: "auth-ag-2", Provider: "antigravity"}}
 
 	// 1. Parent request binds to auth-ag-1
 	parentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"claude-root-100"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -42,11 +39,9 @@ func TestSessionAffinityAntigravitySubagentDoesNotInheritParentBinding(t *testin
 	subagent1Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-100"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent 1 task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent1Auth, errSub1 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent1Opts, auths)
 	if errSub1 != nil {
 		t.Fatalf("subagent 1 Pick() error = %v", errSub1)
@@ -62,11 +57,9 @@ func TestSessionAffinityAntigravitySubagentDoesNotInheritParentBinding(t *testin
 	subagent1Turn2Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-100"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent 1 second turn"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent1Turn2Auth, errSub1Turn2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent1Turn2Opts, auths)
 	if errSub1Turn2 != nil {
 		t.Fatalf("subagent 1 turn 2 Pick() error = %v", errSub1Turn2)
@@ -79,11 +72,9 @@ func TestSessionAffinityAntigravitySubagentDoesNotInheritParentBinding(t *testin
 	subagent2Opts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-100"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-002"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-002"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent 2 task"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subagent2Auth, errSub2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent2Opts, auths)
 	if errSub2 != nil {
 		t.Fatalf("subagent 2 Pick() error = %v", errSub2)
@@ -96,8 +87,7 @@ func TestSessionAffinityAntigravitySubagentDoesNotInheritParentBinding(t *testin
 	parentTurn2Opts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"claude-root-100"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent follow-up"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentTurn2Auth, errParent2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", parentTurn2Opts, auths)
 	if errParent2 != nil {
 		t.Fatalf("parent turn 2 Pick() error = %v", errParent2)
@@ -112,14 +102,12 @@ func TestSessionAffinityMixedProviderAntigravitySubagentIsolation(t *testing.T) 
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-ag-1", Provider: "antigravity"},
-		{ID: "auth-ag-2", Provider: "antigravity"},
-	}
+		{ID: "auth-ag-2", Provider: "antigravity"}}
 
 	// 1. Parent request in mixed pool binds to auth-ag-1
 	parentOpts := cliproxyexecutor.Options{
@@ -127,9 +115,7 @@ func TestSessionAffinityMixedProviderAntigravitySubagentIsolation(t *testing.T) 
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "gemini-3.7-flash-high",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "gemini-3.7-flash-high"}}
 	parentAuth, errParent := selector.Pick(context.Background(), "mixed", "gemini-3.7-flash-high", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -142,14 +128,11 @@ func TestSessionAffinityMixedProviderAntigravitySubagentIsolation(t *testing.T) 
 	subOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-200"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-999"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-999"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "gemini-3.7-flash-high",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "gemini-3.7-flash-high"}}
 	subAuth, errSub := selector.Pick(context.Background(), "mixed", "gemini-3.7-flash-high", subOpts, auths)
 	if errSub != nil {
 		t.Fatalf("subagent Pick() error = %v", errSub)
@@ -167,21 +150,18 @@ func TestSessionAffinityClaudeAndCodexStillInheritParentBinding(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	claudeAuths := []*Auth{
 		{ID: "auth-claude-1", Provider: "claude"},
-		{ID: "auth-claude-2", Provider: "claude"},
-	}
+		{ID: "auth-claude-2", Provider: "claude"}}
 
 	// 1. Claude parent binds to auth-claude-1
 	claudeParentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"claude-root-300"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"claude parent"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	claudeParentAuth, errClaudeParent := selector.Pick(context.Background(), "claude", "claude-3-7-sonnet", claudeParentOpts, claudeAuths)
 	if errClaudeParent != nil {
 		t.Fatalf("claude parent Pick() error = %v", errClaudeParent)
@@ -194,11 +174,9 @@ func TestSessionAffinityClaudeAndCodexStillInheritParentBinding(t *testing.T) {
 	claudeSubOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-300"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-001"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-001"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"claude subagent"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	claudeSubAuth, errClaudeSub := selector.Pick(context.Background(), "claude", "claude-3-7-sonnet", claudeSubOpts, claudeAuths)
 	if errClaudeSub != nil {
 		t.Fatalf("claude sub Pick() error = %v", errClaudeSub)
@@ -210,13 +188,11 @@ func TestSessionAffinityClaudeAndCodexStillInheritParentBinding(t *testing.T) {
 	// 3. Codex parent and subagent inheritance
 	codexAuths := []*Auth{
 		{ID: "auth-codex-1", Provider: "codex"},
-		{ID: "auth-codex-2", Provider: "codex"},
-	}
+		{ID: "auth-codex-2", Provider: "codex"}}
 	codexParentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"Session-Id": []string{"codex-parent-400"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"codex parent"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	codexParentAuth, errCodexParent := selector.Pick(context.Background(), "codex", "gpt-5.4", codexParentOpts, codexAuths)
 	if errCodexParent != nil {
 		t.Fatalf("codex parent Pick() error = %v", errCodexParent)
@@ -228,11 +204,9 @@ func TestSessionAffinityClaudeAndCodexStillInheritParentBinding(t *testing.T) {
 	codexSubOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"Session-Id":               []string{"codex-child-400"},
-			"x-codex-parent-thread-id": []string{"codex-parent-400"},
-		},
+			"x-codex-parent-thread-id": []string{"codex-parent-400"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"codex subagent"}]}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	codexSubAuth, errCodexSub := selector.Pick(context.Background(), "codex", "gpt-5.4", codexSubOpts, codexAuths)
 	if errCodexSub != nil {
 		t.Fatalf("codex sub Pick() error = %v", errCodexSub)
@@ -247,22 +221,18 @@ func TestSessionAffinityMixedPoolClaudeInheritsWhileAntigravityIsolates(t *testi
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	// 1. Parent session selects Claude credential in mixed pool
 	claudeCandidate := []*Auth{
-		{ID: "auth-claude-primary", Provider: "claude"},
-	}
+		{ID: "auth-claude-primary", Provider: "claude"}}
 	parentOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"mixed-sess-claude"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	parentAuth, errParent := selector.Pick(context.Background(), "mixed", "claude-3-7-sonnet", parentOpts, claudeCandidate)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -275,19 +245,15 @@ func TestSessionAffinityMixedPoolClaudeInheritsWhileAntigravityIsolates(t *testi
 	// MUST inherit auth-claude-primary for prompt cache reuse
 	mixedAuths := []*Auth{
 		{ID: "auth-ag-other", Provider: "antigravity"},
-		{ID: "auth-claude-primary", Provider: "claude"},
-	}
+		{ID: "auth-claude-primary", Provider: "claude"}}
 	subClaudeOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"mixed-sess-claude"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-claude-1"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-claude-1"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	subClaudeAuth, errSubClaude := selector.Pick(context.Background(), "mixed", "claude-3-7-sonnet", subClaudeOpts, mixedAuths)
 	if errSubClaude != nil {
 		t.Fatalf("subagent Claude Pick() error = %v", errSubClaude)
@@ -298,16 +264,13 @@ func TestSessionAffinityMixedPoolClaudeInheritsWhileAntigravityIsolates(t *testi
 
 	// 3. Parent session that selected Antigravity credential in mixed pool
 	agCandidate := []*Auth{
-		{ID: "auth-ag-primary", Provider: "antigravity"},
-	}
+		{ID: "auth-ag-primary", Provider: "antigravity"}}
 	parentAgOpts := cliproxyexecutor.Options{
 		Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"mixed-sess-ag"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	parentAgAuth, errParentAg := selector.Pick(context.Background(), "mixed", "claude-3-7-sonnet", parentAgOpts, agCandidate)
 	if errParentAg != nil {
 		t.Fatalf("parent Ag Pick() error = %v", errParentAg)
@@ -320,19 +283,15 @@ func TestSessionAffinityMixedPoolClaudeInheritsWhileAntigravityIsolates(t *testi
 	// MUST NOT inherit Antigravity auth, and independently picking Claude must NOT overwrite parent binding
 	mixedCandidates := []*Auth{
 		{ID: "auth-ag-primary", Provider: "antigravity"},
-		{ID: "auth-claude-primary", Provider: "claude"},
-	}
+		{ID: "auth-claude-primary", Provider: "claude"}}
 	subAgOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"mixed-sess-ag"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-ag-1"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-ag-1"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	subAgAuth, errSubAg := selector.Pick(context.Background(), "mixed", "claude-3-7-sonnet", subAgOpts, mixedCandidates)
 	if errSubAg != nil {
 		t.Fatalf("subagent Ag Pick() error = %v", errSubAg)
@@ -373,14 +332,12 @@ func TestSessionAffinityAntigravitySubagentOnResultFailureDoesNotUnbindParent(t 
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-ag-1", Provider: "antigravity"},
-		{ID: "auth-ag-2", Provider: "antigravity"},
-	}
+		{ID: "auth-ag-2", Provider: "antigravity"}}
 
 	// 1. Parent request in mixed pool binds to auth-ag-1 with model claude-3-7-sonnet
 	parentOpts := cliproxyexecutor.Options{
@@ -388,9 +345,7 @@ func TestSessionAffinityAntigravitySubagentOnResultFailureDoesNotUnbindParent(t 
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	parentAuth, errParent := selector.Pick(context.Background(), "mixed", "claude-3-7-sonnet", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -408,14 +363,11 @@ func TestSessionAffinityAntigravitySubagentOnResultFailureDoesNotUnbindParent(t 
 	subOpts := cliproxyexecutor.Options{
 		Headers: http.Header{
 			"X-Claude-Code-Session-Id": []string{"claude-root-500"},
-			"X-Claude-Code-Agent-Id":   []string{"subagent-err-1"},
-		},
+			"X-Claude-Code-Agent-Id":   []string{"subagent-err-1"}},
 		OriginalRequest: []byte(`{"messages":[{"role":"user","content":"subagent task"}]}`),
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "claude-3-7-sonnet"}}
 	// Simulate subagent executing on auth-ag-1 (same auth ID as parent) and hitting 429
 	selector.OnResult(Result{
 		AuthID:   "auth-ag-1",
@@ -423,8 +375,7 @@ func TestSessionAffinityAntigravitySubagentOnResultFailureDoesNotUnbindParent(t 
 		Model:    "claude-3-7-sonnet",
 		Success:  false,
 		Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "429 rate limited"},
-		Options:  subOpts,
-	})
+		Options:  subOpts})
 
 	// 3. Parent binding in cache must remain untouched
 	if bound, ok := selector.cache.Get("mixed::claude:claude-root-500::claude-3-7-sonnet"); !ok || bound != "auth-ag-1" {
@@ -437,8 +388,7 @@ func TestSessionAffinityAntigravitySubagentOnResultFailureDoesNotUnbindParent(t 
 		Provider: "antigravity",
 		Model:    "claude-3-7-sonnet",
 		Success:  true,
-		Options:  subOpts,
-	})
+		Options:  subOpts})
 	if bound, ok := selector.cache.Get("mixed::claude:claude-root-500::claude-3-7-sonnet"); !ok || bound != "auth-ag-1" {
 		t.Fatalf("parent cache binding was altered by subagent OnResult success: got (%q, %v)", bound, ok)
 	}
@@ -451,20 +401,17 @@ func TestSessionAffinityOtherGoogleProvidersSubagentIsolation(t *testing.T) {
 		t.Run(provider, func(t *testing.T) {
 			selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 				Fallback: &RoundRobinSelector{},
-				TTL:      time.Minute,
-			})
+				TTL:      time.Minute})
 			defer selector.Stop()
 
 			auths := []*Auth{
 				{ID: "auth-1", Provider: provider},
-				{ID: "auth-2", Provider: provider},
-			}
+				{ID: "auth-2", Provider: provider}}
 
 			parentOpts := cliproxyexecutor.Options{
 				Headers:         http.Header{"X-Claude-Code-Session-Id": []string{"root-google-sess"}},
 				OriginalRequest: []byte(`{"messages":[{"role":"user","content":"parent"}]}`),
-				Metadata:        map[string]any{},
-			}
+				Metadata:        map[string]any{}}
 			parentAuth, errParent := selector.Pick(context.Background(), provider, "custom-model", parentOpts, auths)
 			if errParent != nil {
 				t.Fatalf("provider %s parent Pick() error = %v", provider, errParent)
@@ -476,11 +423,9 @@ func TestSessionAffinityOtherGoogleProvidersSubagentIsolation(t *testing.T) {
 			subOpts := cliproxyexecutor.Options{
 				Headers: http.Header{
 					"X-Claude-Code-Session-Id": []string{"root-google-sess"},
-					"X-Claude-Code-Agent-Id":   []string{"subagent-001"},
-				},
+					"X-Claude-Code-Agent-Id":   []string{"subagent-001"}},
 				OriginalRequest: []byte(`{"messages":[{"role":"user","content":"sub"}]}`),
-				Metadata:        map[string]any{},
-			}
+				Metadata:        map[string]any{}}
 			subAuth, errSub := selector.Pick(context.Background(), provider, "custom-model", subOpts, auths)
 			if errSub != nil {
 				t.Fatalf("provider %s subagent Pick() error = %v", provider, errSub)
@@ -500,14 +445,12 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "auth-ag-1", Provider: "antigravity"},
-		{ID: "auth-ag-2", Provider: "antigravity"},
-	}
+		{ID: "auth-ag-2", Provider: "antigravity"}}
 
 	// 1. Parent request with nested request payload binds to auth-ag-1
 	parentOpts := cliproxyexecutor.Options{
@@ -516,8 +459,7 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 				"sessionId": "root-task"
 			}
 		}`),
-		Metadata: map[string]any{},
-	}
+		Metadata: map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -539,8 +481,7 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 				}
 			}
 		}`),
-		Metadata: map[string]any{},
-	}
+		Metadata: map[string]any{}}
 	subagent1Auth, errSub1 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent1Opts, auths)
 	if errSub1 != nil {
 		t.Fatalf("subagent 1 Pick() error = %v", errSub1)
@@ -565,8 +506,7 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 				}
 			}
 		}`),
-		Metadata: map[string]any{},
-	}
+		Metadata: map[string]any{}}
 	subagent1Turn2Auth, errSub1Turn2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent1Turn2Opts, auths)
 	if errSub1Turn2 != nil {
 		t.Fatalf("subagent 1 turn 2 Pick() error = %v", errSub1Turn2)
@@ -585,8 +525,7 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 				}
 			}
 		}`),
-		Metadata: map[string]any{},
-	}
+		Metadata: map[string]any{}}
 	subagent2Auth, errSub2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", subagent2Opts, auths)
 	if errSub2 != nil {
 		t.Fatalf("subagent 2 Pick() error = %v", errSub2)
@@ -602,8 +541,7 @@ func TestSessionAffinityNestedAntigravitySubagentIsolation(t *testing.T) {
 				"sessionId": "root-task"
 			}
 		}`),
-		Metadata: map[string]any{},
-	}
+		Metadata: map[string]any{}}
 	parentTurn2Auth, errParent2 := selector.Pick(context.Background(), "antigravity", "gemini-3.7-flash-high", parentTurn2Opts, auths)
 	if errParent2 != nil {
 		t.Fatalf("parent turn 2 Pick() error = %v", errParent2)
@@ -618,19 +556,16 @@ func TestSessionAffinityNestedGeminiProviderSubagentIsolation(t *testing.T) {
 
 	selector := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Minute,
-	})
+		TTL:      time.Minute})
 	defer selector.Stop()
 
 	auths := []*Auth{
 		{ID: "gemini-auth-1", Provider: "gemini"},
-		{ID: "gemini-auth-2", Provider: "gemini"},
-	}
+		{ID: "gemini-auth-2", Provider: "gemini"}}
 
 	parentOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"request":{"sessionId":"gemini-root"}}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	parentAuth, errParent := selector.Pick(context.Background(), "gemini", "gemini-2.5-pro", parentOpts, auths)
 	if errParent != nil {
 		t.Fatalf("parent Pick() error = %v", errParent)
@@ -641,8 +576,7 @@ func TestSessionAffinityNestedGeminiProviderSubagentIsolation(t *testing.T) {
 
 	subOpts := cliproxyexecutor.Options{
 		OriginalRequest: []byte(`{"request":{"sessionId":"gemini-root","metadata":{"agent_id":"gemini-worker"}}}`),
-		Metadata:        map[string]any{},
-	}
+		Metadata:        map[string]any{}}
 	subAuth, errSub := selector.Pick(context.Background(), "gemini", "gemini-2.5-pro", subOpts, auths)
 	if errSub != nil {
 		t.Fatalf("subagent Pick() error = %v", errSub)

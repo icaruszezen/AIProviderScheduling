@@ -51,8 +51,7 @@ func TestOrderedRequestConnReordersKeepAliveRequestsWithoutChangingBodies(t *tes
 		[]byte(firstInput[:29]),
 		[]byte(firstInput[29 : len(firstInput)-3]),
 		[]byte(firstInput[len(firstInput)-3:] + secondInput[:17]),
-		[]byte(secondInput[17:]),
-	}
+		[]byte(secondInput[17:])}
 	for _, part := range parts {
 		written, errWrite := conn.Write(part)
 		if errWrite != nil {

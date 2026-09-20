@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -253,72 +252,26 @@ func TestShouldResolveAntigravityWebSearchGroundingURLsRequiresTypedWebSearchAnd
 	}
 }
 
-func TestAntigravityPrepareRequestAuth_FetchesMissingProjectID(t *testing.T) {
+func TestAntigravityPrepareRequestAuth_MissingProjectIDFailsClosed(t *testing.T) {
 	executor := &AntigravityExecutor{}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
-		"access_token": "token",
-		"expired":      time.Now().Add(1 * time.Hour).Format(time.RFC3339),
-	}}
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.String() != "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist" {
-			t.Fatalf("unexpected project discovery request: %s", req.URL.String())
-		}
-		if got := req.Header.Get("X-Goog-Api-Client"); got != "" {
-			t.Fatalf("X-Goog-Api-Client = %q, want empty", got)
-		}
-		raw, errRead := io.ReadAll(req.Body)
-		if errRead != nil {
-			t.Fatalf("read discovery body: %v", errRead)
-		}
-		if !strings.Contains(string(raw), `"ideType":"ANTIGRAVITY"`) {
-			t.Fatalf("unexpected discovery body: %s", string(raw))
-		}
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Header:     make(http.Header),
-			Body:       io.NopCloser(strings.NewReader(`{"cloudaicompanionProject":"fetched-project"}`)),
-		}, nil
-	}))
+	auth := &cliproxyauth.Auth{
+		Attributes: map[string]string{"api_key": "token"},
+		Metadata:   map[string]any{"expired": time.Now().Add(1 * time.Hour).Format(time.RFC3339)},
+	}
 
-	updated, err := executor.PrepareRequestAuth(ctx, auth)
-	if err != nil {
-		t.Fatalf("PrepareRequestAuth error: %v", err)
-	}
-	if updated == nil {
-		t.Fatalf("PrepareRequestAuth returned nil auth")
-	}
-	if _, ok := auth.Metadata["project_id"]; ok {
-		t.Fatalf("original auth metadata should not be mutated")
-	}
-	if got, ok := updated.Metadata["project_id"].(string); !ok || got != "fetched-project" {
-		t.Fatalf("updated auth metadata project_id = %v, want fetched-project", updated.Metadata["project_id"])
-	}
-}
-
-func TestAntigravityPrepareRequestAuth_UpstreamForbiddenPreserves403(t *testing.T) {
-	executor := &AntigravityExecutor{}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
-		"access_token": "token",
-		"expired":      time.Now().Add(1 * time.Hour).Format(time.RFC3339),
-	}}
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: http.StatusForbidden,
-			Header:     make(http.Header),
-			Body:       io.NopCloser(strings.NewReader(`{"error":{"code":403,"message":"The caller does not have permission"}}`)),
-		}, nil
-	}))
-
-	_, err := executor.PrepareRequestAuth(ctx, auth)
+	updated, err := executor.PrepareRequestAuth(context.Background(), auth)
 	if err == nil {
-		t.Fatalf("PrepareRequestAuth should fail on upstream 403")
+		t.Fatal("PrepareRequestAuth() error = nil, want missing project_id")
+	}
+	if updated != nil {
+		t.Fatalf("PrepareRequestAuth() auth = %v, want nil", updated)
 	}
 	status, ok := err.(interface{ StatusCode() int })
 	if !ok {
 		t.Fatalf("error should expose StatusCode(), got %T (%v)", err, err)
 	}
-	if got := status.StatusCode(); got != http.StatusForbidden {
-		t.Fatalf("status code = %d, want %d", got, http.StatusForbidden)
+	if got := status.StatusCode(); got != http.StatusBadRequest {
+		t.Fatalf("status code = %d, want %d", got, http.StatusBadRequest)
 	}
 }
 

@@ -54,8 +54,7 @@ func TestHomeAppLogForwarder_ForwardsFormattedLogWhenBoundOwnerIsHealthy(t *test
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 4),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.bind(stub)
 	forwarder.wg.Add(1)
@@ -169,8 +168,7 @@ func TestHomeAppLogForwarder_RebindsOnlyToCurrentOwner(t *testing.T) {
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 4),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.wg.Add(1)
 	go forwarder.run()
@@ -240,8 +238,7 @@ func TestHomeAppLogForwarder_DelayedOldOwnerUnsupportedDoesNotDisableNewOwner(t 
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 1),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.wg.Add(1)
 	go forwarder.run()
@@ -283,8 +280,7 @@ func TestHomeAppLogForwarder_UnboundNeverUsesGlobalFallbackClient(t *testing.T) 
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 1),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 
 	if client := forwarder.client(); client != nil {
@@ -307,8 +303,7 @@ func TestHomeAppLogForwarder_DropsPreACKAndReconnectGapLogs(t *testing.T) {
 	preACKForwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 1),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	preACKForwarder.enabled.Store(true)
 	if client := preACKForwarder.client(); client != nil {
 		t.Fatalf("pre-ACK client = %v, want nil", client)
@@ -346,8 +341,7 @@ func TestHomeAppLogForwarder_SkipsWhenBoundOwnerHeartbeatIsDown(t *testing.T) {
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 4),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.bind(stub)
 
@@ -367,13 +361,11 @@ func TestHomeAppLogForwarder_SkipsWhenBoundOwnerHeartbeatIsDown(t *testing.T) {
 func TestHomeAppLogForwarder_DisablesForwardingWhenBoundOwnerDoesNotSupportAppLog(t *testing.T) {
 	stub := &stubHomeAppLogClient{
 		heartbeatOK: true,
-		err:         errors.New("ERR unsupported key"),
-	}
+		err:         errors.New("ERR unsupported key")}
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, 4),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.bind(stub)
 

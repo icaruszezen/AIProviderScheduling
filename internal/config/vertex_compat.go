@@ -14,8 +14,21 @@ import (
 // Example services: zenmux.ai and similar Vertex-compatible providers.
 type VertexCompatKey struct {
 	// APIKey is the authentication key for accessing the Vertex-compatible API.
-	// Maps to the x-goog-api-key header.
+	// Maps to the x-goog-api-key header. Optional when ServiceAccount is set.
 	APIKey string `yaml:"api-key" json:"api-key"`
+
+	// ServiceAccount is optional official Google Cloud service-account JSON.
+	// When present, the Vertex executor uses ADC-style service account auth.
+	ServiceAccount map[string]any `yaml:"service-account,omitempty" json:"service-account,omitempty"`
+
+	// ProjectID optionally overrides the service-account project_id.
+	ProjectID string `yaml:"project-id,omitempty" json:"project-id,omitempty"`
+
+	// Location optionally sets a default Vertex region (e.g. us-central1).
+	Location string `yaml:"location,omitempty" json:"location,omitempty"`
+
+	// Email is an optional display identity for service-account credentials.
+	Email string `yaml:"email,omitempty" json:"email,omitempty"`
 
 	// Priority controls selection preference when multiple credentials match.
 	// Higher values are preferred; defaults to 0.
@@ -112,7 +125,11 @@ func (cfg *Config) SanitizeVertexCompatKeys() {
 	for i := range cfg.VertexCompatAPIKey {
 		entry := cfg.VertexCompatAPIKey[i]
 		entry.APIKey = strings.TrimSpace(entry.APIKey)
-		if entry.APIKey == "" {
+		entry.ProjectID = strings.TrimSpace(entry.ProjectID)
+		entry.Location = strings.TrimSpace(entry.Location)
+		entry.Email = strings.TrimSpace(entry.Email)
+		entry.ServiceAccount = NormalizeServiceAccount(entry.ServiceAccount)
+		if entry.APIKey == "" && len(entry.ServiceAccount) == 0 {
 			continue
 		}
 		entry.Prefix = normalizeModelPrefix(entry.Prefix)
@@ -133,8 +150,7 @@ func (cfg *Config) SanitizeVertexCompatKeys() {
 		}
 		entry.Models = sanitizedModels
 
-		// Use API key + base URL as uniqueness key
-		uniqueKey := entry.APIKey + "|" + entry.BaseURL
+		uniqueKey := entry.APIKey + "|" + entry.BaseURL + "|" + ServiceAccountIdentity(entry.ServiceAccount)
 		if _, exists := seen[uniqueKey]; exists {
 			continue
 		}
@@ -142,4 +158,27 @@ func (cfg *Config) SanitizeVertexCompatKeys() {
 		out = append(out, entry)
 	}
 	cfg.VertexCompatAPIKey = out
+}
+
+// NormalizeServiceAccount drops empty service-account maps.
+func NormalizeServiceAccount(account map[string]any) map[string]any {
+	if len(account) == 0 {
+		return nil
+	}
+	return account
+}
+
+// ServiceAccountIdentity returns a stable identity for a service-account payload.
+func ServiceAccountIdentity(account map[string]any) string {
+	if len(account) == 0 {
+		return ""
+	}
+	for _, key := range []string{"client_email", "client_id", "project_id"} {
+		if value, ok := account[key].(string); ok {
+			if trimmed := strings.TrimSpace(value); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	return "service-account"
 }

@@ -106,8 +106,7 @@ func StartHomeAppLogForwarder(queueSize int) *HomeAppLogForwarder {
 	forwarder := &HomeAppLogForwarder{
 		formatter: &LogFormatter{},
 		queue:     make(chan homeAppLogPayload, queueSize),
-		stop:      make(chan struct{}),
-	}
+		stop:      make(chan struct{})}
 	forwarder.enabled.Store(true)
 	forwarder.wg.Add(1)
 	go forwarder.run()
@@ -196,8 +195,7 @@ func (f *HomeAppLogForwarder) Fire(entry *log.Entry) error {
 		Level:     entry.Level.String(),
 		Timestamp: entry.Time.Format(time.RFC3339Nano),
 		RequestID: appLogRequestID(entry),
-		client:    client,
-	}
+		client:    client}
 	select {
 	case f.queue <- payload:
 	default:

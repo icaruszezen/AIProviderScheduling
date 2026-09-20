@@ -22,10 +22,10 @@ func TestHandleHangupForwardsPinnedOAuthCall(t *testing.T) {
 	}
 	manager.RegisterExecutor(executor)
 	registerCredential(t, manager, &auth.Auth{
-		ID:       "codex-oauth",
-		Provider: "codex",
-		Status:   auth.StatusActive,
-		Metadata: map[string]any{"access_token": "oauth-token"},
+		ID:         "codex-oauth",
+		Provider:   "codex",
+		Status:     auth.StatusActive,
+		Attributes: map[string]string{auth.AttributeAPIKey: "oauth-token", auth.AttributeAuthKind: auth.AuthKindAPIKey},
 	})
 	handler := NewHandler(manager, nil)
 	handler.sessions.put("call-123", liveSession{

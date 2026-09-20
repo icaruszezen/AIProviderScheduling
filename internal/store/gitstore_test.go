@@ -274,8 +274,7 @@ func TestGitTokenStoreRefusesWatcherOriginatedAuthDeletion(t *testing.T) {
 		ID:       "protected.json",
 		FileName: "protected.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "token"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "token"}}
 	path, err := store.Save(context.Background(), auth)
 	if err != nil {
 		t.Fatalf("Save: %v", err)
@@ -313,8 +312,7 @@ func TestGitTokenStoreWatcherRemovalNoOpsAfterExplicitDelete(t *testing.T) {
 		ID:       "explicit.json",
 		FileName: "explicit.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "token"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "token"}}
 	path, err := store.Save(context.Background(), auth)
 	if err != nil {
 		t.Fatalf("Save: %v", err)
@@ -356,8 +354,7 @@ func TestGitTokenStoreRepeatedDeleteDoesNotOverwriteRemoteOnlyChanges(t *testing
 		ID:       "a.json",
 		FileName: "a.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "a"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "a"}}
 	pathA, err := storeA.Save(context.Background(), authA)
 	if err != nil {
 		t.Fatalf("Save A: %v", err)
@@ -376,8 +373,7 @@ func TestGitTokenStoreRepeatedDeleteDoesNotOverwriteRemoteOnlyChanges(t *testing
 		ID:       "b.json",
 		FileName: "b.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "b"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "b"}}
 	if _, err := storeB.Save(context.Background(), authB); err != nil {
 		t.Fatalf("Save B: %v", err)
 	}
@@ -423,10 +419,8 @@ func TestGitTokenStoreRejectsPathsOutsideRepositoryBeforeMutation(t *testing.T) 
 		FileName: "outside-save.json",
 		Provider: "codex",
 		Attributes: map[string]string{
-			cliproxyauth.AttributePath: outsideSavePath,
-		},
-		Metadata: map[string]any{"type": "codex", "access_token": "token"},
-	}
+			cliproxyauth.AttributePath: outsideSavePath},
+		Metadata: map[string]any{"type": "codex", "access_token": "token"}}
 	if _, err := store.Save(context.Background(), auth); err == nil {
 		t.Fatal("Save outside repository error = nil, want rejection")
 	}
@@ -453,8 +447,7 @@ func TestGitTokenStorePersistConfigDropsUnrelatedStagedDeletions(t *testing.T) {
 		ID:       "protected.json",
 		FileName: "protected.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "token"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "token"}}
 	authPath, err := store.Save(context.Background(), auth)
 	if err != nil {
 		t.Fatalf("Save: %v", err)
@@ -552,8 +545,7 @@ func TestGitTokenStorePersistConfigPreservesRemoteOnlyAuthAfterDivergence(t *tes
 		ID:       "remote-only.json",
 		FileName: "remote-only.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "remote"}}
 	if _, err := storeB.Save(context.Background(), authB); err != nil {
 		t.Fatalf("Save B: %v", err)
 	}
@@ -593,8 +585,7 @@ func TestGitTokenStoreRejectsStaleForcePush(t *testing.T) {
 		ID:       "concurrent.json",
 		FileName: "concurrent.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "remote"}}
 	if _, err := storeB.Save(context.Background(), authB); err != nil {
 		t.Fatalf("Save B: %v", err)
 	}
@@ -639,8 +630,7 @@ func TestGitTokenStoreSaveRetryAfterLeaseConflictCommitsMatchingContent(t *testi
 		ID:       "local.json",
 		FileName: "local.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "local"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "local"}}
 	remoteAdvanced := false
 	authA.Storage = &callbackTokenStorage{save: func(path string) error {
 		raw, errMarshal := json.Marshal(authA.Metadata)
@@ -658,8 +648,7 @@ func TestGitTokenStoreSaveRetryAfterLeaseConflictCommitsMatchingContent(t *testi
 			ID:       "concurrent.json",
 			FileName: "concurrent.json",
 			Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-		})
+			Metadata: map[string]any{"type": "codex", "access_token": "remote"}})
 		return errSave
 	}}
 	if _, errSave := storeA.Save(context.Background(), authA); errSave == nil {
@@ -755,8 +744,7 @@ func TestGitTokenStoreConcurrentInitializationDoesNotOverwriteCreatedBranch(t *t
 	}
 	winnerFiles := map[string]string{
 		"auths/remote.json":  `{"type":"codex","access_token":"remote"}`,
-		"config/config.yaml": "source: winner\n",
-	}
+		"config/config.yaml": "source: winner\n"}
 	winnerWorktree, errWinnerWorktree := winnerRepo.Worktree()
 	if errWinnerWorktree != nil {
 		t.Fatalf("open winning worktree: %v", errWinnerWorktree)
@@ -774,8 +762,7 @@ func TestGitTokenStoreConcurrentInitializationDoesNotOverwriteCreatedBranch(t *t
 		}
 	}
 	if _, errCommit := winnerWorktree.Commit("Initialize complete store", &git.CommitOptions{Author: &object.Signature{
-		Name: "CLIProxyAPI", Email: "cliproxy@local", When: time.Unix(1711929600, 0),
-	}}); errCommit != nil {
+		Name: "CLIProxyAPI", Email: "cliproxy@local", When: time.Unix(1711929600, 0)}}); errCommit != nil {
 		t.Fatalf("commit winning repository: %v", errCommit)
 	}
 	if _, errRemote := winnerRepo.CreateRemote(&gitconfig.RemoteConfig{Name: "origin", URLs: []string{remoteDir}}); errRemote != nil {
@@ -823,8 +810,7 @@ func TestEnsureRepositoryRetryRestoresTrackedAuthOnUpToDatePull(t *testing.T) {
 		ID:       "retry.json",
 		FileName: "retry.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-	})
+		Metadata: map[string]any{"type": "codex", "access_token": "remote"}})
 	if errSave != nil {
 		t.Fatalf("Save: %v", errSave)
 	}
@@ -897,8 +883,8 @@ func TestEnsureRepositoryRetryRestoresTrackedAuthOnUpToDatePull(t *testing.T) {
 	if errList != nil {
 		t.Fatalf("List after retry: %v", errList)
 	}
-	if len(auths) != 1 || auths[0].ID != "retry.json" {
-		t.Fatalf("List after retry = %#v, want retry.json", auths)
+	if len(auths) != 0 {
+		t.Fatalf("List after retry = %#v, want leftover OAuth JSON to be skipped", auths)
 	}
 
 	if errDelete := store.Delete(context.Background(), authPath); errDelete != nil {
@@ -927,8 +913,7 @@ func TestEnsureRepositoryReconcilesRemoteAuthChangesAroundLocalConfig(t *testing
 	for _, id := range []string{"modified.json", "deleted.json"} {
 		if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 			ID: id, FileName: id, Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "old"},
-		}); errSave != nil {
+			Metadata: map[string]any{"type": "codex", "access_token": "old"}}); errSave != nil {
 			t.Fatalf("Save owner %s: %v", id, errSave)
 		}
 	}
@@ -954,11 +939,10 @@ func TestEnsureRepositoryReconcilesRemoteAuthChangesAroundLocalConfig(t *testing
 	}
 	if _, errSave := storeB.Save(context.Background(), &cliproxyauth.Auth{
 		ID: "modified.json", FileName: "modified.json", Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "new"},
-	}); errSave != nil {
+		Metadata: map[string]any{"type": "codex", "access_token": "new"}}); errSave != nil {
 		t.Fatalf("Save remote auth update: %v", errSave)
 	}
-	if errDelete := storeB.Delete(context.Background(), filepath.Join(storeB.AuthDir(), "deleted.json")); errDelete != nil {
+	if errDelete := storeB.Delete(context.Background(), filepath.Join(storeB.baseDirSnapshot(), "deleted.json")); errDelete != nil {
 		t.Fatalf("Delete remote auth: %v", errDelete)
 	}
 
@@ -966,8 +950,8 @@ func TestEnsureRepositoryReconcilesRemoteAuthChangesAroundLocalConfig(t *testing
 		t.Fatalf("EnsureRepository A after remote auth changes: %v", errEnsure)
 	}
 	assertLocalFileContents(t, storeA.ConfigPath(), "source: local-a\n")
-	assertLocalJSONValue(t, filepath.Join(storeA.AuthDir(), "modified.json"), "access_token", "new")
-	if _, errStat := os.Stat(filepath.Join(storeA.AuthDir(), "deleted.json")); !errors.Is(errStat, os.ErrNotExist) {
+	assertLocalJSONValue(t, filepath.Join(storeA.baseDirSnapshot(), "modified.json"), "access_token", "new")
+	if _, errStat := os.Stat(filepath.Join(storeA.baseDirSnapshot(), "deleted.json")); !errors.Is(errStat, os.ErrNotExist) {
 		t.Fatalf("deleted local auth stat error = %v, want not exist", errStat)
 	}
 }
@@ -984,8 +968,7 @@ func TestEnsureRepositoryReconcilesRemoteConfigChangesAroundLocalAuth(t *testing
 	}
 	if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 		ID: "local.json", FileName: "local.json", Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "old"},
-	}); errSave != nil {
+		Metadata: map[string]any{"type": "codex", "access_token": "old"}}); errSave != nil {
 		t.Fatalf("Save owner auth: %v", errSave)
 	}
 	if errWrite := os.WriteFile(owner.ConfigPath(), []byte("source: original\n"), 0o600); errWrite != nil {
@@ -1005,7 +988,7 @@ func TestEnsureRepositoryReconcilesRemoteConfigChangesAroundLocalAuth(t *testing
 	if errEnsure := storeB.EnsureRepository(); errEnsure != nil {
 		t.Fatalf("EnsureRepository B: %v", errEnsure)
 	}
-	localAuthPath := filepath.Join(storeA.AuthDir(), "local.json")
+	localAuthPath := filepath.Join(storeA.baseDirSnapshot(), "local.json")
 	localAuthContents := `{"type":"codex","access_token":"local-dirty"}`
 	if errWrite := os.WriteFile(localAuthPath, []byte(localAuthContents), 0o600); errWrite != nil {
 		t.Fatalf("write local dirty auth: %v", errWrite)
@@ -1295,25 +1278,21 @@ func TestGitTokenStoreCorruptionRecoveryUsesLatestRemoteAuthTree(t *testing.T) {
 				t.Helper()
 				if _, errSave := store.Save(context.Background(), &cliproxyauth.Auth{
 					ID: "victim.json", FileName: "victim.json", Provider: "codex",
-					Metadata: map[string]any{"type": "codex", "access_token": "remote-new"},
-				}); errSave != nil {
+					Metadata: map[string]any{"type": "codex", "access_token": "remote-new"}}); errSave != nil {
 					t.Fatalf("update remote auth: %v", errSave)
 				}
 			},
 			wantExists:    true,
-			wantAuthToken: "remote-new",
-		},
+			wantAuthToken: "remote-new"},
 		{
 			name: "deletion",
 			updateRemote: func(t *testing.T, store *GitTokenStore) {
 				t.Helper()
-				if errDelete := store.Delete(context.Background(), filepath.Join(store.AuthDir(), "victim.json")); errDelete != nil {
+				if errDelete := store.Delete(context.Background(), filepath.Join(store.baseDirSnapshot(), "victim.json")); errDelete != nil {
 					t.Fatalf("delete remote auth: %v", errDelete)
 				}
 			},
-			wantExists: false,
-		},
-	}
+			wantExists: false}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			root := t.TempDir()
@@ -1327,8 +1306,7 @@ func TestGitTokenStoreCorruptionRecoveryUsesLatestRemoteAuthTree(t *testing.T) {
 			}
 			if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 				ID: "victim.json", FileName: "victim.json", Provider: "codex",
-				Metadata: map[string]any{"type": "codex", "access_token": "remote-old"},
-			}); errSave != nil {
+				Metadata: map[string]any{"type": "codex", "access_token": "remote-old"}}); errSave != nil {
 				t.Fatalf("save initial auth: %v", errSave)
 			}
 
@@ -1343,7 +1321,7 @@ func TestGitTokenStoreCorruptionRecoveryUsesLatestRemoteAuthTree(t *testing.T) {
 			if errEnsure := store.EnsureRepository(); errEnsure != nil {
 				t.Fatalf("EnsureRepository recovery: %v", errEnsure)
 			}
-			victimPath := filepath.Join(store.AuthDir(), "victim.json")
+			victimPath := filepath.Join(store.baseDirSnapshot(), "victim.json")
 			if test.wantExists {
 				assertLocalJSONValue(t, victimPath, "access_token", test.wantAuthToken)
 			} else if _, errStat := os.Stat(victimPath); !errors.Is(errStat, os.ErrNotExist) {
@@ -1352,8 +1330,7 @@ func TestGitTokenStoreCorruptionRecoveryUsesLatestRemoteAuthTree(t *testing.T) {
 
 			if _, errSave := store.Save(context.Background(), &cliproxyauth.Auth{
 				ID: "unrelated.json", FileName: "unrelated.json", Provider: "codex",
-				Metadata: map[string]any{"type": "codex", "access_token": "local"},
-			}); errSave != nil {
+				Metadata: map[string]any{"type": "codex", "access_token": "local"}}); errSave != nil {
 				t.Fatalf("Save after recovery: %v", errSave)
 			}
 			assertRemoteTreePath(t, remoteDir, "master", "auths/victim.json", test.wantExists)
@@ -1378,8 +1355,7 @@ func TestGitTokenStoreCorruptionRecoveryPreservesOnlyNonConflictingLocalChanges(
 		}
 		if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 			ID: "victim.json", FileName: "victim.json", Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "remote-old"},
-		}); errSave != nil {
+			Metadata: map[string]any{"type": "codex", "access_token": "remote-old"}}); errSave != nil {
 			t.Fatalf("save initial auth: %v", errSave)
 		}
 		store := NewGitTokenStore(remoteDir, "", "", "")
@@ -1397,8 +1373,7 @@ func TestGitTokenStoreCorruptionRecoveryPreservesOnlyNonConflictingLocalChanges(
 		}
 		if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 			ID: "victim.json", FileName: "victim.json", Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "remote-new"},
-		}); errSave != nil {
+			Metadata: map[string]any{"type": "codex", "access_token": "remote-new"}}); errSave != nil {
 			t.Fatalf("update remote auth: %v", errSave)
 		}
 		removeHeadFileObject(t, workspaceDir, "corrupt-object.txt")
@@ -1407,20 +1382,19 @@ func TestGitTokenStoreCorruptionRecoveryPreservesOnlyNonConflictingLocalChanges(
 			t.Fatalf("EnsureRepository recovery: %v", errEnsure)
 		}
 		assertLocalFileContents(t, store.ConfigPath(), "source: local\n")
-		assertLocalJSONValue(t, filepath.Join(store.AuthDir(), "victim.json"), "access_token", "remote-new")
+		assertLocalJSONValue(t, filepath.Join(store.baseDirSnapshot(), "victim.json"), "access_token", "remote-new")
 	})
 
 	t.Run("same-path conflict", func(t *testing.T) {
 		workspaceDir, owner, store := setup(t)
-		victimPath := filepath.Join(store.AuthDir(), "victim.json")
+		victimPath := filepath.Join(store.baseDirSnapshot(), "victim.json")
 		localContents := `{"type":"codex","access_token":"local"}`
 		if errWrite := os.WriteFile(victimPath, []byte(localContents), 0o600); errWrite != nil {
 			t.Fatalf("write local auth: %v", errWrite)
 		}
 		if _, errSave := owner.Save(context.Background(), &cliproxyauth.Auth{
 			ID: "victim.json", FileName: "victim.json", Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "remote-new"},
-		}); errSave != nil {
+			Metadata: map[string]any{"type": "codex", "access_token": "remote-new"}}); errSave != nil {
 			t.Fatalf("update remote auth: %v", errSave)
 		}
 		removeHeadFileObject(t, workspaceDir, "corrupt-object.txt")
@@ -1478,8 +1452,7 @@ func TestGitTokenStoreFullPackfileCorruptionFailsClosedWithDirtyManagedFile(t *t
 		remoteDir, workspaceDir, store := setup(t)
 		authPath, errSave := store.Save(context.Background(), &cliproxyauth.Auth{
 			ID: "dirty.json", FileName: "dirty.json", Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-		})
+			Metadata: map[string]any{"type": "codex", "access_token": "remote"}})
 		if errSave != nil {
 			t.Fatalf("Save initial auth: %v", errSave)
 		}
@@ -1492,8 +1465,7 @@ func TestGitTokenStoreFullPackfileCorruptionFailsClosedWithDirtyManagedFile(t *t
 
 		_, errSave = store.Save(context.Background(), &cliproxyauth.Auth{
 			ID: "unrelated.json", FileName: "unrelated.json", Provider: "codex",
-			Metadata: map[string]any{"type": "codex", "access_token": "unrelated"},
-		})
+			Metadata: map[string]any{"type": "codex", "access_token": "unrelated"}})
 		if errSave == nil || !strings.Contains(errSave.Error(), "inspect recovery baseline") {
 			t.Fatalf("Save error = %v, want fail-closed recovery baseline error", errSave)
 		}
@@ -1518,8 +1490,7 @@ func TestGitTokenStoreMissingPackfileRecoveryFailsClosedWithoutBaseline(t *testi
 		ID:       "recover.json",
 		FileName: "recover.json",
 		Provider: "codex",
-		Metadata: map[string]any{"type": "codex", "access_token": "remote"},
-	}
+		Metadata: map[string]any{"type": "codex", "access_token": "remote"}}
 	authPath, errSave := store.Save(context.Background(), auth)
 	if errSave != nil {
 		t.Fatalf("Save: %v", errSave)
@@ -1595,8 +1566,7 @@ func TestCommitAndPushLockedPushesBeforeRunningGC(t *testing.T) {
 	workspaceDir := filepath.Join(root, "workspace")
 	updates := []string{
 		"local master update one\n",
-		"local master update two\n",
-	}
+		"local master update two\n"}
 	for _, contents := range updates {
 		if err := os.WriteFile(filepath.Join(workspaceDir, "branch.txt"), []byte(contents), 0o600); err != nil {
 			t.Fatalf("write local master marker: %v", err)
@@ -1723,8 +1693,7 @@ func removeHeadFileObject(t *testing.T, repoDir, path string) {
 		t.Fatalf("add corruption marker: %v", errAdd)
 	}
 	if _, errCommit := worktree.Commit("Add corruption marker", &git.CommitOptions{Author: &object.Signature{
-		Name: "CLIProxyAPI", Email: "cliproxy@local", When: time.Unix(1711929600, 0),
-	}}); errCommit != nil {
+		Name: "CLIProxyAPI", Email: "cliproxy@local", When: time.Unix(1711929600, 0)}}); errCommit != nil {
 		t.Fatalf("commit corruption marker: %v", errCommit)
 	}
 	head, errHead := repo.Head()
@@ -1859,8 +1828,7 @@ func setupGitRemoteRepository(t *testing.T, root, defaultBranch string, branches
 	}
 	if err := seedRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
-		RefSpecs:   []gitconfig.RefSpec{gitconfig.RefSpec("refs/heads/*:refs/heads/*")},
-	}); err != nil {
+		RefSpecs:   []gitconfig.RefSpec{gitconfig.RefSpec("refs/heads/*:refs/heads/*")}}); err != nil {
 		t.Fatalf("push seed branches: %v", err)
 	}
 
@@ -1893,9 +1861,7 @@ func commitBranchMarker(t *testing.T, seedDir string, worktree *git.Worktree, br
 		Author: &object.Signature{
 			Name:  "CLIProxyAPI",
 			Email: "cliproxy@local",
-			When:  time.Unix(1711929600, 0),
-		},
-	}); err != nil {
+			When:  time.Unix(1711929600, 0)}}); err != nil {
 		t.Fatalf("commit branch marker for %s: %v", branch.name, err)
 	}
 }
@@ -1923,9 +1889,7 @@ func advanceRemoteBranch(t *testing.T, seedDir, remoteDir, branch, contents, mes
 	if err := seedRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs: []gitconfig.RefSpec{
-			gitconfig.RefSpec(plumbing.NewBranchReferenceName(branch).String() + ":" + plumbing.NewBranchReferenceName(branch).String()),
-		},
-	}); err != nil {
+			gitconfig.RefSpec(plumbing.NewBranchReferenceName(branch).String() + ":" + plumbing.NewBranchReferenceName(branch).String())}}); err != nil {
 		t.Fatalf("push branch %s update to %s: %v", branch, remoteDir, err)
 	}
 }
@@ -1956,9 +1920,7 @@ func advanceRemoteBranchFromNewBranch(t *testing.T, seedDir, remoteDir, branch, 
 	if err := seedRepo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs: []gitconfig.RefSpec{
-			gitconfig.RefSpec(plumbing.NewBranchReferenceName(branch).String() + ":" + plumbing.NewBranchReferenceName(branch).String()),
-		},
-	}); err != nil {
+			gitconfig.RefSpec(plumbing.NewBranchReferenceName(branch).String() + ":" + plumbing.NewBranchReferenceName(branch).String())}}); err != nil {
 		t.Fatalf("push new branch %s update to %s: %v", branch, remoteDir, err)
 	}
 }

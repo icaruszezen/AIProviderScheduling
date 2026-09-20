@@ -92,8 +92,7 @@ func TestFileRequestLogger_HomeEnabled_ForwardsWhenRequestLogEnabled(t *testing.
 
 	requestHeaders := map[string][]string{
 		"Content-Type":  {"application/json"},
-		"Authorization": {"Bearer secret"},
-	}
+		"Authorization": {"Bearer secret"}}
 
 	errLog := logger.LogRequest(
 		"/v1/chat/completions",

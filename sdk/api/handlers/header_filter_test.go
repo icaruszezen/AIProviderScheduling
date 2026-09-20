@@ -36,8 +36,7 @@ func TestFilterUpstreamHeaders_RemovesConnectionScopedHeaders(t *testing.T) {
 		"X-Hop-C",
 		"Set-Cookie",
 		"x-cpa-trace-id",
-		"Access-Control-Expose-Headers",
-	}
+		"Access-Control-Expose-Headers"}
 	for _, key := range blockedHeaderKeys {
 		value := filtered.Get(key)
 		if value != "" {

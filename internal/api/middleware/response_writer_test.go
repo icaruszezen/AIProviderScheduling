@@ -22,8 +22,7 @@ func TestExtractRequestBodyPrefersOverride(t *testing.T) {
 	c, _ := gin.CreateTestContext(recorder)
 
 	wrapper := &ResponseWriterWrapper{
-		requestInfo: &RequestInfo{Body: []byte("original-body")},
-	}
+		requestInfo: &RequestInfo{Body: []byte("original-body")}}
 
 	body := wrapper.extractRequestBody(c)
 	if string(body) != "original-body" {
@@ -140,11 +139,9 @@ func TestFinalizeStreamingWritesAPIWebsocketTimeline(t *testing.T) {
 			Method:    "POST",
 			Headers:   map[string][]string{"Content-Type": {"application/json"}},
 			RequestID: "req-1",
-			Timestamp: time.Date(2026, time.April, 1, 12, 0, 0, 0, time.UTC),
-		},
+			Timestamp: time.Date(2026, time.April, 1, 12, 0, 0, 0, time.UTC)},
 		isStreaming:  true,
-		streamWriter: streamWriter,
-	}
+		streamWriter: streamWriter}
 
 	c.Set("API_WEBSOCKET_TIMELINE", []byte("Timestamp: 2026-04-01T12:00:00Z\nEvent: api.websocket.request\n{}"))
 
@@ -220,65 +217,53 @@ func TestHasActionableError(t *testing.T) {
 		{
 			name:       "200 ok without errors",
 			statusCode: http.StatusOK,
-			want:       false,
-		},
+			want:       false},
 		{
 			name:       "499 client closed request",
 			statusCode: clienterror.StatusClientClosedRequest,
-			want:       false,
-		},
+			want:       false},
 		{
 			name:       "499 with context canceled api error",
 			statusCode: clienterror.StatusClientClosedRequest,
 			apiErrors:  []*interfaces.ErrorMessage{{StatusCode: clienterror.StatusClientClosedRequest, Error: context.Canceled}},
-			want:       false,
-		},
+			want:       false},
 		{
 			name:       "200 with canceled context",
 			statusCode: http.StatusOK,
 			ctx:        canceledCtx,
-			want:       false,
-		},
+			want:       false},
 		{
 			name:       "0 with canceled context",
 			statusCode: 0,
 			ctx:        canceledCtx,
-			want:       false,
-		},
+			want:       false},
 		{
 			name:       "400 bad request",
 			statusCode: http.StatusBadRequest,
-			want:       true,
-		},
+			want:       true},
 		{
 			name:       "429 rate limit",
 			statusCode: http.StatusTooManyRequests,
-			want:       true,
-		},
+			want:       true},
 		{
 			name:       "500 internal server error",
 			statusCode: http.StatusInternalServerError,
-			want:       true,
-		},
+			want:       true},
 		{
 			name:       "503 with canceled context",
 			statusCode: http.StatusServiceUnavailable,
 			ctx:        canceledCtx,
-			want:       true,
-		},
+			want:       true},
 		{
 			name:       "200 with actionable upstream api error",
 			statusCode: http.StatusOK,
 			apiErrors:  []*interfaces.ErrorMessage{{StatusCode: http.StatusBadGateway, Error: errors.New("upstream failed")}},
-			want:       true,
-		},
+			want:       true},
 		{
 			name:       "200 with non-actionable cancellation api error",
 			statusCode: http.StatusOK,
 			apiErrors:  []*interfaces.ErrorMessage{{StatusCode: 0, Error: fmt.Errorf("read: %w", context.Canceled)}},
-			want:       false,
-		},
-	}
+			want:       false}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -339,9 +324,7 @@ func TestFinalizeExcludes499FromForceLog(t *testing.T) {
 			URL:       "/v1/responses",
 			Method:    "POST",
 			RequestID: "req-499",
-			Timestamp: time.Now(),
-		},
-	}
+			Timestamp: time.Now()}}
 
 	if err := wrapper.Finalize(c); err != nil {
 		t.Fatalf("Finalize error: %v", err)
@@ -367,9 +350,7 @@ func TestFinalizeIncludes500InForceLog(t *testing.T) {
 			URL:       "/v1/responses",
 			Method:    "POST",
 			RequestID: "req-500",
-			Timestamp: time.Now(),
-		},
-	}
+			Timestamp: time.Now()}}
 
 	if err := wrapper.Finalize(c); err != nil {
 		t.Fatalf("Finalize error: %v", err)

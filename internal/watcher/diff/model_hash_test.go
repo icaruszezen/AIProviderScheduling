@@ -10,8 +10,7 @@ import (
 func TestComputeOpenAICompatModelsHash_Deterministic(t *testing.T) {
 	models := []config.OpenAICompatibilityModel{
 		{Name: "gpt-4", Alias: "gpt4"},
-		{Name: "gpt-3.5-turbo"},
-	}
+		{Name: "gpt-3.5-turbo"}}
 	hash1 := ComputeOpenAICompatModelsHash(models)
 	hash2 := ComputeOpenAICompatModelsHash(models)
 	if hash1 == "" {
@@ -55,12 +54,10 @@ func TestComputeOpenAICompatModelsHashPreservesRoutingOrderAndDuplicates(t *test
 		{Name: "gpt-4", Alias: "gpt4"},
 		{Name: " "},
 		{Name: "GPT-4", Alias: "GPT4"},
-		{Alias: "a1"},
-	}
+		{Alias: "a1"}}
 	b := []config.OpenAICompatibilityModel{
 		{Alias: "A1"},
-		{Name: "gpt-4", Alias: "gpt4"},
-	}
+		{Name: "gpt-4", Alias: "gpt4"}}
 	h1 := ComputeOpenAICompatModelsHash(a)
 	h2 := ComputeOpenAICompatModelsHash(b)
 	if h1 == "" || h2 == "" {
@@ -87,11 +84,9 @@ func TestComputeVertexCompatModelsHashPreservesDuplicates(t *testing.T) {
 	a := []config.VertexCompatModel{
 		{Name: "m1", Alias: "a1"},
 		{Name: " "},
-		{Name: "M1", Alias: "A1"},
-	}
+		{Name: "M1", Alias: "A1"}}
 	b := []config.VertexCompatModel{
-		{Name: "m1", Alias: "a1"},
-	}
+		{Name: "m1", Alias: "a1"}}
 	if h1, h2 := ComputeVertexCompatModelsHash(a), ComputeVertexCompatModelsHash(b); h1 == "" || h1 == h2 {
 		t.Fatalf("expected duplicate routing entries to change hash, got %q / %q", h1, h2)
 	}
@@ -119,11 +114,9 @@ func TestComputeClaudeModelsHashPreservesDuplicates(t *testing.T) {
 	a := []config.ClaudeModel{
 		{Name: "m1", Alias: "a1"},
 		{Name: " "},
-		{Name: "M1", Alias: "A1"},
-	}
+		{Name: "M1", Alias: "A1"}}
 	b := []config.ClaudeModel{
-		{Name: "m1", Alias: "a1"},
-	}
+		{Name: "m1", Alias: "a1"}}
 	if h1, h2 := ComputeClaudeModelsHash(a), ComputeClaudeModelsHash(b); h1 == "" || h1 == h2 {
 		t.Fatalf("expected duplicate routing entries to change hash, got %q / %q", h1, h2)
 	}
@@ -133,11 +126,9 @@ func TestComputeCodexModelsHashPreservesDuplicates(t *testing.T) {
 	a := []config.CodexModel{
 		{Name: "m1", Alias: "a1"},
 		{Name: " "},
-		{Name: "M1", Alias: "A1"},
-	}
+		{Name: "M1", Alias: "A1"}}
 	b := []config.CodexModel{
-		{Name: "m1", Alias: "a1"},
-	}
+		{Name: "m1", Alias: "a1"}}
 	if h1, h2 := ComputeCodexModelsHash(a), ComputeCodexModelsHash(b); h1 == "" || h1 == h2 {
 		t.Fatalf("expected duplicate routing entries to change hash, got %q / %q", h1, h2)
 	}
@@ -152,29 +143,23 @@ func TestComputeModelHashesIncludeDisplayName(t *testing.T) {
 		{
 			name:    "openai compatibility",
 			base:    ComputeOpenAICompatModelsHash([]config.OpenAICompatibilityModel{{Name: "m", Alias: "a", DisplayName: "One"}}),
-			changed: ComputeOpenAICompatModelsHash([]config.OpenAICompatibilityModel{{Name: "m", Alias: "a", DisplayName: "Two"}}),
-		},
+			changed: ComputeOpenAICompatModelsHash([]config.OpenAICompatibilityModel{{Name: "m", Alias: "a", DisplayName: "Two"}})},
 		{
 			name:    "vertex",
 			base:    ComputeVertexCompatModelsHash([]config.VertexCompatModel{{Name: "m", Alias: "a", DisplayName: "One"}}),
-			changed: ComputeVertexCompatModelsHash([]config.VertexCompatModel{{Name: "m", Alias: "a", DisplayName: "Two"}}),
-		},
+			changed: ComputeVertexCompatModelsHash([]config.VertexCompatModel{{Name: "m", Alias: "a", DisplayName: "Two"}})},
 		{
 			name:    "claude",
 			base:    ComputeClaudeModelsHash([]config.ClaudeModel{{Name: "m", Alias: "a", DisplayName: "One"}}),
-			changed: ComputeClaudeModelsHash([]config.ClaudeModel{{Name: "m", Alias: "a", DisplayName: "Two"}}),
-		},
+			changed: ComputeClaudeModelsHash([]config.ClaudeModel{{Name: "m", Alias: "a", DisplayName: "Two"}})},
 		{
 			name:    "codex",
 			base:    ComputeCodexModelsHash([]config.CodexModel{{Name: "m", Alias: "a", DisplayName: "One"}}),
-			changed: ComputeCodexModelsHash([]config.CodexModel{{Name: "m", Alias: "a", DisplayName: "Two"}}),
-		},
+			changed: ComputeCodexModelsHash([]config.CodexModel{{Name: "m", Alias: "a", DisplayName: "Two"}})},
 		{
 			name:    "gemini",
 			base:    ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Alias: "a", DisplayName: "One"}}),
-			changed: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Alias: "a", DisplayName: "Two"}}),
-		},
-	}
+			changed: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Alias: "a", DisplayName: "Two"}})}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -295,8 +280,7 @@ func TestComputeModelHashesIncludeThinking(t *testing.T) {
 		{name: "vertex", low: ComputeVertexCompatModelsHash([]config.VertexCompatModel{{Name: "m", Thinking: low}}), high: ComputeVertexCompatModelsHash([]config.VertexCompatModel{{Name: "m", Thinking: high}})},
 		{name: "claude", low: ComputeClaudeModelsHash([]config.ClaudeModel{{Name: "m", Thinking: low}}), high: ComputeClaudeModelsHash([]config.ClaudeModel{{Name: "m", Thinking: high}})},
 		{name: "codex", low: ComputeCodexModelsHash([]config.CodexModel{{Name: "m", Thinking: low}}), high: ComputeCodexModelsHash([]config.CodexModel{{Name: "m", Thinking: high}})},
-		{name: "gemini", low: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Thinking: low}}), high: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Thinking: high}})},
-	}
+		{name: "gemini", low: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Thinking: low}}), high: ComputeGeminiModelsHash([]config.GeminiModel{{Name: "m", Thinking: high}})}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.low == "" || tc.low == tc.high {

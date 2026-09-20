@@ -20,7 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"golang.org/x/sync/singleflight"
 )
 
 type antigravity429Category string
@@ -56,11 +55,9 @@ var (
 	antigravityShortCooldownByAuth    sync.Map
 	antigravityCreditsBalanceByAuth   sync.Map // auth.ID → antigravityCreditsBalance
 	antigravityCreditsHintRefreshByID sync.Map // auth.ID → *antigravityCreditsHintRefreshState
-	antigravityRefreshGroup           singleflight.Group
 	antigravityQuotaExhaustedKeywords = []string{
 		"quota_exhausted",
-		"quota exhausted",
-	}
+		"quota exhausted"}
 )
 
 type antigravityKVClient interface {
@@ -84,13 +81,6 @@ type antigravityCreditsBalance struct {
 type antigravityCreditsHintRefreshState struct {
 	mu          sync.Mutex
 	lastAttempt time.Time
-}
-
-type antigravityTokenRefreshData struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
-	TokenType    string `json:"token_type"`
 }
 
 func antigravityAuthHasCredits(auth *cliproxyauth.Auth) bool {
@@ -155,8 +145,7 @@ func antigravityCreditsBalanceAvailable(authID string, bal antigravityCreditsBal
 		CreditAmount:    bal.CreditAmount,
 		MinCreditAmount: bal.MinCreditAmount,
 		PaidTierID:      bal.PaidTierID,
-		UpdatedAt:       time.Now(),
-	})
+		UpdatedAt:       time.Now()})
 	return available
 }
 
@@ -288,22 +277,19 @@ func markAntigravityCreditsPermanentlyDisabled(auth *cliproxyauth.Auth) {
 	authID := strings.TrimSpace(auth.ID)
 	state := antigravityCreditsFailureState{
 		PermanentlyDisabled:      true,
-		ExplicitBalanceExhausted: true,
-	}
+		ExplicitBalanceExhausted: true}
 	antigravityCreditsFailureByAuth.Store(authID, state)
 	bal := antigravityCreditsBalance{
 		CreditAmount:    0,
 		MinCreditAmount: 1,
-		Known:           true,
-	}
+		Known:           true}
 	storeAntigravityCreditsBalanceBestEffort(authID, bal)
 	cliproxyauth.SetAntigravityCreditsHint(authID, cliproxyauth.AntigravityCreditsHint{
 		Known:           true,
 		Available:       false,
 		CreditAmount:    0,
 		MinCreditAmount: 1,
-		UpdatedAt:       time.Now(),
-	})
+		UpdatedAt:       time.Now()})
 }
 
 func clearAntigravityCreditsPermanentlyDisabled(auth *cliproxyauth.Auth) {
@@ -357,7 +343,7 @@ func (e *AntigravityExecutor) maybeRefreshAntigravityCreditsHint(ctx context.Con
 		return
 	}
 	if strings.TrimSpace(accessToken) == "" {
-		accessToken = metaStringValue(auth.Metadata, "access_token")
+		accessToken = antigravityAPIKey(auth)
 	}
 	if strings.TrimSpace(accessToken) == "" {
 		return
@@ -433,7 +419,7 @@ func (e *AntigravityExecutor) updateAntigravityCreditsBalance(ctx context.Contex
 	}
 	token := strings.TrimSpace(accessToken)
 	if token == "" {
-		token = metaStringValue(auth.Metadata, "access_token")
+		token = antigravityAPIKey(auth)
 	}
 	if token == "" {
 		return
@@ -442,9 +428,7 @@ func (e *AntigravityExecutor) updateAntigravityCreditsBalance(ctx context.Contex
 	userAgent := resolveUserAgent(auth)
 	loadReqBody, errMarshal := json.Marshal(map[string]any{
 		"metadata": map[string]string{
-			"ideType": "ANTIGRAVITY",
-		},
-	})
+			"ideType": "ANTIGRAVITY"}})
 	if errMarshal != nil {
 		log.Debugf("antigravity executor: marshal loadCodeAssist request error: %v", errMarshal)
 		return
@@ -488,8 +472,7 @@ func (e *AntigravityExecutor) updateAntigravityCreditsBalance(ctx context.Contex
 			Known:      true,
 			Available:  false,
 			PaidTierID: paidTierID,
-			UpdatedAt:  time.Now(),
-		})
+			UpdatedAt:  time.Now()})
 		return
 	}
 	for _, credit := range credits.Array() {
@@ -508,8 +491,7 @@ func (e *AntigravityExecutor) updateAntigravityCreditsBalance(ctx context.Contex
 			CreditAmount:    creditAmount,
 			MinCreditAmount: minAmount,
 			PaidTierID:      paidTierID,
-			Known:           true,
-		}
+			Known:           true}
 		storeAntigravityCreditsBalanceBestEffort(authID, bal)
 		cliproxyauth.SetAntigravityCreditsHint(authID, cliproxyauth.AntigravityCreditsHint{
 			Known:           true,
@@ -517,8 +499,7 @@ func (e *AntigravityExecutor) updateAntigravityCreditsBalance(ctx context.Contex
 			CreditAmount:    creditAmount,
 			MinCreditAmount: minAmount,
 			PaidTierID:      paidTierID,
-			UpdatedAt:       time.Now(),
-		})
+			UpdatedAt:       time.Now()})
 		if creditAmount >= minAmount {
 			clearAntigravityCreditsPermanentlyDisabled(auth)
 		}

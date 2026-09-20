@@ -49,16 +49,13 @@ func TestManager_RefreshAuthUnauthorizedFailureStopsAutoRefreshRetry(t *testing.
 	ctx := context.Background()
 	manager := NewManager(nil, &RoundRobinSelector{}, nil)
 	manager.RegisterExecutor(unauthorizedRefreshTestExecutor{
-		schedulerProviderTestExecutor: schedulerProviderTestExecutor{provider: "codex"},
-	})
+		schedulerProviderTestExecutor: schedulerProviderTestExecutor{provider: "codex"}})
 
 	auth := &Auth{
-		ID:       "unauthorized-refresh",
-		Provider: "codex",
-		Metadata: map[string]any{
-			"email": "x@example.com",
-		},
-	}
+		ID:         "unauthorized-refresh",
+		Provider:   "codex",
+		Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "test-key"},
+		Metadata:   map[string]any{"email": "x@example.com"}}
 	if _, errRegister := manager.Register(ctx, auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -85,9 +82,6 @@ func TestManager_RefreshAuthUnauthorizedFailureStopsAutoRefreshRetry(t *testing.
 	if manager.shouldRefresh(updated, now) {
 		t.Fatal("expected unauthorized auth to stop refresh attempts")
 	}
-	if _, shouldSchedule := nextRefreshCheckAt(now, updated, time.Second); shouldSchedule {
-		t.Fatal("expected unauthorized auth to be removed from the auto-refresh schedule")
-	}
 }
 
 func TestManager_RefreshSchedulerEntry_RebuildsSupportedModelSetAfterModelRegistration(t *testing.T) {
@@ -102,8 +96,7 @@ func TestManager_RefreshSchedulerEntry_RebuildsSupportedModelSetAfterModelRegist
 			prime: func(manager *Manager, auth *Auth) error {
 				_, errRegister := manager.Register(ctx, auth)
 				return errRegister
-			},
-		},
+			}},
 		{
 			name: "update",
 			prime: func(manager *Manager, auth *Auth) error {
@@ -115,9 +108,7 @@ func TestManager_RefreshSchedulerEntry_RebuildsSupportedModelSetAfterModelRegist
 				updated.Metadata = map[string]any{"updated": true}
 				_, errUpdate := manager.Update(ctx, updated)
 				return errUpdate
-			},
-		},
-	}
+			}}}
 
 	for _, testCase := range testCases {
 		testCase := testCase
@@ -125,8 +116,7 @@ func TestManager_RefreshSchedulerEntry_RebuildsSupportedModelSetAfterModelRegist
 			manager := NewManager(nil, &RoundRobinSelector{}, nil)
 			auth := &Auth{
 				ID:       "refresh-entry-" + testCase.name,
-				Provider: "gemini",
-			}
+				Provider: "gemini"}
 			if errPrime := testCase.prime(manager, auth); errPrime != nil {
 				t.Fatalf("prime auth %s: %v", testCase.name, errPrime)
 			}
@@ -167,8 +157,7 @@ func TestManager_PickNext_RebuildsSchedulerAfterModelCooldownError(t *testing.T)
 
 	oldAuth := &Auth{
 		ID:       "cooldown-stale-old",
-		Provider: "gemini",
-	}
+		Provider: "gemini"}
 	if _, errRegister := manager.Register(ctx, oldAuth); errRegister != nil {
 		t.Fatalf("register old auth: %v", errRegister)
 	}
@@ -178,13 +167,11 @@ func TestManager_PickNext_RebuildsSchedulerAfterModelCooldownError(t *testing.T)
 		Provider: "gemini",
 		Model:    "scheduler-cooldown-rebuild-model",
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusTooManyRequests, Message: "quota"}})
 
 	newAuth := &Auth{
 		ID:       "cooldown-stale-new",
-		Provider: "gemini",
-	}
+		Provider: "gemini"}
 	if _, errRegister := manager.Register(ctx, newAuth); errRegister != nil {
 		t.Fatalf("register new auth: %v", errRegister)
 	}

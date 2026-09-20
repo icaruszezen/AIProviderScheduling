@@ -63,8 +63,7 @@ func SanitizeGeminiRequestThoughtSignatures(payload []byte, contentsPath string)
 						TargetProvider: SignatureProviderGemini,
 						BlockKind:      SignatureBlockKindGeminiModelPart,
 						Action:         SignatureActionDropSignature,
-						Reason:         "functionResponse parts cannot replay thought signatures",
-					}, rawSignature, true)
+						Reason:         "functionResponse parts cannot replay thought signatures"}, rawSignature, true)
 				}
 				partItems = append(partItems, partJSON)
 				return true
@@ -205,8 +204,7 @@ func logGeminiThoughtSignatureSanitize(contentsPath string, contentIndex, partIn
 		"block_kind":        string(decision.BlockKind),
 		"detected_provider": string(decision.DetectedProvider),
 		"has_signature":     hasSignature,
-		"signature_length":  len(strings.TrimSpace(rawSignature)),
-	}).Debug("gemini request: sanitized thoughtSignature before upstream")
+		"signature_length":  len(strings.TrimSpace(rawSignature))}).Debug("gemini request: sanitized thoughtSignature before upstream")
 }
 
 var geminiPartThoughtSignaturePaths = []string{
@@ -216,8 +214,7 @@ var geminiPartThoughtSignaturePaths = []string{
 	"functionCall.thought_signature",
 	"functionResponse.thoughtSignature",
 	"functionResponse.thought_signature",
-	"extra_content.google.thought_signature",
-}
+	"extra_content.google.thought_signature"}
 
 func geminiPartThoughtSignature(part gjson.Result) (string, bool) {
 	for _, path := range geminiPartThoughtSignaturePaths {

@@ -21,8 +21,7 @@ func TestHomeWebsocketReusesCanonicalModelSelection(t *testing.T) {
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "canonical-model-session",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "home-auth"}}
 	for _, model := range []string{"model-a(high)", "model-a"} {
 		if _, errExecute := manager.Execute(ctx, []string{"home-execution"}, cliproxyexecutor.Request{Model: model}, opts); errExecute != nil {
 			t.Fatalf("Execute(%q) error = %v", model, errExecute)

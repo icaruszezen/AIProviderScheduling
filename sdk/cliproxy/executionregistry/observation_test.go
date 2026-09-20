@@ -20,8 +20,7 @@ func TestFreezeInFlightWaitsForPendingBarrierAndCopiesScopes(t *testing.T) {
 
 	scope, errInstall := registry.Install(pending, ScopeSpec{
 		RequestID: "req-a", CredentialID: "cred", Model: "gpt-5",
-		Kind: "http", StartedAt: time.Unix(10, 0).UTC(), Accounted: true,
-	})
+		Kind: "http", StartedAt: time.Unix(10, 0).UTC(), Accounted: true})
 	if errInstall != nil {
 		t.Fatal(errInstall)
 	}

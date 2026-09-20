@@ -39,8 +39,7 @@ func TestManifestFromReleaseBuildsPinnedManifest(t *testing.T) {
 			Name:        "Sample Provider",
 			Description: "Adds sample provider support.",
 			Author:      "author-name",
-			Repository:  "https://github.com/author-name/sample-provider",
-		},
+			Repository:  "https://github.com/author-name/sample-provider"},
 		Release{TagName: "v0.2.0"},
 	)
 	if errManifest != nil {
@@ -69,10 +68,7 @@ func TestManifestFromPluginBuildsDirectManifest(t *testing.T) {
 					GOOS:   "linux",
 					GOARCH: "amd64",
 					URL:    "https://downloads.example/sample-provider.zip",
-					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-				}},
-			},
-		},
+					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}}},
 	)
 	if errManifest != nil {
 		t.Fatalf("ManifestFromPlugin() error = %v", errManifest)
@@ -97,9 +93,7 @@ func TestManifestFromPluginRejectsArtifactQuery(t *testing.T) {
 		ID: "sample-provider", Name: "Sample Provider", Description: "Sample", Author: "tester", Version: "1.0.0",
 		Install: InstallPlan{Type: InstallTypeDirect, Artifacts: []Artifact{{
 			GOOS: "linux", GOARCH: "amd64", URL: "https://downloads.example/sample.zip?X-Amz-Signature=secret",
-			SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-		}}},
-	})
+			SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}}})
 	if errManifest == nil {
 		t.Fatal("ManifestFromPlugin() error = nil, want query rejection")
 	}
@@ -121,9 +115,7 @@ func TestPluginArtifactsIncludesVersionArtifacts(t *testing.T) {
 				GOOS:   "windows",
 				GOARCH: "x64",
 				URL:    "https://downloads.example/sample-provider.zip",
-				SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-			}},
-		},
+				SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}},
 		Versions: []Version{{
 			Version: "0.3.0",
 			Install: InstallPlan{
@@ -132,11 +124,7 @@ func TestPluginArtifactsIncludesVersionArtifacts(t *testing.T) {
 					GOOS:   "linux",
 					GOARCH: "aarch64",
 					URL:    "https://downloads.example/sample-provider-0.3.0.zip",
-					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-				}},
-			},
-		}},
-	}
+					SHA256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}}}}}
 
 	artifacts := PluginArtifacts(plugin)
 	if len(artifacts) != 2 ||
@@ -154,6 +142,5 @@ func validTestManifest() Manifest {
 		Author:      "author-name",
 		Version:     "0.2.0",
 		ReleaseTag:  "v0.2.0",
-		Repository:  "https://github.com/author-name/sample-provider",
-	}
+		Repository:  "https://github.com/author-name/sample-provider"}
 }

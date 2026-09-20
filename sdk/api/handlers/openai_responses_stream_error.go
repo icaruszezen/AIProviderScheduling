@@ -110,8 +110,7 @@ func BuildOpenAIResponsesStreamErrorChunk(status int, errText string, sequenceNu
 		Type:           "error",
 		Code:           code,
 		Message:        message,
-		SequenceNumber: sequenceNumber,
-	})
+		SequenceNumber: sequenceNumber})
 	if err == nil {
 		return data
 	}
@@ -121,8 +120,7 @@ func BuildOpenAIResponsesStreamErrorChunk(status int, errText string, sequenceNu
 		Type:           "error",
 		Code:           "internal_server_error",
 		Message:        message,
-		SequenceNumber: sequenceNumber,
-	})
+		SequenceNumber: sequenceNumber})
 	if len(data) > 0 {
 		return data
 	}
@@ -149,8 +147,7 @@ func openAIResponsesStreamFailedErrorDetail(status int, errText, code, message s
 	return map[string]any{
 		"type":    errorType,
 		"code":    code,
-		"message": message,
-	}
+		"message": message}
 }
 
 // BuildOpenAIResponsesStreamFailedChunk builds the terminal Responses event used by official Codex clients.
@@ -179,9 +176,7 @@ func BuildOpenAIResponsesStreamFailedChunk(status int, errText string, sequenceN
 		SequenceNumber: sequenceNumber,
 		Response: openAIResponsesStreamFailedResponse{
 			Status: "failed",
-			Error:  openAIResponsesStreamFailedErrorDetail(status, errText, legacyPayload.Code, legacyPayload.Message),
-		},
-	})
+			Error:  openAIResponsesStreamFailedErrorDetail(status, errText, legacyPayload.Code, legacyPayload.Message)}})
 	if errMarshal == nil {
 		return data
 	}

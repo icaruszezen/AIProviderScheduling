@@ -33,8 +33,7 @@ func newFastDirectResponseTestError(status int, body string) error {
 	return &fastDirectResponseTestError{response: &cliproxyexecutor.RequestTerminatedError{
 		HTTPStatus: status,
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
-		Body:       []byte(body),
-	}}
+		Body:       []byte(body)}}
 }
 
 func TestManagerFastLocalErrorDoesNotRefreshRetryOrCoolCredential(t *testing.T) {
@@ -56,8 +55,7 @@ func TestManagerFastLocalErrorDoesNotRefreshRetryOrCoolCredential(t *testing.T) 
 			run: func(manager *Manager, model string) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			configure: func(executor *claudeCancellationTestExecutor, calls *atomic.Int32) {
@@ -79,9 +77,7 @@ func TestManagerFastLocalErrorDoesNotRefreshRetryOrCoolCredential(t *testing.T) 
 				for range stream.Chunks {
 				}
 				return nil
-			},
-		},
-	}
+			}}}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -136,8 +132,7 @@ func TestManagerFastDirectErrorDoesNotRefreshRetryOrCoolCredential(t *testing.T)
 			run: func(manager *Manager, model string) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			configure: func(executor *claudeCancellationTestExecutor, calls *atomic.Int32) {
@@ -159,9 +154,7 @@ func TestManagerFastDirectErrorDoesNotRefreshRetryOrCoolCredential(t *testing.T)
 				for range stream.Chunks {
 				}
 				return nil
-			},
-		},
-	}
+			}}}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

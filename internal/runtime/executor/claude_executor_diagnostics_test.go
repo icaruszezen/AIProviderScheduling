@@ -62,8 +62,9 @@ func TestClaudeExecutorDiagnosticsAdvancesAfterSuccessfulResponse(t *testing.T) 
 	deviceIDs := []string{"0000000000000000000000000000000000000000000000000000000000000000"}
 	testID := uuid.NewString()
 	auth := &cliproxyauth.Auth{
-		ID:         "diagnostics-live-path-" + testID,
-		Attributes: map[string]string{"api_key": "sk-ant-oat-diagnostics-live-path"},
+		ID: "diagnostics-live-path-" + testID,
+		Attributes: map[string]string{
+			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-diagnostics-live-path"},
 		Metadata: map[string]any{
 			"account_uuid":                        "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 			claudeauth.ClaudeDeviceIDsMetadataKey: deviceIDs,
@@ -80,7 +81,7 @@ func TestClaudeExecutorDiagnosticsAdvancesAfterSuccessfulResponse(t *testing.T) 
 			t.Fatalf("Execute() error = %v", errExecute)
 		}
 		if turn == 0 {
-			auth.Attributes["api_key"] = "sk-ant-oat-diagnostics-live-path-rotated"
+			auth.Attributes["api_key"] = "sk-ant-api-diagnostics-live-path-rotated"
 		}
 	}
 	if len(previousValues) != 2 || previousValues[0].Type != gjson.Null || previousValues[0].Raw != "null" {

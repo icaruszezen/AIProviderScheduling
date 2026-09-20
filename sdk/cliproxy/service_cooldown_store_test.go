@@ -6,29 +6,8 @@ import (
 	"testing"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 )
-
-type cooldownProviderTokenStore struct {
-	cooldownStore coreauth.CooldownStateStore
-}
-
-func (s *cooldownProviderTokenStore) List(context.Context) ([]*coreauth.Auth, error) {
-	return nil, nil
-}
-
-func (s *cooldownProviderTokenStore) Save(context.Context, *coreauth.Auth) (string, error) {
-	return "", nil
-}
-
-func (s *cooldownProviderTokenStore) Delete(context.Context, string) error {
-	return nil
-}
-
-func (s *cooldownProviderTokenStore) CooldownStateStore() coreauth.CooldownStateStore {
-	return s.cooldownStore
-}
 
 type serviceCooldownStateStore struct{}
 
@@ -40,29 +19,20 @@ func (*serviceCooldownStateStore) Save(context.Context, []coreauth.CooldownState
 	return nil
 }
 
-func TestResolveCooldownStateStoreUsesCapturedBackendProvider(t *testing.T) {
-	originalStore := sdkAuth.GetTokenStore()
-	t.Cleanup(func() {
-		sdkAuth.RegisterTokenStore(originalStore)
-	})
-
+func TestResolveCooldownStateStoreUsesExplicitOverride(t *testing.T) {
 	providedStore := &serviceCooldownStateStore{}
-	sdkAuth.RegisterTokenStore(&cooldownProviderTokenStore{cooldownStore: providedStore})
-	cfg := &config.Config{
-		AuthDir:            t.TempDir(),
-		SaveCooldownStatus: true,
-	}
+	cfg := &config.Config{}
 	service, errBuild := NewBuilder().
 		WithConfig(cfg).
 		WithConfigPath(filepath.Join(t.TempDir(), "config.yaml")).
+		WithCooldownStateStore(providedStore).
 		Build()
 	if errBuild != nil {
 		t.Fatalf("Build() error = %v", errBuild)
 	}
 
-	sdkAuth.RegisterTokenStore(&cooldownProviderTokenStore{cooldownStore: &serviceCooldownStateStore{}})
 	got := service.resolveCooldownStateStore(cfg)
 	if got != providedStore {
-		t.Fatalf("resolveCooldownStateStore() = %T, want captured backend-provided store", got)
+		t.Fatalf("resolveCooldownStateStore() = %T, want explicit override", got)
 	}
 }

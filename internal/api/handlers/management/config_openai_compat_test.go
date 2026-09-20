@@ -21,17 +21,12 @@ func TestGetOpenAICompatIncludesDisableCooling(t *testing.T) {
 				Name:    "Mimo CN",
 				BaseURL: "https://token-plan-cn.xiaomimimo.com/v1",
 				APIKeyEntries: []config.OpenAICompatibilityAPIKey{
-					{APIKey: "test-key"},
-				},
+					{APIKey: "test-key"}},
 				Models: []config.OpenAICompatibilityModel{
-					{Name: "mimo-v2.5", Alias: ""},
-				},
+					{Name: "mimo-v2.5", Alias: ""}},
 				SupportPromptCacheKey: true,
 				DisableCooling:        &disableCooling,
-				RequestRetry:          &requestRetry,
-			},
-		},
-	}, nil)
+				RequestRetry:          &requestRetry}}}, nil)
 
 	rec := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(rec)

@@ -79,8 +79,7 @@ func (h *Host) RegisterManagementRoutes(ctx context.Context, reserved map[string
 				pluginID: record.id,
 				path:     record.path,
 				version:  record.version,
-				route:    item,
-			}
+				route:    item}
 		}
 
 		for _, item := range resp.Resources {
@@ -110,8 +109,7 @@ func (h *Host) callManagementRegistrar(ctx context.Context, record capabilityRec
 	return plugin.RegisterManagement(ctx, pluginapi.ManagementRegistrationRequest{
 		Plugin:           record.meta,
 		BasePath:         managementBasePath,
-		ResourceBasePath: resourcePluginBasePath + "/" + record.id,
-	})
+		ResourceBasePath: resourcePluginBasePath + "/" + record.id})
 }
 
 func normalizeManagementRoute(item pluginapi.ManagementRoute) (string, string, bool) {
@@ -159,8 +157,7 @@ func resourceRouteFromManagementRoute(item pluginapi.ManagementRoute) pluginapi.
 		Path:        item.Path,
 		Menu:        item.Menu,
 		Description: item.Description,
-		Handler:     item.Handler,
-	}
+		Handler:     item.Handler}
 }
 
 func registerResourceRoute(routes map[string]resourceRouteRecord, record capabilityRecord, item pluginapi.ResourceRoute) bool {
@@ -178,8 +175,7 @@ func registerResourceRoute(routes map[string]resourceRouteRecord, record capabil
 		pluginID: record.id,
 		path:     record.path,
 		version:  record.version,
-		route:    item,
-	}
+		route:    item}
 	return true
 }
 
@@ -257,8 +253,7 @@ func (h *Host) ServeManagementHTTP(w http.ResponseWriter, r *http.Request) bool 
 		Path:    r.URL.Path,
 		Headers: cloneHeader(r.Header),
 		Query:   cloneValues(r.URL.Query()),
-		Body:    bytes.Clone(body),
-	})
+		Body:    bytes.Clone(body)})
 	if errHandle != nil {
 		log.Warnf("pluginhost: management handler %s failed: %v", record.pluginID, errHandle)
 		http.Error(w, "plugin management handler failed", http.StatusBadGateway)
@@ -302,8 +297,7 @@ func (h *Host) ServeResourceHTTP(w http.ResponseWriter, r *http.Request) bool {
 		Method:  http.MethodGet,
 		Path:    r.URL.Path,
 		Headers: cloneHeader(r.Header),
-		Query:   cloneValues(r.URL.Query()),
-	})
+		Query:   cloneValues(r.URL.Query())})
 	if errHandle != nil {
 		log.Warnf("pluginhost: resource handler %s failed: %v", record.pluginID, errHandle)
 		http.Error(w, "plugin resource handler failed", http.StatusBadGateway)

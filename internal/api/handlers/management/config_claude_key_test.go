@@ -13,9 +13,7 @@ import (
 func TestPatchClaudeKeyFingerprintProfile(t *testing.T) {
 	cfg := &config.Config{
 		ClaudeKey: []config.ClaudeKey{
-			{APIKey: "test-claude-key"},
-		},
-	}
+			{APIKey: "test-claude-key"}}}
 	h := &Handler{cfg: cfg, configFilePath: writeTestConfigFile(t)}
 
 	// Patch fingerprint-profile to claude-code-cli
@@ -70,9 +68,7 @@ func TestPatchClaudeKeyFingerprintProfile(t *testing.T) {
 func TestPatchClaudeKeyRejectsUnknownFingerprintProfile(t *testing.T) {
 	cfg := &config.Config{
 		ClaudeKey: []config.ClaudeKey{
-			{APIKey: "test-claude-key", FingerprintProfile: "claude-code-cli"},
-		},
-	}
+			{APIKey: "test-claude-key", FingerprintProfile: "claude-code-cli"}}}
 	h := &Handler{cfg: cfg, configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()

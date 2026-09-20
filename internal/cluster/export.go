@@ -38,7 +38,6 @@ func StripLocalIdentity(cfg *config.Config) *config.Config {
 	out.Host = ""
 	out.Port = 0
 	out.TLS = config.TLSConfig{}
-	out.AuthDir = ""
 	out.RemoteManagement = config.RemoteManagement{}
 	out.Cluster = config.ClusterConfig{}
 	out.Home = config.HomeConfig{}
@@ -48,7 +47,6 @@ func StripLocalIdentity(cfg *config.Config) *config.Config {
 }
 
 // MergeLocal copies incoming synced fields and restores local identity from local.
-// It never touches auth-dir files.
 func MergeLocal(local, incoming *config.Config) *config.Config {
 	if incoming == nil {
 		if local == nil {
@@ -64,7 +62,6 @@ func MergeLocal(local, incoming *config.Config) *config.Config {
 	out.Host = preserved.Host
 	out.Port = preserved.Port
 	out.TLS = preserved.TLS
-	out.AuthDir = preserved.AuthDir
 	out.RemoteManagement = preserved.RemoteManagement
 	out.Cluster = preserved.Cluster
 	out.Home = preserved.Home
@@ -90,8 +87,7 @@ func Export(cfg *config.Config) (*ExportPayload, error) {
 		UpdatedAt:     time.Now().UTC(),
 		SourceNodeID:  sourceNodeID,
 		SourceVersion: buildinfo.Version,
-		ConfigYAML:    string(yamlBytes),
-	}, nil
+		ConfigYAML:    string(yamlBytes)}, nil
 }
 
 // HashOf returns the canonical hash of cfg after stripping local identity.

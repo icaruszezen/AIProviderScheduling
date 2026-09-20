@@ -22,8 +22,7 @@ type codexIncompleteStreamError struct {
 func newCodexIncompleteStreamError() codexIncompleteStreamError {
 	return codexIncompleteStreamError{statusErr: statusErr{
 		code: http.StatusRequestTimeout,
-		msg:  codexIncompleteStreamMessage,
-	}}
+		msg:  codexIncompleteStreamMessage}}
 }
 
 func (codexIncompleteStreamError) IsRequestScoped() bool {
@@ -349,8 +348,7 @@ func isCodexModelCapacityError(errorBody []byte) bool {
 	candidates := []string{
 		gjson.GetBytes(errorBody, "error.message").String(),
 		gjson.GetBytes(errorBody, "message").String(),
-		string(errorBody),
-	}
+		string(errorBody)}
 	for _, candidate := range candidates {
 		lower := strings.ToLower(strings.TrimSpace(candidate))
 		if lower == "" {
@@ -376,8 +374,7 @@ func isCodexUsageLimitError(errorBody []byte) bool {
 	}
 	candidates := []string{
 		gjson.GetBytes(errorBody, "error.type").String(),
-		gjson.GetBytes(errorBody, "type").String(),
-	}
+		gjson.GetBytes(errorBody, "type").String()}
 	for _, candidate := range candidates {
 		if strings.EqualFold(strings.TrimSpace(candidate), "usage_limit_reached") {
 			return true

@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	kimiauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/kimi"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
@@ -41,10 +40,8 @@ func NewKimiExecutor(cfg *config.Config) *KimiExecutor {
 		ClaudeExecutor: ClaudeExecutor{
 			cfg:                     cfg,
 			requestLogProvider:      "kimi",
-			upstreamModelNormalizer: normalizeKimiUpstreamModel,
-		},
-		cfg: cfg,
-	}
+			upstreamModelNormalizer: normalizeKimiUpstreamModel},
+		cfg: cfg}
 }
 
 // Identifier returns the executor identifier.
@@ -173,8 +170,7 @@ func (e *KimiExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -298,8 +294,7 @@ func (e *KimiExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Aut
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	httpClient := helps.NewProxyAwareHTTPClient(ctx, e.cfg, auth, 0)
 	httpClient = reporter.TrackHTTPClient(httpClient)
@@ -438,8 +433,7 @@ func normalizeKimiToolMessageLinks(body []byte) ([]byte, error) {
 							index:        msgIndex,
 							path:         "reasoning_content",
 							value:        fallbackAssistantReasoning(msg, hasLatestReasoning, latestReasoning),
-							errorContext: "failed to set assistant reasoning_content",
-						})
+							errorContext: "failed to set assistant reasoning_content"})
 						patchedReasoning++
 					}
 					for _, toolCall := range toolCallItems {
@@ -481,8 +475,7 @@ func normalizeKimiToolMessageLinks(body []byte) ([]byte, error) {
 		if ambiguous > 0 {
 			log.WithFields(log.Fields{
 				"ambiguous_tool_messages": ambiguous,
-				"pending_tool_calls":      len(pending),
-			}).Warn("kimi executor: tool messages missing tool_call_id with ambiguous candidates")
+				"pending_tool_calls":      len(pending)}).Warn("kimi executor: tool messages missing tool_call_id with ambiguous candidates")
 		}
 		return body, nil
 	}
@@ -528,14 +521,12 @@ func normalizeKimiToolMessageLinks(body []byte) ([]byte, error) {
 	if patched > 0 || patchedReasoning > 0 {
 		log.WithFields(log.Fields{
 			"patched_tool_messages":      patched,
-			"patched_reasoning_messages": patchedReasoning,
-		}).Debug("kimi executor: normalized tool message fields")
+			"patched_reasoning_messages": patchedReasoning}).Debug("kimi executor: normalized tool message fields")
 	}
 	if ambiguous > 0 {
 		log.WithFields(log.Fields{
 			"ambiguous_tool_messages": ambiguous,
-			"pending_tool_calls":      len(pending),
-		}).Warn("kimi executor: tool messages missing tool_call_id with ambiguous candidates")
+			"pending_tool_calls":      len(pending)}).Warn("kimi executor: tool messages missing tool_call_id with ambiguous candidates")
 	}
 	return out, nil
 }
@@ -641,7 +632,8 @@ func fallbackAssistantReasoning(msg gjson.Result, hasLatest bool, latest string)
 	return kimiReasoningUnavailable
 }
 
-// Refresh refreshes the Kimi token using the refresh token.
+// Refresh replaces credentials via Home when enabled. Account OAuth token
+// refresh is not supported; API keys are returned unchanged.
 func (e *KimiExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
 	log.Debugf("kimi executor: refresh called")
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
@@ -650,37 +642,6 @@ func (e *KimiExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*c
 	if auth == nil {
 		return nil, fmt.Errorf("kimi executor: auth is nil")
 	}
-	// Expect refresh_token in metadata for OAuth-based accounts
-	var refreshToken string
-	if auth.Metadata != nil {
-		if v, ok := auth.Metadata["refresh_token"].(string); ok && strings.TrimSpace(v) != "" {
-			refreshToken = v
-		}
-	}
-	if strings.TrimSpace(refreshToken) == "" {
-		// Nothing to refresh
-		return auth, nil
-	}
-
-	client := kimiauth.NewDeviceFlowClientWithDeviceIDAndProxyURL(e.cfg, resolveKimiDeviceID(auth), auth.ProxyURL)
-	td, err := client.RefreshToken(ctx, refreshToken)
-	if err != nil {
-		return nil, err
-	}
-	if auth.Metadata == nil {
-		auth.Metadata = make(map[string]any)
-	}
-	auth.Metadata["access_token"] = td.AccessToken
-	if td.RefreshToken != "" {
-		auth.Metadata["refresh_token"] = td.RefreshToken
-	}
-	if td.ExpiresAt > 0 {
-		exp := time.Unix(td.ExpiresAt, 0).UTC().Format(time.RFC3339)
-		auth.Metadata["expired"] = exp
-	}
-	auth.Metadata["type"] = "kimi"
-	now := time.Now().Format(time.RFC3339)
-	auth.Metadata["last_refresh"] = now
 	return auth, nil
 }
 
@@ -721,25 +682,8 @@ func resolveKimiDeviceIDFromAuth(auth *cliproxyauth.Auth) string {
 	return strings.TrimSpace(deviceID)
 }
 
-func resolveKimiDeviceIDFromStorage(auth *cliproxyauth.Auth) string {
-	if auth == nil {
-		return ""
-	}
-
-	storage, ok := auth.Storage.(*kimiauth.KimiTokenStorage)
-	if !ok || storage == nil {
-		return ""
-	}
-
-	return strings.TrimSpace(storage.DeviceID)
-}
-
 func resolveKimiDeviceID(auth *cliproxyauth.Auth) string {
-	deviceID := resolveKimiDeviceIDFromAuth(auth)
-	if deviceID != "" {
-		return deviceID
-	}
-	return resolveKimiDeviceIDFromStorage(auth)
+	return resolveKimiDeviceIDFromAuth(auth)
 }
 
 func applyKimiHeadersWithAuth(r *http.Request, token string, stream bool, auth *cliproxyauth.Auth) {
@@ -791,25 +735,13 @@ func getKimiDeviceID() string {
 	return "cli-proxy-api-device"
 }
 
-// kimiCreds extracts the access token from auth.
+// kimiCreds extracts the API key from auth.
 func kimiCreds(a *cliproxyauth.Auth) (token string) {
-	if a == nil {
+	if a == nil || a.Attributes == nil {
 		return ""
 	}
-	// Check metadata first (OAuth flow stores tokens here)
-	if a.Metadata != nil {
-		if v, ok := a.Metadata["access_token"].(string); ok && strings.TrimSpace(v) != "" {
-			return v
-		}
-	}
-	// Fallback to attributes (API key style)
-	if a.Attributes != nil {
-		if v := a.Attributes["access_token"]; v != "" {
-			return v
-		}
-		if v := a.Attributes["api_key"]; v != "" {
-			return v
-		}
+	if v := strings.TrimSpace(a.Attributes["api_key"]); v != "" {
+		return v
 	}
 	return ""
 }

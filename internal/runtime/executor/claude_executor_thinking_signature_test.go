@@ -104,7 +104,7 @@ func TestClaudeThinkingSignaturesSurviveUpstreamPreparation(t *testing.T) {
 		cfg,
 		auth,
 		payload,
-		"sk-ant-oat-test",
+		"sk-ant-api-test",
 		false,
 		true,
 	)

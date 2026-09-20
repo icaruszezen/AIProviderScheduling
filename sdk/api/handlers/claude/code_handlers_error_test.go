@@ -20,8 +20,7 @@ func TestClaudeErrorExtractsOpenAIStyleUpstreamJSON(t *testing.T) {
 	handler := &ClaudeCodeAPIHandler{}
 	msg := &interfaces.ErrorMessage{
 		StatusCode: http.StatusBadRequest,
-		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`),
-	}
+		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`)}
 
 	got := handler.toClaudeError(msg)
 
@@ -40,8 +39,7 @@ func TestClaudeErrorExtractsClaudeStyleUpstreamJSON(t *testing.T) {
 	handler := &ClaudeCodeAPIHandler{}
 	msg := &interfaces.ErrorMessage{
 		StatusCode: http.StatusTooManyRequests,
-		Error:      errors.New(`{"type":"error","error":{"type":"rate_limit_error","message":"This request would exceed your account's rate limit. Please try again later."},"request_id":"req_123"}`),
-	}
+		Error:      errors.New(`{"type":"error","error":{"type":"rate_limit_error","message":"This request would exceed your account's rate limit. Please try again later."},"request_id":"req_123"}`)}
 
 	got := handler.toClaudeError(msg)
 
@@ -60,8 +58,7 @@ func TestWriteClaudeErrorResponseUsesClaudeEnvelope(t *testing.T) {
 	handler := &ClaudeCodeAPIHandler{}
 	msg := &interfaces.ErrorMessage{
 		StatusCode: http.StatusBadRequest,
-		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`),
-	}
+		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`)}
 
 	handler.WriteErrorResponse(c, msg)
 
@@ -91,8 +88,7 @@ func TestWriteClaudeErrorResponse_IncludesRetryAfterForModelCooldownDefaultSetti
 	// Create mock model cooldown error
 	msg := &interfaces.ErrorMessage{
 		StatusCode: http.StatusTooManyRequests,
-		Error:      coreauth.NewModelCooldownError("claude-sonnet-4-6", "claude", 20*time.Second),
-	}
+		Error:      coreauth.NewModelCooldownError("claude-sonnet-4-6", "claude", 20*time.Second)}
 
 	handler.WriteErrorResponse(c, msg)
 
@@ -116,8 +112,7 @@ func TestWriteClaudeErrorResponse_HidesNoAvailableChannel(t *testing.T) {
 		Error:                  errors.New(upstream),
 		DirectResponse:         true,
 		Body:                   []byte(upstream),
-		HideNoAvailableChannel: true,
-	}
+		HideNoAvailableChannel: true}
 
 	handler.WriteErrorResponse(c, msg)
 
@@ -164,8 +159,7 @@ func TestForwardClaudeStream_HidesNoAvailableChannelKeepsLog(t *testing.T) {
 		Error:                  errors.New(upstream),
 		DirectResponse:         true,
 		Body:                   []byte(upstream),
-		HideNoAvailableChannel: true,
-	}
+		HideNoAvailableChannel: true}
 	close(errs)
 
 	handler.forwardClaudeStream(c, recorder, func(error) {}, data, errs)
@@ -194,8 +188,7 @@ func TestForwardClaudeStream_HidesNoAvailableChannelKeepsLog(t *testing.T) {
 func TestPendingClaudeStreamErrorUsesBufferedError(t *testing.T) {
 	wantErr := &interfaces.ErrorMessage{
 		StatusCode: http.StatusBadRequest,
-		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`),
-	}
+		Error:      errors.New(`{"error":{"message":"Your input exceeds the context window of this model. Please adjust your input and try again.","type":"invalid_request_error","code":"context_too_large"}}`)}
 	errs := make(chan *interfaces.ErrorMessage, 1)
 	errs <- wantErr
 	close(errs)

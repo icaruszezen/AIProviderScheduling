@@ -9,8 +9,7 @@ import (
 func TestResponseFormatOrSourceUsesExplicitResponseFormat(t *testing.T) {
 	opts := Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
-		ResponseFormat: sdktranslator.FormatClaude,
-	}
+		ResponseFormat: sdktranslator.FormatClaude}
 
 	if got := ResponseFormatOrSource(opts); got != sdktranslator.FormatClaude {
 		t.Fatalf("ResponseFormatOrSource() = %q, want %q", got, sdktranslator.FormatClaude)

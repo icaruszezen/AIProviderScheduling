@@ -13,22 +13,19 @@ var (
 		"elapsed_time_seconds": 2.5,
 		"task_id":              "task_123",
 		"uuid":                 "11111111-1111-4111-8111-111111111111",
-		"session_id":           "sess_123",
-	}
+		"session_id":           "sess_123"}
 	claudeCodeSessionStateChangedFixture = sentinelPayload{
 		"type":       "system",
 		"subtype":    "session_state_changed",
 		"state":      "requires_action",
 		"uuid":       "22222222-2222-4222-8222-222222222222",
-		"session_id": "sess_123",
-	}
+		"session_id": "sess_123"}
 	claudeCodeToolUseSummaryFixture = sentinelPayload{
 		"type":                   "tool_use_summary",
 		"summary":                "Searched in auth/",
 		"preceding_tool_use_ids": []any{"toolu_1", "toolu_2"},
 		"uuid":                   "33333333-3333-4333-8333-333333333333",
-		"session_id":             "sess_123",
-	}
+		"session_id":             "sess_123"}
 	claudeCodeControlRequestCanUseToolFixture = sentinelPayload{
 		"type":       "control_request",
 		"request_id": "req_123",
@@ -37,9 +34,7 @@ var (
 			"tool_name":   "Bash",
 			"input":       sentinelPayload{"command": "npm test"},
 			"tool_use_id": "toolu_123",
-			"description": "Running npm test",
-		},
-	}
+			"description": "Running npm test"}}
 )
 
 func requireStringField(t *testing.T, obj sentinelPayload, key string) string {

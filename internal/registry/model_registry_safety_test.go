@@ -10,8 +10,7 @@ func TestGetModelInfoReturnsClone(t *testing.T) {
 	r.RegisterClient("client-1", "gemini", []*ModelInfo{{
 		ID:          "m1",
 		DisplayName: "Model One",
-		Thinking:    &ThinkingSupport{Min: 1, Max: 2, Levels: []string{"low", "high"}},
-	}})
+		Thinking:    &ThinkingSupport{Min: 1, Max: 2, Levels: []string{"low", "high"}}}})
 
 	first := r.GetModelInfo("m1", "gemini")
 	if first == nil {
@@ -34,8 +33,7 @@ func TestGetModelsForClientReturnsClones(t *testing.T) {
 	r.RegisterClient("client-1", "gemini", []*ModelInfo{{
 		ID:          "m1",
 		DisplayName: "Model One",
-		Thinking:    &ThinkingSupport{Levels: []string{"low", "high"}},
-	}})
+		Thinking:    &ThinkingSupport{Levels: []string{"low", "high"}}}})
 
 	first := r.GetModelsForClient("client-1")
 	if len(first) != 1 || first[0] == nil {
@@ -61,8 +59,7 @@ func TestGetAvailableModelsByProviderReturnsClones(t *testing.T) {
 	r.RegisterClient("client-1", "gemini", []*ModelInfo{{
 		ID:          "m1",
 		DisplayName: "Model One",
-		Thinking:    &ThinkingSupport{Levels: []string{"low", "high"}},
-	}})
+		Thinking:    &ThinkingSupport{Levels: []string{"low", "high"}}}})
 
 	first := r.GetAvailableModelsByProvider("gemini")
 	if len(first) != 1 || first[0] == nil {
@@ -115,8 +112,7 @@ func TestGetAvailableModelsReturnsClonedSupportedParameters(t *testing.T) {
 	r.RegisterClient("client-1", "openai", []*ModelInfo{{
 		ID:                  "m1",
 		DisplayName:         "Model One",
-		SupportedParameters: []string{"temperature", "top_p"},
-	}})
+		SupportedParameters: []string{"temperature", "top_p"}}})
 
 	first := r.GetAvailableModels("openai")
 	if len(first) != 1 {
@@ -141,8 +137,7 @@ func TestGetAvailableModelsIncludesMaxContextLengthOverride(t *testing.T) {
 	r.RegisterClient("client-1", "openai", []*ModelInfo{{
 		ID:               "deepseek-v4-flash",
 		ContextLength:    want,
-		MaxContextLength: want,
-	}})
+		MaxContextLength: want}})
 
 	models := r.GetAvailableModels("openai")
 	if len(models) != 1 {

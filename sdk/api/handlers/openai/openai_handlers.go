@@ -39,8 +39,7 @@ type OpenAIAPIHandler struct {
 //   - *OpenAIAPIHandler: A new OpenAI API handlers instance
 func NewOpenAIAPIHandler(apiHandlers *handlers.BaseAPIHandler) *OpenAIAPIHandler {
 	return &OpenAIAPIHandler{
-		BaseAPIHandler: apiHandlers,
-	}
+		BaseAPIHandler: apiHandlers}
 }
 
 // HandlerType returns the identifier for this handler implementation.
@@ -73,8 +72,7 @@ func (h *OpenAIAPIHandler) OpenAIModels(c *gin.Context) {
 	for i, model := range allModels {
 		filteredModel := map[string]any{
 			"id":     model["id"],
-			"object": model["object"],
-		}
+			"object": model["object"]}
 
 		// Add created field if it exists
 		if created, exists := model["created"]; exists {
@@ -91,8 +89,7 @@ func (h *OpenAIAPIHandler) OpenAIModels(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"object": "list",
-		"data":   filteredModels,
-	})
+		"data":   filteredModels})
 }
 
 // ChatCompletions handles the /v1/chat/completions endpoint.
@@ -108,9 +105,7 @@ func (h *OpenAIAPIHandler) ChatCompletions(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -163,9 +158,7 @@ func (h *OpenAIAPIHandler) Completions(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: fmt.Sprintf("Invalid request: %v", err),
-				Type:    "invalid_request_error",
-			},
-		})
+				Type:    "invalid_request_error"}})
 		return
 	}
 
@@ -287,8 +280,7 @@ func convertChatCompletionsResponseToCompletions(rawJSON []byte) []byte {
 	if chatChoices := root.Get("choices"); chatChoices.Exists() && chatChoices.IsArray() {
 		chatChoices.ForEach(func(_, choice gjson.Result) bool {
 			completionsChoice := map[string]interface{}{
-				"index": choice.Get("index").Int(),
-			}
+				"index": choice.Get("index").Int()}
 
 			// Extract text content from message.content
 			if message := choice.Get("message"); message.Exists() {
@@ -383,8 +375,7 @@ func convertChatCompletionsStreamChunkToCompletions(chunkData []byte) []byte {
 	if chatChoices := root.Get("choices"); chatChoices.Exists() && chatChoices.IsArray() {
 		chatChoices.ForEach(func(_, choice gjson.Result) bool {
 			completionsChoice := map[string]interface{}{
-				"index": choice.Get("index").Int(),
-			}
+				"index": choice.Get("index").Int()}
 
 			// Extract text content from delta.content
 			if delta := choice.Get("delta"); delta.Exists() {
@@ -464,9 +455,7 @@ func (h *OpenAIAPIHandler) handleStreamingResponse(c *gin.Context, rawJSON []byt
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -578,9 +567,7 @@ func (h *OpenAIAPIHandler) handleCompletionsStreamingResponse(c *gin.Context, ra
 		c.JSON(http.StatusInternalServerError, handlers.ErrorResponse{
 			Error: handlers.ErrorDetail{
 				Message: "Streaming not supported",
-				Type:    "server_error",
-			},
-		})
+				Type:    "server_error"}})
 		return
 	}
 
@@ -697,6 +684,5 @@ func (h *OpenAIAPIHandler) handleStreamResult(c *gin.Context, flusher http.Flush
 		},
 		WriteDone: func() {
 			_, _ = fmt.Fprint(c.Writer, "data: [DONE]\n\n")
-		},
-	})
+		}})
 }

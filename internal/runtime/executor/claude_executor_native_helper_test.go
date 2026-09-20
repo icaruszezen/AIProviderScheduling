@@ -60,8 +60,9 @@ func claudeNativeHelperOAuthAuth(baseURL string) *cliproxyauth.Auth {
 	return &cliproxyauth.Auth{
 		ID: "native-helper-oauth",
 		Attributes: map[string]string{
-			"api_key":  "sk-ant-oat-native-helper",
-			"base_url": baseURL,
+			"fingerprint_profile": "claude-code-cli",
+			"api_key":             "sk-ant-api-native-helper",
+			"base_url":            baseURL,
 		},
 		Metadata: claudeOAuthTestMetadata(),
 	}
@@ -201,8 +202,8 @@ func TestClaudeExecutorStructuredNativeHelperPreservesStreamProfile(t *testing.T
 	if got := gjson.GetBytes(upstreamBody, "stream").Bool(); !got {
 		t.Fatalf("structured helper stream = false, want true: %s", upstreamBody)
 	}
-	if got := gjson.GetBytes(upstreamBody, "system.0.text").String(); strings.Contains(got, "cch=00000") || !strings.Contains(got, " cch=") {
-		t.Fatalf("structured helper billing CCH was not re-signed: %q", got)
+	if got := gjson.GetBytes(upstreamBody, "system.0.text").String(); !strings.Contains(got, "x-anthropic-billing-header") {
+		t.Fatalf("structured helper billing header missing: %q", got)
 	}
 	assertClaudeNativeHelperHeaders(t, upstreamHeaders, headers)
 }

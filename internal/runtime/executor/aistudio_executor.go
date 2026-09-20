@@ -97,8 +97,7 @@ func (e *AIStudioExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.A
 		Method:  httpReq.Method,
 		URL:     httpReq.URL.String(),
 		Headers: httpReq.Header.Clone(),
-		Body:    body,
-	}
+		Body:    body}
 	wsResp, errRelay := e.relay.NonStream(ctx, auth.ID, wsReq)
 	if errRelay != nil {
 		return nil, errRelay
@@ -117,8 +116,7 @@ func (e *AIStudioExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.A
 		Header:        wsResp.Headers.Clone(),
 		Body:          io.NopCloser(bytes.NewReader(wsResp.Body)),
 		ContentLength: int64(len(wsResp.Body)),
-		Request:       httpReq,
-	}
+		Request:       httpReq}
 	return resp, nil
 }
 
@@ -142,8 +140,7 @@ func (e *AIStudioExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth,
 		Method:  http.MethodPost,
 		URL:     endpoint,
 		Headers: http.Header{"Content-Type": []string{"application/json"}},
-		Body:    body.payload,
-	}
+		Body:    body.payload}
 	var attrs map[string]string
 	if auth != nil {
 		attrs = auth.Attributes
@@ -165,8 +162,7 @@ func (e *AIStudioExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth,
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 
 	reporter.StartResponseTTFT()
 	wsResp, err := e.relay.NonStream(ctx, authID, wsReq)
@@ -214,8 +210,7 @@ func (e *AIStudioExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth
 		Method:  http.MethodPost,
 		URL:     endpoint,
 		Headers: http.Header{"Content-Type": []string{"application/json"}},
-		Body:    body.payload,
-	}
+		Body:    body.payload}
 	var attrs map[string]string
 	if auth != nil {
 		attrs = auth.Attributes
@@ -236,8 +231,7 @@ func (e *AIStudioExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 	reporter.StartResponseTTFT()
 	wsStream, err := e.relay.Stream(ctx, authID, wsReq)
 	if err != nil {
@@ -399,8 +393,7 @@ func (e *AIStudioExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.A
 		Method:  http.MethodPost,
 		URL:     endpoint,
 		Headers: http.Header{"Content-Type": []string{"application/json"}},
-		Body:    body.payload,
-	}
+		Body:    body.payload}
 	var authID, authLabel, authType, authValue string
 	if auth != nil {
 		authID = auth.ID
@@ -416,8 +409,7 @@ func (e *AIStudioExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.A
 		AuthID:    authID,
 		AuthLabel: authLabel,
 		AuthType:  authType,
-		AuthValue: authValue,
-	})
+		AuthValue: authValue})
 	resp, err := e.relay.NonStream(ctx, authID, wsReq)
 	if err != nil {
 		helps.RecordAPIResponseError(ctx, e.cfg, err)

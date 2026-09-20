@@ -62,8 +62,7 @@ func setQuotaAttemptIsolationHeaders(ctx context.Context) {
 		"X-Codex-Plan-Type":                   []string{"pro"},
 		"X-Codex-Primary-Used-Percent":        []string{"91"},
 		"X-Codex-Primary-Window-Minutes":      []string{"10080"},
-		"X-Codex-Primary-Reset-After-Seconds": []string{"3600"},
-	})
+		"X-Codex-Primary-Reset-After-Seconds": []string{"3600"}})
 }
 
 func quotaAttemptIsolationError() error {
@@ -80,16 +79,13 @@ func TestExecutionAttemptsDoNotReuseQuotaResponseHeaders(t *testing.T) {
 			run: func(manager *Manager, ctx context.Context, model string) error {
 				_, errExecute := manager.Execute(ctx, []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			run: func(manager *Manager, ctx context.Context, model string) error {
 				_, errExecute := manager.ExecuteStream(ctx, []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{Stream: true})
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			manager := NewManager(nil, quotaAttemptIsolationSelector{}, nil)
@@ -101,8 +97,7 @@ func TestExecutionAttemptsDoNotReuseQuotaResponseHeaders(t *testing.T) {
 				if _, errRegister := manager.Register(context.Background(), &Auth{
 					ID:       id,
 					Provider: "codex",
-					Status:   StatusActive,
-				}); errRegister != nil {
+					Status:   StatusActive}); errRegister != nil {
 					t.Fatalf("Register(%s) error = %v", id, errRegister)
 				}
 				registry.GetGlobalRegistry().RegisterClient(id, "codex", []*registry.ModelInfo{{ID: model}})

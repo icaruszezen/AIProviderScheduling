@@ -12,9 +12,7 @@ func TestBuilderBuildRejectsInvalidWithConfigCredentialWeight(t *testing.T) {
 	cfg := &internalconfig.Config{
 		ClaudeKey: []internalconfig.ClaudeKey{{
 			APIKey: "claude-key",
-			Weight: &invalidWeight,
-		}},
-	}
+			Weight: &invalidWeight}}}
 
 	service, errBuild := NewBuilder().
 		WithConfig(cfg).

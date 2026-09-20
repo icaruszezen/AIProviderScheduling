@@ -41,8 +41,7 @@ func TestHomeDispatchHeadersAddsQueryKeyCredential(t *testing.T) {
 func TestHomeDispatchHeadersAddsQueryCredentialFromAccessMetadata(t *testing.T) {
 	ginCtx := homeDispatchTestGinContext{values: map[string]any{
 		"accessMetadata": map[string]string{"source": "query-key"},
-		"userApiKey":     "12345",
-	}}
+		"userApiKey":     "12345"}}
 	ctx := context.WithValue(context.Background(), "gin", ginCtx)
 	headers := http.Header{"User-Agent": {"client"}}
 
@@ -71,8 +70,7 @@ func TestHomeDispatchHeadersKeepsExistingCredentialHeader(t *testing.T) {
 func TestHomeDispatchHeadersIgnoresHeaderCredentialSource(t *testing.T) {
 	ginCtx := homeDispatchTestGinContext{values: map[string]any{
 		"accessMetadata": map[string]string{"source": "authorization"},
-		"userApiKey":     "12345",
-	}}
+		"userApiKey":     "12345"}}
 	ctx := context.WithValue(context.Background(), "gin", ginCtx)
 	headers := http.Header{"Authorization": {"Bearer 12345"}}
 

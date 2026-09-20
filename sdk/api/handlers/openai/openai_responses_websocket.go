@@ -46,8 +46,7 @@ var responsesWebsocketUpgrader = websocket.Upgrader{
 	WriteBufferSize: 4096,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
-	},
-}
+	}}
 
 // writeWebsocketCloseForUpstreamError mirrors transport-level upstream close
 // codes to the downstream WebSocket client before the connection is torn down.
@@ -603,8 +602,7 @@ func (h *OpenAIResponsesAPIHandler) ResponsesWebsocket(c *gin.Context) {
 			passthroughSessionID,
 			responsesWebsocketForwardOptions{
 				toolCacheTurn: toolCacheTurn,
-				suppressError: replayPinnedAuthFailure,
-			},
+				suppressError: replayPinnedAuthFailure},
 		)
 		if errForward != nil {
 			wsTerminateErr = errForward
@@ -699,6 +697,5 @@ func responsesWebsocketPreviousResponseNotFoundError() *interfaces.ErrorMessage 
 		StatusCode: http.StatusConflict,
 		Error: errors.New(
 			`{"error":{"message":"Previous response is not available on this websocket; resend the full conversation input without previous_response_id","type":"invalid_request_error","code":"previous_response_not_found","param":"previous_response_id"}}`,
-		),
-	}
+		)}
 }

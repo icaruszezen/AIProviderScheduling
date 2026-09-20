@@ -92,8 +92,7 @@ func antigravityReasoningReplayScopeFromPayload(modelName string, payload []byte
 	}
 	return antigravityReasoningReplayScope{
 		modelName:  strings.TrimSpace(modelName),
-		sessionKey: "session:" + sessionID,
-	}
+		sessionKey: "session:" + sessionID}
 }
 
 func antigravityReasoningReplayScopeFromRequest(ctx context.Context, modelName string, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, payload []byte) antigravityReasoningReplayScope {
@@ -576,8 +575,7 @@ func (i *antigravityReplayRequestIndex) functionCallPartLocationForReplayWithSch
 					contentIndex: cachedContentIndex,
 					partIndex:    partIndex,
 					part:         part,
-					functionCall: functionCall,
-				}, true
+					functionCall: functionCall}, true
 			}
 			occurrence++
 		}
@@ -601,8 +599,7 @@ func (i *antigravityReplayRequestIndex) functionCallPartLocationForReplayWithSch
 					contentIndex: contentIndex,
 					partIndex:    partIndex,
 					part:         part,
-					functionCall: functionCall,
-				})
+					functionCall: functionCall})
 			}
 		}
 	}
@@ -759,8 +756,7 @@ func insertAntigravityModelFunctionCallBeforeContent(payload []byte, beforeIndex
 	part["thoughtSignature"] = thoughtSig
 	newContent := map[string]any{
 		"role":  "model",
-		"parts": []any{part},
-	}
+		"parts": []any{part}}
 	newArr := make([]any, 0, len(arr)+1)
 	for i := 0; i < beforeIndex; i++ {
 		newArr = append(newArr, arr[i].Value())
@@ -889,8 +885,7 @@ type antigravityReplayRequestIndex struct {
 func newAntigravityReplayRequestIndex(payload []byte) *antigravityReplayRequestIndex {
 	index := &antigravityReplayRequestIndex{
 		functionCallsByID:           make(map[string]antigravityReplayIndexedPart),
-		functionResponseContentByID: make(map[string]int),
-	}
+		functionResponseContentByID: make(map[string]int)}
 	contentsResult := util.GetGJSONBytesNoCopy(payload, "request.contents")
 	index.validContents = contentsResult.IsArray()
 	if index.validContents {
@@ -911,8 +906,7 @@ func newAntigravityReplayRequestIndex(payload []byte) *antigravityReplayRequestI
 							contentIndex: contentIndex,
 							partIndex:    partIndex,
 							part:         part,
-							functionCall: functionCall,
-						}
+							functionCall: functionCall}
 					}
 				}
 				if functionResponse := part.Get("functionResponse"); functionResponse.Exists() {
@@ -997,8 +991,7 @@ func newAntigravityReplayContextFingerprints(
 	fingerprints := &antigravityReplayContextFingerprints{
 		valid:    valid,
 		contents: contents,
-		hasher:   sha256.New(),
-	}
+		hasher:   sha256.New()}
 	if !valid {
 		fingerprints.sums = []string{""}
 		return fingerprints
@@ -1726,8 +1719,7 @@ func newAntigravityReasoningReplayAccumulator(scope antigravityReasoningReplaySc
 		visiblePartIndex:        -1,
 		thoughtPartIndex:        -1,
 		itemBytes:               itemBytes,
-		overflow:                len(items) > internalcache.AntigravityReasoningReplayCacheMaxItemsPerEntry || itemBytes > internalcache.AntigravityReasoningReplayCacheMaxBytesPerEntry,
-	}
+		overflow:                len(items) > internalcache.AntigravityReasoningReplayCacheMaxItemsPerEntry || itemBytes > internalcache.AntigravityReasoningReplayCacheMaxBytesPerEntry}
 }
 
 func antigravityReasoningReplayItemsFromRequest(payload []byte) [][]byte {
@@ -2006,8 +1998,7 @@ func buildAntigravityFunctionCallPartItem(contentIndex, partIndex, targetOccurre
 		"contentIndex":     contentIndex,
 		"partIndex":        partIndex,
 		"targetOccurrence": targetOccurrence,
-		"name":             fc.Get("name").String(),
-	}
+		"name":             fc.Get("name").String()}
 	if id := strings.TrimSpace(fc.Get("id").String()); id != "" {
 		item["call_id"] = id
 	}

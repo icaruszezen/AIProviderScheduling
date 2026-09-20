@@ -48,8 +48,7 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 				"  cpa-heartbeat-timeout: 3s\n" +
 				"  cpa-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
-				"  cleanup-interval: 5s\n",
-		},
+				"  cleanup-interval: 5s\n"},
 		{
 			name: "explicit zero duration",
 			payload: "credential-concurrency:\n" +
@@ -57,8 +56,7 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 				"  cpa-heartbeat-timeout: 0s\n" +
 				"  cpa-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
-				"  cleanup-interval: 5s\n",
-		},
+				"  cleanup-interval: 5s\n"},
 		{
 			name: "explicit null duration",
 			payload: "credential-concurrency:\n" +
@@ -66,8 +64,7 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 				"  cpa-heartbeat-timeout: null\n" +
 				"  cpa-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
-				"  cleanup-interval: 5s\n",
-		},
+				"  cleanup-interval: 5s\n"},
 		{
 			name: "negative observation barrier",
 			payload: "credential-concurrency:\n" +
@@ -76,9 +73,7 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 				"  cpa-heartbeat-timeout: 3s\n" +
 				"  cpa-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
-				"  cleanup-interval: 5s\n",
-		},
-	}
+				"  cleanup-interval: 5s\n"}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -97,8 +92,7 @@ func TestCredentialConcurrencyConfigRejectsInvalidLimiter(t *testing.T) {
 	tests := []CredentialConcurrencyConfig{
 		{ReleaseFlushInterval: time.Second, ReleaseMaxBackoff: 500 * time.Millisecond, BusyRetryMin: time.Millisecond, BusyRetryMax: time.Millisecond, MaxLimit: 1},
 		{ReleaseFlushInterval: time.Millisecond, ReleaseMaxBackoff: time.Millisecond, BusyRetryMin: 1500 * time.Microsecond, BusyRetryMax: 2 * time.Millisecond, MaxLimit: 1},
-		{ReleaseFlushInterval: time.Millisecond, ReleaseMaxBackoff: time.Millisecond, BusyRetryMin: time.Millisecond, BusyRetryMax: time.Millisecond, MaxLimit: 1_000_001},
-	}
+		{ReleaseFlushInterval: time.Millisecond, ReleaseMaxBackoff: time.Millisecond, BusyRetryMin: time.Millisecond, BusyRetryMax: time.Millisecond, MaxLimit: 1_000_001}}
 	for _, cfg := range tests {
 		cfg.CPAHeartbeatTimeout = 3 * time.Second
 		cfg.CPACancelBound = 5 * time.Second
@@ -116,8 +110,7 @@ func TestValidateCredentialConcurrencyLifecycleRejectsSafetyOverflow(t *testing.
 		CPAHeartbeatTimeout:     time.Duration(1<<63 - 1),
 		CPACancelBound:          time.Nanosecond,
 		ReclaimGrace:            time.Second,
-		CleanupInterval:         time.Second,
-	}
+		CleanupInterval:         time.Second}
 	if errValidate := ValidateCredentialConcurrencyLifecycle(time.Second, cfg); errValidate == nil {
 		t.Fatal("ValidateCredentialConcurrencyLifecycle() error = nil, want overflow rejection")
 	}

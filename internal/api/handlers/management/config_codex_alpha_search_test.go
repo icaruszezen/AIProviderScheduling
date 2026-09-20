@@ -14,10 +14,8 @@ func TestPatchCodexKeyUpdatesAlphaSearch(t *testing.T) {
 	h := &Handler{
 		cfg: &config.Config{CodexKey: []config.CodexKey{{
 			APIKey:  "codex-key",
-			BaseURL: "https://codex.example.com",
-		}}},
-		configFilePath: writeTestConfigFile(t),
-	}
+			BaseURL: "https://codex.example.com"}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(rec)

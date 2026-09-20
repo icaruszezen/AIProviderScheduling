@@ -24,15 +24,13 @@ var requestFaultCodes = map[string]struct{}{
 	"invalid_value":               {},
 	"unsupported_value":           {},
 	"invalid_request_error":       {},
-	"previous_response_not_found": {},
-}
+	"previous_response_not_found": {}}
 
 var requestFaultTypes = map[string]struct{}{
 	"invalid_request":       {},
 	"invalid_request_error": {},
 	"bad_request_error":     {},
-	"invalid_prompt":        {},
-}
+	"invalid_prompt":        {}}
 
 // HTTPStatusFromError extracts an HTTP status from err.
 // Explicit StatusCode() values win. Otherwise context.Canceled maps to 499

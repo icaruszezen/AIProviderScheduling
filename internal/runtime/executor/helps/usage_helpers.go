@@ -80,8 +80,7 @@ func NewUsageReporter(ctx context.Context, provider, model string, auth *cliprox
 		reasoning:   usage.ReasoningEffortFromContext(ctx),
 		serviceTier: usage.ServiceTierFromContext(ctx),
 		generate:    usage.GenerateFromContext(ctx),
-		stream:      usage.StreamFromContext(ctx),
-	}
+		stream:      usage.StreamFromContext(ctx)}
 	if auth != nil {
 		reporter.authID = auth.ID
 		reporter.authIndex = auth.EnsureIndex()
@@ -172,8 +171,7 @@ func (r *UsageReporter) trackHTTPClient(client *http.Client, packetOnly bool) *h
 	tracked.Transport = usageTTFTRoundTripper{
 		base:       transport,
 		reporter:   r,
-		packetOnly: packetOnly,
-	}
+		packetOnly: packetOnly}
 	return &tracked
 }
 
@@ -186,8 +184,7 @@ func (r *UsageReporter) ObserveResponse(resp *http.Response) {
 		ReadCloser: resp.Body,
 		mark: func() {
 			r.MarkFirstResponseByte()
-		},
-	}
+		}}
 }
 
 func (r *UsageReporter) ObserveResponsePacketOnly(resp *http.Response) {
@@ -199,8 +196,7 @@ func (r *UsageReporter) ObserveResponsePacketOnly(resp *http.Response) {
 		ReadCloser: resp.Body,
 		mark: func() {
 			r.RecordFirstPacket()
-		},
-	}
+		}}
 }
 
 func (r *UsageReporter) StartResponseTTFT() {
@@ -407,8 +403,7 @@ func (r *UsageReporter) buildRecordForModel(model string, detail usage.Detail, f
 		TTFT:                r.ttftDuration(),
 		Failed:              failed,
 		Fail:                fail,
-		Detail:              detail,
-	}
+		Detail:              detail}
 }
 
 func failFromErrors(errs ...error) usage.Failure {
@@ -428,8 +423,7 @@ func failFromErrors(errs ...error) usage.Failure {
 		}
 		return usage.Failure{
 			Body:       body,
-			StatusCode: clienterror.HTTPStatusFromError(err),
-		}
+			StatusCode: clienterror.HTTPStatusFromError(err)}
 	}
 	return usage.Failure{}
 }
@@ -741,8 +735,7 @@ func parseOpenAIStyleUsageNode(usageNode gjson.Result) usage.Detail {
 	detail := usage.Detail{
 		InputTokens:  inputNode.Int(),
 		OutputTokens: outputNode.Int(),
-		TotalTokens:  usageNode.Get("total_tokens").Int(),
-	}
+		TotalTokens:  usageNode.Get("total_tokens").Int()}
 	cached := usageNode.Get("prompt_tokens_details.cached_tokens")
 	if !cached.Exists() {
 		cached = usageNode.Get("input_tokens_details.cached_tokens")
@@ -876,8 +869,7 @@ func parseClaudeUsageNode(usageNode gjson.Result) usage.Detail {
 		ReasoningTokens:     reasoningTokens,
 		CachedTokens:        cacheReadTokens,
 		CacheReadTokens:     cacheReadTokens,
-		CacheCreationTokens: cacheCreationTokens,
-	}
+		CacheCreationTokens: cacheCreationTokens}
 	if detail.CachedTokens == 0 {
 		detail.CachedTokens = detail.CacheCreationTokens
 	}
@@ -905,8 +897,7 @@ func parseGeminiFamilyUsageDetail(node gjson.Result) usage.Detail {
 		ReasoningTokens: node.Get("thoughtsTokenCount").Int(),
 		TotalTokens:     node.Get("totalTokenCount").Int(),
 		CachedTokens:    cachedTokens,
-		CacheReadTokens: cachedTokens,
-	}
+		CacheReadTokens: cachedTokens}
 	if !okInput {
 		detail.TokenBreakdown = invalidUsageTokenBreakdown(detail.TotalTokens)
 		return detail
@@ -945,8 +936,7 @@ func parseInteractionsUsageDetail(node gjson.Result) usage.Detail {
 		TotalTokens:         firstExistingUsageNode(node, "total_tokens", "totalTokenCount").Int(),
 		CachedTokens:        firstExistingUsageNode(node, "cached_tokens", "cachedContentTokenCount", "total_cached_tokens").Int(),
 		CacheReadTokens:     cacheRead.Int(),
-		CacheCreationTokens: firstExistingUsageNode(node, "cache_creation_tokens", "cacheCreationTokens", "cache_write_tokens", "cacheWriteTokens").Int(),
-	}
+		CacheCreationTokens: firstExistingUsageNode(node, "cache_creation_tokens", "cacheCreationTokens", "cache_write_tokens", "cacheWriteTokens").Int()}
 	if !okInput {
 		detail.TokenBreakdown = invalidUsageTokenBreakdown(detail.TotalTokens)
 		return detail
@@ -1085,8 +1075,7 @@ func invalidUsageTokenBreakdown(total int64) usage.TokenBreakdown {
 		SchemaVersion:      usage.TokenAccountingSchemaVersion,
 		Quality:            usage.TokenAccountingQualityInconsistent,
 		TotalTokens:        total,
-		UnclassifiedTokens: total,
-	}
+		UnclassifiedTokens: total}
 }
 
 func ParseAntigravityUsage(data []byte) usage.Detail {

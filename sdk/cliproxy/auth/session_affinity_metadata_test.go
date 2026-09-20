@@ -67,8 +67,7 @@ func TestManagerSessionAffinityMixedPoolNilMetadataPropagatesFailureCleanup(t *t
 	manager := NewManager(nil, nil, nil)
 	affinity := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer affinity.Stop()
 	manager.SetSelector(affinity)
 	failExec := &failExecutor{provider: p1}
@@ -87,9 +86,7 @@ func TestManagerSessionAffinityMixedPoolNilMetadataPropagatesFailureCleanup(t *t
 			ID:       auth2ID,
 			Provider: p2,
 			Status:   StatusActive,
-			Metadata: map[string]any{"disable_cooling": true},
-		},
-	} {
+			Metadata: map[string]any{"disable_cooling": true}}} {
 		if _, errRegister := manager.Register(WithSkipPersist(ctx), auth); errRegister != nil {
 			t.Fatalf("Register(%s): %v", auth.ID, errRegister)
 		}
@@ -100,8 +97,7 @@ func TestManagerSessionAffinityMixedPoolNilMetadataPropagatesFailureCleanup(t *t
 	// Inbound request with explicitly nil Metadata, only session header
 	req := cliproxyexecutor.Request{Model: model}
 	opts := cliproxyexecutor.Options{
-		Headers: http.Header{"X-Session-Id": []string{"sess-mixed-1"}},
-	}
+		Headers: http.Header{"X-Session-Id": []string{"sess-mixed-1"}}}
 	if opts.Metadata != nil {
 		t.Fatalf("expected test initial opts.Metadata to be nil")
 	}
@@ -138,8 +134,7 @@ func TestManagerSessionAffinityMixedPoolNilMetadataPropagatesFailureCleanup(t *t
 
 	// 2. Second Execute call with fresh request and nil Metadata for the SAME session
 	opts2 := cliproxyexecutor.Options{
-		Headers: http.Header{"X-Session-Id": []string{"sess-mixed-1"}},
-	}
+		Headers: http.Header{"X-Session-Id": []string{"sess-mixed-1"}}}
 	resp2, errExec2 := manager.Execute(ctx, []string{p1, p2}, req, opts2)
 	if errExec2 != nil {
 		t.Fatalf("second Execute failed: %v", errExec2)
@@ -197,8 +192,7 @@ func TestSessionAffinityAtomicCompareAndDeleteProtectsReboundSession(t *testing.
 func TestSessionAffinityDelayedSuccessDoesNotOverwriteReboundAuth(t *testing.T) {
 	affinity := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer affinity.Stop()
 
 	sessionKey := "mixed::header:sess-delay-success::model-x"
@@ -214,16 +208,13 @@ func TestSessionAffinityDelayedSuccessDoesNotOverwriteReboundAuth(t *testing.T) 
 		Headers: http.Header{"X-Session-Id": []string{"sess-delay-success"}},
 		Metadata: map[string]any{
 			cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-			cliproxyexecutor.SessionAffinityModelMetadataKey:    "model-x",
-		},
-	}
+			cliproxyexecutor.SessionAffinityModelMetadataKey:    "model-x"}}
 	affinity.OnResult(Result{
 		AuthID:   "auth-A",
 		Provider: "provider-a",
 		Model:    "model-x",
 		Success:  true,
-		Options:  opts,
-	})
+		Options:  opts})
 
 	// 4. Cache must remain bound to auth-B, not overwritten by auth-A
 	got, ok := affinity.cache.Get(sessionKey)
@@ -235,8 +226,7 @@ func TestSessionAffinityDelayedSuccessDoesNotOverwriteReboundAuth(t *testing.T) 
 func TestSessionAffinityOnResultWithMismatchedNamespaceFailsToUnbind(t *testing.T) {
 	affinity := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer affinity.Stop()
 
 	sessionID := "header:sess-ns-1"
@@ -258,10 +248,7 @@ func TestSessionAffinityOnResultWithMismatchedNamespaceFailsToUnbind(t *testing.
 			Headers: http.Header{"X-Session-Id": []string{"sess-ns-1"}},
 			Metadata: map[string]any{
 				cliproxyexecutor.SessionAffinityProviderMetadataKey: "mixed",
-				cliproxyexecutor.SessionAffinityModelMetadataKey:    model,
-			},
-		},
-	}
+				cliproxyexecutor.SessionAffinityModelMetadataKey:    model}}}
 
 	affinity.OnResult(res)
 

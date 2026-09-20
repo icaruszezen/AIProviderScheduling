@@ -176,8 +176,7 @@ func GetGlobalRegistry() *ModelRegistry {
 			clientEpochs:         make(map[string]uint64),
 			clientGenerations:    make(map[string]uint64),
 			availableModelsCache: make(map[string]availableModelsCacheEntry),
-			mutex:                &sync.RWMutex{},
-		}
+			mutex:                &sync.RWMutex{}}
 	})
 	return globalRegistry
 }
@@ -551,8 +550,7 @@ func (r *ModelRegistry) addModelRegistration(modelID, provider string, model *Mo
 		Count:                1,
 		LastUpdated:          now,
 		QuotaExceededClients: make(map[string]*time.Time),
-		SuspendedClients:     make(map[string]string),
-	}
+		SuspendedClients:     make(map[string]string)}
 	if provider != "" {
 		registration.Providers = map[string]int{provider: 1}
 		registration.InfoByProvider[provider] = cloneModelInfo(model)
@@ -1044,8 +1042,7 @@ func (r *ModelRegistry) GetAvailableModels(handlerType string) []map[string]any 
 	models, expiresAt := r.buildAvailableModelsLocked(handlerType, now)
 	r.availableModelsCache[handlerType] = availableModelsCacheEntry{
 		models:    cloneModelMaps(models),
-		expiresAt: expiresAt,
-	}
+		expiresAt: expiresAt}
 
 	return models
 }
@@ -1417,8 +1414,7 @@ func (r *ModelRegistry) convertModelToMap(model *ModelInfo, handlerType string) 
 		result := map[string]any{
 			"id":       model.ID,
 			"object":   "model",
-			"owned_by": model.OwnedBy,
-		}
+			"owned_by": model.OwnedBy}
 		if model.Created > 0 {
 			result["created"] = model.Created
 		}
@@ -1452,8 +1448,7 @@ func (r *ModelRegistry) convertModelToMap(model *ModelInfo, handlerType string) 
 		result := map[string]any{
 			"id":       model.ID,
 			"object":   "model",
-			"owned_by": model.OwnedBy,
-		}
+			"owned_by": model.OwnedBy}
 		if model.Created > 0 {
 			result["created_at"] = time.Unix(model.Created, 0).UTC().Format(time.RFC3339)
 		}
@@ -1512,8 +1507,7 @@ func (r *ModelRegistry) convertModelToMap(model *ModelInfo, handlerType string) 
 		// Generic format
 		result := map[string]any{
 			"id":     model.ID,
-			"object": "model",
-		}
+			"object": "model"}
 		if model.OwnedBy != "" {
 			result["owned_by"] = model.OwnedBy
 		}

@@ -93,8 +93,7 @@ func TestManagerExecuteStream_AntigravityCreditsFallbackAfterBootstrap429(t *tes
 	executor := &antigravityCreditsFallbackExecutor{}
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
-		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true},
-	})
+		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true}})
 	manager.RegisterExecutor(executor)
 	registry.GetGlobalRegistry().RegisterClient("ag-credits", "antigravity", []*registry.ModelInfo{{ID: model}})
 	t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient("ag-credits") })
@@ -134,8 +133,7 @@ func TestManagerExecuteStream_AntigravityCreditsHomeModeFailsClosedWithoutDispat
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
 		Home:          internalconfig.HomeConfig{Enabled: true},
-		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true},
-	})
+		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true}})
 	manager.RegisterExecutor(executor)
 	registry.GetGlobalRegistry().RegisterClient("ag-credits-home-kv", "antigravity", []*registry.ModelInfo{{ID: model}})
 	t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient("ag-credits-home-kv") })
@@ -172,8 +170,7 @@ func TestManagerExecuteStream_CodexOnlyDoesNotEnterAntigravityCreditsFallback(t 
 
 	manager := NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
-		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true},
-	})
+		QuotaExceeded: internalconfig.QuotaExceeded{AntigravityCredits: true}})
 	manager.RegisterExecutor(codexOnlyFailureExecutor{})
 	manager.RegisterExecutor(&antigravityCreditsFallbackExecutor{})
 	reg := registry.GetGlobalRegistry()
@@ -221,17 +218,12 @@ func TestIsAuthBlockedForModel_ClaudeWithCreditsStillBlockedDuringCooldown(t *te
 				NextRetryAfter: time.Now().Add(10 * time.Minute),
 				Quota: QuotaState{
 					Exceeded:      true,
-					NextRecoverAt: time.Now().Add(10 * time.Minute),
-				},
-			},
-		},
-	}
+					NextRecoverAt: time.Now().Add(10 * time.Minute)}}}}
 
 	SetAntigravityCreditsHint(auth.ID, AntigravityCreditsHint{
 		Known:     true,
 		Available: true,
-		UpdatedAt: time.Now(),
-	})
+		UpdatedAt: time.Now()})
 
 	blocked, reason, _ := isAuthBlockedForModel(auth, "claude-sonnet-4-6", time.Now())
 	if !blocked || reason != blockReasonCooldown {
@@ -249,17 +241,12 @@ func TestIsAuthBlockedForModel_KeepsGeminiBlockedWithoutCreditsBypass(t *testing
 				NextRetryAfter: time.Now().Add(10 * time.Minute),
 				Quota: QuotaState{
 					Exceeded:      true,
-					NextRecoverAt: time.Now().Add(10 * time.Minute),
-				},
-			},
-		},
-	}
+					NextRecoverAt: time.Now().Add(10 * time.Minute)}}}}
 
 	SetAntigravityCreditsHint(auth.ID, AntigravityCreditsHint{
 		Known:     true,
 		Available: true,
-		UpdatedAt: time.Now(),
-	})
+		UpdatedAt: time.Now()})
 
 	blocked, reason, _ := isAuthBlockedForModel(auth, "gemini-3-flash", time.Now())
 	if !blocked || reason != blockReasonCooldown {

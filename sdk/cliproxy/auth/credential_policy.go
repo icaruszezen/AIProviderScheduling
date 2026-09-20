@@ -25,14 +25,10 @@ func credentialPolicyAllows(policy string, auth *Auth) bool {
 		if !strings.EqualFold(strings.TrimSpace(auth.Provider), "codex") {
 			return false
 		}
-		switch auth.AuthKind() {
-		case AuthKindOAuth:
-			return true
-		case AuthKindAPIKey:
-			return strings.EqualFold(authAttribute(auth, AttributeCodexAlphaSearch), "true")
-		default:
+		if auth.AuthKind() != AuthKindAPIKey {
 			return false
 		}
+		return strings.EqualFold(authAttribute(auth, AttributeCodexAlphaSearch), "true")
 	default:
 		return false
 	}

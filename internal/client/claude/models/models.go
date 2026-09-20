@@ -40,8 +40,7 @@ func BuildResponse(availableModels []map[string]any, disableCloaking bool) map[s
 		"data":     models,
 		"has_more": false,
 		"first_id": firstID,
-		"last_id":  lastID,
-	}
+		"last_id":  lastID}
 }
 
 // EnsureClaudeModelIDPrefix rewrites model IDs for Anthropic model listings.

@@ -157,8 +157,7 @@ func TestPickHomeDispatchSelectionRejectsMalformedErrorPresence(t *testing.T) {
 		{name: "empty type and code without tuple", payload: `{"error":{"type":" ","code":""},"auth":{"id":"cred-1","provider":"codex"}}`, wantCode: "invalid_auth"},
 		{name: "string with tuple", payload: `{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"error":"busy","auth":{"id":"cred-1","provider":"codex"}}`, wantCode: "invalid_home_concurrency", wantFence: true},
 		{name: "empty object with tuple", payload: `{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"error":{},"auth":{"id":"cred-1","provider":"codex"}}`, wantCode: "invalid_home_concurrency", wantFence: true},
-		{name: "null with tuple", payload: `{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"error":null,"auth":{"id":"cred-1","provider":"codex"}}`, wantCode: "invalid_home_concurrency", wantFence: true},
-	}
+		{name: "null with tuple", payload: `{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"error":null,"auth":{"id":"cred-1","provider":"codex"}}`, wantCode: "invalid_home_concurrency", wantFence: true}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dispatcher := &fixtureHomeDispatcher{payload: []byte(tt.payload)}
@@ -189,8 +188,7 @@ func TestPickHomeDispatchSelectionValidAccountedLocalValidationReleasesAndKeepsH
 		"auth validation":   []byte(`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"auth":{"id":"","provider":"codex"}}`),
 		"payload decode":    []byte(`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"model":123,"auth":{"id":"cred-1","provider":"codex"}}`),
 		"auth decode":       []byte(`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"auth":"invalid"}`),
-		"identity mismatch": []byte(`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"auth_index":"other","auth":{"id":"cred-1","provider":"codex"}}`),
-	}
+		"identity mismatch": []byte(`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"gpt"},"auth_index":"other","auth":{"id":"cred-1","provider":"codex"}}`)}
 	for name, invalidPayload := range tests {
 		t.Run(name, func(t *testing.T) {
 			dispatcher := &fixtureHomeDispatcher{payloads: [][]byte{invalidPayload, validPayload}}
@@ -449,8 +447,7 @@ func TestInstallHomeConcurrencyScopeRejectsNonCanonicalTuple(t *testing.T) {
 	defer pending.End()
 
 	_, errInstall := installHomeConcurrencyScope(registry, pending, homeConcurrencyTuple{
-		Accounted: true, CredentialID: " cred-1 ", Model: "gpt",
-	}, executionregistry.ScopeSpec{Kind: "http", StartedAt: time.Now()})
+		Accounted: true, CredentialID: " cred-1 ", Model: "gpt"}, executionregistry.ScopeSpec{Kind: "http", StartedAt: time.Now()})
 	if !errors.Is(errInstall, ErrMalformedHomeConcurrencyTuple) {
 		t.Fatalf("install error = %v, want malformed tuple", errInstall)
 	}
@@ -460,8 +457,7 @@ func TestPickHomeDispatchSelectionFencesInvalidExplicitConcurrency(t *testing.T)
 	tests := []string{
 		`{"concurrency":{"accounted":false,"credential_id":"cred-1","model":"gpt"},"auth":{"id":"cred-1","provider":"codex"}}`,
 		`{"concurrency":{"accounted":true,"credential_id":" cred-1","model":"gpt"},"auth":{"id":"cred-1","provider":"codex"}}`,
-		`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"other"},"model":"gpt","auth":{"id":"cred-1","provider":"codex"}}`,
-	}
+		`{"concurrency":{"accounted":true,"credential_id":"cred-1","model":"other"},"model":"gpt","auth":{"id":"cred-1","provider":"codex"}}`}
 	for _, payload := range tests {
 		dispatcher := &fixtureHomeDispatcher{payload: []byte(payload)}
 		manager := newHomeSelectionTestManager(t, dispatcher)
@@ -519,8 +515,7 @@ func TestCanonicalHomeConcurrencyModelKeyMatchesHomeLimiter(t *testing.T) {
 		"model(custom)":     "model(custom)",
 		"model(+1)":         "model(+1)",
 		"model(2147483648)": "model(2147483648)",
-		"(high)":            "(high)",
-	}
+		"(high)":            "(high)"}
 	for input, want := range cases {
 		if got := canonicalHomeConcurrencyModelKey(input); got != want {
 			t.Fatalf("canonicalHomeConcurrencyModelKey(%q) = %q, want %q", input, got, want)

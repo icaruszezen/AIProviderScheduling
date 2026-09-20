@@ -29,8 +29,7 @@ func NewBoundedLRU[K comparable, V any](capacity int, onEvict func(K, V)) *Bound
 		capacity: capacity,
 		entries:  make(map[K]*list.Element, capacity),
 		order:    list.New(),
-		onEvict:  onEvict,
-	}
+		onEvict:  onEvict}
 }
 
 // GetOrAdd returns the cached value or creates and stores one while holding the

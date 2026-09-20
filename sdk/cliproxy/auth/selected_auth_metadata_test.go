@@ -10,8 +10,7 @@ func TestPublishSelectedAuthMetadataIncludesStableIndex(t *testing.T) {
 	auth := &Auth{
 		ID:       "auth-1",
 		Provider: "codex",
-		FileName: "auth-1.json",
-	}
+		FileName: "auth-1.json"}
 	selectedAuthID := ""
 	selectedAuthIndex := ""
 	meta := map[string]any{
@@ -20,8 +19,7 @@ func TestPublishSelectedAuthMetadataIncludesStableIndex(t *testing.T) {
 		},
 		cliproxyexecutor.SelectedAuthIndexCallbackMetadataKey: func(authIndex string) {
 			selectedAuthIndex = authIndex
-		},
-	}
+		}}
 
 	publishSelectedAuthMetadata(meta, auth)
 

@@ -60,8 +60,7 @@ func InspectGPTReasoningSignature(rawSignature string) (*GPTReasoningSignatureIn
 
 	return &GPTReasoningSignatureInfo{
 		DecodedLen:    len(decoded),
-		CiphertextLen: ciphertextLen,
-	}, nil
+		CiphertextLen: ciphertextLen}, nil
 }
 
 func decodeGPTReasoningSignature(sig string) ([]byte, error) {

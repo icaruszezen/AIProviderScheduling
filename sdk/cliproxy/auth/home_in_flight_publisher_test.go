@@ -21,13 +21,10 @@ func TestEncodeHomeInFlightFreezePreservesPartitionsAndBarrier(t *testing.T) {
 		BarrierRevision: 14,
 		Executions: []executionregistry.Observation{
 			{RequestID: "req-a", CredentialID: "cred", Model: "gpt-5", RequestKind: "http", StartedAt: time.Unix(10, 0).UTC(), Accounted: true},
-			{RequestID: "req-b", CredentialID: "cred", Model: "gpt-5", RequestKind: "sse", StartedAt: time.Unix(11, 0).UTC(), Accounted: false},
-		},
-	}
+			{RequestID: "req-b", CredentialID: "cred", Model: "gpt-5", RequestKind: "sse", StartedAt: time.Unix(11, 0).UTC(), Accounted: false}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(12, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 64, MaxRevisionBytes: 16384,
-		MaxAggregateGroups: 100000, MaxDetails: 1, MaxStringBytes: 256,
-	})
+		MaxAggregateGroups: 100000, MaxDetails: 1, MaxStringBytes: 256})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFramePart {
 		t.Fatalf("frames = %#v", frames)
 	}
@@ -42,12 +39,10 @@ func TestEncodeHomeInFlightFreezePreservesPartitionsAndBarrier(t *testing.T) {
 func TestEncodeHomeInFlightFreezeUsesOverflowWithoutPartialAggregates(t *testing.T) {
 	freeze := executionregistry.Freeze{Revision: 10, BarrierRevision: 15, Executions: []executionregistry.Observation{
 		{CredentialID: "a", Model: "m1", RequestKind: "http", Accounted: false},
-		{CredentialID: "b", Model: "m2", RequestKind: "http", Accounted: true},
-	}}
+		{CredentialID: "b", Model: "m2", RequestKind: "http", Accounted: true}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 256, MaxPartCount: 1, MaxRevisionBytes: 256,
-		MaxAggregateGroups: 1, MaxDetails: 0, MaxStringBytes: 256,
-	})
+		MaxAggregateGroups: 1, MaxDetails: 0, MaxStringBytes: 256})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFrameOverflow || frames[0].AggregateGroupCount != 2 {
 		t.Fatalf("frames = %#v", frames)
 	}
@@ -63,12 +58,10 @@ func TestEncodeHomeInFlightFreezeUsesDeterministicBoundedMultipartFrames(t *test
 	freeze := executionregistry.Freeze{Revision: 4, Executions: []executionregistry.Observation{
 		{RequestID: "req-c", CredentialID: "cred", Model: "model", RequestKind: "http", StartedAt: time.Unix(12, 0).UTC()},
 		{RequestID: "req-a", CredentialID: "cred", Model: "model", RequestKind: "http", StartedAt: time.Unix(10, 0).UTC()},
-		{RequestID: "req-b", CredentialID: "cred", Model: "model", RequestKind: "http", StartedAt: time.Unix(11, 0).UTC()},
-	}}
+		{RequestID: "req-b", CredentialID: "cred", Model: "model", RequestKind: "http", StartedAt: time.Unix(11, 0).UTC()}}}
 	cfg := HomeInFlightPublisherConfig{
 		MaxPartBytes: 300, MaxPartCount: 8, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 8, MaxDetails: 3, MaxStringBytes: 256,
-	}
+		MaxAggregateGroups: 8, MaxDetails: 3, MaxStringBytes: 256}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), cfg)
 	if len(frames) < 2 {
 		t.Fatalf("frames = %#v, want multipart", frames)
@@ -97,12 +90,10 @@ func TestEncodeHomeInFlightFreezeOverflowsWhenFinalAggregatePartExceedsPartCount
 	freeze := executionregistry.Freeze{Revision: 13, Executions: []executionregistry.Observation{
 		{CredentialID: strings.Repeat("a", 300), Model: strings.Repeat("a", 300), Accounted: true},
 		{CredentialID: strings.Repeat("b", 300), Model: strings.Repeat("b", 300), Accounted: true},
-		{CredentialID: strings.Repeat("c", 300), Model: strings.Repeat("c", 300), Accounted: true},
-	}}
+		{CredentialID: strings.Repeat("c", 300), Model: strings.Repeat("c", 300), Accounted: true}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 3, MaxDetails: 0, MaxStringBytes: 512,
-	})
+		MaxAggregateGroups: 3, MaxDetails: 0, MaxStringBytes: 512})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFrameOverflow || frames[0].AggregateGroupCount != 3 {
 		t.Fatalf("frames = %#v", frames)
 	}
@@ -116,13 +107,11 @@ func TestEncodeHomeInFlightFreezeTruncatesDetailsBeforeTotalOverflow(t *testing.
 	for index := 0; index < 5; index++ {
 		freeze.Executions = append(freeze.Executions, executionregistry.Observation{
 			RequestID: strings.Repeat(string(rune('a'+index)), 60), CredentialID: "cred", Model: "model", RequestKind: "http",
-			StartedAt: time.Unix(int64(index), 0).UTC(),
-		})
+			StartedAt: time.Unix(int64(index), 0).UTC()})
 	}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 512, MaxPartCount: 8, MaxRevisionBytes: 1000,
-		MaxAggregateGroups: 8, MaxDetails: 5, MaxStringBytes: 128,
-	})
+		MaxAggregateGroups: 8, MaxDetails: 5, MaxStringBytes: 128})
 	if len(frames) == 1 && frames[0].Kind == home.InFlightFrameOverflow {
 		t.Fatalf("details overflowed complete aggregates: %#v", frames)
 	}
@@ -134,12 +123,10 @@ func TestEncodeHomeInFlightFreezeTruncatesDetailsBeforeTotalOverflow(t *testing.
 func TestEncodeHomeInFlightFreezeBoundsStringsAndExcludesSensitiveFields(t *testing.T) {
 	freeze := executionregistry.Freeze{Revision: 3, Executions: []executionregistry.Observation{{
 		RequestID: strings.Repeat("request", 20), CredentialID: strings.Repeat("credential", 20),
-		Model: strings.Repeat("model", 20), RequestKind: strings.Repeat("kind", 20),
-	}}}
+		Model: strings.Repeat("model", 20), RequestKind: strings.Repeat("kind", 20)}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 8, MaxDetails: 1, MaxStringBytes: 8,
-	})
+		MaxAggregateGroups: 8, MaxDetails: 1, MaxStringBytes: 8})
 	raw, errMarshal := json.Marshal(frames)
 	if errMarshal != nil {
 		t.Fatal(errMarshal)
@@ -205,8 +192,7 @@ func (homeInFlightModelDispatcher) HeartbeatOK() bool { return true }
 func (homeInFlightModelDispatcher) RPopAuth(context.Context, string, string, http.Header, int) ([]byte, error) {
 	return json.Marshal(homeAuthDispatchResponse{
 		Model: "final-upstream-model",
-		Auth:  Auth{ID: "home-auth", Provider: "home-execution", Status: StatusActive},
-	})
+		Auth:  Auth{ID: "home-auth", Provider: "home-execution", Status: StatusActive}})
 }
 func (homeInFlightModelDispatcher) AbortAmbiguousDispatch() {}
 
@@ -231,12 +217,10 @@ func TestHomeInFlightObservationUsesFinalDispatchModel(t *testing.T) {
 
 func TestEncodeHomeInFlightFreezeOverflowsForRawAggregateKey(t *testing.T) {
 	freeze := executionregistry.Freeze{Executions: []executionregistry.Observation{{
-		CredentialID: "credential-id-exceeds-limit", Model: "model", RequestKind: "http",
-	}}}
+		CredentialID: "credential-id-exceeds-limit", Model: "model", RequestKind: "http"}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 2, MaxDetails: 1, MaxStringBytes: 8,
-	})
+		MaxAggregateGroups: 2, MaxDetails: 1, MaxStringBytes: 8})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFrameOverflow || frames[0].AggregateGroupCount != 1 {
 		t.Fatalf("frames = %#v", frames)
 	}
@@ -245,12 +229,10 @@ func TestEncodeHomeInFlightFreezeOverflowsForRawAggregateKey(t *testing.T) {
 func TestEncodeHomeInFlightFreezeKeepsRawAggregateGroupsDistinct(t *testing.T) {
 	freeze := executionregistry.Freeze{Executions: []executionregistry.Observation{
 		{CredentialID: "credential-a", Model: "model", RequestKind: "http"},
-		{CredentialID: "credential-b", Model: "model", RequestKind: "http"},
-	}}
+		{CredentialID: "credential-b", Model: "model", RequestKind: "http"}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 1, MaxDetails: 0, MaxStringBytes: 8,
-	})
+		MaxAggregateGroups: 1, MaxDetails: 0, MaxStringBytes: 8})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFrameOverflow || frames[0].AggregateGroupCount != 2 {
 		t.Fatalf("frames = %#v", frames)
 	}
@@ -259,12 +241,10 @@ func TestEncodeHomeInFlightFreezeKeepsRawAggregateGroupsDistinct(t *testing.T) {
 func TestEncodeHomeInFlightFreezeDropsInvalidDetailsWithoutDiscardingAggregates(t *testing.T) {
 	freeze := executionregistry.Freeze{Revision: 21, Executions: []executionregistry.Observation{
 		{RequestID: "", CredentialID: "cred-a", Model: "model-a", RequestKind: "http", StartedAt: time.Unix(1, 0).UTC()},
-		{RequestID: "request-b", CredentialID: "cred-a", Model: "model-a", RequestKind: "http", StartedAt: time.Unix(2, 0).UTC()},
-	}}
+		{RequestID: "request-b", CredentialID: "cred-a", Model: "model-a", RequestKind: "http", StartedAt: time.Unix(2, 0).UTC()}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 2, MaxDetails: 2, MaxStringBytes: 64,
-	})
+		MaxAggregateGroups: 2, MaxDetails: 2, MaxStringBytes: 64})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFramePart {
 		t.Fatalf("frames = %#v, want one part", frames)
 	}
@@ -279,12 +259,10 @@ func TestEncodeHomeInFlightFreezeDropsInvalidDetailsWithoutDiscardingAggregates(
 func TestEncodeHomeInFlightFreezeCanonicalizesUnaccountedModelsWithFallback(t *testing.T) {
 	freeze := executionregistry.Freeze{Revision: 22, Executions: []executionregistry.Observation{
 		{RequestID: "request-a", CredentialID: "cred-a", Model: "GPT-5(HIGH)", RequestKind: "http", StartedAt: time.Unix(1, 0).UTC()},
-		{RequestID: "request-b", CredentialID: "cred-b", Model: "   ", RequestKind: "http", StartedAt: time.Unix(2, 0).UTC()},
-	}}
+		{RequestID: "request-b", CredentialID: "cred-b", Model: "   ", RequestKind: "http", StartedAt: time.Unix(2, 0).UTC()}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 3, MaxDetails: 2, MaxStringBytes: 64,
-	})
+		MaxAggregateGroups: 3, MaxDetails: 2, MaxStringBytes: 64})
 	if len(frames) != 1 || frames[0].Kind != home.InFlightFramePart {
 		t.Fatalf("frames = %#v, want one part", frames)
 	}
@@ -304,12 +282,10 @@ func TestEncodeHomeInFlightFreezeSetsGlobalDetailTruncationMetadata(t *testing.T
 	freeze := executionregistry.Freeze{Executions: []executionregistry.Observation{
 		{RequestID: strings.Repeat("r", 32), CredentialID: "cred-a", Model: "model-a", RequestKind: "http", StartedAt: time.Unix(1, 0)},
 		{RequestID: "request-b", CredentialID: "cred-b", Model: "model-b", RequestKind: "http", StartedAt: time.Unix(2, 0)},
-		{RequestID: "request-c", CredentialID: "cred-c", Model: "model-c", RequestKind: "http", StartedAt: time.Unix(3, 0)},
-	}}
+		{RequestID: "request-c", CredentialID: "cred-c", Model: "model-c", RequestKind: "http", StartedAt: time.Unix(3, 0)}}}
 	frames := encodeHomeInFlightFreeze(freeze, time.Unix(20, 0).UTC(), HomeInFlightPublisherConfig{
 		MaxPartBytes: 300, MaxPartCount: 8, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 4, MaxDetails: 2, MaxStringBytes: 8,
-	})
+		MaxAggregateGroups: 4, MaxDetails: 2, MaxStringBytes: 8})
 	if len(frames) < 2 {
 		t.Fatalf("frames = %#v, want multipart", frames)
 	}
@@ -345,8 +321,7 @@ func (t *homeInFlightLifecycleTransport) LPushInFlightSnapshot(_ context.Context
 func homeInFlightPublisherTestConfig(interval time.Duration) HomeInFlightPublisherConfig {
 	return HomeInFlightPublisherConfig{
 		SnapshotInterval: interval, MaxPartBytes: 1024, MaxPartCount: 2, MaxRevisionBytes: 2048,
-		MaxAggregateGroups: 2, MaxDetails: 1, MaxStringBytes: 32,
-	}
+		MaxAggregateGroups: 2, MaxDetails: 1, MaxStringBytes: 32}
 }
 
 func waitForHomeInFlightPublisherPayload(t *testing.T, payloads <-chan homeInFlightPublisherPayload) homeInFlightPublisherPayload {

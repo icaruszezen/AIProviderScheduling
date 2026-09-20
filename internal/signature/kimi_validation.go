@@ -76,8 +76,7 @@ const (
 // touching the probe itself.
 var kimiThinkingSignatureLens = map[int]KimiThinkingSignatureMode{
 	KimiThinkingSignatureNonStreamingLen: KimiThinkingSignatureModeNonStreaming,
-	KimiThinkingSignatureStreamingLen:    KimiThinkingSignatureModeStreaming,
-}
+	KimiThinkingSignatureStreamingLen:    KimiThinkingSignatureModeStreaming}
 
 // MinKimiThinkingSignatureEntropyRatio keeps a same-length attacker-supplied
 // filler from claiming the family. Native samples sit at 0.997+ against the
@@ -149,8 +148,7 @@ func InspectKimiThinkingSignature(raw string) (*KimiThinkingSignatureInfo, error
 	return &KimiThinkingSignatureInfo{
 		RawLen:     len(sig),
 		DecodedLen: len(decoded),
-		Mode:       mode,
-	}, nil
+		Mode:       mode}, nil
 }
 
 // IsValidKimiThinkingSignature reports whether raw has the transport shape of a

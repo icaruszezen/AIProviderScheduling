@@ -96,9 +96,7 @@ func (dynamicLibraryLoader) Open(file pluginFile, host *Host) (pluginClient, err
 			abiVersion: pluginHostABIVersion,
 			hostCtx:    uintptr(unsafe.Pointer(hostCtx)),
 			call:       windowsHostCallCallback,
-			freeBuffer: windowsHostFreeCallback,
-		},
-	}
+			freeBuffer: windowsHostFreeCallback}}
 	rc, _, errCall := proc.Call(uintptr(unsafe.Pointer(client.hostAPI)), uintptr(unsafe.Pointer(&client.api)))
 	if rc != 0 {
 		client.closeAfterOpenFailure()

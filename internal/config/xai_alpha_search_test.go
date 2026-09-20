@@ -6,8 +6,7 @@ func TestSanitizeXAIKeysClearsCodexAlphaSearchCapability(t *testing.T) {
 	cfg := &Config{XAIKey: []XAIKey{{
 		APIKey:      "xai-key",
 		BaseURL:     "https://api.x.ai/v1",
-		AlphaSearch: true,
-	}}}
+		AlphaSearch: true}}}
 
 	cfg.SanitizeXAIKeys()
 

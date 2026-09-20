@@ -24,7 +24,6 @@ type ClaudeExecutor struct {
 	cfg                     *config.Config
 	requestLogProvider      string
 	upstreamModelNormalizer func(string) string
-	oauthProfileFetcher     claudeOAuthProfileFetcher
 }
 
 type claudeOAuthCancellationError struct {
@@ -120,8 +119,7 @@ func logClaudeSignatureSanitizeReport(ctx context.Context, baseModel string, rep
 		"preserved":           report.Preserved,
 		"dropped_blocks":      report.DroppedBlocks,
 		"dropped_signatures":  report.DroppedSignatures,
-		"replaced_signatures": report.ReplacedSignatures,
-	}
+		"replaced_signatures": report.ReplacedSignatures}
 	if len(report.Decisions) > 0 {
 		decision := report.Decisions[0]
 		fields["first_block_kind"] = string(decision.BlockKind)
@@ -248,4 +246,13 @@ func (e *ClaudeExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.Aut
 	}
 	httpClient := helps.NewUtlsHTTPClient(ctx, e.cfg, auth, 0)
 	return httpClient.Do(httpReq)
+}
+
+// Refresh replaces credentials via Home when enabled. Account OAuth token
+// refresh is not supported; API keys are returned unchanged.
+func (e *ClaudeExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
+		return refreshed, err
+	}
+	return auth, nil
 }

@@ -29,17 +29,13 @@ func TestManager_ShouldRetryAfterError_RespectsAuthRequestRetryOverride(t *testi
 		ID:       "auth-1",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"request_retry": float64(0),
-		},
+			"request_retry": float64(0)},
 		ModelStates: map[string]*ModelState{
 			model: {
 				Unavailable:    true,
 				Status:         StatusError,
 				NextRetryAfter: next,
-				LastError:      &Error{HTTPStatus: http.StatusInternalServerError, Message: "upstream unavailable"},
-			},
-		},
-	}
+				LastError:      &Error{HTTPStatus: http.StatusInternalServerError, Message: "upstream unavailable"}}}}
 	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
 	t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(auth.ID) })
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
@@ -117,11 +113,8 @@ func TestManager_ShouldRetryAfterError_DoesNotWaitWhenAnotherCredentialIsAvailab
 			ID:       "cooling-" + uuid.NewString(),
 			Provider: "codex",
 			ModelStates: map[string]*ModelState{
-				model: {Unavailable: true, Status: StatusError, NextRetryAfter: next},
-			},
-		},
-		{ID: "available-" + uuid.NewString(), Provider: "codex"},
-	}
+				model: {Unavailable: true, Status: StatusError, NextRetryAfter: next}}},
+		{ID: "available-" + uuid.NewString(), Provider: "codex"}}
 	for _, auth := range auths {
 		registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
 		t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(auth.ID) })
@@ -184,8 +177,7 @@ func TestManager_ShouldRetryAfterError_IgnoresNonRoundCooldownOverrides(t *testi
 		{name: "unauthorized", state: &ModelState{Status: StatusError, Unavailable: true, LastError: &Error{HTTPStatus: http.StatusUnauthorized, Message: "unauthorized"}}},
 		{name: "payment required", state: &ModelState{Status: StatusError, Unavailable: true, LastError: &Error{HTTPStatus: http.StatusPaymentRequired, Message: "payment required"}}},
 		{name: "not found", state: &ModelState{Status: StatusError, Unavailable: true, LastError: &Error{HTTPStatus: http.StatusNotFound, Message: "not found"}}},
-		{name: "model unsupported", state: &ModelState{Status: StatusError, Unavailable: true, LastError: &Error{HTTPStatus: http.StatusBadRequest, Message: "model not supported"}}},
-	}
+		{name: "model unsupported", state: &ModelState{Status: StatusError, Unavailable: true, LastError: &Error{HTTPStatus: http.StatusBadRequest, Message: "model not supported"}}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)
@@ -200,9 +192,7 @@ func TestManager_ShouldRetryAfterError_IgnoresNonRoundCooldownOverrides(t *testi
 					ID:          "retry-round-ineligible-" + uuid.NewString(),
 					Provider:    "codex",
 					Metadata:    map[string]any{"request_retry": 2},
-					ModelStates: map[string]*ModelState{model: test.state},
-				},
-			}
+					ModelStates: map[string]*ModelState{model: test.state}}}
 			for _, auth := range auths {
 				registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
 				t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(auth.ID) })
@@ -232,16 +222,13 @@ func TestManager_ShouldRetryAfterError_IgnoresRequestIneligibleOverrides(t *test
 			eligible: &Auth{
 				ID:         "retry-policy-eligible",
 				Provider:   "codex",
-				Attributes: map[string]string{"auth_kind": "oauth"},
-				Metadata:   map[string]any{"request_retry": 0},
-			},
+				Attributes: map[string]string{AttributeAuthKind: AuthKindAPIKey, AttributeAPIKey: "alpha-key", AttributeCodexAlphaSearch: "true"},
+				Metadata:   map[string]any{"request_retry": 0}},
 			ineligible: &Auth{
 				ID:         "retry-policy-ineligible",
 				Provider:   "codex",
 				Attributes: map[string]string{"api_key": "ordinary"},
-				Metadata:   map[string]any{"request_retry": 2},
-			},
-		},
+				Metadata:   map[string]any{"request_retry": 2}}},
 		{
 			name: "pinned credential",
 			ctx:  context.Background(),
@@ -249,15 +236,11 @@ func TestManager_ShouldRetryAfterError_IgnoresRequestIneligibleOverrides(t *test
 			eligible: &Auth{
 				ID:       "retry-pinned-eligible",
 				Provider: "codex",
-				Metadata: map[string]any{"request_retry": 0},
-			},
+				Metadata: map[string]any{"request_retry": 0}},
 			ineligible: &Auth{
 				ID:       "retry-pinned-ineligible",
 				Provider: "codex",
-				Metadata: map[string]any{"request_retry": 2},
-			},
-		},
-	}
+				Metadata: map[string]any{"request_retry": 2}}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)
@@ -293,23 +276,19 @@ func TestManager_RequestRetryRunsAdditionalLocalRoundWithoutCooldown(t *testing.
 			execute: func(m *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := m.Execute(context.Background(), []string{"claude"}, req, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count tokens",
 			execute: func(m *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := m.ExecuteCount(context.Background(), []string{"claude"}, req, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			execute: func(m *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := m.ExecuteStream(context.Background(), []string{"claude"}, req, cliproxyexecutor.Options{Stream: true})
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			m := NewManager(nil, nil, nil)
@@ -340,9 +319,7 @@ func TestManager_ShouldRetryAfterError_UsesOAuthModelAliasForCooldown(t *testing
 	m.SetRetryConfig(3, 30*time.Second, 0)
 	m.SetOAuthModelAlias(map[string][]internalconfig.OAuthModelAlias{
 		"kimi": {
-			{Name: "deepseek-v3.1", Alias: "pool-model"},
-		},
-	})
+			{Name: "deepseek-v3.1", Alias: "pool-model"}}})
 
 	routeModel := "pool-model"
 	upstreamModel := "deepseek-v3.1"
@@ -359,11 +336,7 @@ func TestManager_ShouldRetryAfterError_UsesOAuthModelAliasForCooldown(t *testing
 				Quota: QuotaState{
 					Exceeded:      true,
 					Reason:        "quota",
-					NextRecoverAt: next,
-				},
-			},
-		},
-	}
+					NextRecoverAt: next}}}}
 	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: upstreamModel}})
 	t.Cleanup(func() { registry.GetGlobalRegistry().UnregisterClient(auth.ID) })
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
@@ -623,23 +596,19 @@ func TestManager_MaxRetryCredentials_LimitsCrossCredentialRetries(t *testing.T) 
 			invoke: func(m *Manager) error {
 				_, errExecute := m.Execute(context.Background(), []string{"claude"}, request, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "execute_count",
 			invoke: func(m *Manager) error {
 				_, errExecute := m.ExecuteCount(context.Background(), []string{"claude"}, request, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "execute_stream",
 			invoke: func(m *Manager) error {
 				_, errExecute := m.ExecuteStream(context.Background(), []string{"claude"}, request, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
-	}
+			}}}
 
 	for _, tc := range testCases {
 		tc := tc
@@ -670,10 +639,7 @@ func TestManager_ModelSupportBadRequest_FallsBackAndSuspendsAuth(t *testing.T) {
 		executeErrors: map[string]error{
 			"aa-bad-auth": &Error{
 				HTTPStatus: http.StatusBadRequest,
-				Message:    "invalid_request_error: The requested model is not supported.",
-			},
-		},
-	}
+				Message:    "invalid_request_error: The requested model is not supported."}}}
 	m.RegisterExecutor(executor)
 
 	model := "claude-opus-4-6"
@@ -737,14 +703,11 @@ func TestManagerExecute_AntigravityInvalidGrantFallsBackAndSuspendsAuth(t *testi
 	m := NewManager(nil, nil, nil)
 	invalidGrantErr := &Error{
 		HTTPStatus: http.StatusBadRequest,
-		Message:    `bad response status code 400, message: {"error":"invalid_grant","error_description":"Bad Request"}, body: {"type":"error","error":{"type":"invalid_request_error","message":"{\"error\":\"invalid_grant\"}"}}`,
-	}
+		Message:    `bad response status code 400, message: {"error":"invalid_grant","error_description":"Bad Request"}, body: {"type":"error","error":{"type":"invalid_request_error","message":"{\"error\":\"invalid_grant\"}"}}`}
 	executor := &authFallbackExecutor{
 		id: "antigravity",
 		executeErrors: map[string]error{
-			"aa-bad-auth": invalidGrantErr,
-		},
-	}
+			"aa-bad-auth": invalidGrantErr}}
 	m.RegisterExecutor(executor)
 
 	model := "gemini-3-pro-preview"
@@ -811,14 +774,11 @@ func TestManagerExecuteStream_AntigravityInvalidGrantFallsBackAndSuspendsAuth(t 
 	m := NewManager(nil, nil, nil)
 	invalidGrantErr := &Error{
 		HTTPStatus: http.StatusBadRequest,
-		Message:    `bad response status code 400, message: {"error":"invalid_grant","error_description":"Bad Request"}, body: {"type":"error","error":{"type":"invalid_request_error","message":"{\"error\":\"invalid_grant\"}"}}`,
-	}
+		Message:    `bad response status code 400, message: {"error":"invalid_grant","error_description":"Bad Request"}, body: {"type":"error","error":{"type":"invalid_request_error","message":"{\"error\":\"invalid_grant\"}"}}`}
 	executor := &authFallbackExecutor{
 		id: "antigravity",
 		streamFirstErrors: map[string]error{
-			"aa-bad-auth": invalidGrantErr,
-		},
-	}
+			"aa-bad-auth": invalidGrantErr}}
 	m.RegisterExecutor(executor)
 
 	model := "gemini-3-pro-preview"
@@ -892,10 +852,7 @@ func TestManagerExecuteStream_ModelSupportBadRequestFallsBackAndSuspendsAuth(t *
 		streamFirstErrors: map[string]error{
 			"aa-bad-auth": &Error{
 				HTTPStatus: http.StatusBadRequest,
-				Message:    "invalid_request_error: The requested model is not supported.",
-			},
-		},
-	}
+				Message:    "invalid_request_error: The requested model is not supported."}}}
 	m.RegisterExecutor(executor)
 
 	model := "claude-opus-4-6"
@@ -973,9 +930,7 @@ func TestManager_MarkResult_RespectsAuthDisableCoolingOverride(t *testing.T) {
 		ID:       "auth-1",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"disable_cooling": true,
-		},
-	}
+			"disable_cooling": true}}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -986,8 +941,7 @@ func TestManager_MarkResult_RespectsAuthDisableCoolingOverride(t *testing.T) {
 		Provider: "claude",
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: 500, Message: "boom"},
-	})
+		Error:    &Error{HTTPStatus: 500, Message: "boom"}})
 
 	updated, ok := m.GetByID("auth-1")
 	if !ok || updated == nil {
@@ -1016,8 +970,7 @@ func TestManager_MarkResult_TransientErrorCooldownDefault(t *testing.T) {
 
 	auth := &Auth{
 		ID:       "auth-transient-default",
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1028,8 +981,7 @@ func TestManager_MarkResult_TransientErrorCooldownDefault(t *testing.T) {
 		Provider: auth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusBadGateway, Message: "bad gateway"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusBadGateway, Message: "bad gateway"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -1062,8 +1014,7 @@ func TestManager_MarkResult_TransientErrorCooldownDisabled(t *testing.T) {
 
 	modelAuth := &Auth{
 		ID:       "auth-transient-model-disabled",
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, errRegisterModel := m.Register(context.Background(), modelAuth); errRegisterModel != nil {
 		t.Fatalf("register model auth: %v", errRegisterModel)
 	}
@@ -1074,8 +1025,7 @@ func TestManager_MarkResult_TransientErrorCooldownDisabled(t *testing.T) {
 		Provider: modelAuth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusBadGateway, Message: "bad gateway"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusBadGateway, Message: "bad gateway"}})
 
 	updatedModelAuth, okModelAuth := m.GetByID(modelAuth.ID)
 	if !okModelAuth || updatedModelAuth == nil {
@@ -1091,8 +1041,7 @@ func TestManager_MarkResult_TransientErrorCooldownDisabled(t *testing.T) {
 
 	authLevelAuth := &Auth{
 		ID:       "auth-transient-auth-disabled",
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, errRegisterAuth := m.Register(context.Background(), authLevelAuth); errRegisterAuth != nil {
 		t.Fatalf("register auth-level auth: %v", errRegisterAuth)
 	}
@@ -1101,8 +1050,7 @@ func TestManager_MarkResult_TransientErrorCooldownDisabled(t *testing.T) {
 		AuthID:   authLevelAuth.ID,
 		Provider: authLevelAuth.Provider,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusServiceUnavailable, Message: "unavailable"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusServiceUnavailable, Message: "unavailable"}})
 
 	updatedAuthLevel, okAuthLevel := m.GetByID(authLevelAuth.ID)
 	if !okAuthLevel || updatedAuthLevel == nil {
@@ -1127,8 +1075,7 @@ func TestManager_MarkResult_TransientErrorCooldownDoesNotDisableAuthErrors(t *te
 
 	auth := &Auth{
 		ID:       "auth-transient-auth-error",
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1139,8 +1086,7 @@ func TestManager_MarkResult_TransientErrorCooldownDoesNotDisableAuthErrors(t *te
 		Provider: auth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "forbidden"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "forbidden"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -1170,9 +1116,7 @@ func TestManager_MarkResult_RespectsAuthDisableCoolingOverride_On403(t *testing.
 		ID:       "auth-403",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"disable_cooling": true,
-		},
-	}
+			"disable_cooling": true}}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1187,8 +1131,7 @@ func TestManager_MarkResult_RespectsAuthDisableCoolingOverride_On403(t *testing.
 		Provider: "claude",
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "forbidden"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "forbidden"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -1216,8 +1159,7 @@ func TestManager_MarkResult_CloudflareChallenge_On403(t *testing.T) {
 
 	auth := &Auth{
 		ID:       "auth-cf-403",
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1232,8 +1174,7 @@ func TestManager_MarkResult_CloudflareChallenge_On403(t *testing.T) {
 		Provider: "claude",
 		Model:    model,
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "cf-mitigated: challenge"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusForbidden, Message: "cf-mitigated: challenge"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -1272,19 +1213,14 @@ func TestManager_Execute_DisableCooling_DoesNotBlackoutAfter403(t *testing.T) {
 		executeErrors: map[string]error{
 			"auth-403-exec": &Error{
 				HTTPStatus: http.StatusForbidden,
-				Message:    "forbidden",
-			},
-		},
-	}
+				Message:    "forbidden"}}}
 	m.RegisterExecutor(executor)
 
 	auth := &Auth{
 		ID:       "auth-403-exec",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"disable_cooling": true,
-		},
-	}
+			"disable_cooling": true}}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1324,19 +1260,14 @@ func TestManager_Execute_DisableCooling_DoesNotBlackoutAfter429RetryAfter(t *tes
 			"auth-429-exec": &retryAfterStatusError{
 				status:     http.StatusTooManyRequests,
 				message:    "quota exhausted",
-				retryAfter: 2 * time.Minute,
-			},
-		},
-	}
+				retryAfter: 2 * time.Minute}}}
 	m.RegisterExecutor(executor)
 
 	auth := &Auth{
 		ID:       "auth-429-exec",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"disable_cooling": true,
-		},
-	}
+			"disable_cooling": true}}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1395,19 +1326,14 @@ func TestManager_Execute_DisableCooling_RetriesAfter429RetryAfter(t *testing.T) 
 			"auth-429-retryafter-exec": &retryAfterStatusError{
 				status:     http.StatusTooManyRequests,
 				message:    "quota exhausted",
-				retryAfter: 5 * time.Millisecond,
-			},
-		},
-	}
+				retryAfter: 5 * time.Millisecond}}}
 	m.RegisterExecutor(executor)
 
 	auth := &Auth{
 		ID:       "auth-429-retryafter-exec",
 		Provider: "claude",
 		Metadata: map[string]any{
-			"disable_cooling": true,
-		},
-	}
+			"disable_cooling": true}}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1435,51 +1361,40 @@ func TestManager_Execute_DisableCooling_RetriesAfter429RetryAfter(t *testing.T) 
 func TestManager_RequestScopedErrorStopsCredentialFallbackWithoutSuspendingAuth(t *testing.T) {
 	incompleteErr := &requestScopedStatusError{
 		status:  http.StatusRequestTimeout,
-		message: "stream error: stream disconnected before completion: stream closed before response.completed",
-	}
+		message: "stream error: stream disconnected before completion: stream closed before response.completed"}
 	messageTooBigErr := &requestScopedStatusError{
 		status:  http.StatusRequestEntityTooLarge,
-		message: `{"error":{"message":"upstream websocket message too big","type":"invalid_request_error","code":"message_too_big"}}`,
-	}
+		message: `{"error":{"message":"upstream websocket message too big","type":"invalid_request_error","code":"message_too_big"}}`}
 	invalidRequestErr := &Error{
 		HTTPStatus: http.StatusBadRequest,
-		Message:    `{"error":{"type":"invalid_request_error","code":"invalid_value","message":"Invalid input."}}`,
-	}
+		Message:    `{"error":{"type":"invalid_request_error","code":"invalid_value","message":"Invalid input."}}`}
 	badRequestErr := &Error{
 		HTTPStatus: http.StatusBadRequest,
-		Message:    `{"error":{"type":"bad_request_error","code":"invalid_value","message":"Bad input."}}`,
-	}
+		Message:    `{"error":{"type":"bad_request_error","code":"invalid_value","message":"Bad input."}}`}
 	cyberPolicyErr := &Error{
 		HTTPStatus: http.StatusBadGateway,
-		Message:    `{"error":{"type":"invalid_request","code":"cyber_policy","message":"This content was flagged for possible cybersecurity risk."}}`,
-	}
+		Message:    `{"error":{"type":"invalid_request","code":"cyber_policy","message":"This content was flagged for possible cybersecurity risk."}}`}
 	// A frame/payload that exceeds the upstream size limit fails identically on
 	// every credential, so it must not rotate or punish the pool.
 	tooLargeErr := &Error{
 		HTTPStatus: http.StatusRequestEntityTooLarge,
-		Message:    `{"error":{"code":"message_too_big","message":"upstream websocket message too big"}}`,
-	}
+		Message:    `{"error":{"code":"message_too_big","message":"upstream websocket message too big"}}`}
 	plainBadRequestErr := &Error{
 		HTTPStatus: http.StatusBadRequest,
-		Message:    "bad request",
-	}
+		Message:    "bad request"}
 	conflictErr := &Error{
 		HTTPStatus: http.StatusConflict,
-		Message:    `{"error":{"type":"conflict_error","code":"conflict","message":"request conflict"}}`,
-	}
+		Message:    `{"error":{"type":"conflict_error","code":"conflict","message":"request conflict"}}`}
 	contextLengthErr := &Error{
 		HTTPStatus: http.StatusBadGateway,
-		Message:    `{"error":{"type":"server_error","code":"context_length_exceeded","message":"input too long"}}`,
-	}
+		Message:    `{"error":{"type":"server_error","code":"context_length_exceeded","message":"input too long"}}`}
 	invalidRequestTypeErr := &Error{
 		HTTPStatus: http.StatusBadGateway,
-		Message:    `{"body":{"error":{"type":"invalid_request","message":"invalid input"}}}`,
-	}
+		Message:    `{"body":{"error":{"type":"invalid_request","message":"invalid input"}}}`}
 	// Upstream sends this one as plain text rather than a JSON error body.
 	itemNotPersistedErr := &Error{
 		HTTPStatus: http.StatusNotFound,
-		Message:    requestScopedNotFoundMessage,
-	}
+		Message:    requestScopedNotFoundMessage}
 	tests := []struct {
 		name               string
 		provider           string
@@ -1509,8 +1424,7 @@ func TestManager_RequestScopedErrorStopsCredentialFallbackWithoutSuspendingAuth(
 		{name: "streaming invalid request type behind bad gateway", stream: true, err: invalidRequestTypeErr, wantStatus: http.StatusBadGateway},
 		{name: "non-streaming item not persisted", err: itemNotPersistedErr, wantStatus: http.StatusNotFound},
 		{name: "streaming item not persisted", stream: true, err: itemNotPersistedErr, wantStatus: http.StatusNotFound},
-		{name: "streaming item not persisted after payload", stream: true, streamAfterPayload: true, err: itemNotPersistedErr, wantStatus: http.StatusNotFound},
-	}
+		{name: "streaming item not persisted after payload", stream: true, streamAfterPayload: true, err: itemNotPersistedErr, wantStatus: http.StatusNotFound}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1613,8 +1527,7 @@ func TestManager_DeepSeekInsufficientBalanceRotatesCredentialAndRebindsSession(t
 	m.SetRetryConfig(2, 30*time.Second, 0)
 	affinity := NewSessionAffinitySelectorWithConfig(SessionAffinityConfig{
 		Fallback: &RoundRobinSelector{},
-		TTL:      time.Hour,
-	})
+		TTL:      time.Hour})
 	defer affinity.Stop()
 	m.SetSelector(affinity)
 
@@ -1626,10 +1539,7 @@ func TestManager_DeepSeekInsufficientBalanceRotatesCredentialAndRebindsSession(t
 		executeErrors: map[string]error{
 			"aa-empty-balance": &Error{
 				HTTPStatus: http.StatusPaymentRequired,
-				Message:    `{"error":{"message":"Insufficient Balance","type":"unknown_error","param":null,"code":"invalid_request_error"}}`,
-			},
-		},
-	}
+				Message:    `{"error":{"message":"Insufficient Balance","type":"unknown_error","param":null,"code":"invalid_request_error"}}`}}}
 	m.RegisterExecutor(executor)
 
 	depletedAuth := &Auth{ID: "aa-empty-balance", Provider: provider}
@@ -1652,8 +1562,7 @@ func TestManager_DeepSeekInsufficientBalanceRotatesCredentialAndRebindsSession(t
 	}
 
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
-		cliproxyexecutor.DerivedSessionIDMetadataKey: "deepseek-insufficient-balance",
-	}}
+		cliproxyexecutor.DerivedSessionIDMetadataKey: "deepseek-insufficient-balance"}}
 	beforeExecute := time.Now()
 	resp, errExecute := m.Execute(
 		context.Background(),
@@ -1711,15 +1620,12 @@ func TestManager_DeepSeekCredentialFailuresRotateCredential(t *testing.T) {
 		{
 			name:    "authentication failure",
 			status:  http.StatusUnauthorized,
-			message: `{"error":{"code":"invalid_request_error","message":"Authentication Fails, Your api key: ****heck is invalid","param":null,"type":"authentication_error"}}`,
-		},
+			message: `{"error":{"code":"invalid_request_error","message":"Authentication Fails, Your api key: ****heck is invalid","param":null,"type":"authentication_error"}}`},
 		{
 			name:      "rate limit with generic request error code",
 			status:    http.StatusTooManyRequests,
 			message:   `{"error":{"code":"invalid_request_error","message":"Rate Limit Reached","param":null,"type":"unknown_error"}}`,
-			wantQuota: true,
-		},
-	}
+			wantQuota: true}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1732,9 +1638,7 @@ func TestManager_DeepSeekCredentialFailuresRotateCredential(t *testing.T) {
 			executor := &authFallbackExecutor{
 				id: provider,
 				executeErrors: map[string]error{
-					"aa-failed-key": &Error{HTTPStatus: tc.status, Message: tc.message},
-				},
-			}
+					"aa-failed-key": &Error{HTTPStatus: tc.status, Message: tc.message}}}
 			m.RegisterExecutor(executor)
 
 			failedAuth := &Auth{ID: "aa-failed-key", Provider: provider}
@@ -1805,9 +1709,7 @@ func TestManager_UnknownUpstreamErrorRotatesAndPenalizesModelOnly(t *testing.T) 
 	executor.executeErrors = map[string]error{
 		"aa-bad-auth": &Error{
 			HTTPStatus: http.StatusInternalServerError,
-			Message:    `{"error":{"code":500,"message":"Internal error encountered.","status":"UNKNOWN"}}`,
-		},
-	}
+			Message:    `{"error":{"code":500,"message":"Internal error encountered.","status":"UNKNOWN"}}`}}
 	m.RegisterExecutor(executor)
 
 	badAuth := &Auth{ID: "aa-bad-auth", Provider: provider}
@@ -1866,8 +1768,7 @@ func TestManager_MarkResult_RequestScopedNotFoundDoesNotCooldownAuth(t *testing.
 
 	auth := &Auth{
 		ID:       "auth-1",
-		Provider: "openai",
-	}
+		Provider: "openai"}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -1880,9 +1781,7 @@ func TestManager_MarkResult_RequestScopedNotFoundDoesNotCooldownAuth(t *testing.
 		Success:  false,
 		Error: &Error{
 			HTTPStatus: http.StatusNotFound,
-			Message:    requestScopedNotFoundMessage,
-		},
-	})
+			Message:    requestScopedNotFoundMessage}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -1911,10 +1810,7 @@ func TestManager_ExecuteCount_GenericRouteNotFoundDoesNotSuspendModel(t *testing
 		countTokenErrors: map[string]error{
 			"count-route-not-found-auth": &Error{
 				HTTPStatus: http.StatusNotFound,
-				Message:    "404 page not found",
-			},
-		},
-	}
+				Message:    "404 page not found"}}}
 	m.RegisterExecutor(executor)
 
 	model := "count-route-not-found-model"
@@ -1974,10 +1870,7 @@ func TestManager_ExecuteCount_ExplicitModelNotFoundSuspendsModel(t *testing.T) {
 			"count-model-not-found-auth": &Error{
 				Code:       "model_not_found",
 				HTTPStatus: http.StatusNotFound,
-				Message:    `{"type":"error","error":{"type":"not_found_error","message":"model count-explicitly-missing-model was not found"}}`,
-			},
-		},
-	}
+				Message:    `{"type":"error","error":{"type":"not_found_error","message":"model count-explicitly-missing-model was not found"}}`}}}
 	m.RegisterExecutor(executor)
 
 	model := "count-explicitly-missing-model"
@@ -2028,150 +1921,120 @@ func TestIsCountTokensEndpointNotFoundError(t *testing.T) {
 		{
 			name: "empty router 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound},
-			want: true,
-		},
+			want: true},
 		{
 			name: "plain router 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: "404 page not found"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "wrapped router 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: "upstream request failed: 404 page not found"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "fastapi route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"detail":"Not Found"}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "problem details route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"title":"Not Found","status":404}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "nested generic route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"Not Found"}}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "generic model api route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"type":"not_found_error","title":"Model API","detail":"Not Found"}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "generic model metadata route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"model metadata route not found"}}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "generic model provider 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"model provider was not found"}}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "generic route with misleading metadata",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"message":"Not Found","request_id":"model_not_found"}`},
-			want: true,
-		},
+			want: true},
 		{
 			name: "express count route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: "Cannot POST /v1/messages/count_tokens"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "html route 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: "<html><title>404 Not Found</title></html>"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "structured model 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"model claude-missing was not found"}}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "anthropic exact model reference",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"model: claude-missing"}}`},
-			want: false,
-		},
+			want: false},
 		{
 			name:  "anthropic model reference with thinking suffix",
 			err:   &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"model: claude-missing"}}`},
 			model: "claude-missing(high)",
-			want:  false,
-		},
+			want:  false},
 		{
 			name: "requested model does not exist",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"The requested model does not exist"}}`},
-			want: false,
-		},
+			want: false},
 		{
 			name:  "requested quoted model could not be found",
 			err:   &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":{"type":"not_found_error","message":"The requested model 'foo' could not be found"}}`},
 			model: "foo",
-			want:  false,
-		},
+			want:  false},
 		{
 			name: "problem details model type uri",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"type":"https://example.com/problems/model-not-found","title":"Not Found","status":404}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "structured model error string",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"error":"model claude-missing does not exist"}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "model code with generic message",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"message":"Not Found","code":"model_not_found","model":"claude-missing"}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "typed model not found code",
 			err:  &Error{Code: "model_not_found", HTTPStatus: http.StatusNotFound, Message: "Not Found"},
-			want: false,
-		},
+			want: false},
 		{
 			name: "typed wrapper with structured model code",
 			err:  &Error{Code: "not_found", HTTPStatus: http.StatusNotFound, Message: `{"error":{"code":"model_not_found","message":"Not Found"}}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "wrapped structured model code",
 			err: fmt.Errorf("upstream failed: %w", &requestScopedStatusError{
 				status:  http.StatusNotFound,
-				message: `{"error":{"code":"model_not_found","message":"Not Found"}}`,
-			}),
-			want: false,
-		},
+				message: `{"error":{"code":"model_not_found","message":"Not Found"}}`}),
+			want: false},
 		{
 			name: "joined structured model code",
 			err: errors.Join(
 				errors.New("upstream failed"),
 				&requestScopedStatusError{
 					status:  http.StatusNotFound,
-					message: `{"error":{"code":"model_not_found","message":"Not Found"}}`,
-				},
+					message: `{"error":{"code":"model_not_found","message":"Not Found"}}`},
 			),
-			want: false,
-		},
+			want: false},
 		{
 			name: "outer generic inner model 404",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: `{"message":"Not Found","error":{"type":"not_found_error","message":"model claude-missing does not exist"}}`},
-			want: false,
-		},
+			want: false},
 		{
 			name: "unstructured model text",
 			err:  &Error{HTTPStatus: http.StatusNotFound, Message: "model claude-missing was not found"},
-			want: true,
-		},
+			want: true},
 		{
 			name: "non 404",
 			err:  &Error{HTTPStatus: http.StatusInternalServerError, Message: "404 page not found"},
-			want: false,
-		},
-	}
+			want: false}}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2197,10 +2060,7 @@ func TestManager_Execute_GenericRouteNotFoundStillSuspendsModel(t *testing.T) {
 		executeErrors: map[string]error{
 			"messages-route-not-found-auth": &Error{
 				HTTPStatus: http.StatusNotFound,
-				Message:    "404 page not found",
-			},
-		},
-	}
+				Message:    "404 page not found"}}}
 	m.RegisterExecutor(executor)
 
 	model := "messages-route-not-found-model"
@@ -2247,8 +2107,7 @@ func TestManager_RecordResult_AvailabilityNeutralSkipsSchedulerUpdate(t *testing
 		Provider: auth.Provider,
 		Model:    "availability-neutral-model",
 		Success:  false,
-		Error:    &Error{HTTPStatus: http.StatusNotFound, Message: "404 page not found"},
-	})
+		Error:    &Error{HTTPStatus: http.StatusNotFound, Message: "404 page not found"}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil || updated.Failed != 1 {
@@ -2269,10 +2128,7 @@ func TestManager_RequestScopedNotFoundStopsRetryWithoutSuspendingAuth(t *testing
 		executeErrors: map[string]error{
 			"aa-bad-auth": &Error{
 				HTTPStatus: http.StatusNotFound,
-				Message:    requestScopedNotFoundMessage,
-			},
-		},
-	}
+				Message:    requestScopedNotFoundMessage}}}
 	m.RegisterExecutor(executor)
 
 	model := "gpt-4.1"
@@ -2344,8 +2200,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 
 	auth := &Auth{
 		ID:       "auth-request-fault",
-		Provider: "deepseek",
-	}
+		Provider: "deepseek"}
 	if _, errRegister := m.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("register auth: %v", errRegister)
 	}
@@ -2359,9 +2214,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Success:  false,
 		Error: &Error{
 			HTTPStatus: http.StatusUnauthorized,
-			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`,
-		},
-	})
+			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`}})
 
 	updated, ok := m.GetByID(auth.ID)
 	if !ok || updated == nil {
@@ -2392,8 +2245,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Provider: auth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    explicitReqErr,
-	})
+		Error:    explicitReqErr})
 	updated, _ = m.GetByID(auth.ID)
 	if updated.Unavailable || !updated.NextRetryAfter.IsZero() {
 		t.Fatalf("expected explicit request-scoped error to keep auth available")
@@ -2404,8 +2256,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Provider: auth.Provider,
 		Model:    model,
 		Success:  false,
-		Error:    customErr,
-	})
+		Error:    customErr})
 	updated, _ = m.GetByID(auth.ID)
 	if updated.Unavailable || !updated.NextRetryAfter.IsZero() {
 		t.Fatalf("expected MarkRequestScoped error to keep auth available")
@@ -2420,9 +2271,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Error: &Error{
 			Code:       "custom_upstream_code",
 			HTTPStatus: http.StatusUnauthorized,
-			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`,
-		},
-	})
+			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`}})
 	updated, _ = m.GetByID(auth.ID)
 	if updated.Unavailable || !updated.NextRetryAfter.IsZero() {
 		t.Fatalf("expected custom code with request-fault message to keep auth available")
@@ -2431,8 +2280,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 	// Auth-level request-fault error (empty Model) must also avoid cooling auth.
 	authEmptyModel := &Auth{
 		ID:       "auth-empty-model",
-		Provider: "deepseek",
-	}
+		Provider: "deepseek"}
 	if _, errRegister := m.Register(context.Background(), authEmptyModel); errRegister != nil {
 		t.Fatalf("register authEmptyModel: %v", errRegister)
 	}
@@ -2443,9 +2291,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Success:  false,
 		Error: &Error{
 			HTTPStatus: http.StatusUnauthorized,
-			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`,
-		},
-	})
+			Message:    `{"error":{"message":"Invalid request parameter","type":"invalid_request_error"}}`}})
 	updatedEmptyModel, ok := m.GetByID(authEmptyModel.ID)
 	if !ok || updatedEmptyModel == nil {
 		t.Fatalf("expected authEmptyModel to be present")
@@ -2457,8 +2303,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 	// Real authentication error must still trigger cooldown.
 	authFail := &Auth{
 		ID:       "auth-real-fail",
-		Provider: "deepseek",
-	}
+		Provider: "deepseek"}
 	if _, errRegister := m.Register(context.Background(), authFail); errRegister != nil {
 		t.Fatalf("register authFail: %v", errRegister)
 	}
@@ -2469,9 +2314,7 @@ func TestManager_MarkResult_RequestFaultBodyDoesNotCooldownModelOrAuth(t *testin
 		Success:  false,
 		Error: &Error{
 			HTTPStatus: http.StatusUnauthorized,
-			Message:    `{"error":{"message":"Authentication Fails, Your api key is invalid","type":"authentication_error"}}`,
-		},
-	})
+			Message:    `{"error":{"message":"Authentication Fails, Your api key is invalid","type":"authentication_error"}}`}})
 	updatedFail, ok := m.GetByID(authFail.ID)
 	if !ok || updatedFail == nil {
 		t.Fatalf("expected authFail to be present")

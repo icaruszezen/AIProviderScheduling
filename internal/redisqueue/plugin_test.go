@@ -20,8 +20,7 @@ func TestUsageQueuePluginPayloadIncludesStableFieldsAndSuccess(t *testing.T) {
 		ctx = internallogging.WithClientRequestMetadata(ctx, internallogging.ClientRequestMetadata{
 			ClientIP:      "192.0.2.10",
 			XForwardedFor: "203.0.113.5, 198.51.100.8",
-			UserAgent:     "test-client/1.0",
-		})
+			UserAgent:     "test-client/1.0"})
 		ctx = internallogging.WithResponseStatusHolder(ctx)
 		internallogging.SetResponseStatus(ctx, http.StatusOK)
 		responseHeaders := http.Header{}
@@ -48,10 +47,8 @@ func TestUsageQueuePluginPayloadIncludesStableFieldsAndSuccess(t *testing.T) {
 			Detail: coreusage.Detail{
 				InputTokens:  10,
 				OutputTokens: 20,
-				TotalTokens:  30,
-			},
-			ResponseHeaders: responseHeaders.Clone(),
-		})
+				TotalTokens:  30},
+			ResponseHeaders: responseHeaders.Clone()})
 		responseHeaders.Set("Retry-After", "999")
 
 		payload := popSinglePayload(t)
@@ -89,8 +86,7 @@ func TestUsageQueuePluginNormalizesDirectSDKUsageByProvider(t *testing.T) {
 		wantTotal int
 	}{
 		{provider: "openai", wantTotal: 130},
-		{provider: "gemini", wantTotal: 142},
-	}
+		{provider: "gemini", wantTotal: 142}}
 	for _, tt := range tests {
 		t.Run(tt.provider, func(t *testing.T) {
 			withEnabledQueue(t, func() {
@@ -103,9 +99,7 @@ func TestUsageQueuePluginNormalizesDirectSDKUsageByProvider(t *testing.T) {
 					Detail: coreusage.Detail{
 						InputTokens:     100,
 						OutputTokens:    30,
-						ReasoningTokens: 12,
-					},
-				})
+						ReasoningTokens: 12}})
 
 				payload := popSinglePayload(t)
 				requireIntField(t, requireTokensPayload(t, payload), "total_tokens", tt.wantTotal)
@@ -126,9 +120,7 @@ func TestUsageQueuePluginPayloadIncludesGenerateFalse(t *testing.T) {
 			Generate: coreusage.GenerateFlag(false),
 			Detail: coreusage.Detail{
 				InputTokens: 1,
-				TotalTokens: 1,
-			},
-		})
+				TotalTokens: 1}})
 
 		payload := popSinglePayload(t)
 		requireBoolField(t, payload, "generate", false)
@@ -146,9 +138,7 @@ func TestUsageQueuePluginPayloadDefaultsGenerateTrueWhenOmitted(t *testing.T) {
 			Model:    "gpt-5.4",
 			Detail: coreusage.Detail{
 				InputTokens: 1,
-				TotalTokens: 1,
-			},
-		})
+				TotalTokens: 1}})
 
 		payload := popSinglePayload(t)
 		requireBoolField(t, payload, "generate", true)
@@ -168,9 +158,7 @@ func TestUsageQueuePluginPublishesStreamFlag(t *testing.T) {
 					Stream:   stream,
 					Detail: coreusage.Detail{
 						InputTokens: 1,
-						TotalTokens: 1,
-					},
-				})
+						TotalTokens: 1}})
 
 				payload := popSinglePayload(t)
 				requireBoolField(t, payload, "stream", stream)
@@ -188,9 +176,7 @@ func TestUsageQueuePluginPreservesLegacyCachedOnlyUsage(t *testing.T) {
 			Provider: "openai",
 			Model:    "gpt-5.4",
 			Detail: coreusage.Detail{
-				CachedTokens: 13,
-			},
-		})
+				CachedTokens: 13}})
 
 		payload := popSinglePayload(t)
 		requireTokensBoolField(t, payload, "cache_read_tokens_present", true)
@@ -212,9 +198,7 @@ func TestUsageQueuePluginEmitsSingleCanonicalAutoTier(t *testing.T) {
 			Model:    "gpt-5.4",
 			Detail: coreusage.Detail{
 				InputTokens: 1,
-				TotalTokens: 1,
-			},
-		})
+				TotalTokens: 1}})
 
 		payload := popSinglePayload(t)
 		requireStringField(t, payload, "service_tier", "auto")
@@ -231,8 +215,7 @@ func TestUsageQueuePluginAcceptsDeprecatedRequestTierRecordField(t *testing.T) {
 			Provider:           "openai",
 			Model:              "gpt-5.4",
 			RequestServiceTier: "priority",
-			Detail:             coreusage.Detail{InputTokens: 1, TotalTokens: 1},
-		})
+			Detail:             coreusage.Detail{InputTokens: 1, TotalTokens: 1}})
 
 		payload := popSinglePayload(t)
 		requireStringField(t, payload, "service_tier", "priority")
@@ -274,10 +257,8 @@ func TestUsageQueuePluginAsyncUsesRecordResponseHeaders(t *testing.T) {
 			Detail: coreusage.Detail{
 				InputTokens:  10,
 				OutputTokens: 20,
-				TotalTokens:  30,
-			},
-			ResponseHeaders: internallogging.GetResponseHeaders(ctx),
-		})
+				TotalTokens:  30},
+			ResponseHeaders: internallogging.GetResponseHeaders(ctx)})
 
 		payload := waitForSinglePayload(t, 2*time.Second)
 		requireHeaderField(t, payload, "response_headers", "X-Upstream-Request-Id", []string{"upstream-req-1"})
@@ -304,14 +285,11 @@ func TestUsageQueuePluginPayloadIncludesStableFieldsAndFailureAndGinRequestID(t 
 			Latency:     2500 * time.Millisecond,
 			Fail: coreusage.Failure{
 				StatusCode: http.StatusInternalServerError,
-				Body:       "upstream failed",
-			},
+				Body:       "upstream failed"},
 			Detail: coreusage.Detail{
 				InputTokens:  10,
 				OutputTokens: 20,
-				TotalTokens:  30,
-			},
-		})
+				TotalTokens:  30}})
 
 		payload := popSinglePayload(t)
 		requireStringField(t, payload, "provider", "openai")
@@ -356,14 +334,11 @@ func TestUsageQueuePluginAsyncIgnoresRecycledGinContext(t *testing.T) {
 			Latency:     1500 * time.Millisecond,
 			Fail: coreusage.Failure{
 				StatusCode: http.StatusBadGateway,
-				Body:       "bad gateway",
-			},
+				Body:       "bad gateway"},
 			Detail: coreusage.Detail{
 				InputTokens:  10,
 				OutputTokens: 20,
-				TotalTokens:  30,
-			},
-		})
+				TotalTokens:  30}})
 
 		payload := waitForSinglePayload(t, 2*time.Second)
 		requireStringField(t, payload, "endpoint", "POST /v1/chat/completions")

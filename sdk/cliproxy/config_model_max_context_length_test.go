@@ -18,62 +18,43 @@ func TestBuildConfigModelsPropagatesMaxContextLength(t *testing.T) {
 			got: func() *ModelInfo {
 				return buildCodexConfigModels(&config.CodexKey{
 					Models: []config.CodexModel{{
-						Name: "codex-upstream", Alias: "codex-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
+						Name: "codex-upstream", Alias: "codex-alias", MaxContextLength: want}}})[0]
+			}},
 		{
 			name: "claude",
 			got: func() *ModelInfo {
 				return buildClaudeConfigModels(&config.ClaudeKey{
 					Models: []config.ClaudeModel{{
-						Name: "claude-upstream", Alias: "claude-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
+						Name: "claude-upstream", Alias: "claude-alias", MaxContextLength: want}}})[0]
+			}},
 		{
 			name: "gemini",
 			got: func() *ModelInfo {
 				return buildGeminiConfigModels(&config.GeminiKey{
 					Models: []config.GeminiModel{{
-						Name: "gemini-upstream", Alias: "gemini-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
+						Name: "gemini-upstream", Alias: "gemini-alias", MaxContextLength: want}}})[0]
+			}},
 		{
 			name: "interactions",
 			got: func() *ModelInfo {
 				return buildGeminiConfigModels(&config.GeminiKey{
 					Models: []config.GeminiModel{{
-						Name: "interactions-upstream", Alias: "interactions-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
+						Name: "interactions-upstream", Alias: "interactions-alias", MaxContextLength: want}}})[0]
+			}},
 		{
 			name: "xai",
 			got: func() *ModelInfo {
 				return buildXAIConfigModels(&config.XAIKey{
 					Models: []config.XAIModel{{
-						Name: "xai-upstream", Alias: "xai-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
+						Name: "xai-upstream", Alias: "xai-alias", MaxContextLength: want}}})[0]
+			}},
 		{
 			name: "openai compatibility",
 			got: func() *ModelInfo {
 				return buildOpenAICompatibilityConfigModels(&config.OpenAICompatibility{
 					Models: []config.OpenAICompatibilityModel{{
-						Name: "compat-upstream", Alias: "compat-alias", MaxContextLength: want,
-					}},
-				})[0]
-			},
-		},
-	}
+						Name: "compat-upstream", Alias: "compat-alias", MaxContextLength: want}}})[0]
+			}}}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

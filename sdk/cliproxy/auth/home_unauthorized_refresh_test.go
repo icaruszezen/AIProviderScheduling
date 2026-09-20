@@ -14,6 +14,16 @@ import (
 
 const homeUnauthorizedRefreshProvider = "home-unauthorized-refresh"
 
+func homeUnauthorizedToken(auth *Auth) string {
+	if auth == nil {
+		return ""
+	}
+	if token := authAttribute(auth, AttributeAPIKey); token != "" {
+		return token
+	}
+	return authAccessToken(auth)
+}
+
 type homeUnauthorizedRefreshDispatcher struct {
 	calls atomic.Int32
 }
@@ -27,13 +37,9 @@ func (d *homeUnauthorizedRefreshDispatcher) RPopAuth(context.Context, string, st
 		Provider: homeUnauthorizedRefreshProvider,
 		Status:   StatusActive,
 		Attributes: map[string]string{
-			AttributeAuthKind: AuthKindOAuth,
-			"websockets":      "true",
-		},
-		Metadata: map[string]any{
-			"access_token": "stale-access-token",
-		},
-	}})
+			AttributeAuthKind: AuthKindAPIKey,
+			AttributeAPIKey:   "stale-access-token",
+			"websockets":      "true"}}})
 }
 
 func (*homeUnauthorizedRefreshDispatcher) AbortAmbiguousDispatch() {}
@@ -58,7 +64,7 @@ func (e *homeUnauthorizedRefreshExecutor) Execute(_ context.Context, auth *Auth,
 			lifecycle.Retain()
 		}
 	}
-	if authAccessToken(auth) == "stale-access-token" {
+	if homeUnauthorizedToken(auth) == "stale-access-token" {
 		return cliproxyexecutor.Response{}, &Error{HTTPStatus: http.StatusUnauthorized, Message: "access token expired"}
 	}
 	return cliproxyexecutor.Response{Payload: []byte("ok")}, nil
@@ -66,7 +72,7 @@ func (e *homeUnauthorizedRefreshExecutor) Execute(_ context.Context, auth *Auth,
 
 func (e *homeUnauthorizedRefreshExecutor) ExecuteStream(_ context.Context, auth *Auth, _ cliproxyexecutor.Request, _ cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
 	e.streamCalls.Add(1)
-	if authAccessToken(auth) == "stale-access-token" {
+	if homeUnauthorizedToken(auth) == "stale-access-token" {
 		switch e.streamMode {
 		case "bootstrap":
 			chunks := make(chan cliproxyexecutor.StreamChunk, 1)
@@ -98,16 +104,16 @@ func (e *homeUnauthorizedRefreshExecutor) Refresh(_ context.Context, auth *Auth)
 	if e.keepStale {
 		return updated, nil
 	}
-	if updated.Metadata == nil {
-		updated.Metadata = make(map[string]any)
+	if updated.Attributes == nil {
+		updated.Attributes = make(map[string]string)
 	}
-	updated.Metadata["access_token"] = "fresh-access-token"
+	updated.Attributes[AttributeAPIKey] = "fresh-access-token"
 	return updated, nil
 }
 
 func (e *homeUnauthorizedRefreshExecutor) CountTokens(_ context.Context, auth *Auth, _ cliproxyexecutor.Request, _ cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
 	e.countCalls.Add(1)
-	if authAccessToken(auth) == "stale-access-token" {
+	if homeUnauthorizedToken(auth) == "stale-access-token" {
 		return cliproxyexecutor.Response{}, &Error{HTTPStatus: http.StatusUnauthorized, Message: "access token expired"}
 	}
 	return cliproxyexecutor.Response{Payload: []byte("ok")}, nil
@@ -135,16 +141,13 @@ func TestHomeUnauthorizedReturnsOriginalErrorWithoutRefresh(t *testing.T) {
 			run: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{homeUnauthorizedRefreshProvider}, cliproxyexecutor.Request{Model: "model-a"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count_tokens",
 			run: func(manager *Manager) error {
 				_, errCount := manager.ExecuteCount(context.Background(), []string{homeUnauthorizedRefreshProvider}, cliproxyexecutor.Request{Model: "model-a"}, cliproxyexecutor.Options{})
 				return errCount
-			},
-		},
-	} {
+			}}} {
 		t.Run(test.name, func(t *testing.T) {
 			dispatcher := &homeUnauthorizedRefreshDispatcher{}
 			executor := &homeUnauthorizedRefreshExecutor{}
@@ -174,8 +177,7 @@ func TestHomeUnauthorizedDoesNotRefreshRetainedSelection(t *testing.T) {
 	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
 	opts := cliproxyexecutor.Options{Metadata: map[string]any{
 		cliproxyexecutor.ExecutionSessionMetadataKey: "refresh-session",
-		cliproxyexecutor.PinnedAuthMetadataKey:       "home-refresh-auth",
-	}}
+		cliproxyexecutor.PinnedAuthMetadataKey:       "home-refresh-auth"}}
 
 	_, errExecute := manager.Execute(ctx, []string{homeUnauthorizedRefreshProvider}, cliproxyexecutor.Request{Model: "model-a"}, opts)
 	if errExecute == nil || errExecute.Error() != "access token expired" {
@@ -186,25 +188,6 @@ func TestHomeUnauthorizedDoesNotRefreshRetainedSelection(t *testing.T) {
 	}
 	if got := executor.executeCalls.Load(); got != 1 {
 		t.Fatalf("execute calls = %d, want 1", got)
-	}
-}
-
-func TestRefreshHomeSelectionReusesConcurrentNewerToken(t *testing.T) {
-	executor := &homeUnauthorizedRefreshExecutor{}
-	selection := &HomeDispatchSelection{
-		Auth:     &Auth{ID: "home-refresh-auth", Provider: homeUnauthorizedRefreshProvider, Attributes: map[string]string{AttributeAuthKind: AuthKindOAuth}, Metadata: map[string]any{"access_token": "fresh-access-token"}},
-		Executor: executor,
-		Provider: homeUnauthorizedRefreshProvider,
-	}
-	failed := &Auth{ID: "home-refresh-auth", Provider: homeUnauthorizedRefreshProvider, Attributes: map[string]string{AttributeAuthKind: AuthKindOAuth}, Metadata: map[string]any{"access_token": "stale-access-token"}}
-	manager := NewManager(nil, nil, nil)
-
-	updated, reused, errRefresh := manager.RefreshHomeSelectionAfterUnauthorized(context.Background(), selection, failed)
-	if errRefresh != nil || !reused || authAccessToken(updated) != "fresh-access-token" {
-		t.Fatalf("RefreshHomeSelectionAfterUnauthorized() = %#v, %v, %v", updated, reused, errRefresh)
-	}
-	if got := executor.refreshCalls.Load(); got != 0 {
-		t.Fatalf("refresh calls = %d, want 0 when selection already has a newer token", got)
 	}
 }
 
@@ -236,8 +219,7 @@ func TestHomeNoCandidatePreservesOriginalUpstreamError(t *testing.T) {
 func TestHomeUnauthorizedIgnoresExecutorRefreshFailure(t *testing.T) {
 	dispatcher := &homeUnauthorizedRefreshDispatcher{}
 	executor := &homeUnauthorizedRefreshExecutor{
-		refreshErr: &Error{HTTPStatus: http.StatusServiceUnavailable, Message: "Home refresh temporarily unavailable"},
-	}
+		refreshErr: &Error{HTTPStatus: http.StatusServiceUnavailable, Message: "Home refresh temporarily unavailable"}}
 	manager := newHomeUnauthorizedRefreshManager(dispatcher, executor)
 
 	_, errExecute := manager.Execute(context.Background(), []string{homeUnauthorizedRefreshProvider}, cliproxyexecutor.Request{Model: "model-a"}, cliproxyexecutor.Options{})

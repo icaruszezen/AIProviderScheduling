@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
@@ -35,8 +34,7 @@ func TestParseInteractionsRequestTarget(t *testing.T) {
 		{name: "missing", body: `{"input":"hi"}`, wantErr: true},
 		{name: "both", body: `{"model":"gemini-3.5-flash","agent":"agents/test-agent","input":"hi"}`, wantErr: true},
 		{name: "stream string", body: `{"model":"gemini-3.5-flash","stream":"true","input":"hi"}`, wantErr: true},
-		{name: "stream true", body: `{"model":"gemini-3.5-flash","stream":true,"input":"hi"}`, wantModel: "gemini-3.5-flash"},
-	}
+		{name: "stream true", body: `{"model":"gemini-3.5-flash","stream":true,"input":"hi"}`, wantModel: "gemini-3.5-flash"}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			target, errParse := parseInteractionsRequestTarget([]byte(tt.body))
@@ -196,11 +194,10 @@ func TestInteractionsAgentUsesNativeInteractionsEndpoint(t *testing.T) {
 		Provider: "gemini-interactions",
 		Status:   coreauth.StatusActive,
 		Attributes: map[string]string{
-			"api_key":  "test-key",
-			"base_url": server.URL,
-		},
-		Metadata: map[string]any{"email": "interactions-agent@example.com"},
-	}
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key",
+			"base_url":                 server.URL},
+		Metadata: map[string]any{"email": "interactions-agent@example.com"}}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}
@@ -257,14 +254,11 @@ func TestInteractionsAntigravityModelUsesTranslatorBridge(t *testing.T) {
 		Provider: "antigravity",
 		Status:   coreauth.StatusActive,
 		Attributes: map[string]string{
-			"base_url": server.URL,
-		},
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "token",
+			"base_url":                 server.URL},
 		Metadata: map[string]any{
-			"access_token": "token",
-			"project_id":   "project-1",
-			"expired":      time.Now().Add(time.Hour).Format(time.RFC3339),
-		},
-	}
+			"project_id": "project-1"}}
 	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
 		t.Fatalf("manager.Register(): %v", errRegister)
 	}

@@ -26,8 +26,7 @@ func TestReportPluginStatusPushesNodeReport(t *testing.T) {
 		Task:    "plugin-sync",
 		Status:  "success",
 		OK:      true,
-		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "installed"}},
-	}
+		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "installed"}}}
 
 	if errReport := ReportPluginStatus(context.Background(), client, " node-1 ", report); errReport != nil {
 		t.Fatalf("ReportPluginStatus() error = %v", errReport)
@@ -50,8 +49,7 @@ func TestReportPluginStatusPushesEmptyReport(t *testing.T) {
 		Task:    "plugin-sync",
 		Status:  "success",
 		OK:      true,
-		Plugins: []homeplugins.PluginInstallStatus{},
-	}
+		Plugins: []homeplugins.PluginInstallStatus{}}
 
 	if errReport := ReportPluginStatus(context.Background(), client, "node-1", report); errReport != nil {
 		t.Fatalf("ReportPluginStatus() error = %v", errReport)
@@ -68,8 +66,7 @@ func TestReportPluginStatusPushesEmptyReport(t *testing.T) {
 func TestReportPluginStatusRequiresNodeID(t *testing.T) {
 	client := &recordingPluginStatusClient{}
 	report := homeplugins.SyncReport{
-		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "failed"}},
-	}
+		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "failed"}}}
 
 	errReport := ReportPluginStatus(context.Background(), client, " ", report)
 	if errReport == nil || !strings.Contains(errReport.Error(), "node id") {
@@ -83,8 +80,7 @@ func TestReportPluginStatusRequiresNodeID(t *testing.T) {
 func TestReportPluginStatusPropagatesPushError(t *testing.T) {
 	client := &recordingPluginStatusClient{err: errors.New("push failed")}
 	report := homeplugins.SyncReport{
-		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "installed"}},
-	}
+		Plugins: []homeplugins.PluginInstallStatus{{ID: "sample", InstallStatus: "installed"}}}
 
 	errReport := ReportPluginStatus(context.Background(), client, "node-1", report)
 	if !errors.Is(errReport, client.err) {

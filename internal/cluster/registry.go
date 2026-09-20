@@ -222,8 +222,7 @@ func (r *Registry) Snapshot(fallbackStaleAfter time.Duration) []NodeStatus {
 			UptimeSeconds: node.UptimeSeconds,
 			LastSeen:      node.LastSeen,
 			LastError:     node.LastError,
-			Status:        status,
-		})
+			Status:        status})
 	}
 	r.mu.RUnlock()
 	sort.Slice(out, func(i, j int) bool {

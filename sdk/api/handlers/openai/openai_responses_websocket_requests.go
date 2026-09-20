@@ -42,8 +42,7 @@ func normalizeResponsesWebsocketRequestWithIncrementalState(rawJSON []byte, last
 	default:
 		return nil, lastRequest, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("unsupported websocket request type: %s", requestType),
-		}
+			Error:      fmt.Errorf("unsupported websocket request type: %s", requestType)}
 	}
 }
 
@@ -61,8 +60,7 @@ func normalizeResponseCreateRequest(rawJSON []byte) ([]byte, []byte, *interfaces
 	if modelName == "" {
 		return nil, nil, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("missing model in response.create request"),
-		}
+			Error:      fmt.Errorf("missing model in response.create request")}
 	}
 	return normalized, bytes.Clone(normalized), nil
 }
@@ -71,16 +69,14 @@ func normalizeResponseSubsequentRequest(rawJSON []byte, lastRequest []byte, last
 	if len(lastRequest) == 0 {
 		return nil, lastRequest, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("websocket request received before response.create"),
-		}
+			Error:      fmt.Errorf("websocket request received before response.create")}
 	}
 
 	nextInput := gjson.GetBytes(rawJSON, "input")
 	if !nextInput.Exists() || !nextInput.IsArray() {
 		return nil, lastRequest, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("websocket request requires array field: input"),
-		}
+			Error:      fmt.Errorf("websocket request requires array field: input")}
 	}
 
 	// Compaction can cause clients to replace local websocket history with a new
@@ -146,8 +142,7 @@ func normalizeResponseSubsequentRequest(rawJSON []byte, lastRequest []byte, last
 		if errMerge != nil {
 			return nil, lastRequest, &interfaces.ErrorMessage{
 				StatusCode: http.StatusBadRequest,
-				Error:      errMerge,
-			}
+				Error:      errMerge}
 		}
 	}
 
@@ -174,8 +169,7 @@ func normalizeResponseSubsequentRequest(rawJSON []byte, lastRequest []byte, last
 	if errSet != nil {
 		return nil, lastRequest, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("failed to merge websocket input: %w", errSet),
-		}
+			Error:      fmt.Errorf("failed to merge websocket input: %w", errSet)}
 	}
 	return normalized, normalized, nil
 }
@@ -707,8 +701,7 @@ func normalizeResponsesWebsocketPassthroughRequest(rawJSON []byte, modelName str
 	if !json.Valid(rawJSON) {
 		return nil, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("invalid websocket request JSON"),
-		}
+			Error:      fmt.Errorf("invalid websocket request JSON")}
 	}
 
 	requestType := strings.TrimSpace(gjson.GetBytes(rawJSON, "type").String())
@@ -717,8 +710,7 @@ func normalizeResponsesWebsocketPassthroughRequest(rawJSON []byte, modelName str
 	default:
 		return nil, &interfaces.ErrorMessage{
 			StatusCode: http.StatusBadRequest,
-			Error:      fmt.Errorf("unsupported websocket request type: %s", requestType),
-		}
+			Error:      fmt.Errorf("unsupported websocket request type: %s", requestType)}
 	}
 
 	normalized := bytes.Clone(rawJSON)
@@ -727,8 +719,7 @@ func normalizeResponsesWebsocketPassthroughRequest(rawJSON []byte, modelName str
 		if modelName == "" {
 			return nil, &interfaces.ErrorMessage{
 				StatusCode: http.StatusBadRequest,
-				Error:      fmt.Errorf("missing model in response.create request"),
-			}
+				Error:      fmt.Errorf("missing model in response.create request")}
 		}
 		normalized, _ = sjson.SetBytes(normalized, "model", modelName)
 	}

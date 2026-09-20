@@ -59,8 +59,7 @@ func (l *FileRequestLogger) forwardRequestLogToHome(ctx context.Context, headers
 	payload := homeRequestLogPayload{
 		Headers:    cloneHeaders(headers),
 		RequestID:  strings.TrimSpace(requestID),
-		RequestLog: logText,
-	}
+		RequestLog: logText}
 	raw, errMarshal := json.Marshal(&payload)
 	if errMarshal != nil {
 		return errMarshal
@@ -119,8 +118,7 @@ func newHomeStreamingLogWriter(url, method string, headers map[string][]string, 
 		requestBody:    append([]byte(nil), body...),
 		requestID:      strings.TrimSpace(requestID),
 		chunkChan:      make(chan []byte, 100),
-		doneChan:       make(chan struct{}),
-	}
+		doneChan:       make(chan struct{})}
 
 	go writer.asyncWriter()
 	return writer
@@ -236,8 +234,7 @@ func (w *homeStreamingLogWriter) Close() error {
 	payload := homeRequestLogPayload{
 		Headers:    cloneHeaders(w.requestHeaders),
 		RequestID:  w.requestID,
-		RequestLog: buf.String(),
-	}
+		RequestLog: buf.String()}
 	raw, errMarshal := json.Marshal(&payload)
 	if errMarshal != nil {
 		return errMarshal

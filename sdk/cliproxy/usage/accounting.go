@@ -104,14 +104,11 @@ func NewSubsetTokenBreakdown(inputTotal, cacheRead, cacheWrite, outputTotal, rea
 			TotalTokens:      inputTotal,
 			UncachedTokens:   inputTotal - cacheRead - cacheWrite,
 			CacheReadTokens:  cacheRead,
-			CacheWriteTokens: cacheWrite,
-		},
+			CacheWriteTokens: cacheWrite},
 		Output: TokenOutputBreakdown{
 			TotalTokens:        outputTotal,
 			NonReasoningTokens: outputTotal - reasoning,
-			ReasoningTokens:    reasoning,
-		},
-	}
+			ReasoningTokens:    reasoning}}
 }
 
 // NewPartialSubsetTokenBreakdown preserves known subset buckets while assigning
@@ -143,15 +140,12 @@ func NewPartialSubsetTokenBreakdown(inputTotal, cacheRead, cacheWrite, outputTot
 			TotalTokens:      inputTotal,
 			UncachedTokens:   inputTotal - cacheTotal,
 			CacheReadTokens:  cacheRead,
-			CacheWriteTokens: cacheWrite,
-		},
+			CacheWriteTokens: cacheWrite},
 		Output: TokenOutputBreakdown{
 			TotalTokens:        outputTotal,
 			NonReasoningTokens: outputTotal - reasoning,
-			ReasoningTokens:    reasoning,
-		},
-		UnclassifiedTokens: unclassified,
-	}
+			ReasoningTokens:    reasoning},
+		UnclassifiedTokens: unclassified}
 }
 
 // NewIndependentTokenBreakdown normalizes protocols where uncached input,
@@ -175,14 +169,11 @@ func NewIndependentTokenBreakdown(uncachedInput, cacheRead, cacheWrite, nonReaso
 			TotalTokens:      inputTotal,
 			UncachedTokens:   uncachedInput,
 			CacheReadTokens:  cacheRead,
-			CacheWriteTokens: cacheWrite,
-		},
+			CacheWriteTokens: cacheWrite},
 		Output: TokenOutputBreakdown{
 			TotalTokens:        outputTotal,
 			NonReasoningTokens: nonReasoningOutput,
-			ReasoningTokens:    reasoning,
-		},
-	}
+			ReasoningTokens:    reasoning}}
 }
 
 // NewSeparateReasoningTokenBreakdown normalizes protocols where cache tokens
@@ -208,14 +199,11 @@ func NewSeparateReasoningTokenBreakdown(inputTotal, cacheRead, cacheWrite, nonRe
 			TotalTokens:      inputTotal,
 			UncachedTokens:   inputTotal - cacheRead - cacheWrite,
 			CacheReadTokens:  cacheRead,
-			CacheWriteTokens: cacheWrite,
-		},
+			CacheWriteTokens: cacheWrite},
 		Output: TokenOutputBreakdown{
 			TotalTokens:        outputTotal,
 			NonReasoningTokens: nonReasoningOutput,
-			ReasoningTokens:    reasoning,
-		},
-	}
+			ReasoningTokens:    reasoning}}
 }
 
 // NewUnclassifiedTokenBreakdown preserves an authoritative total without
@@ -232,8 +220,7 @@ func NewUnclassifiedTokenBreakdown(total int64) TokenBreakdown {
 		SchemaVersion:      TokenAccountingSchemaVersion,
 		Quality:            TokenAccountingQualityUnclassified,
 		TotalTokens:        total,
-		UnclassifiedTokens: total,
-	}
+		UnclassifiedTokens: total}
 }
 
 // EnsureTokenBreakdown attaches a valid v2 breakdown to legacy or direct SDK
@@ -370,8 +357,7 @@ func inconsistentTokenBreakdown(total, fallback int64) TokenBreakdown {
 		SchemaVersion:      TokenAccountingSchemaVersion,
 		Quality:            TokenAccountingQualityInconsistent,
 		TotalTokens:        resolved,
-		UnclassifiedTokens: resolved,
-	}
+		UnclassifiedTokens: resolved}
 }
 
 func resolveAccountingTotal(total, expected int64) (int64, bool) {

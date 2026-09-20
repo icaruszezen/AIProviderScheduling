@@ -133,8 +133,7 @@ func CacheAntigravityReasoningReplayItemsBestEffort(ctx context.Context, modelNa
 		Items:     normalized,
 		Timestamp: now,
 		Revision:  antigravityReasoningReplayNextRevision,
-		Branch:    newAntigravityReasoningReplayGeneration(),
-	}
+		Branch:    newAntigravityReasoningReplayGeneration()}
 	if len(antigravityReasoningReplayEntries) > AntigravityReasoningReplayCacheMaxEntries {
 		evictOldestAntigravityReasoningReplayEntries(AntigravityReasoningReplayCacheEvictBatchSize)
 	}
@@ -262,16 +261,14 @@ func reserveAntigravityReasoningReplayAbsentLocked(key string, now time.Time) An
 		Timestamp: now,
 		Revision:  antigravityReasoningReplayNextRevision,
 		Branch:    newAntigravityReasoningReplayGeneration(),
-		Deleted:   true,
-	}
+		Deleted:   true}
 	antigravityReasoningReplayEntries[key] = entry
 	return AntigravityReasoningReplaySnapshot{
 		loaded:        true,
 		found:         true,
 		revision:      entry.Revision,
 		branch:        entry.Branch,
-		evictionEpoch: antigravityReasoningReplayEvictionEpoch,
-	}
+		evictionEpoch: antigravityReasoningReplayEvictionEpoch}
 }
 
 // ReplaceAntigravityReasoningReplayItemsIfUnchanged publishes a completed chain

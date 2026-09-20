@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -91,8 +89,7 @@ func NewService(cfgFn ConfigFunc, pathFn ConfigPathFunc, applyFn ApplyFunc) *Ser
 		startedAt: time.Now(),
 		client:    NewClient(),
 		registry:  NewRegistry(),
-		hostname:  hostname,
-	}
+		hostname:  hostname}
 }
 
 func (s *Service) Start(ctx context.Context) {
@@ -200,8 +197,7 @@ func (s *Service) Status() NodeSelfStatus {
 	status := NodeSelfStatus{
 		Role:                     config.ClusterRoleStandalone,
 		SyncIntervalSeconds:      config.DefaultClusterSyncIntervalSeconds,
-		HeartbeatIntervalSeconds: config.DefaultClusterHeartbeatIntervalSeconds,
-	}
+		HeartbeatIntervalSeconds: config.DefaultClusterHeartbeatIntervalSeconds}
 	if cfg != nil {
 		status.Role = cfg.Cluster.NormalizedRole()
 		status.NodeID = cfg.Cluster.NodeID
@@ -540,8 +536,7 @@ func (s *Service) registerOnce(ctx context.Context) error {
 		NodeID:       cfg.Cluster.NodeID,
 		AdvertiseURL: cfg.Cluster.AdvertiseURL,
 		Hostname:     s.hostname,
-		Version:      buildinfo.Version,
-	})
+		Version:      buildinfo.Version})
 }
 
 func (s *Service) heartbeatOnce(ctx context.Context) error {
@@ -558,10 +553,9 @@ func (s *Service) heartbeatOnce(ctx context.Context) error {
 		Hostname:                 s.hostname,
 		Version:                  buildinfo.Version,
 		AppliedHash:              applied,
-		AuthFileCount:            countAuthFiles(cfg.AuthDir),
+		AuthFileCount:            0,
 		UptimeSeconds:            int64(time.Since(s.startedAt).Seconds()),
-		HeartbeatIntervalSeconds: cfg.Cluster.HeartbeatInterval(),
-	})
+		HeartbeatIntervalSeconds: cfg.Cluster.HeartbeatInterval()})
 }
 
 func (s *Service) pullOnce(ctx context.Context) error {
@@ -614,25 +608,4 @@ func (s *Service) slavePeer() (*config.Config, string, string, error) {
 		return nil, "", "", fmt.Errorf("cluster: node-id is empty")
 	}
 	return cfg, token, cfg.Cluster.MasterURL, nil
-}
-
-func countAuthFiles(authDir string) int {
-	resolved, err := util.ResolveAuthDir(authDir)
-	if err != nil || resolved == "" {
-		return 0
-	}
-	entries, err := os.ReadDir(resolved)
-	if err != nil {
-		return 0
-	}
-	count := 0
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		if strings.EqualFold(filepath.Ext(entry.Name()), ".json") {
-			count++
-		}
-	}
-	return count
 }

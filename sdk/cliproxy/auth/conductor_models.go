@@ -260,8 +260,7 @@ func (m *Manager) clientModelProjectionForAuth(auth *Auth, routeModel string, no
 		ModelID:       targetModel,
 		Suspended:     isSuspended,
 		SuspendReason: suspendReason,
-		QuotaExceeded: isQuotaExceeded,
-	}
+		QuotaExceeded: isQuotaExceeded}
 }
 
 func (m *Manager) stateModelForExecution(auth *Auth, routeModel, upstreamModel string, pooled bool) string {
@@ -392,8 +391,7 @@ func homeForceMappingAliasResult(auth *Auth, requestedModel string) OAuthModelAl
 	return OAuthModelAliasResult{
 		UpstreamModel: upstreamModel,
 		ForceMapping:  true,
-		OriginalAlias: originalAlias,
-	}
+		OriginalAlias: originalAlias}
 }
 
 func executionAliasPoolModel(auth *Auth, requestedModel string, aliasResult OAuthModelAliasResult) string {
@@ -647,8 +645,7 @@ func (m *Manager) rebuildAPIKeyModelAliasLocked(cfg *internalconfig.Config) {
 	m.apiKeyModelRouting.Store(&apiKeyModelRoutingSnapshot{
 		config:       cfg,
 		aliases:      out,
-		capabilities: capabilities,
-	})
+		capabilities: capabilities})
 }
 
 func compileAPIKeyModelAliasForModels[T interface {

@@ -71,8 +71,7 @@ func TestStreamRewriter_RewriteChunk_CodexResponsesLineChunks(t *testing.T) {
 		[]byte("\n"),
 		[]byte("event: response.completed\n"),
 		[]byte(`data: {"type":"response.completed","response":{"model":"gpt-5.4"}}` + "\n"),
-		[]byte("\n"),
-	}
+		[]byte("\n")}
 	var out []byte
 	for _, line := range lines {
 		if rewritten := rewriter.RewriteChunk(line); len(rewritten) > 0 {
@@ -95,8 +94,7 @@ func TestRewriteForceMappedStreamChunk_CodexLineChunksDoNotDuplicateBufferedEven
 	rewriter := NewStreamRewriter(StreamRewriteOptions{RewriteModel: "gpt-5.4-fast"})
 	chunks := [][]byte{
 		[]byte("event: response.created\n"),
-		[]byte(`data: {"type":"response.created","response":{"model":"gpt-5.4"}}` + "\n\n"),
-	}
+		[]byte(`data: {"type":"response.created","response":{"model":"gpt-5.4"}}` + "\n\n")}
 
 	var out []byte
 	for _, chunk := range chunks {
@@ -145,21 +143,17 @@ func TestStreamRewriter_RewriteChunk_LiveDerivedProviderChunks(t *testing.T) {
 			name:         "kimi_chat_stream",
 			rewriteModel: "k2.5",
 			upstream:     "kimi-k2.5",
-			chunk:        `data:{"id":"chatcmpl-live","object":"chat.completion.chunk","created":1782272323,"model":"kimi-k2.5","choices":[{"index":0,"delta":{"content":"KCHATS"},"finish_reason":null}]}` + "\n\n",
-		},
+			chunk:        `data:{"id":"chatcmpl-live","object":"chat.completion.chunk","created":1782272323,"model":"kimi-k2.5","choices":[{"index":0,"delta":{"content":"KCHATS"},"finish_reason":null}]}` + "\n\n"},
 		{
 			name:         "kimi_messages_stream",
 			rewriteModel: "k2.5",
 			upstream:     "kimi-k2.5",
-			chunk:        "event:message_start\n" + `data:{"type":"message_start","message":{"model":"kimi-k2.5"}}` + "\n\n",
-		},
+			chunk:        "event:message_start\n" + `data:{"type":"message_start","message":{"model":"kimi-k2.5"}}` + "\n\n"},
 		{
 			name:         "xai_messages_stream",
 			rewriteModel: "grok-latest",
 			upstream:     "grok-4.3",
-			chunk:        `data: {"type":"message_start","message":{"model":"grok-4.3"}}` + "\n\n",
-		},
-	}
+			chunk:        `data: {"type":"message_start","message":{"model":"grok-4.3"}}` + "\n\n"}}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			rewriter := NewStreamRewriter(StreamRewriteOptions{RewriteModel: tc.rewriteModel})
@@ -193,8 +187,7 @@ func TestRewriteForceMappedResponse_NoRewriteWhenForceMappingDisabled(t *testing
 	rewriteForceMappedResponse(resp, OAuthModelAliasResult{
 		UpstreamModel: "gpt-5.4",
 		ForceMapping:  false,
-		OriginalAlias: "gpt-5.4-fast",
-	})
+		OriginalAlias: "gpt-5.4-fast"})
 	if string(resp.Payload) != string(upstream) {
 		t.Fatalf("payload = %s, want unchanged %s", resp.Payload, upstream)
 	}
@@ -283,8 +276,7 @@ func TestRewriteForceMappedStreamChunk_CodexDataLinesWithoutNewlines_FinishParse
 	lines := [][]byte{
 		[]byte(`data: {"type":"response.created","response":{"model":"gpt-5.4"}}`),
 		[]byte(`data: {"type":"response.in_progress","response":{"model":"gpt-5.4"}}`),
-		[]byte(`data: {"type":"response.completed","response":{"model":"gpt-5.4","output":[]}}`),
-	}
+		[]byte(`data: {"type":"response.completed","response":{"model":"gpt-5.4","output":[]}}`)}
 	var types []string
 	for _, ln := range lines {
 		if out := rewriteForceMappedStreamChunk(rewriter, ln); len(out) > 0 {

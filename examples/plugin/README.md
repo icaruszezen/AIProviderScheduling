@@ -24,7 +24,6 @@ This directory contains standard dynamic library plugin examples for the CLIProx
 - `cli/`: command-line capability only.
 - `management-api/`: Management API and resource capability only.
 - `host-callback/`: minimal plugin resource that demonstrates host callbacks.
-- `host-callback-auth-files/`: Go-only plugin resource that calls host auth file callbacks.
 - `host-model-callback/`: Go-only plugin resource that calls the host model execution callbacks.
 
 Most standard capability examples contain `go/`, `c/`, and `rust/` subdirectories. Specialized examples may provide only the implementation language they need.
@@ -57,20 +56,6 @@ plugins:
 ```
 
 See `request-lifecycle/README.md` for build instructions and lifecycle semantics.
-
-## Host Auth Files Callback
-
-`host-callback-auth-files` declares the Management API capability and exposes a browser resource named `Host Auth Files`. The resource demonstrates `host.auth.list`, `host.auth.get` (physical JSON file), `host.auth.get_runtime`, and `host.auth.save`.
-
-```yaml
-plugins:
-  configs:
-    host-callback-auth-files:
-      enabled: true
-      priority: 1
-```
-
-See `host-callback-auth-files/README.md` for URL examples.
 
 ## Host Model Callback
 

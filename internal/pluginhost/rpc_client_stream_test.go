@@ -18,8 +18,7 @@ func TestRPCExecuteStreamKeepsHostCallbackScopeUntilStreamCloses(t *testing.T) {
 	adapter := &rpcPluginAdapter{
 		id:     "stream-plugin",
 		host:   host,
-		client: client,
-	}
+		client: client}
 
 	stream, errStream := adapter.ExecuteStream(context.Background(), pluginapi.ExecutorRequest{Stream: true})
 	if errStream != nil {
@@ -54,8 +53,7 @@ func TestRPCExecuteStreamClosesHostCallbackScopeOnContextCancelWhileChunkPending
 	adapter := &rpcPluginAdapter{
 		id:     "stream-plugin",
 		host:   host,
-		client: client,
-	}
+		client: client}
 	ctx, cancel := context.WithCancel(context.Background())
 	stream, errStream := adapter.ExecuteStream(ctx, pluginapi.ExecutorRequest{Stream: true})
 	if errStream != nil {
@@ -111,8 +109,7 @@ func (c *streamCallbackPluginClient) Call(ctx context.Context, method string, re
 	c.callbackID = req.HostCallbackID
 	close(c.called)
 	return marshalRPCResult(rpcExecutorStreamResponse{
-		Headers: http.Header{"Content-Type": []string{"text/event-stream"}},
-	})
+		Headers: http.Header{"Content-Type": []string{"text/event-stream"}}})
 }
 
 func (c *streamCallbackPluginClient) Shutdown() {}

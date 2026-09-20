@@ -15,8 +15,7 @@ func TestAuthenticateManagementKey_LocalhostIPBan_BlocksCorrectKeyDuringBan(t *t
 	h := &Handler{
 		cfg:            &config.Config{},
 		failedAttempts: make(map[string]*attemptInfo),
-		envSecret:      "test-secret",
-	}
+		envSecret:      "test-secret"}
 
 	for i := 0; i < 5; i++ {
 		allowed, statusCode, errMsg := h.AuthenticateManagementKey("127.0.0.1", true, "wrong-secret")
@@ -45,8 +44,7 @@ func TestMiddlewareSetsSupportPluginHeader(t *testing.T) {
 	h := &Handler{
 		cfg:            &config.Config{},
 		failedAttempts: make(map[string]*attemptInfo),
-		envSecret:      "test-secret",
-	}
+		envSecret:      "test-secret"}
 	middleware := h.Middleware()
 
 	t.Run("invalid key", func(t *testing.T) {

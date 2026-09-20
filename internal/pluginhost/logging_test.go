@@ -9,8 +9,7 @@ import (
 func TestPluginLogFieldsIncludesNameVersionAndPath(t *testing.T) {
 	fields := pluginLogFieldsFromMetadata("sample", pluginapi.Metadata{
 		Name:    "Sample Provider",
-		Version: "0.2.0",
-	}, "/tmp/plugins/sample-v0.2.0.dll")
+		Version: "0.2.0"}, "/tmp/plugins/sample-v0.2.0.dll")
 
 	if fields["plugin_id"] != "sample" {
 		t.Fatalf("plugin_id = %v, want sample", fields["plugin_id"])
@@ -47,8 +46,7 @@ func TestPluginHotReloadLogFieldsIncludesActiveAndRetiredIdentity(t *testing.T) 
 		"active_version":  "0.1.0",
 		"active_path":     "/tmp/plugins/sample-v0.1.0.dll",
 		"retired_version": "0.2.0",
-		"retired_path":    "/tmp/plugins/sample-v0.2.0.dll",
-	} {
+		"retired_path":    "/tmp/plugins/sample-v0.2.0.dll"} {
 		if fields[key] != want {
 			t.Fatalf("%s = %v, want %s", key, fields[key], want)
 		}

@@ -76,39 +76,30 @@ func TestAutoUpdateSkipReason(t *testing.T) {
 			name:       "nil config",
 			cfg:        nil,
 			wantReason: "config not yet available",
-			wantSkip:   true,
-		},
+			wantSkip:   true},
 		{
 			name: "cluster mode",
 			cfg: &config.Config{
-				Home: config.HomeConfig{Enabled: true},
-			},
+				Home: config.HomeConfig{Enabled: true}},
 			wantReason: "cluster mode enabled",
-			wantSkip:   true,
-		},
+			wantSkip:   true},
 		{
 			name: "control panel disabled",
 			cfg: &config.Config{
-				RemoteManagement: config.RemoteManagement{DisableControlPanel: true},
-			},
+				RemoteManagement: config.RemoteManagement{DisableControlPanel: true}},
 			wantReason: "control panel disabled",
-			wantSkip:   true,
-		},
+			wantSkip:   true},
 		{
 			name: "auto update disabled",
 			cfg: &config.Config{
-				RemoteManagement: config.RemoteManagement{DisableAutoUpdatePanel: true},
-			},
+				RemoteManagement: config.RemoteManagement{DisableAutoUpdatePanel: true}},
 			wantReason: "disable-auto-update-panel is enabled",
-			wantSkip:   true,
-		},
+			wantSkip:   true},
 		{
 			name:       "enabled",
 			cfg:        &config.Config{},
 			wantReason: "",
-			wantSkip:   false,
-		},
-	}
+			wantSkip:   false}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -117,5 +108,26 @@ func TestAutoUpdateSkipReason(t *testing.T) {
 				t.Fatalf("autoUpdateSkipReason() = (%q, %t), want (%q, %t)", gotReason, gotSkip, tt.wantReason, tt.wantSkip)
 			}
 		})
+	}
+}
+
+func TestResolveReleaseURLUsesProjectPanel(t *testing.T) {
+	got := resolveReleaseURL("")
+	want := defaultManagementReleaseURL
+	if got != want {
+		t.Fatalf("resolveReleaseURL(\"\") = %q, want %q", got, want)
+	}
+
+	got = resolveReleaseURL("https://github.com/icaruszezen/AI-Provider-Scheduling-Management-Center")
+	if got != want {
+		t.Fatalf("resolveReleaseURL(project repo) = %q, want %q", got, want)
+	}
+
+	if got = resolveReleaseURL("https://github.com/router-for-me/Cli-Proxy-API-Management-Center"); got != "" {
+		t.Fatalf("resolveReleaseURL(legacy oauth panel) = %q, want empty", got)
+	}
+
+	if got = resolveReleaseURL("not a url"); got != "" {
+		t.Fatalf("resolveReleaseURL(invalid) = %q, want empty", got)
 	}
 }

@@ -83,8 +83,7 @@ func registerRetryRoundLocalAuths(t *testing.T, manager *Manager, provider, mode
 		if _, errRegister := manager.Register(context.Background(), &Auth{
 			ID:       id,
 			Provider: provider,
-			Metadata: map[string]any{"request_retry": limits[id], "disable_cooling": true},
-		}); errRegister != nil {
+			Metadata: map[string]any{"request_retry": limits[id], "disable_cooling": true}}); errRegister != nil {
 			t.Fatalf("register %s: %v", id, errRegister)
 		}
 	}
@@ -111,25 +110,21 @@ func TestExecuteRetryRoundCredentialWindows(t *testing.T) {
 				_, errExecute := manager.Execute(context.Background(), []string{"retry-round-test"}, req, cliproxyexecutor.Options{})
 				return errExecute
 			},
-			kind: "execute",
-		},
+			kind: "execute"},
 		{
 			name: "count-tokens",
 			invoke: func(manager *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := manager.ExecuteCount(context.Background(), []string{"retry-round-test"}, req, cliproxyexecutor.Options{})
 				return errExecute
 			},
-			kind: "count",
-		},
+			kind: "count"},
 		{
 			name: "stream",
 			invoke: func(manager *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := manager.ExecuteStream(context.Background(), []string{"retry-round-test"}, req, cliproxyexecutor.Options{Stream: true})
 				return errExecute
 			},
-			kind: "stream",
-		},
-	}
+			kind: "stream"}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)
@@ -139,8 +134,7 @@ func TestExecuteRetryRoundCredentialWindows(t *testing.T) {
 			registerRetryRoundLocalAuths(t, manager, "retry-round-test", "retry-round-model", map[string]int{
 				"retry-round-a": 3,
 				"retry-round-b": 2,
-				"retry-round-c": 2,
-			})
+				"retry-round-c": 2})
 
 			if errExecute := test.invoke(manager, cliproxyexecutor.Request{Model: "retry-round-model"}); errExecute == nil {
 				t.Fatal("execution error = nil, want terminal retry error")
@@ -162,8 +156,7 @@ func TestExecuteRetryRoundMaxCredentialsAgesSkippedAuths(t *testing.T) {
 		"retry-cap-a": 1,
 		"retry-cap-b": 1,
 		"retry-cap-c": 1,
-		"retry-cap-d": 2,
-	})
+		"retry-cap-d": 2})
 
 	if _, errExecute := manager.Execute(context.Background(), []string{"retry-round-test"}, cliproxyexecutor.Request{Model: "retry-round-model-cap"}, cliproxyexecutor.Options{}); errExecute == nil {
 		t.Fatal("execution error = nil, want terminal retry error")
@@ -249,23 +242,19 @@ func TestExecuteSnapshotsDefaultRequestRetry(t *testing.T) {
 			invoke: func(manager *Manager) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"retry-config-snapshot"}, cliproxyexecutor.Request{Model: "retry-config-snapshot-model"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count-tokens",
 			invoke: func(manager *Manager) error {
 				_, errExecute := manager.ExecuteCount(context.Background(), []string{"retry-config-snapshot"}, cliproxyexecutor.Request{Model: "retry-config-snapshot-model"}, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			invoke: func(manager *Manager) error {
 				_, errExecute := manager.ExecuteStream(context.Background(), []string{"retry-config-snapshot"}, cliproxyexecutor.Request{Model: "retry-config-snapshot-model"}, cliproxyexecutor.Options{Stream: true})
 				return errExecute
-			},
-		},
-	}
+			}}}
 	scenarios := []struct {
 		name        string
 		initial     int
@@ -274,8 +263,7 @@ func TestExecuteSnapshotsDefaultRequestRetry(t *testing.T) {
 		wantSuccess bool
 	}{
 		{name: "decrease after request starts", initial: 1, next: 0, wantCalls: 2, wantSuccess: true},
-		{name: "increase after request starts", initial: 0, next: 1, wantCalls: 1, wantSuccess: false},
-	}
+		{name: "increase after request starts", initial: 0, next: 1, wantCalls: 1, wantSuccess: false}}
 
 	for _, path := range paths {
 		for _, scenario := range scenarios {
@@ -285,8 +273,7 @@ func TestExecuteSnapshotsDefaultRequestRetry(t *testing.T) {
 				executor := &retryConfigMutationExecutor{
 					identifier:  "retry-config-snapshot",
 					manager:     manager,
-					nextDefault: scenario.next,
-				}
+					nextDefault: scenario.next}
 				manager.RegisterExecutor(executor)
 
 				const authID = "retry-config-snapshot-auth"
@@ -296,8 +283,7 @@ func TestExecuteSnapshotsDefaultRequestRetry(t *testing.T) {
 				if _, errRegister := manager.Register(context.Background(), &Auth{
 					ID:       authID,
 					Provider: "retry-config-snapshot",
-					Metadata: map[string]any{"disable_cooling": true},
-				}); errRegister != nil {
+					Metadata: map[string]any{"disable_cooling": true}}); errRegister != nil {
 					t.Fatalf("register auth: %v", errRegister)
 				}
 
@@ -363,8 +349,7 @@ func (d *retryRoundHomeDispatcher) RPopAuthWithRetryRoundConstraints(_ context.C
 		}
 		return json.Marshal(homeAuthDispatchResponse{
 			RequestRetry: func() *int { value := maxRetry; return &value }(),
-			Auth:         Auth{ID: id, Provider: "retry-round-home", Status: StatusActive, Metadata: map[string]any{"request_retry": d.limits[id]}},
-		})
+			Auth:         Auth{ID: id, Provider: "retry-round-home", Status: StatusActive, Metadata: map[string]any{"request_retry": d.limits[id]}}})
 	}
 	return nil, home.ErrAuthNotFound
 }
@@ -393,23 +378,19 @@ func TestExecuteHomeRetryRoundCredentialWindows(t *testing.T) {
 			invoke: func(manager *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := manager.Execute(context.Background(), []string{"retry-round-home"}, req, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "count-tokens",
 			invoke: func(manager *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := manager.ExecuteCount(context.Background(), []string{"retry-round-home"}, req, cliproxyexecutor.Options{})
 				return errExecute
-			},
-		},
+			}},
 		{
 			name: "stream",
 			invoke: func(manager *Manager, req cliproxyexecutor.Request) error {
 				_, errExecute := manager.ExecuteStream(context.Background(), []string{"retry-round-home"}, req, cliproxyexecutor.Options{Stream: true})
 				return errExecute
-			},
-		},
-	}
+			}}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			manager := NewManager(nil, nil, nil)
@@ -418,8 +399,7 @@ func TestExecuteHomeRetryRoundCredentialWindows(t *testing.T) {
 			dispatcher := &retryRoundHomeDispatcher{limits: map[string]int{
 				"retry-round-a": 3,
 				"retry-round-b": 2,
-				"retry-round-c": 2,
-			}}
+				"retry-round-c": 2}}
 			manager.PublishHomeDispatch(dispatcher, executionregistry.New(), 1)
 			executor := &retryRoundCallExecutor{identifier: "retry-round-home"}
 			manager.RegisterExecutor(executor)

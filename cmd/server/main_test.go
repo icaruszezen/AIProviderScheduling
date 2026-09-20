@@ -9,14 +9,10 @@ import (
 func TestShouldEnableExampleAPIKeySafeMode(t *testing.T) {
 	cfgWithExampleKey := &config.Config{
 		SDKConfig: config.SDKConfig{
-			APIKeys: []string{"real-key", " your-api-key-1 "},
-		},
-	}
+			APIKeys: []string{"real-key", " your-api-key-1 "}}}
 	cfgWithRealKey := &config.Config{
 		SDKConfig: config.SDKConfig{
-			APIKeys: []string{"real-key"},
-		},
-	}
+			APIKeys: []string{"real-key"}}}
 
 	tests := []struct {
 		name               string
@@ -31,52 +27,43 @@ func TestShouldEnableExampleAPIKeySafeMode(t *testing.T) {
 		{
 			name: "normal server with example key",
 			cfg:  cfgWithExampleKey,
-			want: true,
-		},
+			want: true},
 		{
 			name:       "standalone tui with example key",
 			cfg:        cfgWithExampleKey,
 			tuiMode:    true,
 			standalone: true,
-			want:       true,
-		},
+			want:       true},
 		{
 			name:        "pure tui client is not blocked",
 			cfg:         cfgWithExampleKey,
 			tuiMode:     true,
 			standalone:  false,
 			commandMode: false,
-			want:        false,
-		},
+			want:        false},
 		{
 			name:        "one-shot command is not blocked",
 			cfg:         cfgWithExampleKey,
 			commandMode: true,
-			want:        false,
-		},
+			want:        false},
 		{
 			name:     "home mode is not blocked",
 			cfg:      cfgWithExampleKey,
 			homeMode: true,
-			want:     false,
-		},
+			want:     false},
 		{
 			name:               "cloud standby without config is not blocked",
 			cfg:                cfgWithExampleKey,
 			cloudConfigMissing: true,
-			want:               false,
-		},
+			want:               false},
 		{
 			name: "normal server with real key",
 			cfg:  cfgWithRealKey,
-			want: false,
-		},
+			want: false},
 		{
 			name: "nil config",
 			cfg:  nil,
-			want: false,
-		},
-	}
+			want: false}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -101,30 +88,25 @@ func TestModelCatalogUpdaterPlan(t *testing.T) {
 			localModel:      false,
 			homeEnabled:     false,
 			wantModels:      true,
-			wantCodexClient: true,
-		},
+			wantCodexClient: true},
 		{
 			name:            "home mode keeps models.json local and refreshes codex templates",
 			localModel:      false,
 			homeEnabled:     true,
 			wantModels:      false,
-			wantCodexClient: true,
-		},
+			wantCodexClient: true},
 		{
 			name:            "local-model disables both remote catalogs",
 			localModel:      true,
 			homeEnabled:     false,
 			wantModels:      false,
-			wantCodexClient: false,
-		},
+			wantCodexClient: false},
 		{
 			name:            "local-model disables both remote catalogs even under home",
 			localModel:      true,
 			homeEnabled:     true,
 			wantModels:      false,
-			wantCodexClient: false,
-		},
-	}
+			wantCodexClient: false}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotModels, gotCodex := modelCatalogUpdaterPlan(tt.localModel, tt.homeEnabled)
@@ -145,24 +127,19 @@ func TestHomeConfigPayloadPortApplication(t *testing.T) {
 		{
 			name:     "custom port honored",
 			yamlBody: "port: 9090\n",
-			wantPort: 9090,
-		},
+			wantPort: 9090},
 		{
 			name:     "custom port 8327 honored",
 			yamlBody: "port: 8327\n",
-			wantPort: 8327,
-		},
+			wantPort: 8327},
 		{
 			name:     "missing port defaults to 8317",
 			yamlBody: "debug: true\n",
-			wantPort: 8317,
-		},
+			wantPort: 8317},
 		{
 			name:     "standard port 8317 preserved",
 			yamlBody: "port: 8317\n",
-			wantPort: 8317,
-		},
-	}
+			wantPort: 8317}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

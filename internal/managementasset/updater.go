@@ -26,13 +26,12 @@ import (
 )
 
 const (
-	defaultManagementReleaseURL  = "https://api.github.com/repos/router-for-me/Cli-Proxy-API-Management-Center/releases/latest"
-	defaultManagementFallbackURL = "https://cpamc.router-for.me/"
-	managementAssetName          = "management.html"
-	httpUserAgent                = "AIProviderScheduling-management-updater"
-	managementSyncMinInterval    = 30 * time.Second
-	updateCheckInterval          = 3 * time.Hour
-	maxAssetDownloadSize         = 50 << 20 // 10 MB safety limit for management asset downloads
+	defaultManagementReleaseURL = "https://api.github.com/repos/icaruszezen/AI-Provider-Scheduling-Management-Center/releases/latest"
+	managementAssetName         = "management.html"
+	httpUserAgent               = "AIProviderScheduling-management-updater"
+	managementSyncMinInterval   = 30 * time.Second
+	updateCheckInterval         = 3 * time.Hour
+	maxAssetDownloadSize        = 50 << 20 // 10 MB safety limit for management asset downloads
 )
 
 // ManagementFileName exposes the control panel asset filename.
@@ -241,13 +240,15 @@ func EnsureLatestManagementHTML(ctx context.Context, staticDir string, proxyURL 
 			localHash = ""
 		}
 
+		if strings.TrimSpace(releaseURL) == "" {
+			log.Warn("management asset sync skipped: panel GitHub repository is not configured")
+			return nil, nil
+		}
+
 		asset, remoteHash, err := fetchLatestAsset(ctx, client, releaseURL)
 		if err != nil {
 			if localFileMissing {
-				log.WithError(err).Warn("failed to fetch latest management release information, trying fallback page")
-				if ensureFallbackManagementHTML(ctx, client, localPath) {
-					return nil, nil
-				}
+				log.WithError(err).Warn("failed to fetch latest management release information; using the bundled panel")
 				return nil, nil
 			}
 			log.WithError(err).Warn("failed to fetch latest management release information")
@@ -262,10 +263,7 @@ func EnsureLatestManagementHTML(ctx context.Context, staticDir string, proxyURL 
 		data, downloadedHash, err := downloadAsset(ctx, client, asset.BrowserDownloadURL)
 		if err != nil {
 			if localFileMissing {
-				log.WithError(err).Warn("failed to download management asset, trying fallback page")
-				if ensureFallbackManagementHTML(ctx, client, localPath) {
-					return nil, nil
-				}
+				log.WithError(err).Warn("failed to download management asset; using the bundled panel")
 				return nil, nil
 			}
 			log.WithError(err).Warn("failed to download management asset")
@@ -290,25 +288,6 @@ func EnsureLatestManagementHTML(ctx context.Context, staticDir string, proxyURL 
 	return err == nil
 }
 
-func ensureFallbackManagementHTML(ctx context.Context, client *http.Client, localPath string) bool {
-	data, downloadedHash, err := downloadAsset(ctx, client, defaultManagementFallbackURL)
-	if err != nil {
-		log.WithError(err).Warn("failed to download fallback management control panel page")
-		return false
-	}
-
-	log.Warnf("management asset downloaded from fallback URL without digest verification (hash=%s) — "+
-		"enable verified GitHub updates by keeping disable-auto-update-panel set to false", downloadedHash)
-
-	if err = atomicWriteFile(localPath, data); err != nil {
-		log.WithError(err).Warn("failed to persist fallback management control panel page")
-		return false
-	}
-
-	log.Infof("management asset updated from fallback page successfully (hash=%s)", downloadedHash)
-	return true
-}
-
 func resolveReleaseURL(repo string) string {
 	repo = strings.TrimSpace(repo)
 	if repo == "" {
@@ -317,7 +296,7 @@ func resolveReleaseURL(repo string) string {
 
 	parsed, err := url.Parse(repo)
 	if err != nil || parsed.Host == "" {
-		return defaultManagementReleaseURL
+		return ""
 	}
 
 	host := strings.ToLower(parsed.Host)
@@ -327,6 +306,9 @@ func resolveReleaseURL(repo string) string {
 		if !strings.HasSuffix(strings.ToLower(parsed.Path), "/releases/latest") {
 			parsed.Path = parsed.Path + "/releases/latest"
 		}
+		if isLegacyOAuthPanelReleaseURL(parsed.String()) {
+			return ""
+		}
 		return parsed.String()
 	}
 
@@ -334,22 +316,32 @@ func resolveReleaseURL(repo string) string {
 		parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
 		if len(parts) >= 2 && parts[0] != "" && parts[1] != "" {
 			repoName := strings.TrimSuffix(parts[1], ".git")
-			return fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", parts[0], repoName)
+			release := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", parts[0], repoName)
+			if isLegacyOAuthPanelReleaseURL(release) {
+				return ""
+			}
+			return release
 		}
 	}
 
-	return defaultManagementReleaseURL
+	return ""
+}
+
+func isLegacyOAuthPanelReleaseURL(releaseURL string) bool {
+	return strings.Contains(strings.ToLower(releaseURL), "router-for-me/cli-proxy-api-management-center")
 }
 
 func fetchLatestAsset(ctx context.Context, client *http.Client, releaseURL string) (*releaseAsset, string, error) {
 	if strings.TrimSpace(releaseURL) == "" {
-		releaseURL = defaultManagementReleaseURL
+		return nil, "", fmt.Errorf("management panel release URL is not configured")
+	}
+	if isLegacyOAuthPanelReleaseURL(releaseURL) {
+		return nil, "", fmt.Errorf("refusing upstream Cli-Proxy-API-Management-Center panel that still ships account OAuth")
 	}
 
 	headers := map[string]string{
 		"Accept":     "application/vnd.github+json",
-		"User-Agent": httpUserAgent,
-	}
+		"User-Agent": httpUserAgent}
 	if token := util.ResolveGitHubToken(); token != "" {
 		headers["Authorization"] = "Bearer " + token
 	}

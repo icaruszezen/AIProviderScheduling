@@ -143,8 +143,7 @@ func defaultClaudeDeviceProfile(cfg *config.Config) ClaudeDeviceProfile {
 		PackageVersion: hdrDefault(hd.PackageVersion, defaultClaudeFingerprintPackageVersion),
 		RuntimeVersion: hdrDefault(hd.RuntimeVersion, defaultClaudeFingerprintRuntimeVersion),
 		OS:             hdrDefault(hd.OS, defaultClaudeFingerprintOS),
-		Arch:           hdrDefault(hd.Arch, defaultClaudeFingerprintArch),
-	}
+		Arch:           hdrDefault(hd.Arch, defaultClaudeFingerprintArch)}
 	if version, ok := parseClaudeCLIVersion(profile.UserAgent); ok {
 		profile.version = version
 		profile.hasVersion = true
@@ -275,8 +274,7 @@ func extractClaudeDeviceProfile(headers http.Header, cfg *config.Config) (Claude
 		OS:             firstNonEmptyHeader(headers, "X-Stainless-Os", baseline.OS),
 		Arch:           firstNonEmptyHeader(headers, "X-Stainless-Arch", baseline.Arch),
 		version:        version,
-		hasVersion:     true,
-	}
+		hasVersion:     true}
 	return profile, true
 }
 
@@ -420,8 +418,7 @@ func resolveClaudeDeviceProfileLocal(auth *cliproxyauth.Auth, apiKey string, hea
 
 		claudeDeviceProfileCache[cacheKey] = claudeDeviceProfileCacheEntry{
 			profile: candidate,
-			expire:  now.Add(claudeDeviceProfileTTL),
-		}
+			expire:  now.Add(claudeDeviceProfileTTL)}
 		claudeDeviceProfileCacheMu.Unlock()
 		return candidate
 	}
@@ -544,8 +541,7 @@ func claudeDeviceProfileKVValueFromProfile(profile ClaudeDeviceProfile) claudeDe
 		PackageVersion: profile.PackageVersion,
 		RuntimeVersion: profile.RuntimeVersion,
 		OS:             profile.OS,
-		Arch:           profile.Arch,
-	}
+		Arch:           profile.Arch}
 }
 
 func (value claudeDeviceProfileKVValue) ToProfile() ClaudeDeviceProfile {
@@ -554,8 +550,7 @@ func (value claudeDeviceProfileKVValue) ToProfile() ClaudeDeviceProfile {
 		PackageVersion: strings.TrimSpace(value.PackageVersion),
 		RuntimeVersion: strings.TrimSpace(value.RuntimeVersion),
 		OS:             strings.TrimSpace(value.OS),
-		Arch:           strings.TrimSpace(value.Arch),
-	}
+		Arch:           strings.TrimSpace(value.Arch)}
 	if version, ok := parseClaudeCLIVersion(profile.UserAgent); ok {
 		profile.version = version
 		profile.hasVersion = true
@@ -572,8 +567,7 @@ func ApplyClaudeDeviceProfileHeaders(r *http.Request, profile ClaudeDeviceProfil
 		"X-Stainless-Package-Version",
 		"X-Stainless-Runtime-Version",
 		"X-Stainless-Os",
-		"X-Stainless-Arch",
-	} {
+		"X-Stainless-Arch"} {
 		r.Header.Del(headerName)
 	}
 	r.Header.Set("User-Agent", profile.UserAgent)

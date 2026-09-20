@@ -526,16 +526,9 @@ func resolveConfigCodexStyleKey(auth *coreauth.Auth, entries []config.CodexKey, 
 }
 
 func (s *Service) oauthExcludedModels(provider, authKind string) []string {
-	cfg := s.cfg
-	if cfg == nil {
-		return nil
-	}
-	authKindKey := strings.ToLower(strings.TrimSpace(authKind))
-	providerKey := strings.ToLower(strings.TrimSpace(provider))
-	if authKindKey == "apikey" {
-		return nil
-	}
-	return cfg.OAuthExcludedModels[providerKey]
+	_ = provider
+	_ = authKind
+	return nil
 }
 
 func applyExcludedModels(models []*ModelInfo, excluded []string) []*ModelInfo {
@@ -697,8 +690,7 @@ func buildConfiguredModelInfo(model modelEntry, ownedBy, modelType string, creat
 		OwnedBy:     ownedBy,
 		Type:        modelType,
 		DisplayName: displayName,
-		UserDefined: userDefined,
-	}
+		UserDefined: userDefined}
 	if maxContextModel, okMaxContext := any(model).(modelMaxContextLengthEntry); okMaxContext {
 		if maxContextLength := maxContextModel.GetMaxContextLength(); maxContextLength > 0 {
 			info.ContextLength = maxContextLength
@@ -905,37 +897,8 @@ func applyOAuthModelAliasForAuth(cfg *config.Config, provider, authKind string, 
 	return applyOAuthModelAliasEntries(aliases, models)
 }
 
-func oauthModelAliasesForAuth(cfg *config.Config, channel string, attributes map[string]string) []config.OAuthModelAlias {
-	perAuthAliases := coreauth.OAuthModelAliasesFromAttributes(attributes)
-	if cfg == nil || len(cfg.OAuthModelAlias) == 0 {
-		return perAuthAliases
-	}
-	globalAliases := cfg.OAuthModelAlias[channel]
-	if len(perAuthAliases) == 0 {
-		return globalAliases
-	}
-	if len(globalAliases) == 0 {
-		return perAuthAliases
-	}
-	out := make([]config.OAuthModelAlias, 0, len(perAuthAliases)+len(globalAliases))
-	seenAlias := make(map[string]struct{}, len(perAuthAliases)+len(globalAliases))
-	add := func(aliases []config.OAuthModelAlias) {
-		for _, entry := range aliases {
-			alias := strings.TrimSpace(entry.Alias)
-			if alias == "" {
-				continue
-			}
-			key := strings.ToLower(alias)
-			if _, exists := seenAlias[key]; exists {
-				continue
-			}
-			seenAlias[key] = struct{}{}
-			out = append(out, entry)
-		}
-	}
-	add(perAuthAliases)
-	add(globalAliases)
-	return out
+func oauthModelAliasesForAuth(_ *config.Config, _ string, attributes map[string]string) []config.OAuthModelAlias {
+	return coreauth.OAuthModelAliasesFromAttributes(attributes)
 }
 
 func applyOAuthModelAliasEntries(aliases []config.OAuthModelAlias, models []*ModelInfo) []*ModelInfo {
@@ -959,8 +922,7 @@ func applyOAuthModelAliasEntries(aliases []config.OAuthModelAlias, models []*Mod
 		forward[key] = append(forward[key], aliasEntry{
 			alias:       alias,
 			displayName: strings.TrimSpace(aliases[i].DisplayName),
-			fork:        aliases[i].Fork,
-		})
+			fork:        aliases[i].Fork})
 	}
 	if len(forward) == 0 {
 		return models

@@ -136,8 +136,7 @@ func TestXAIReasoningReplayCacheStoresAssistantMessageWithReasoning(t *testing.T
 
 	items := [][]byte{
 		[]byte(`{"id":"rs_1","type":"reasoning","summary":[{"type":"summary_text","text":"visible"}],"encrypted_content":"` + encryptedContent + `"}`),
-		[]byte(`{"id":"msg_1","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"answer","annotations":[],"logprobs":[]}]}`),
-	}
+		[]byte(`{"id":"msg_1","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"answer","annotations":[],"logprobs":[]}]}`)}
 	if !CacheXAIReasoningReplayItems("grok-4.5", "prompt-cache:session", items) {
 		t.Fatal("expected reasoning replay items to be cached")
 	}
@@ -162,8 +161,7 @@ func TestXAIReasoningReplayCacheRejectsAssistantMessageWithoutReasoning(t *testi
 	t.Cleanup(ClearXAIReasoningReplayCache)
 
 	items := [][]byte{
-		[]byte(`{"id":"msg_1","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"answer"}]}`),
-	}
+		[]byte(`{"id":"msg_1","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"answer"}]}`)}
 	if CacheXAIReasoningReplayItems("grok-4.5", "prompt-cache:message-only", items) {
 		t.Fatal("message-only replay batch must not be cached")
 	}
@@ -188,16 +186,13 @@ func TestXAIReasoningReplayCacheStoresToolCallWithoutReasoning(t *testing.T) {
 			sessionKey:  "prompt-cache:function-call-only",
 			item:        []byte(`{"type":"function_call","call_id":"call_1","name":"lookup","arguments":"{\"q\":\"weather\"}"}`),
 			wantType:    "function_call",
-			wantPayload: `{"q":"weather"}`,
-		},
+			wantPayload: `{"q":"weather"}`},
 		{
 			name:        "custom tool call",
 			sessionKey:  "prompt-cache:custom-tool-call-only",
 			item:        []byte(`{"type":"custom_tool_call","call_id":"call_2","name":"shell","input":"pwd"}`),
 			wantType:    "custom_tool_call",
-			wantPayload: "pwd",
-		},
-	}
+			wantPayload: "pwd"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -260,8 +255,7 @@ func TestXAIReasoningReplayCacheStoresRefusalMessagePart(t *testing.T) {
 
 	items := [][]byte{
 		[]byte(`{"type":"reasoning","summary":[],"encrypted_content":"` + encryptedContent + `"}`),
-		[]byte(`{"type":"message","role":"assistant","content":[{"type":"refusal","refusal":"I cannot help with that"}]}`),
-	}
+		[]byte(`{"type":"message","role":"assistant","content":[{"type":"refusal","refusal":"I cannot help with that"}]}`)}
 	if !CacheXAIReasoningReplayItems("grok-4.5", "prompt-cache:refusal", items) {
 		t.Fatal("expected refusal message with reasoning to be cached")
 	}

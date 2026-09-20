@@ -38,9 +38,7 @@ func TestHostApplyConfig_DisabledGlobalSkipsSnapshot(t *testing.T) {
 	h.ApplyConfig(context.Background(), &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: false,
-			Dir:     makePluginDir(t, "alpha"),
-		},
-	})
+			Dir:     makePluginDir(t, "alpha")}})
 
 	if loader.openCalls != 0 {
 		t.Fatalf("Open calls = %d, want 0", loader.openCalls)
@@ -55,8 +53,7 @@ func TestHostApplyConfig_DisabledGlobalDoesNotResolvePluginsDir(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -65,9 +62,7 @@ func TestHostApplyConfig_DisabledGlobalDoesNotResolvePluginsDir(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 	if !h.PluginRegistered("alpha") {
 		t.Fatal("PluginRegistered(alpha) = false, want true before disable")
 	}
@@ -96,8 +91,7 @@ func TestHostApplyConfig_ExpandsPluginsDirLeadingTilde(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -110,9 +104,7 @@ func TestHostApplyConfig_ExpandsPluginsDirLeadingTilde(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     "~/" + filepath.ToSlash(filepath.Base(pluginsDir)),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 
 	if loader.openCalls != 1 {
 		t.Fatalf("Open calls = %d, want 1", loader.openCalls)
@@ -127,8 +119,7 @@ func TestHostApplyConfig_DisabledPluginSkipsCapability(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 
@@ -137,10 +128,7 @@ func TestHostApplyConfig_DisabledPluginSkipsCapability(t *testing.T) {
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": {Enabled: &enabled},
-			},
-		},
-	})
+				"alpha": {Enabled: &enabled}}}})
 
 	if plugin.registerCalls != 0 || plugin.reconfigureCalls != 0 {
 		t.Fatalf("calls = register %d reconfigure %d, want 0", plugin.registerCalls, plugin.reconfigureCalls)
@@ -157,17 +145,14 @@ func TestHostApplyConfig_DefaultDisabledPluginSkipsLoad(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 
 	h.ApplyConfig(context.Background(), &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
-			Dir:     makePluginDir(t, "alpha"),
-		},
-	})
+			Dir:     makePluginDir(t, "alpha")}})
 
 	if plugin.registerCalls != 0 || loader.openCalls != 0 {
 		t.Fatalf("calls = register %d open %d, want 0", plugin.registerCalls, loader.openCalls)
@@ -182,8 +167,7 @@ func TestPluginLoadedTracksLoadedPluginAfterDisabled(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -193,9 +177,7 @@ func TestPluginLoadedTracksLoadedPluginAfterDisabled(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     pluginsDir,
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 
 	if !h.PluginLoaded("alpha") {
 		t.Fatal("PluginLoaded(alpha) = false, want true after load")
@@ -212,10 +194,7 @@ func TestPluginLoadedTracksLoadedPluginAfterDisabled(t *testing.T) {
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": {Enabled: &disabled},
-			},
-		},
-	})
+				"alpha": {Enabled: &disabled}}}})
 
 	if len(h.RegisteredPlugins()) != 0 {
 		t.Fatalf("RegisteredPlugins() len = %d, want 0 after disable", len(h.RegisteredPlugins()))
@@ -237,12 +216,10 @@ func TestHostUnloadPluginTargetsOnlyRequestedPlugin(t *testing.T) {
 	loader := newTestSymbolLoader()
 	alpha := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	bravo := &testPlugin{
 		registerResult:    validTestPlugin("bravo"),
-		reconfigureResult: validTestPlugin("bravo"),
-	}
+		reconfigureResult: validTestPlugin("bravo")}
 	alphaLookup := newTestSymbolLookup(alpha)
 	bravoLookup := newTestSymbolLookup(bravo)
 	loader.lookups["alpha"] = alphaLookup
@@ -253,9 +230,7 @@ func TestHostUnloadPluginTargetsOnlyRequestedPlugin(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha", "bravo"),
-			Configs: enabledPluginConfigs("alpha", "bravo"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha", "bravo")}}
 
 	h.ApplyConfig(context.Background(), cfg)
 
@@ -299,8 +274,7 @@ func TestHostApplyConfigRegistersPluginThinkingApplier(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	plugin.registerResult.Capabilities.ThinkingApplier = testThinkingCapability{provider: "plugin-thinking"}
 	plugin.reconfigureResult.Capabilities.ThinkingApplier = testThinkingCapability{provider: "plugin-thinking"}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
@@ -309,16 +283,12 @@ func TestHostApplyConfigRegistersPluginThinkingApplier(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 	t.Cleanup(func() {
 		h.ApplyConfig(context.Background(), &config.Config{
 			Plugins: config.PluginsConfig{
 				Enabled: false,
-				Dir:     cfg.Plugins.Dir,
-			},
-		})
+				Dir:     cfg.Plugins.Dir}})
 	})
 
 	h.ApplyConfig(context.Background(), cfg)
@@ -343,15 +313,11 @@ func TestHostApplyConfigRegistersInterceptorOnlyPlugin(t *testing.T) {
 				Name:             "alpha",
 				Version:          "1.0.0",
 				Author:           "test",
-				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-			},
+				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
 			Capabilities: pluginapi.Capabilities{
 				RequestInterceptor: requestInterceptorFunc(func(ctx context.Context, req pluginapi.RequestInterceptRequest) (pluginapi.RequestInterceptResponse, error) {
 					return pluginapi.RequestInterceptResponse{Body: []byte("registered")}, nil
-				}),
-			},
-		},
-	}
+				})}}}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 
@@ -359,9 +325,7 @@ func TestHostApplyConfigRegistersInterceptorOnlyPlugin(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 
 	if len(h.activeRecords()) != 1 {
 		t.Fatalf("Snapshot records = %d, want 1", len(h.activeRecords()))
@@ -376,8 +340,7 @@ func TestHostApplyConfigDispatchesInterceptorRPCMethods(t *testing.T) {
 				Name:             "alpha",
 				Version:          "1.0.0",
 				Author:           "test",
-				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-			},
+				GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
 			Capabilities: pluginapi.Capabilities{
 				RequestInterceptor: requestInterceptorFunc(func(ctx context.Context, req pluginapi.RequestInterceptRequest) (pluginapi.RequestInterceptResponse, error) {
 					return pluginapi.RequestInterceptResponse{Body: []byte("request|rpc")}, nil
@@ -385,16 +348,11 @@ func TestHostApplyConfigDispatchesInterceptorRPCMethods(t *testing.T) {
 				ResponseInterceptor: responseInterceptorFunc{
 					interceptResponse: func(ctx context.Context, req pluginapi.ResponseInterceptRequest) (pluginapi.ResponseInterceptResponse, error) {
 						return pluginapi.ResponseInterceptResponse{Body: []byte("response|rpc")}, nil
-					},
-				},
+					}},
 				StreamChunkInterceptor: responseInterceptorFunc{
 					interceptStreamChunk: func(ctx context.Context, req pluginapi.StreamChunkInterceptRequest) (pluginapi.StreamChunkInterceptResponse, error) {
 						return pluginapi.StreamChunkInterceptResponse{Body: []byte("chunk|rpc")}, nil
-					},
-				},
-			},
-		},
-	}
+					}}}}}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 
@@ -402,9 +360,7 @@ func TestHostApplyConfigDispatchesInterceptorRPCMethods(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 
 	if len(h.activeRecords()) != 1 {
 		t.Fatalf("Snapshot records = %d, want 1", len(h.activeRecords()))
@@ -455,8 +411,7 @@ func TestRPCInterceptorsIncludeHostCallbackID(t *testing.T) {
 	client := &capturePluginClient{}
 	adapter := &rpcPluginAdapter{
 		host:   New(),
-		client: client,
-	}
+		client: client}
 
 	if _, errReq := adapter.InterceptRequestBeforeAuth(context.Background(), pluginapi.RequestInterceptRequest{Body: []byte("request")}); errReq != nil {
 		t.Fatalf("InterceptRequestBeforeAuth() error = %v", errReq)
@@ -508,14 +463,12 @@ func TestRPCManagementIncludesHostCallbackID(t *testing.T) {
 	host := New()
 	adapter := &rpcPluginAdapter{
 		host:   host,
-		client: client,
-	}
+		client: client}
 
 	if _, errHandle := adapter.HandleManagement(context.Background(), pluginapi.ManagementRequest{
 		Method: http.MethodGet,
 		Path:   "/v0/management/plugins/test/status",
-		Body:   []byte("request"),
-	}); errHandle != nil {
+		Body:   []byte("request")}); errHandle != nil {
 		t.Fatalf("HandleManagement() error = %v", errHandle)
 	}
 	var req rpcManagementRequest
@@ -544,11 +497,8 @@ func TestSanitizePluginRequestRemovesNonJSONMetadata(t *testing.T) {
 			"callback": func(string) {},
 			"nested": map[string]any{
 				"keep": "nested",
-				"drop": func() {},
-			},
-			"list": []any{"item", func() {}},
-		},
-	}
+				"drop": func() {}},
+			"list": []any{"item", func() {}}}}
 	raw, errMarshal := json.Marshal(sanitizePluginRequest(req))
 	if errMarshal != nil {
 		t.Fatalf("Marshal(sanitized request interceptor) error = %v", errMarshal)
@@ -575,10 +525,7 @@ func TestSanitizePluginRequestRemovesNonJSONMetadata(t *testing.T) {
 		ExecutorRequest: pluginapi.ExecutorRequest{
 			Metadata: map[string]any{
 				"keep":     "value",
-				"callback": func(string) {},
-			},
-		},
-	}
+				"callback": func(string) {}}}}
 	if _, errMarshalExec := json.Marshal(sanitizePluginRequest(execReq)); errMarshalExec != nil {
 		t.Fatalf("Marshal(sanitized executor request) error = %v", errMarshalExec)
 	}
@@ -587,11 +534,8 @@ func TestSanitizePluginRequestRemovesNonJSONMetadata(t *testing.T) {
 		RequestInterceptRequest: pluginapi.RequestInterceptRequest{
 			Metadata: map[string]any{
 				"keep":     "value",
-				"callback": func(string) {},
-			},
-		},
-		HostCallbackID: "callback-1",
-	}
+				"callback": func(string) {}}},
+		HostCallbackID: "callback-1"}
 	if _, errMarshalWrapped := json.Marshal(sanitizePluginRequest(wrappedReq)); errMarshalWrapped != nil {
 		t.Fatalf("Marshal(sanitized wrapped request interceptor) error = %v", errMarshalWrapped)
 	}
@@ -601,17 +545,14 @@ func TestHostApplyConfig_ReconfigureCalledOnReload(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	cfg := &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 
 	h.ApplyConfig(context.Background(), cfg)
 	h.ApplyConfig(context.Background(), cfg)
@@ -638,8 +579,7 @@ func TestHostApplyConfigLogsLoadedAndRegisteredOnlyOnInitialLoad(t *testing.T) {
 	log.SetOutput(&out)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:    true,
-		DisableTimestamp: true,
-	})
+		DisableTimestamp: true})
 	log.SetLevel(log.InfoLevel)
 	t.Cleanup(func() {
 		log.SetOutput(originalOut)
@@ -650,8 +590,7 @@ func TestHostApplyConfigLogsLoadedAndRegisteredOnlyOnInitialLoad(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -659,9 +598,7 @@ func TestHostApplyConfigLogsLoadedAndRegisteredOnlyOnInitialLoad(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 
 	h.ApplyConfig(context.Background(), cfg)
 	h.ApplyConfig(context.Background(), cfg)
@@ -689,8 +626,7 @@ func TestHostApplyConfigLogsHotReloadActiveAndRetiredVersions(t *testing.T) {
 	log.SetOutput(&out)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:    true,
-		DisableTimestamp: true,
-	})
+		DisableTimestamp: true})
 	log.SetLevel(log.InfoLevel)
 	t.Cleanup(func() {
 		log.SetOutput(originalOut)
@@ -700,8 +636,7 @@ func TestHostApplyConfigLogsHotReloadActiveAndRetiredVersions(t *testing.T) {
 
 	loader := newTestSymbolLoader()
 	loader.lookups["alpha"] = newTestSymbolLookup(&testPlugin{
-		registerResult: validTestPlugin("alpha"),
-	})
+		registerResult: validTestPlugin("alpha")})
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
 	pluginsDir, paths := makeVersionedPluginDir(t, "alpha", "1.0.4")
@@ -711,20 +646,14 @@ func TestHostApplyConfigLogsHotReloadActiveAndRetiredVersions(t *testing.T) {
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.4"),
-			},
-		},
-	})
+				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.4")}}})
 	paths["1.0.3"] = writeVersionedPluginFile(t, pluginsDir, "alpha", "1.0.3")
 	h.ApplyConfig(context.Background(), &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.3"),
-			},
-		},
-	})
+				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.3")}}})
 
 	if !h.pluginIdentityCurrent("alpha", paths["1.0.3"], "1.0.3") {
 		t.Fatalf("active plugin identity did not switch to %s", paths["1.0.3"])
@@ -744,8 +673,7 @@ func TestHostApplyConfigLogsHotReloadActiveAndRetiredVersions(t *testing.T) {
 		"active_path=",
 		"retired_path=",
 		"alpha-v1.0.3",
-		"alpha-v1.0.4",
-	} {
+		"alpha-v1.0.4"} {
 		if !strings.Contains(logs, want) {
 			t.Fatalf("plugin hot reload log missing %s:\n%s", want, logs)
 		}
@@ -784,8 +712,7 @@ func TestHostApplyConfigQuiescesBeforeHotReloadRegistration(t *testing.T) {
 	if got, want := events.snapshot(), []string{
 		"old." + pluginabi.MethodPluginRegister,
 		"old." + pluginabi.MethodPluginQuiesce,
-		"replacement." + pluginabi.MethodPluginRegister,
-	}; !slices.Equal(got, want) {
+		"replacement." + pluginabi.MethodPluginRegister}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 	if !h.pluginIdentityCurrent("alpha", paths["2.0.0"], "2.0.0") {
@@ -834,8 +761,7 @@ func TestHostApplyConfigRollsBackQuiescedPluginWhenReplacementFails(t *testing.T
 			}
 			return nil, fmt.Errorf("replacement registration failed")
 		},
-		shutdown: func() { events.add("replacement.shutdown") },
-	}
+		shutdown: func() { events.add("replacement.shutdown") }}
 	loader := &sequencePluginLoader{clients: []pluginClient{oldClient, replacementClient}}
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -850,8 +776,7 @@ func TestHostApplyConfigRollsBackQuiescedPluginWhenReplacementFails(t *testing.T
 		"old." + pluginabi.MethodPluginQuiesce,
 		"replacement." + pluginabi.MethodPluginRegister,
 		"replacement.shutdown",
-		"old." + pluginabi.MethodPluginReconfigure,
-	}; !slices.Equal(got, want) {
+		"old." + pluginabi.MethodPluginReconfigure}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 	configMu.Lock()
@@ -906,8 +831,7 @@ func TestHostApplyConfigFallsBackWhenQuiesceUnsupported(t *testing.T) {
 	if got, want := events.snapshot(), []string{
 		"old." + pluginabi.MethodPluginRegister,
 		"old." + pluginabi.MethodPluginQuiesce,
-		"replacement." + pluginabi.MethodPluginRegister,
-	}; !slices.Equal(got, want) {
+		"replacement." + pluginabi.MethodPluginRegister}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 	if !h.pluginIdentityCurrent("alpha", paths["2.0.0"], "2.0.0") {
@@ -923,8 +847,7 @@ func TestHostCallQuiesceClassifiesErrors(t *testing.T) {
 	log.SetOutput(&out)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:    true,
-		DisableTimestamp: true,
-	})
+		DisableTimestamp: true})
 	log.SetLevel(log.DebugLevel)
 	t.Cleanup(func() {
 		log.SetOutput(originalOut)
@@ -943,27 +866,22 @@ func TestHostCallQuiesceClassifiesErrors(t *testing.T) {
 			name:        "unknown method RPC error",
 			response:    marshalRPCError("unknown_method", "plugin.quiesce is unavailable"),
 			wantMessage: "pluginhost: plugin quiesce unsupported",
-			wantLevel:   "level=debug",
-		},
+			wantLevel:   "level=debug"},
 		{
 			name:        "standard unsupported indication",
 			errCall:     fmt.Errorf("method not found: plugin.quiesce"),
 			wantMessage: "pluginhost: plugin quiesce unsupported",
-			wantLevel:   "level=debug",
-		},
+			wantLevel:   "level=debug"},
 		{
 			name:        "runtime failure",
 			errCall:     fmt.Errorf("quiesce runtime failure"),
 			wantMessage: "pluginhost: plugin quiesce failed",
-			wantLevel:   "level=warning",
-		},
+			wantLevel:   "level=warning"},
 		{
 			name:        "context cancellation",
 			errCall:     context.Canceled,
 			wantMessage: "pluginhost: plugin quiesce canceled",
-			wantLevel:   "level=debug",
-		},
-	}
+			wantLevel:   "level=debug"}}
 
 	h := New()
 	for _, tt := range tests {
@@ -1078,8 +996,7 @@ func TestHostApplyConfigSerializesLifecycleDuringQuiesce(t *testing.T) {
 		"old." + pluginabi.MethodPluginRegister,
 		"old." + pluginabi.MethodPluginQuiesce,
 		"replacement." + pluginabi.MethodPluginRegister,
-		"replacement." + pluginabi.MethodPluginReconfigure,
-	}; !slices.Equal(got, want) {
+		"replacement." + pluginabi.MethodPluginReconfigure}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 }
@@ -1108,8 +1025,7 @@ func TestHostApplyConfigRollsBackQuiescedPluginWhenContextCanceled(t *testing.T)
 			<-ctx.Done()
 			return nil, ctx.Err()
 		},
-		shutdown: func() { events.add("replacement.shutdown") },
-	}
+		shutdown: func() { events.add("replacement.shutdown") }}
 	h := NewForTest(&sequencePluginLoader{clients: []pluginClient{oldClient, replacementClient}})
 	t.Cleanup(h.ShutdownAll)
 	pluginsDir, paths := makeVersionedPluginDir(t, "alpha", "1.0.0")
@@ -1132,8 +1048,7 @@ func TestHostApplyConfigRollsBackQuiescedPluginWhenContextCanceled(t *testing.T)
 		"old." + pluginabi.MethodPluginQuiesce,
 		"replacement." + pluginabi.MethodPluginRegister,
 		"replacement.shutdown",
-		"old." + pluginabi.MethodPluginReconfigure,
-	}; !slices.Equal(got, want) {
+		"old." + pluginabi.MethodPluginReconfigure}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 	if !h.pluginIdentityCurrent("alpha", paths["1.0.0"], "1.0.0") {
@@ -1165,8 +1080,7 @@ func TestHostApplyConfigShutsDownSuccessfulReplacementBeforeCanceledRollback(t *
 			}
 			return lifecycleRegistrationResult(validTestPlugin("alpha"))
 		},
-		shutdown: func() { events.add("replacement.shutdown") },
-	}
+		shutdown: func() { events.add("replacement.shutdown") }}
 	h := NewForTest(&sequencePluginLoader{clients: []pluginClient{oldClient, replacementClient}})
 	t.Cleanup(h.ShutdownAll)
 	pluginsDir, paths := makeVersionedPluginDir(t, "alpha", "1.0.0")
@@ -1176,8 +1090,7 @@ func TestHostApplyConfigShutsDownSuccessfulReplacementBeforeCanceledRollback(t *
 	ctx := &cancelOnErrContext{
 		Context:  context.Background(),
 		done:     make(chan struct{}),
-		cancelAt: 3,
-	}
+		cancelAt: 3}
 	h.ApplyConfig(ctx, versionedPluginHostConfig(t, pluginsDir, "2.0.0"))
 
 	if got, want := events.snapshot(), []string{
@@ -1185,8 +1098,7 @@ func TestHostApplyConfigShutsDownSuccessfulReplacementBeforeCanceledRollback(t *
 		"old." + pluginabi.MethodPluginQuiesce,
 		"replacement." + pluginabi.MethodPluginRegister,
 		"replacement.shutdown",
-		"old." + pluginabi.MethodPluginReconfigure,
-	}; !slices.Equal(got, want) {
+		"old." + pluginabi.MethodPluginReconfigure}; !slices.Equal(got, want) {
 		t.Fatalf("lifecycle events = %v, want %v", got, want)
 	}
 	if replacementClient.shutdownCalls.Load() != 1 {
@@ -1201,8 +1113,7 @@ func TestHostApplyConfigKeepsLoadedVersionWhenPinnedVersionMissing(t *testing.T)
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
@@ -1213,10 +1124,7 @@ func TestHostApplyConfigKeepsLoadedVersionWhenPinnedVersionMissing(t *testing.T)
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.4"),
-			},
-		},
-	})
+				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.4")}}})
 	if !h.pluginIdentityCurrent("alpha", paths["1.0.4"], "1.0.4") {
 		t.Fatalf("active plugin identity did not start at %s", paths["1.0.4"])
 	}
@@ -1226,10 +1134,7 @@ func TestHostApplyConfigKeepsLoadedVersionWhenPinnedVersionMissing(t *testing.T)
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.5"),
-			},
-		},
-	})
+				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.5")}}})
 	if !h.PluginRegistered("alpha") {
 		t.Fatal("PluginRegistered(alpha) = false, want old version to remain active while pinned version is missing")
 	}
@@ -1249,10 +1154,7 @@ func TestHostApplyConfigKeepsLoadedVersionWhenPinnedVersionMissing(t *testing.T)
 			Enabled: true,
 			Dir:     pluginsDir,
 			Configs: map[string]config.PluginInstanceConfig{
-				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.5"),
-			},
-		},
-	})
+				"alpha": enabledPluginConfigWithStoreVersion(t, "1.0.5")}}})
 	if !h.pluginIdentityCurrent("alpha", paths["1.0.5"], "1.0.5") {
 		t.Fatalf("active plugin identity did not switch after pinned version was available")
 	}
@@ -1272,8 +1174,7 @@ func TestHostApplyConfigLogsLoadedWhenRegistrationInvalid(t *testing.T) {
 	log.SetOutput(&out)
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:    true,
-		DisableTimestamp: true,
-	})
+		DisableTimestamp: true})
 	log.SetLevel(log.InfoLevel)
 	t.Cleanup(func() {
 		log.SetOutput(originalOut)
@@ -1283,8 +1184,7 @@ func TestHostApplyConfigLogsLoadedWhenRegistrationInvalid(t *testing.T) {
 
 	loader := newTestSymbolLoader()
 	loader.lookups["empty-name"] = newTestSymbolLookup(&testPlugin{
-		registerResult: validTestPlugin(""),
-	})
+		registerResult: validTestPlugin("")})
 	h := NewForTest(loader)
 	t.Cleanup(h.ShutdownAll)
 
@@ -1292,9 +1192,7 @@ func TestHostApplyConfigLogsLoadedWhenRegistrationInvalid(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "empty-name"),
-			Configs: enabledPluginConfigs("empty-name"),
-		},
-	})
+			Configs: enabledPluginConfigs("empty-name")}})
 
 	logs := out.String()
 	if count := strings.Count(logs, `msg="pluginhost: plugin loaded"`); count != 1 {
@@ -1309,15 +1207,13 @@ func TestRegisteredPluginsIncludesMetadataAndOAuthCapability(t *testing.T) {
 	loader := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	plugin.registerResult.Metadata.Logo = "https://example.com/logo.svg"
 	plugin.registerResult.Metadata.ConfigFields = []pluginapi.ConfigField{{
 		Name:        "mode",
 		Type:        pluginapi.ConfigFieldTypeEnum,
 		EnumValues:  []string{"safe", "fast"},
-		Description: "Execution mode.",
-	}}
+		Description: "Execution mode."}}
 	plugin.registerResult.Capabilities.AuthProvider = fakeAuthProvider{identifier: "alpha"}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
@@ -1326,19 +1222,11 @@ func TestRegisteredPluginsIncludesMetadataAndOAuthCapability(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	})
+			Configs: enabledPluginConfigs("alpha")}})
 
 	infos := h.RegisteredPlugins()
 	if len(infos) != 1 {
 		t.Fatalf("RegisteredPlugins() len = %d, want 1; infos=%#v", len(infos), infos)
-	}
-	if !infos[0].SupportsOAuth {
-		t.Fatalf("RegisteredPlugins()[0].SupportsOAuth = false, want true; infos=%#v", infos)
-	}
-	if infos[0].OAuthProvider != "alpha" {
-		t.Fatalf("RegisteredPlugins()[0].OAuthProvider = %q, want alpha; infos=%#v", infos[0].OAuthProvider, infos)
 	}
 	if infos[0].Metadata.Logo == "" || len(infos[0].Metadata.ConfigFields) != 1 {
 		t.Fatalf("RegisteredPlugins()[0].Metadata = %#v, want logo and config fields", infos[0].Metadata)
@@ -1349,28 +1237,23 @@ func TestHostApplyConfig_InvalidMetadataOrNoCapabilitiesSkipped(t *testing.T) {
 	loader := newTestSymbolLoader()
 	loader.lookups["empty-name"] = newTestSymbolLookup(&testPlugin{
 		registerResult:    validTestPlugin(""),
-		reconfigureResult: validTestPlugin(""),
-	})
+		reconfigureResult: validTestPlugin("")})
 	loader.lookups["no-caps"] = newTestSymbolLookup(&testPlugin{
 		registerResult:    validTestPlugin("no-caps"),
-		reconfigureResult: validTestPlugin("no-caps"),
-	})
+		reconfigureResult: validTestPlugin("no-caps")})
 	loader.lookups["no-caps"].registerOverride = func([]byte) pluginapi.Plugin {
 		return pluginapi.Plugin{Metadata: pluginapi.Metadata{
 			Name:             "no-caps",
 			Version:          "1.0.0",
 			Author:           "test",
-			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-		}}
+			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"}}
 	}
 	h := NewForTest(loader)
 
 	h.ApplyConfig(context.Background(), &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
-			Dir:     makePluginDir(t, "empty-name", "no-caps"),
-		},
-	})
+			Dir:     makePluginDir(t, "empty-name", "no-caps")}})
 
 	if len(h.activeRecords()) != 0 {
 		t.Fatalf("Snapshot records = %d, want 0", len(h.activeRecords()))
@@ -1382,17 +1265,14 @@ func TestHostApplyConfig_PanicFusesPluginForProcessLifetime(t *testing.T) {
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
 		reconfigureResult: validTestPlugin("alpha"),
-		panicOnReload:     true,
-	}
+		panicOnReload:     true}
 	loader.lookups["alpha"] = newTestSymbolLookup(plugin)
 	h := NewForTest(loader)
 	cfg := &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 
 	h.ApplyConfig(context.Background(), cfg)
 	h.ApplyConfig(context.Background(), cfg)
@@ -1465,8 +1345,7 @@ func TestHostApplyConfigSerializesLifecycleCalls(t *testing.T) {
 	}
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	lookup := newTestSymbolLookup(plugin)
 	lookup.registerOverride = lifecycle
 	lookup.reconfigureOverride = lifecycle
@@ -1476,9 +1355,7 @@ func TestHostApplyConfigSerializesLifecycleCalls(t *testing.T) {
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 
 	firstDone := make(chan struct{})
 	go func() {
@@ -1542,14 +1419,12 @@ func TestHostCanceledInitializationDiscardsBlockedClient(t *testing.T) {
 	client := &blockingInitializationClient{
 		started:      make(chan struct{}),
 		release:      make(chan struct{}),
-		registration: validTestPlugin("alpha"),
-	}
+		registration: validTestPlugin("alpha")}
 	h := NewForTest(&blockingHostCallLoader{client: client})
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 	ctx, cancel := context.WithCancel(context.Background())
 	applyDone := make(chan struct{})
 	go func() {
@@ -1581,14 +1456,12 @@ func TestHostCancellationUnderMutationLockDoesNotInsertLoadedPlugin(t *testing.T
 		started:      make(chan struct{}),
 		release:      make(chan struct{}),
 		completed:    make(chan struct{}),
-		registration: validTestPlugin("alpha"),
-	}
+		registration: validTestPlugin("alpha")}
 	h := NewForTest(&blockingHostCallLoader{client: client})
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 	ctx, cancel := context.WithCancel(context.Background())
 	applyDone := make(chan struct{})
 	go func() {
@@ -1624,14 +1497,12 @@ func TestHostCanceledLoadDiscardsLateClientWithoutReplacingCurrentPlugin(t *test
 		second:        second,
 		firstStarted:  make(chan struct{}),
 		firstRelease:  make(chan struct{}),
-		secondStarted: make(chan struct{}),
-	}
+		secondStarted: make(chan struct{})}
 	h := NewForTest(loader)
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 	ctx, cancel := context.WithCancel(context.Background())
 	firstDone := make(chan struct{})
 	go func() {
@@ -1681,14 +1552,12 @@ func TestHostCanceledBlockedLoadKeepsOneLoaderAndCleanupPerPlugin(t *testing.T) 
 		second:        &lateLoadClient{registration: validTestPlugin("alpha")},
 		firstStarted:  make(chan struct{}),
 		firstRelease:  make(chan struct{}),
-		secondStarted: make(chan struct{}),
-	}
+		secondStarted: make(chan struct{})}
 	h := NewForTest(loader)
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	firstDone := make(chan struct{})
@@ -1728,8 +1597,7 @@ func TestHostUnloadPluginContextDetachesBlockedCall(t *testing.T) {
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 	h.ApplyConfig(context.Background(), cfg)
 
 	h.mu.Lock()
@@ -1810,8 +1678,7 @@ func TestHostUnloadAndShutdownWaitForBlockingRegister(t *testing.T) {
 				if h.PluginLoaded("alpha") {
 					t.Fatal("PluginLoaded(alpha) = true, want false after unload")
 				}
-			},
-		},
+			}},
 		{
 			name: "shutdown",
 			action: func(h *Host) bool {
@@ -1823,9 +1690,7 @@ func TestHostUnloadAndShutdownWaitForBlockingRegister(t *testing.T) {
 				if h.PluginLoaded("alpha") {
 					t.Fatal("PluginLoaded(alpha) = true, want false after shutdown")
 				}
-			},
-		},
-	}
+			}}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1861,8 +1726,7 @@ func TestSortRecordsPriorityDescendingAndIDTieBreak(t *testing.T) {
 	records := []capabilityRecord{
 		{id: "charlie", priority: 1},
 		{id: "bravo", priority: 2},
-		{id: "alpha", priority: 2},
-	}
+		{id: "alpha", priority: 2}}
 
 	sortRecords(records)
 
@@ -1952,8 +1816,7 @@ func lifecycleRegistrationResult(plugin pluginapi.Plugin) ([]byte, error) {
 	return marshalRPCResult(rpcRegistration{
 		SchemaVersion: pluginabi.SchemaVersion,
 		Metadata:      plugin.Metadata,
-		Capabilities:  rpcCapabilitiesFromPlugin(plugin),
-	})
+		Capabilities:  rpcCapabilitiesFromPlugin(plugin)})
 }
 
 func versionedPluginHostConfig(t *testing.T, pluginsDir string, version string) *config.Config {
@@ -1962,9 +1825,7 @@ func versionedPluginHostConfig(t *testing.T, pluginsDir string, version string) 
 		Enabled: true,
 		Dir:     pluginsDir,
 		Configs: map[string]config.PluginInstanceConfig{
-			"alpha": enabledPluginConfigWithStoreVersion(t, version),
-		},
-	}}
+			"alpha": enabledPluginConfigWithStoreVersion(t, version)}}}
 }
 
 type capturePluginClient struct {
@@ -2003,8 +1864,7 @@ func (c *blockingInitializationClient) Call(_ context.Context, method string, _ 
 	return marshalRPCResult(rpcRegistration{
 		SchemaVersion: pluginabi.SchemaVersion,
 		Metadata:      c.registration.Metadata,
-		Capabilities:  rpcCapabilitiesFromPlugin(c.registration),
-	})
+		Capabilities:  rpcCapabilitiesFromPlugin(c.registration)})
 }
 
 func (c *blockingInitializationClient) Shutdown() {
@@ -2048,8 +1908,7 @@ func (c *lateLoadClient) Call(_ context.Context, method string, _ []byte) ([]byt
 	return marshalRPCResult(rpcRegistration{
 		SchemaVersion: pluginabi.SchemaVersion,
 		Metadata:      c.registration.Metadata,
-		Capabilities:  rpcCapabilitiesFromPlugin(c.registration),
-	})
+		Capabilities:  rpcCapabilitiesFromPlugin(c.registration)})
 }
 
 func (c *lateLoadClient) Shutdown() {
@@ -2077,8 +1936,7 @@ func (c *blockingHostCallClient) Call(_ context.Context, method string, _ []byte
 		return marshalRPCResult(rpcRegistration{
 			SchemaVersion: pluginabi.SchemaVersion,
 			Metadata:      c.registration.Metadata,
-			Capabilities:  rpcCapabilitiesFromPlugin(c.registration),
-		})
+			Capabilities:  rpcCapabilitiesFromPlugin(c.registration)})
 	case pluginabi.MethodUsageHandle:
 		close(c.started)
 		<-c.release
@@ -2111,8 +1969,7 @@ func newBlockingOpenHost(t *testing.T) (*Host, *config.Config, <-chan struct{}, 
 	inner := newTestSymbolLoader()
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	inner.lookups["alpha"] = newTestSymbolLookup(plugin)
 
 	openStarted := make(chan struct{})
@@ -2124,15 +1981,12 @@ func newBlockingOpenHost(t *testing.T) (*Host, *config.Config, <-chan struct{}, 
 	h := NewForTest(&blockingOpenLoader{
 		inner:   inner,
 		started: openStarted,
-		release: release,
-	})
+		release: release})
 	cfg := &config.Config{
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 	return h, cfg, openStarted, releaseOpen
 }
 
@@ -2149,8 +2003,7 @@ func newBlockingRegisterHost(t *testing.T) (*Host, *config.Config, <-chan struct
 
 	plugin := &testPlugin{
 		registerResult:    validTestPlugin("alpha"),
-		reconfigureResult: validTestPlugin("alpha"),
-	}
+		reconfigureResult: validTestPlugin("alpha")}
 	lookup := newTestSymbolLookup(plugin)
 	lookup.registerOverride = func([]byte) pluginapi.Plugin {
 		startOnce.Do(func() { close(registerStarted) })
@@ -2163,9 +2016,7 @@ func newBlockingRegisterHost(t *testing.T) (*Host, *config.Config, <-chan struct
 		Plugins: config.PluginsConfig{
 			Enabled: true,
 			Dir:     makePluginDir(t, "alpha"),
-			Configs: enabledPluginConfigs("alpha"),
-		},
-	}
+			Configs: enabledPluginConfigs("alpha")}}
 	return h, cfg, registerStarted, releaseRegister
 }
 
@@ -2208,15 +2059,13 @@ func TestHostShutdownAllRetainsBlockedLoadTokenUntilCleanup(t *testing.T) {
 		release:         make(chan struct{}),
 		registration:    validTestPlugin("alpha"),
 		shutdownStarted: make(chan struct{}),
-		shutdownRelease: make(chan struct{}),
-	}
+		shutdownRelease: make(chan struct{})}
 	loader := &countingPluginLoader{client: client, replacement: &lateLoadClient{registration: validTestPlugin("alpha")}}
 	h := NewForTest(loader)
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	firstDone := make(chan struct{})
@@ -2263,15 +2112,13 @@ func TestHostCanceledRegisterRetainsLoadTokenUntilShutdownReturns(t *testing.T) 
 		release:         make(chan struct{}),
 		registration:    validTestPlugin("alpha"),
 		shutdownStarted: make(chan struct{}),
-		shutdownRelease: make(chan struct{}),
-	}
+		shutdownRelease: make(chan struct{})}
 	loader := &countingPluginLoader{client: client, replacement: &lateLoadClient{registration: validTestPlugin("alpha")}}
 	h := NewForTest(loader)
 	cfg := &config.Config{Plugins: config.PluginsConfig{
 		Enabled: true,
 		Dir:     makePluginDir(t, "alpha"),
-		Configs: enabledPluginConfigs("alpha"),
-	}}
+		Configs: enabledPluginConfigs("alpha")}}
 	ctx, cancel := context.WithCancel(context.Background())
 	applyDone := make(chan struct{})
 	go func() {

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with OAuth and round-robin load balancing.
+Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with provider API key scheduling.
 
 ## Repository
 - GitHub: https://github.com/icaruszezen/AIProviderScheduling
@@ -14,18 +14,19 @@ go test ./... # Run all tests
 go test -v -run TestName ./path/to/pkg # Run single test
 go build -o test-output ./cmd/server && rm test-output # Verify compile (REQUIRED after changes)
 ```
-- Common flags: `--config <path>`, `--tui`, `--standalone`, `--local-model`, `--no-browser`, `--oauth-callback-port <port>`
+- Common flags: `--config <path>`, `--tui`, `--standalone`, `--local-model`
 
 ## Config
 - Default config: `config.yaml` (template: `config.example.yaml`)
 - `.env` is auto-loaded from the working directory
-- Auth material defaults under `auths/`
-- Storage backends: file-based default; optional Postgres/git/object store (`PGSTORE_*`, `GITSTORE_*`, `OBJECTSTORE_*`)
+- Provider credentials come from config (`*-api-key`, `openai-compatibility`, `vertex-api-key`, `antigravity-api-key`). Official Vertex service accounts use `vertex-api-key[].service-account`.
+- Account OAuth / `auths/` JSON login is not supported. Remote stores (`PGSTORE_*`, `GITSTORE_*`, `OBJECTSTORE_*`) host `config.yaml`; leftover `auths/` directories are not loaded into the scheduler. `Manager.Load` and remote token-store `List` skip `AuthKindOAuth` records if a store is reattached later.
+- Plugin ABI: `AuthProvider.StartLogin` / `PollLogin` are retired (`ErrOAuthLoginUnsupported`). `HostConfigSummary` no longer has `AuthDir`, `OAuthModelAlias`, or `ExcludedModels` (breaking change; only `ProxyURL` and `ForceModelPrefix` remain).
+- `cmd/fetch_codex_models` and `cmd/fetch_antigravity_models` are retired stubs. They do not call upstream; configure `codex-api-key` / `antigravity-api-key` (with `project-id`) in `config.yaml` instead.
 
 ## Architecture
 - `cmd/server/` — Server entrypoint
-- `internal/api/` — Gin HTTP API (routes, middleware, modules)
-- `internal/api/modules/amp/` — Amp integration (Amp-style routes + reverse proxy)
+- `internal/api/` — Gin HTTP API (routes, middleware)
 - `internal/thinking/` — Main thinking/reasoning pipeline. `ApplyThinking()` (apply.go) parses suffixes (`suffix.go`, suffix overrides body), normalizes config to canonical `ThinkingConfig` (`types.go`), normalizes and validates centrally (`validate.go`/`convert.go`), then applies provider-specific output via `ProviderApplier`. Do not break this "canonical representation → per-provider translation" architecture.
 - `internal/runtime/executor/` — Per-provider runtime executors (incl. Codex WebSocket)
 - `internal/translator/` — Provider protocol translators (and shared `common`)
@@ -55,5 +56,5 @@ go build -o test-output ./cmd/server && rm test-output # Verify compile (REQUIRE
 - Wrap defer errors: `defer func() { if err := f.Close(); err != nil { log.Errorf(...) } }()`
 - Use logrus structured logging; avoid leaking secrets/tokens in logs
 - Avoid panics in HTTP handlers; prefer logged errors and meaningful HTTP status codes
-- Timeouts are allowed only during credential acquisition; after an upstream connection is established, do not set timeouts for any subsequent network behavior. Intentional exceptions that must remain allowed are the Codex websocket liveness deadlines in `internal/runtime/executor/codex_websockets_executor.go`, the wsrelay session deadlines in `internal/wsrelay/session.go`, the management APICall timeout in `internal/api/handlers/management/api_tools.go`, and the `cmd/fetch_antigravity_models` utility timeouts
+- Timeouts are allowed only during credential acquisition; after an upstream connection is established, do not set timeouts for any subsequent network behavior. Intentional exceptions that must remain allowed are the Codex websocket liveness deadlines in `internal/runtime/executor/codex_websockets_executor.go`, the wsrelay session deadlines in `internal/wsrelay/session.go`, and the management APICall timeout in `internal/api/handlers/management/api_tools.go`
 - Avoid wall-clock `time.Sleep` in TTL, expiration, ordering, or cache-eviction unit tests due to platform timer granularity (e.g. Windows default timer resolution of ~15.6ms) and CI jitter under load; prefer controllable clocks (`nowFunc` / mock clock), explicit timestamp manipulation, or deterministic synchronization primitives.

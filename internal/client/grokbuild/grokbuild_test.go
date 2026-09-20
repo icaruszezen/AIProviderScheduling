@@ -11,8 +11,7 @@ func TestIsGrokShellUserAgent(t *testing.T) {
 		{"shell", "grok-shell/0.2.119 (macos; aarch64)", true},
 		{"pager", "grok-pager/0.2.119 grok-shell/0.2.119 (macos; aarch64)", true},
 		{"case insensitive", "GROK-PAGER/1.0 GROK-SHELL/1.0", true},
-		{"ordinary client", "curl/8.7.1", false},
-	}
+		{"ordinary client", "curl/8.7.1", false}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if got := IsGrokShellUserAgent(test.ua); got != test.want {
@@ -25,8 +24,7 @@ func TestIsGrokShellUserAgent(t *testing.T) {
 func TestBuildResponse(t *testing.T) {
 	response := BuildResponse([]ModelInfo{
 		{ID: "grok-4", DisplayName: "Grok 4", ContextLength: 256000, ReasoningLevels: []string{"high"}},
-		{ID: "plain-model", ContextLength: 0},
-	})
+		{ID: "plain-model", ContextLength: 0}})
 
 	if response.Object != "list" || len(response.Data) != 2 {
 		t.Fatalf("response envelope = %#v", response)

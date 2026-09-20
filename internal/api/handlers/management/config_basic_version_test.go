@@ -15,12 +15,9 @@ func TestSetLatestReleaseRequestHeaders(t *testing.T) {
 		{
 			name:              "sets GitHub authorization",
 			githubToken:       "release-token",
-			wantAuthorization: "Bearer release-token",
-		},
+			wantAuthorization: "Bearer release-token"},
 		{
-			name: "omits authorization without token",
-		},
-	}
+			name: "omits authorization without token"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -27,8 +27,7 @@ type CodexWebsocketsExecutor struct {
 func NewCodexWebsocketsExecutor(cfg *config.Config) *CodexWebsocketsExecutor {
 	return &CodexWebsocketsExecutor{
 		CodexExecutor: NewCodexExecutor(cfg),
-		store:         globalCodexWebsocketSessionStore,
-	}
+		store:         globalCodexWebsocketSessionStore}
 }
 
 // CodexAutoExecutor routes Codex requests to the websocket transport only when:
@@ -44,8 +43,7 @@ type CodexAutoExecutor struct {
 func NewCodexAutoExecutor(cfg *config.Config) *CodexAutoExecutor {
 	return &CodexAutoExecutor{
 		httpExec: NewCodexExecutor(cfg),
-		wsExec:   NewCodexWebsocketsExecutor(cfg),
-	}
+		wsExec:   NewCodexWebsocketsExecutor(cfg)}
 }
 
 func (e *CodexAutoExecutor) Identifier() string { return "codex" }

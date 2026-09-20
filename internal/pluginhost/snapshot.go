@@ -23,12 +23,10 @@ type Snapshot struct {
 
 // RegisteredPluginInfo describes a plugin that is active in the current runtime snapshot.
 type RegisteredPluginInfo struct {
-	ID            string
-	Priority      int
-	Metadata      pluginapi.Metadata
-	SupportsOAuth bool
-	OAuthProvider string
-	Menus         []RegisteredPluginMenu
+	ID       string
+	Priority int
+	Metadata pluginapi.Metadata
+	Menus    []RegisteredPluginMenu
 }
 
 // RegisteredPluginMenu describes a plugin-owned resource menu entry.
@@ -68,21 +66,11 @@ func (h *Host) RegisteredPlugins() []RegisteredPluginInfo {
 	menusByPlugin := h.registeredPluginMenus()
 	out := make([]RegisteredPluginInfo, 0, len(records))
 	for _, record := range records {
-		authProvider := record.plugin.Capabilities.AuthProvider
-		oauthProvider := ""
-		if authProvider != nil && !h.isPluginFused(record.id) {
-			if identifier, okIdentifier := h.callAuthProviderIdentifier(record.id, authProvider); okIdentifier {
-				oauthProvider = identifier
-			}
-		}
 		out = append(out, RegisteredPluginInfo{
-			ID:            record.id,
-			Priority:      record.priority,
-			Metadata:      clonePluginMetadata(record.meta),
-			SupportsOAuth: authProvider != nil,
-			OAuthProvider: oauthProvider,
-			Menus:         menusByPlugin[record.id],
-		})
+			ID:       record.id,
+			Priority: record.priority,
+			Metadata: clonePluginMetadata(record.meta),
+			Menus:    menusByPlugin[record.id]})
 	}
 	return out
 }
@@ -119,8 +107,7 @@ func (h *Host) registeredPluginMenus() map[string][]RegisteredPluginMenu {
 		out[record.pluginID] = append(out[record.pluginID], RegisteredPluginMenu{
 			Path:        strings.TrimSpace(record.route.Path),
 			Menu:        menu,
-			Description: strings.TrimSpace(record.route.Description),
-		})
+			Description: strings.TrimSpace(record.route.Description)})
 	}
 	for pluginID := range out {
 		sort.SliceStable(out[pluginID], func(i, j int) bool {

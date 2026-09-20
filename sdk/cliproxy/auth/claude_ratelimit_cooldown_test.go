@@ -21,15 +21,12 @@ func TestAuthManager_ConcurrentSuccessDoesNotClearActiveCredentialCooldown(t *te
 		ID:       baseID + "-claude-concurrent",
 		Provider: "claude",
 		Attributes: map[string]string{
-			"api_key": "test-key",
-		},
-	}
+			"api_key": "test-key"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{
 		{ID: "claude-3-5-sonnet-20241022"},
-		{ID: "claude-3-opus-20240229"},
-	})
+		{ID: "claude-3-opus-20240229"}})
 	t.Cleanup(func() {
 		reg.UnregisterClient(auth.ID)
 	})
@@ -47,16 +44,14 @@ func TestAuthManager_ConcurrentSuccessDoesNotClearActiveCredentialCooldown(t *te
 		Success:         false,
 		RetryAfter:      &sevenDayDuration,
 		CredentialScope: true,
-		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"},
-	})
+		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"}})
 
 	// 2. An earlier in-flight request on opus returns 200 OK after the 429
 	manager.MarkResult(context.Background(), Result{
 		AuthID:   auth.ID,
 		Provider: "claude",
 		Model:    "claude-3-opus-20240229",
-		Success:  true,
-	})
+		Success:  true})
 
 	// 3. The credential MUST still be blocked for all models
 	updatedAuth, ok := manager.GetByID(auth.ID)
@@ -88,14 +83,11 @@ func TestAuthManager_UpdatePreservesActiveCredentialCooldown(t *testing.T) {
 		ID:       baseID + "-claude-update",
 		Provider: "claude",
 		Attributes: map[string]string{
-			"api_key": "test-key",
-		},
-	}
+			"api_key": "test-key"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{
-		{ID: "claude-3-5-sonnet-20241022"},
-	})
+		{ID: "claude-3-5-sonnet-20241022"}})
 	t.Cleanup(func() {
 		reg.UnregisterClient(auth.ID)
 	})
@@ -112,17 +104,14 @@ func TestAuthManager_UpdatePreservesActiveCredentialCooldown(t *testing.T) {
 		Success:         false,
 		RetryAfter:      &sevenDayDuration,
 		CredentialScope: true,
-		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"},
-	})
+		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"}})
 
 	// Reload/update auth (e.g. config reload or token refresh)
 	updatedAuth := &Auth{
 		ID:       auth.ID,
 		Provider: "claude",
 		Attributes: map[string]string{
-			"api_key": "test-key-updated",
-		},
-	}
+			"api_key": "test-key-updated"}}
 	if _, err := manager.Update(context.Background(), updatedAuth); err != nil {
 		t.Fatalf("update auth: %v", err)
 	}
@@ -152,15 +141,12 @@ func TestAuthManager_DisableCoolingDoesNotPermanentlyBlock(t *testing.T) {
 		ID:       baseID + "-claude-disable-cooling",
 		Provider: "claude",
 		Attributes: map[string]string{
-			"api_key": "test-key",
-		},
-	}
+			"api_key": "test-key"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{
 		{ID: "claude-3-5-sonnet-20241022"},
-		{ID: "claude-3-opus-20240229"},
-	})
+		{ID: "claude-3-opus-20240229"}})
 	t.Cleanup(func() {
 		reg.UnregisterClient(auth.ID)
 	})
@@ -178,8 +164,7 @@ func TestAuthManager_DisableCoolingDoesNotPermanentlyBlock(t *testing.T) {
 		Success:         false,
 		RetryAfter:      &sevenDayDuration,
 		CredentialScope: true,
-		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"},
-	})
+		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d limit rejected"}})
 
 	// Must NOT be blocked when cooling is disabled
 	for _, m := range []string{"claude-3-5-sonnet-20241022", "claude-3-opus-20240229"} {
@@ -199,15 +184,12 @@ func TestAuthManager_NonClaudeProvider_Model429DoesNotBlockSiblingModels(t *test
 		ID:       baseID + "-openai-auth",
 		Provider: "openai",
 		Attributes: map[string]string{
-			"api_key": "test-key",
-		},
-	}
+			"api_key": "test-key"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "openai", []*registry.ModelInfo{
 		{ID: "gpt-4o"},
-		{ID: "gpt-4o-mini"},
-	})
+		{ID: "gpt-4o-mini"}})
 	t.Cleanup(func() {
 		reg.UnregisterClient(auth.ID)
 	})
@@ -223,8 +205,7 @@ func TestAuthManager_NonClaudeProvider_Model429DoesNotBlockSiblingModels(t *test
 		Model:           "gpt-4o",
 		Success:         false,
 		CredentialScope: false,
-		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "rate limit"},
-	})
+		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "rate limit"}})
 
 	// gpt-4o should be blocked
 	updatedAuth, _ := manager.GetByID(auth.ID)
@@ -248,9 +229,7 @@ func TestAuthManager_CooldownPersistenceAcrossRestore(t *testing.T) {
 		ID:       baseID + "-persistence-test",
 		Provider: "claude",
 		Attributes: map[string]string{
-			"api_key": "k",
-		},
-	}
+			"api_key": "k"}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{{ID: "claude-3-5-sonnet-20241022"}})
@@ -270,8 +249,7 @@ func TestAuthManager_CooldownPersistenceAcrossRestore(t *testing.T) {
 		Success:         false,
 		RetryAfter:      &futureCooldown,
 		CredentialScope: true,
-		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d rejected"},
-	})
+		Error:           &Error{HTTPStatus: http.StatusTooManyRequests, Message: "7d rejected"}})
 
 	records := manager.cooldownStateRecordsSnapshot()
 	if len(records) == 0 {
@@ -282,8 +260,7 @@ func TestAuthManager_CooldownPersistenceAcrossRestore(t *testing.T) {
 	newManager := NewManager(nil, nil, nil)
 	newAuth := &Auth{
 		ID:       auth.ID,
-		Provider: "claude",
-	}
+		Provider: "claude"}
 	if _, err := newManager.Register(context.Background(), newAuth); err != nil {
 		t.Fatalf("register new auth: %v", err)
 	}

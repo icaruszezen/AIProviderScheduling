@@ -71,10 +71,8 @@ func (h *Handler) HandleHangup(c *gin.Context) {
 			Headers: liveSelectionHeaders(c),
 			Metadata: map[string]any{
 				coreexecutor.PinnedAuthMetadataKey:       session.authID,
-				coreexecutor.ExecutionSessionMetadataKey: callID,
-			},
-		}
-		selection, selectedAuth, errSelect := h.selectOAuth(ctx, session.model, selectionOpts)
+				coreexecutor.ExecutionSessionMetadataKey: callID}}
+		selection, selectedAuth, errSelect := h.selectAPIKey(ctx, session.model, selectionOpts)
 		if errSelect != nil {
 			writeSelectionError(c, errSelect)
 			return
@@ -138,8 +136,7 @@ func (h *Handler) HandleHangup(c *gin.Context) {
 			AuthID:    current.ID,
 			AuthLabel: current.Label,
 			AuthType:  authType,
-			AuthValue: authValue,
-		})
+			AuthValue: authValue})
 		return h.authManager.HttpRequest(ctx, current, request)
 	}
 	response, errRequest := performRequest(selected)

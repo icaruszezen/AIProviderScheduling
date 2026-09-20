@@ -104,16 +104,14 @@ func (h *BaseAPIHandler) ExecuteModel(ctx context.Context, req ModelExecutionReq
 		Query:                   req.Query,
 		InternalSource:          true,
 		SkipInterceptorPluginID: req.SkipInterceptorPluginID,
-		SkipRouterPluginID:      req.SkipRouterPluginID,
-	})
+		SkipRouterPluginID:      req.SkipRouterPluginID})
 	if errMsg != nil {
 		return ModelExecutionResponse{}, errMsg
 	}
 	return ModelExecutionResponse{
 		StatusCode: http.StatusOK,
 		Headers:    cloneHeader(headers),
-		Body:       cloneBytes(body),
-	}, nil
+		Body:       cloneBytes(body)}, nil
 }
 
 // ExecuteModelStream executes an internal streaming model request.
@@ -130,8 +128,7 @@ func (h *BaseAPIHandler) ExecuteModelStream(ctx context.Context, req ModelExecut
 		Query:                   req.Query,
 		InternalSource:          true,
 		SkipInterceptorPluginID: req.SkipInterceptorPluginID,
-		SkipRouterPluginID:      req.SkipRouterPluginID,
-	})
+		SkipRouterPluginID:      req.SkipRouterPluginID})
 	chunks, errMsg := prepareModelExecutionStream(ctx, dataChan, errChan)
 	if errMsg != nil {
 		return ModelExecutionStream{}, errMsg
@@ -139,8 +136,7 @@ func (h *BaseAPIHandler) ExecuteModelStream(ctx context.Context, req ModelExecut
 	return ModelExecutionStream{
 		StatusCode: http.StatusOK,
 		Headers:    cloneHeader(headers),
-		Chunks:     chunks,
-	}, nil
+		Chunks:     chunks}, nil
 }
 
 // ExecuteProtocolWithAuthManager executes a route-level non-streaming request with explicit protocols.
@@ -152,16 +148,14 @@ func (h *BaseAPIHandler) ExecuteProtocolWithAuthManager(ctx context.Context, req
 		Headers:            req.Headers,
 		Query:              req.Query,
 		ForcedProvider:     req.ForcedProvider,
-		AuthSelectionModel: req.AuthSelectionModel,
-	})
+		AuthSelectionModel: req.AuthSelectionModel})
 	if errMsg != nil {
 		return ModelExecutionResponse{}, errMsg
 	}
 	return ModelExecutionResponse{
 		StatusCode: http.StatusOK,
 		Headers:    cloneHeader(headers),
-		Body:       cloneBytes(body),
-	}, nil
+		Body:       cloneBytes(body)}, nil
 }
 
 // ExecuteProtocolStreamWithAuthManager executes a route-level streaming request with explicit protocols.
@@ -173,8 +167,7 @@ func (h *BaseAPIHandler) ExecuteProtocolStreamWithAuthManager(ctx context.Contex
 		Headers:            req.Headers,
 		Query:              req.Query,
 		ForcedProvider:     req.ForcedProvider,
-		AuthSelectionModel: req.AuthSelectionModel,
-	})
+		AuthSelectionModel: req.AuthSelectionModel})
 	chunks, errMsg := prepareModelExecutionStream(ctx, dataChan, errChan)
 	if errMsg != nil {
 		return ModelExecutionStream{}, errMsg
@@ -182,8 +175,7 @@ func (h *BaseAPIHandler) ExecuteProtocolStreamWithAuthManager(ctx context.Contex
 	return ModelExecutionStream{
 		StatusCode: http.StatusOK,
 		Headers:    cloneHeader(headers),
-		Chunks:     chunks,
-	}, nil
+		Chunks:     chunks}, nil
 }
 
 func modelExecutionModeError(message string) *interfaces.ErrorMessage {
@@ -320,8 +312,7 @@ func modelExecutionStreamErrorFromMessage(errMsg *interfaces.ErrorMessage) *Mode
 	return &ModelExecutionStreamError{
 		StatusCode: errMsg.StatusCode,
 		Message:    message,
-		Headers:    cloneHeader(errMsg.Addon),
-	}
+		Headers:    cloneHeader(errMsg.Addon)}
 }
 
 func sendModelExecutionChunk(ctx context.Context, chunks chan<- ModelExecutionChunk, chunk ModelExecutionChunk) bool {

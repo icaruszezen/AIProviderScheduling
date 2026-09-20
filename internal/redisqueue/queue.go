@@ -133,8 +133,7 @@ func (q *queue) enqueue(payload []byte) {
 	q.pruneLocked(now)
 	q.items = append(q.items, queueItem{
 		enqueuedAt: now,
-		payload:    append([]byte(nil), payload...),
-	})
+		payload:    append([]byte(nil), payload...)})
 	q.maybeCompactLocked()
 }
 

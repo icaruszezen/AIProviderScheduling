@@ -17,8 +17,7 @@ func TestParseValueValidation(t *testing.T) {
 		{name: "fraction rejected", value: json.Number("1.5"), wantErr: true},
 		{name: "maximum", value: json.Number("1000000"), want: Max},
 		{name: "above maximum", value: json.Number("1000001"), wantErr: true},
-		{name: "int64 overflow", value: json.Number("9223372036854775808"), wantErr: true},
-	}
+		{name: "int64 overflow", value: json.Number("9223372036854775808"), wantErr: true}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got, errParse := ParseValue(test.value)

@@ -222,6 +222,7 @@ func TestXAIWebsocketsExecuteStreamMapsMessageTooBigClose(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -303,6 +304,7 @@ func TestXAIWebsocketsExecuteStreamSendsResponseCreateWithPreviousResponseID(t *
 		ID:       "xai-auth",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -406,6 +408,7 @@ func TestXAIWebsocketsExecuteStreamRestoresNamespaceToolCalls(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -520,6 +523,7 @@ func TestXAIWebsocketsExecuteStreamPreservesClientSameNameToolsWithXSearch(t *te
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -652,6 +656,7 @@ func TestXAIWebsocketsExecuteStreamPreservesNormalizedCustomSameNameToolWithXSea
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -794,6 +799,7 @@ func TestXAIWebsocketsExecuteStreamNormalizesReasoningTextEvents(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -881,6 +887,7 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDForDownstream(t *te
 		ID:       "xai-auth-id-map",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -1005,6 +1012,7 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDWithoutPreviousResp
 		ID:       "xai-auth-id-map-no-prev",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -1118,10 +1126,10 @@ func TestXAIWebsocketsExecuteStreamReplaysTranscriptWhenAuthChanges(t *testing.T
 			ID:       id,
 			Provider: "xai",
 			Attributes: map[string]string{
+				"api_key":    token,
 				"base_url":   baseURL,
 				"websockets": "true",
 			},
-			Metadata: map[string]any{"access_token": token},
 		}
 	}
 	opts := cliproxyexecutor.Options{
@@ -1240,6 +1248,7 @@ func TestXAIWebsocketsExecuteStreamCompactionTriggerUsesHTTPCompactWithRecordedC
 		ID:       "xai-auth-compaction",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -1535,6 +1544,7 @@ func TestXAIWebsocketsExecuteStreamCompletesGenerateFalseWarmup(t *testing.T) {
 		ID:       "xai-auth-warmup",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -1606,6 +1616,7 @@ func TestXAIWebsocketsExecuteStreamHandshakeFreeUsageExhaustedSetsRetryAfter(t *
 		ID:       "xai-auth-free-usage",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},
@@ -1757,6 +1768,7 @@ func TestXAIWebsocketsExecuteStreamStopsOnBareErrorPayload(t *testing.T) {
 		ID:       "xai-auth-error",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":    "xai-token",
 			"base_url":   server.URL,
 			"websockets": "true",
 		},

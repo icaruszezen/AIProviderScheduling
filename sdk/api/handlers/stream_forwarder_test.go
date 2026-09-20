@@ -58,8 +58,7 @@ func TestForwardStreamNormalizesErrorBeforeWriteAndCancel(t *testing.T) {
 		},
 		WriteTerminalError: func(errMsg *interfaces.ErrorMessage) {
 			written = errMsg.Error.Error()
-		},
-	})
+		}})
 
 	if written != "safe error" || canceled != "safe error" {
 		t.Fatalf("written=%q canceled=%q, want sanitized error", written, canceled)
@@ -73,8 +72,7 @@ func TestPendingStreamErrorIgnoresUnavailableErrors(t *testing.T) {
 	for name, errs := range map[string]<-chan *interfaces.ErrorMessage{
 		"nil":          nil,
 		"closed empty": closed,
-		"open empty":   make(chan *interfaces.ErrorMessage),
-	} {
+		"open empty":   make(chan *interfaces.ErrorMessage)} {
 		t.Run(name, func(t *testing.T) {
 			if got, ok := PendingStreamError(errs); ok || got != nil {
 				t.Fatalf("PendingStreamError() = (%#v, %t), want (nil, false)", got, ok)

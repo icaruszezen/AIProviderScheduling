@@ -47,8 +47,7 @@ func kimiThinkingReplayScopeFromRequest(ctx context.Context, req cliproxyexecuto
 	sessionKey = xaiReasoningReplayIsolateSessionKey(ctx, sessionKey)
 	return kimiThinkingReplayScope{
 		modelFamily: kimiThinkingReplayModelFamily(req.Model),
-		sessionKey:  sessionKey,
-	}
+		sessionKey:  sessionKey}
 }
 
 func prepareKimiThinkingReplayRequest(ctx context.Context, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Request, kimiThinkingReplayScope) {

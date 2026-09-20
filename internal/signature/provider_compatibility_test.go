@@ -40,8 +40,7 @@ func TestBase64AlphabetSet_MatchesEncoderAlphabets(t *testing.T) {
 		alphabet string
 	}{
 		{"grok unpadded std", grokEncryptedContentCharSet, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"},
-		{"gpt base64url", gptReasoningSignatureCharSet, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_="},
-	}
+		{"gpt base64url", gptReasoningSignatureCharSet, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_="}}
 	for _, tc := range cases {
 		allowed := map[byte]bool{}
 		for i := 0; i < len(tc.alphabet); i++ {
@@ -71,8 +70,7 @@ func replaySafeEnvelopeFixtures() map[string]struct {
 		"claude double-layer R":  {testUnpaddedAntigravityClaudeThinkingSignature(), SignatureProviderClaude},
 		"claude CAIS":            {testClaudeCAISSignature("claude-fable-5"), SignatureProviderClaude},
 		"gemini protobuf field2": {testGeminiThoughtSignatureEnvelope(), SignatureProviderGemini},
-		"gpt fernet":             {testGPTReasoningSignature(), SignatureProviderGPT},
-	}
+		"gpt fernet":             {testGPTReasoningSignature(), SignatureProviderGPT}}
 }
 
 // TestSelfDescribingSignatureFirstChars_CoversEveryKnownEnvelope guards the
@@ -94,8 +92,7 @@ func TestSelfDescribingSignatureFirstChars_CoversEveryKnownEnvelope(t *testing.T
 	for _, sig := range []string{
 		"K1ZAIbzDbO",
 		"jQDLUr+fD8RFP8nbkkfI",
-		"qcgG7jzxH3D6mlVLBBaKXaG3",
-	} {
+		"qcgG7jzxH3D6mlVLBBaKXaG3"} {
 		if maybeSelfDescribingSignatureEnvelope(sig) {
 			t.Errorf("opaque ciphertext %q must not look like a self-describing envelope", sig)
 		}
@@ -115,8 +112,7 @@ func TestGeminiASCIIUUIDIsGateIndependent(t *testing.T) {
 		"49743975-4bb0-4936-9e28-d5b0d21bdc48",
 		"89743975-4bb0-4936-9e28-d5b0d21bdc48",
 		"a9743975-4bb0-4936-9e28-d5b0d21bdc48",
-		"e9743975-4bb0-4936-9e28-d5b0d21bdc48",
-	} {
+		"e9743975-4bb0-4936-9e28-d5b0d21bdc48"} {
 		sig := testGeminiThoughtSignature([]byte(uuid))
 		if got := DetectSignatureProvider(sig); got != SignatureProviderUnknown {
 			t.Errorf("uuid %q: DetectSignatureProvider = %q, want %q regardless of the pre-filter",
@@ -153,8 +149,7 @@ func TestGeminiEnvelopeNeverClaimsClaudeSignatures(t *testing.T) {
 		"single-layer E opaque": testClaudeThinkingSignatureWithOpaqueLen(64),
 		"double-layer R":        testUnpaddedAntigravityClaudeThinkingSignature(),
 		"CAIS synthetic":        testClaudeCAISSignature("claude-opus-5"),
-		"CAIS observed":         observedFable5Sample,
-	} {
+		"CAIS observed":         observedFable5Sample} {
 		if isRecognizedGeminiProviderSignature(sig, SignatureBlockKindUnknown) {
 			t.Errorf("claude %s is claimed by the Gemini envelope check; probe order in DetectSignatureProviderForBlock is now load-bearing", name)
 		}
@@ -441,8 +436,7 @@ func TestSanitizeClaudeMessagesForClaudeUpstream_DropsInvalidThinkingAndCleansTo
 		"thoughtSignature",
 		"thought_signature",
 		"model",
-		"extra_content",
-	} {
+		"extra_content"} {
 		if toolUse.Get(path).Exists() {
 			t.Fatalf("tool_use.%s should be removed: %s", path, toolUse.Raw)
 		}

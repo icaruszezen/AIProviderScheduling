@@ -31,9 +31,7 @@ func TestGetAPIKeyUsage_GroupsByProviderAndAPIKey(t *testing.T) {
 		Provider: "codex",
 		Attributes: map[string]string{
 			"api_key":  "codex-key",
-			"base_url": "https://codex.example.com",
-		},
-	}); err != nil {
+			"base_url": "https://codex.example.com"}}); err != nil {
 		t.Fatalf("register codex auth: %v", err)
 	}
 	if _, err := manager.Register(context.Background(), &coreauth.Auth{
@@ -41,9 +39,7 @@ func TestGetAPIKeyUsage_GroupsByProviderAndAPIKey(t *testing.T) {
 		Provider: "claude",
 		Attributes: map[string]string{
 			"api_key":  "claude-key",
-			"base_url": "https://claude.example.com",
-		},
-	}); err != nil {
+			"base_url": "https://claude.example.com"}}); err != nil {
 		t.Fatalf("register claude auth: %v", err)
 	}
 
@@ -51,7 +47,7 @@ func TestGetAPIKeyUsage_GroupsByProviderAndAPIKey(t *testing.T) {
 	manager.MarkResult(context.Background(), coreauth.Result{AuthID: "codex-auth", Provider: "codex", Model: "gpt-5", Success: false})
 	manager.MarkResult(context.Background(), coreauth.Result{AuthID: "claude-auth", Provider: "claude", Model: "claude-4", Success: true})
 
-	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: t.TempDir()}, manager)
+	h := NewHandlerWithoutConfigFilePath(&config.Config{}, manager)
 
 	rec := httptest.NewRecorder()
 	ginCtx, _ := gin.CreateTestContext(rec)
@@ -103,15 +99,13 @@ func TestGetAPIKeyUsage_GroupsOpenAICompatibleByCompatName(t *testing.T) {
 		Attributes: map[string]string{
 			"api_key":     "vast-key",
 			"base_url":    "https://www.vastnum.com/v1",
-			"compat_name": "VAST",
-		},
-	}); err != nil {
+			"compat_name": "VAST"}}); err != nil {
 		t.Fatalf("register vast auth: %v", err)
 	}
 
 	manager.MarkResult(context.Background(), coreauth.Result{AuthID: "vast-auth", Provider: "openai-compatible-vast", Model: "gpt-5", Success: true})
 
-	h := NewHandlerWithoutConfigFilePath(&config.Config{AuthDir: t.TempDir()}, manager)
+	h := NewHandlerWithoutConfigFilePath(&config.Config{}, manager)
 
 	rec := httptest.NewRecorder()
 	ginCtx, _ := gin.CreateTestContext(rec)

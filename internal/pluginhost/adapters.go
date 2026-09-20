@@ -137,8 +137,7 @@ func pluginModelInfoToRegistryModelInfo(model pluginapi.ModelInfo) *registry.Mod
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
 		Thinking:                   pluginThinkingSupportToRegistryThinkingSupport(model.Thinking),
-		UserDefined:                model.UserDefined,
-	}
+		UserDefined:                model.UserDefined}
 }
 
 func pluginThinkingSupportToRegistryThinkingSupport(thinking *pluginapi.ThinkingSupport) *registry.ThinkingSupport {
@@ -150,8 +149,7 @@ func pluginThinkingSupportToRegistryThinkingSupport(thinking *pluginapi.Thinking
 		Max:            thinking.Max,
 		ZeroAllowed:    thinking.ZeroAllowed,
 		DynamicAllowed: thinking.DynamicAllowed,
-		Levels:         cloneStringSlice(thinking.Levels),
-	}
+		Levels:         cloneStringSlice(thinking.Levels)}
 }
 
 func registryModelInfoToPluginModelInfo(model *registry.ModelInfo) pluginapi.ModelInfo {
@@ -177,8 +175,7 @@ func registryModelInfoToPluginModelInfo(model *registry.ModelInfo) pluginapi.Mod
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
 		Thinking:                   registryThinkingSupportToPluginThinkingSupport(model.Thinking),
-		UserDefined:                model.UserDefined,
-	}
+		UserDefined:                model.UserDefined}
 }
 
 func registryThinkingSupportToPluginThinkingSupport(thinking *registry.ThinkingSupport) *pluginapi.ThinkingSupport {
@@ -190,8 +187,7 @@ func registryThinkingSupportToPluginThinkingSupport(thinking *registry.ThinkingS
 		Max:            thinking.Max,
 		ZeroAllowed:    thinking.ZeroAllowed,
 		DynamicAllowed: thinking.DynamicAllowed,
-		Levels:         cloneStringSlice(thinking.Levels),
-	}
+		Levels:         cloneStringSlice(thinking.Levels)}
 }
 
 func cloneStringSlice(in []string) []string {
@@ -252,8 +248,7 @@ func (h *Host) RegisterModels(ctx context.Context, modelRegistry modelRegistry) 
 			errRegisterModels = errStaticModels
 			resp = pluginapi.ModelRegistrationResponse{
 				Provider: modelResp.Provider,
-				Models:   modelResp.Models,
-			}
+				Models:   modelResp.Models}
 		} else {
 			resp, errRegisterModels = h.callModelRegistrar(ctx, record, registrar)
 		}
@@ -285,16 +280,14 @@ func (h *Host) RegisterModels(ctx context.Context, modelRegistry modelRegistry) 
 			provider:    provider,
 			priority:    record.priority,
 			models:      cloneRegistryModels(models),
-			hasExecutor: record.plugin.Capabilities.Executor != nil,
-		}
+			hasExecutor: record.plugin.Capabilities.Executor != nil}
 		nextProviders[record.id] = provider
 		if record.plugin.Capabilities.Executor == nil {
 			clientID := "plugin:" + record.id + ":" + provider
 			registrations = append(registrations, modelClientRegistration{
 				clientID: clientID,
 				provider: provider,
-				models:   models,
-			})
+				models:   models})
 			nextClients[clientID] = struct{}{}
 		}
 	}
@@ -473,8 +466,7 @@ func (h *Host) callModelProviderStaticModels(ctx context.Context, record capabil
 	}()
 	return provider.StaticModels(ctx, pluginapi.StaticModelRequest{
 		Plugin: record.meta,
-		Host:   h.hostConfigSummary(),
-	})
+		Host:   h.hostConfigSummary()})
 }
 
 func (h *Host) callModelsForAuth(ctx context.Context, record capabilityRecord, provider pluginapi.ModelProvider, auth *coreauth.Auth) (resp pluginapi.ModelResponse, err error) {
@@ -496,6 +488,5 @@ func (h *Host) callModelsForAuth(ctx context.Context, record capabilityRecord, p
 		Metadata:     cloneAnyMap(auth.Metadata),
 		Attributes:   cloneStringMap(auth.Attributes),
 		Host:         h.hostConfigSummary(),
-		HTTPClient:   h.newHTTPClient(auth),
-	})
+		HTTPClient:   h.newHTTPClient(auth)})
 }

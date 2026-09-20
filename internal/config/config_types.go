@@ -103,8 +103,7 @@ func defaultPluginInstanceConfigNode() *yaml.Node {
 	return &yaml.Node{
 		Kind:    yaml.MappingNode,
 		Tag:     "!!map",
-		Content: []*yaml.Node{},
-	}
+		Content: []*yaml.Node{}}
 }
 
 // ClaudeHeaderDefaults configures the measured Claude Code software baseline.
@@ -124,7 +123,8 @@ type ClaudeHeaderDefaults struct {
 }
 
 // CodexHeaderDefaults configures fallback header values injected into Codex
-// model requests for OAuth/file-backed auth when the client omits them.
+// model requests for non-API-key credentials when the client omits them.
+// Local codex-api-key entries ignore these values.
 // UserAgent applies to HTTP and websocket requests; BetaFeatures only applies to websockets.
 type CodexHeaderDefaults struct {
 	UserAgent    string `yaml:"user-agent" json:"user-agent"`
@@ -210,6 +210,8 @@ type RemoteManagement struct {
 	// When false (the default), the background updater remains enabled; when true, the panel is only downloaded on first access if missing.
 	DisableAutoUpdatePanel bool `yaml:"disable-auto-update-panel"`
 	// PanelGitHubRepository overrides the GitHub repository used to fetch the management panel asset.
+	// The official router-for-me/Cli-Proxy-API-Management-Center release is rejected: it still ships
+	// Auth Files / OAuth pages that this server no longer implements.
 	// Accepts either a repository URL (https://github.com/org/repo) or an API releases endpoint.
 	PanelGitHubRepository string `yaml:"panel-github-repository"`
 }
@@ -646,6 +648,24 @@ type GeminiKey struct {
 	// payloads with a generic Service Unavailable envelope. Management connectivity
 	// tests still see the original upstream body.
 	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
+}
+
+// AntigravityKey configures a native Antigravity API key credential.
+type AntigravityKey struct {
+	APIKey                   string            `yaml:"api-key" json:"api-key"`
+	ProjectID                string            `yaml:"project-id,omitempty" json:"project-id,omitempty"`
+	Priority                 int               `yaml:"priority,omitempty" json:"priority,omitempty"`
+	Weight                   *int              `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Prefix                   string            `yaml:"prefix,omitempty" json:"prefix,omitempty"`
+	BaseURL                  string            `yaml:"base-url,omitempty" json:"base-url,omitempty"`
+	ProxyURL                 string            `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
+	Headers                  map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
+	ExcludedModels           []string          `yaml:"excluded-models,omitempty" json:"excluded-models,omitempty"`
+	DisableCooling           *bool             `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
+	RequestRetry             *int              `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
+	ProviderRetryCount       *int              `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+	ProviderRetryStatusCodes *[]int            `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+	HideNoAvailableChannel   bool              `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k GeminiKey) GetAPIKey() string { return k.APIKey }

@@ -33,6 +33,11 @@ type vertexCompatKeyWithAuthIndex struct {
 	AuthIndex string `json:"auth-index,omitempty"`
 }
 
+type antigravityKeyWithAuthIndex struct {
+	config.AntigravityKey
+	AuthIndex string `json:"auth-index,omitempty"`
+}
+
 type openAICompatibilityAPIKeyWithAuthIndex struct {
 	config.OpenAICompatibilityAPIKey
 	AuthIndex string `json:"auth-index,omitempty"`
@@ -114,8 +119,7 @@ func (h *Handler) geminiKeysWithAuthIndex() []geminiKeyWithAuthIndex {
 		}
 		out[i] = geminiKeyWithAuthIndex{
 			GeminiKey: entry,
-			AuthIndex: authIndex,
-		}
+			AuthIndex: authIndex}
 	}
 	return out
 }
@@ -147,8 +151,7 @@ func (h *Handler) interactionsKeysWithAuthIndex() []geminiKeyWithAuthIndex {
 		}
 		out[i] = geminiKeyWithAuthIndex{
 			GeminiKey: entry,
-			AuthIndex: authIndex,
-		}
+			AuthIndex: authIndex}
 	}
 	return out
 }
@@ -180,8 +183,7 @@ func (h *Handler) claudeKeysWithAuthIndex() []claudeKeyWithAuthIndex {
 		}
 		out[i] = claudeKeyWithAuthIndex{
 			ClaudeKey: entry,
-			AuthIndex: authIndex,
-		}
+			AuthIndex: authIndex}
 	}
 	return out
 }
@@ -213,8 +215,7 @@ func (h *Handler) codexKeysWithAuthIndex() []codexKeyWithAuthIndex {
 		}
 		out[i] = codexKeyWithAuthIndex{
 			CodexKey:  entry,
-			AuthIndex: authIndex,
-		}
+			AuthIndex: authIndex}
 	}
 	return out
 }
@@ -246,8 +247,7 @@ func (h *Handler) xaiKeysWithAuthIndex() []xaiKeyWithAuthIndex {
 		}
 		out[i] = xaiKeyWithAuthIndex{
 			XAIKey:    entry,
-			AuthIndex: authIndex,
-		}
+			AuthIndex: authIndex}
 	}
 	return out
 }
@@ -268,12 +268,43 @@ func (h *Handler) vertexCompatKeysWithAuthIndex() []vertexCompatKeyWithAuthIndex
 	out := make([]vertexCompatKeyWithAuthIndex, len(h.cfg.VertexCompatAPIKey))
 	for i := range h.cfg.VertexCompatAPIKey {
 		entry := h.cfg.VertexCompatAPIKey[i]
-		id, _ := idGen.Next("vertex:apikey", entry.APIKey, entry.BaseURL, entry.ProxyURL)
+		id, _ := idGen.Next("vertex:apikey", entry.APIKey, entry.BaseURL, entry.ProxyURL, config.ServiceAccountIdentity(entry.ServiceAccount))
 		authIndex := liveIndexByID[id]
 		out[i] = vertexCompatKeyWithAuthIndex{
 			VertexCompatKey: entry,
-			AuthIndex:       authIndex,
+			AuthIndex:       authIndex}
+	}
+	return out
+}
+
+func (h *Handler) antigravityKeysWithAuthIndex() []antigravityKeyWithAuthIndex {
+	if h == nil {
+		return nil
+	}
+	liveIndexByID := h.liveAuthIndexByID()
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.cfg == nil {
+		return nil
+	}
+
+	idGen := synthesizer.NewStableIDGenerator()
+	out := make([]antigravityKeyWithAuthIndex, len(h.cfg.AntigravityKey))
+	for i := range h.cfg.AntigravityKey {
+		entry := h.cfg.AntigravityKey[i]
+		authIndex := ""
+		key := strings.TrimSpace(entry.APIKey)
+		base := strings.TrimSpace(entry.BaseURL)
+		proxyURL := strings.TrimSpace(entry.ProxyURL)
+		prefix := strings.TrimSpace(entry.Prefix)
+		if key != "" || base != "" {
+			id, _ := idGen.Next("antigravity:apikey", key, base, proxyURL, prefix, strings.TrimSpace(entry.ProjectID), config.FormatSortedHeaders(entry.Headers))
+			authIndex = liveIndexByID[id]
 		}
+		out[i] = antigravityKeyWithAuthIndex{
+			AntigravityKey: entry,
+			AuthIndex:      authIndex}
 	}
 	return out
 }
@@ -314,8 +345,7 @@ func (h *Handler) openAICompatibilityWithAuthIndex() []openAICompatibilityWithAu
 			RequestRetry:           entry.RequestRetry,
 			RequestScopedErrors:    entry.RequestScopedErrors,
 			HideNoAvailableChannel: entry.HideNoAvailableChannel,
-			AuthIndex:              "",
-		}
+			AuthIndex:              ""}
 		if len(entry.APIKeyEntries) == 0 {
 			id, _ := idGen.Next(idKind, entry.BaseURL)
 			response.AuthIndex = liveIndexByID[id]
@@ -326,8 +356,7 @@ func (h *Handler) openAICompatibilityWithAuthIndex() []openAICompatibilityWithAu
 				id, _ := idGen.Next(idKind, apiKeyEntry.APIKey, entry.BaseURL, apiKeyEntry.ProxyURL)
 				response.APIKeyEntries[j] = openAICompatibilityAPIKeyWithAuthIndex{
 					OpenAICompatibilityAPIKey: apiKeyEntry,
-					AuthIndex:                 liveIndexByID[id],
-				}
+					AuthIndex:                 liveIndexByID[id]}
 			}
 		}
 		out[i] = response

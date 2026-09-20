@@ -152,9 +152,9 @@ func TestClaudeCCHSigningEnabled(t *testing.T) {
 		{name: "anthropic lookalike host opt-in", apiKey: "key-123", kind: claudeCCHUpstreamAnthropic, cliFingerprint: true, origin: "https://api.anthropic.com.evil.example/v1/messages", want: false},
 		// A real OAuth credential signs on every upstream: CPA is the hop that has to
 		// regenerate the cch a downstream Claude Code could not produce.
-		{name: "Claude OAuth", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: anthropicOrigin, want: true},
-		{name: "Claude OAuth custom gateway", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: gatewayOrigin, want: true},
-		{name: "other provider Claude OAuth", apiKey: "sk-ant-oat-other", kind: claudeCCHUpstreamOther, origin: gatewayOrigin, want: true},
+		{name: "Claude OAuth token never signs", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: anthropicOrigin, want: false},
+		{name: "Claude OAuth token never signs on custom gateway", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: gatewayOrigin, want: false},
+		{name: "other provider Claude OAuth token never signs", apiKey: "sk-ant-oat-other", kind: claudeCCHUpstreamOther, origin: gatewayOrigin, want: false},
 		{name: "Vertex provider API key", apiKey: "key-123", kind: claudeCCHUpstreamVertex, origin: "https://us-east5-aiplatform.googleapis.com/v1/projects/p/locations/l/publishers/anthropic/models/m:streamRawPredict", want: true},
 		{name: "other provider API key", apiKey: "key-123", kind: claudeCCHUpstreamOther, origin: gatewayOrigin, want: false},
 		{name: "other provider API key opt-in", apiKey: "key-123", kind: claudeCCHUpstreamOther, cliFingerprint: true, origin: gatewayOrigin, want: false},

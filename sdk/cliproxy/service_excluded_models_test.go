@@ -14,21 +14,14 @@ import (
 
 func TestRegisterModelsForAuth_UsesPreMergedExcludedModelsAttribute(t *testing.T) {
 	service := &Service{
-		cfg: &config.Config{
-			OAuthExcludedModels: map[string][]string{
-				"gemini": {"gemini-2.5-pro"},
-			},
-		},
-	}
+		cfg: &config.Config{}}
 	auth := &coreauth.Auth{
 		ID:       "auth-gemini",
 		Provider: "gemini",
 		Status:   coreauth.StatusActive,
 		Attributes: map[string]string{
-			"auth_kind":       "oauth",
-			"excluded_models": "gemini-2.5-flash",
-		},
-	}
+			"auth_kind":       "apikey",
+			"excluded_models": "gemini-2.5-flash"}}
 
 	registry := GlobalModelRegistry()
 	registry.UnregisterClient(auth.ID)
@@ -77,12 +70,7 @@ func TestRegisterModelsForAuth_OpenAICompatibilityImageModelType(t *testing.T) {
 					BaseURL: "https://example.com/v1",
 					Models: []config.OpenAICompatibilityModel{
 						{Name: "upstream-image", Alias: "compat-image", Image: true},
-						{Name: "upstream-chat", Alias: "compat-chat"},
-					},
-				},
-			},
-		},
-	}
+						{Name: "upstream-chat", Alias: "compat-chat"}}}}}}
 	auth := &coreauth.Auth{
 		ID:       "auth-openai-compat-image",
 		Provider: "openai-compatibility",
@@ -90,9 +78,7 @@ func TestRegisterModelsForAuth_OpenAICompatibilityImageModelType(t *testing.T) {
 		Attributes: map[string]string{
 			"auth_kind":    "api_key",
 			"compat_name":  "images",
-			"provider_key": "images",
-		},
-	}
+			"provider_key": "images"}}
 
 	modelRegistry := internalregistry.GetGlobalRegistry()
 	modelRegistry.UnregisterClient(auth.ID)
@@ -148,14 +134,8 @@ func TestRegisterModelsForAuth_OpenAICompatibilityInputModalities(t *testing.T) 
 							Name:             "mimo-v2.5-pro",
 							Alias:            "mimo-v2.5-pro",
 							InputModalities:  []string{"text", "image"},
-							OutputModalities: []string{"text"},
-						},
-						{Name: "upstream-image", Alias: "compat-image", Image: true},
-					},
-				},
-			},
-		},
-	}
+							OutputModalities: []string{"text"}},
+						{Name: "upstream-image", Alias: "compat-image", Image: true}}}}}}
 	auth := &coreauth.Auth{
 		ID:       "auth-openai-compat-modalities",
 		Provider: "openai-compatibility",
@@ -163,9 +143,7 @@ func TestRegisterModelsForAuth_OpenAICompatibilityInputModalities(t *testing.T) 
 		Attributes: map[string]string{
 			"auth_kind":    "api_key",
 			"compat_name":  "mimo",
-			"provider_key": "mimo",
-		},
-	}
+			"provider_key": "mimo"}}
 
 	modelRegistry := internalregistry.GetGlobalRegistry()
 	modelRegistry.UnregisterClient(auth.ID)
@@ -245,12 +223,9 @@ func TestRegisterModelsForAuth_AntigravityFetchesWebSearchCapability(t *testing.
 		Provider: "antigravity",
 		Status:   coreauth.StatusActive,
 		Attributes: map[string]string{
-			"base_url": server.URL,
-		},
-		Metadata: map[string]any{
-			"access_token": "token",
-		},
-	}
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "token",
+			"base_url":                 server.URL}}
 
 	registry := internalregistry.GetGlobalRegistry()
 	registry.UnregisterClient(auth.ID)

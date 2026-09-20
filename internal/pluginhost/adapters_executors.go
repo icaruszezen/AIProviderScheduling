@@ -120,8 +120,7 @@ func (h *Host) RegisterExecutors(manager executorManager, modelRegistry modelPro
 			modelClientRegistrations = append(modelClientRegistrations, modelClientRegistration{
 				clientID: clientID,
 				provider: provider,
-				models:   selectedModels[record.id],
-			})
+				models:   selectedModels[record.id]})
 			nextModelClients[clientID] = struct{}{}
 		}
 	}
@@ -203,9 +202,7 @@ func newExecutorAdapterRegistration(h *Host, record capabilityRecord, provider s
 			provider:      provider,
 			executor:      executor,
 			inputFormats:  normalizeExecutorFormats(record.plugin.Capabilities.ExecutorInputFormats),
-			outputFormats: normalizeExecutorFormats(record.plugin.Capabilities.ExecutorOutputFormats),
-		},
-	}
+			outputFormats: normalizeExecutorFormats(record.plugin.Capabilities.ExecutorOutputFormats)}}
 }
 
 func (h *Host) snapshotModelRegistrations() []pluginModelRegistration {
@@ -423,8 +420,7 @@ func (a *executorAdapter) prepareExecutorCall(req coreexecutor.Request, opts cor
 		inputRequested:  inputRequested,
 		requestedFormat: requestedFormat,
 		inputFormat:     inputFormat,
-		outputFormat:    outputFormat,
-	}, nil
+		outputFormat:    outputFormat}, nil
 }
 
 func (a *executorAdapter) RequestToFormat(req coreexecutor.Request, opts coreexecutor.Options) sdktranslator.Format {
@@ -709,8 +705,7 @@ func (a *executorAdapter) Execute(ctx context.Context, auth *coreauth.Auth, req 
 	return coreexecutor.Response{
 		Payload:  a.translateExecutorResponse(ctx, prepared, pluginResp.Payload, false, nil),
 		Metadata: cloneAnyMap(pluginResp.Metadata),
-		Headers:  cloneHeader(pluginResp.Headers),
-	}, nil
+		Headers:  cloneHeader(pluginResp.Headers)}, nil
 }
 
 func (a *executorAdapter) ExecuteStream(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (result *coreexecutor.StreamResult, err error) {
@@ -760,8 +755,7 @@ func (a *executorAdapter) ExecuteStream(ctx context.Context, auth *coreauth.Auth
 	chunks := a.observeAndTranslateExecutorStream(ctx, prepared, pluginResp.Chunks, reporter)
 	return &coreexecutor.StreamResult{
 		Headers: cloneHeader(pluginResp.Headers),
-		Chunks:  chunks,
-	}, nil
+		Chunks:  chunks}, nil
 }
 
 func (a *executorAdapter) observeAndTranslateExecutorStream(ctx context.Context, prepared preparedExecutorCall, in <-chan pluginapi.ExecutorStreamChunk, reporter *helps.UsageReporter) <-chan coreexecutor.StreamChunk {
@@ -899,8 +893,7 @@ func (a *executorAdapter) Refresh(ctx context.Context, auth *coreauth.Auth) (ref
 		Metadata:     cloneAnyMap(authMetadata(auth)),
 		Attributes:   authAttributes(auth),
 		Host:         a.host.hostConfigSummary(),
-		HTTPClient:   a.host.newHTTPClient(auth),
-	})
+		HTTPClient:   a.host.newHTTPClient(auth)})
 	if errRefresh != nil {
 		return nil, errRefresh
 	}
@@ -972,8 +965,7 @@ func (a *executorAdapter) CountTokens(ctx context.Context, auth *coreauth.Auth, 
 	return coreexecutor.Response{
 		Payload:  a.translateExecutorResponse(ctx, prepared, pluginResp.Payload, false, nil),
 		Metadata: cloneAnyMap(pluginResp.Metadata),
-		Headers:  cloneHeader(pluginResp.Headers),
-	}, nil
+		Headers:  cloneHeader(pluginResp.Headers)}, nil
 }
 
 func (a *executorAdapter) HttpRequest(ctx context.Context, auth *coreauth.Auth, req *http.Request) (resp *http.Response, err error) {
@@ -1004,8 +996,7 @@ func (a *executorAdapter) HttpRequest(ctx context.Context, auth *coreauth.Auth, 
 		StorageJSON:  storageJSONFromAuth(auth),
 		Metadata:     cloneAnyMap(authMetadata(auth)),
 		Attributes:   authAttributes(auth),
-		HTTPClient:   a.host.newHTTPClient(auth, a.provider),
-	})
+		HTTPClient:   a.host.newHTTPClient(auth, a.provider)})
 	if errHTTPRequest != nil {
 		return nil, errHTTPRequest
 	}
@@ -1018,8 +1009,7 @@ func (a *executorAdapter) HttpRequest(ctx context.Context, auth *coreauth.Auth, 
 		Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
 		Header:     cloneHeader(pluginResp.Headers),
 		Body:       io.NopCloser(bytes.NewReader(bytes.Clone(pluginResp.Body))),
-		Request:    req,
-	}
+		Request:    req}
 	return resp, nil
 }
 
@@ -1040,8 +1030,7 @@ func buildExecutorRequest(host *Host, provider string, auth *coreauth.Auth, req 
 		StorageJSON:     storageJSONFromAuth(auth),
 		AuthMetadata:    cloneAnyMap(authMetadata(auth)),
 		AuthAttributes:  authAttributes(auth),
-		HTTPClient:      host.newHTTPClient(auth, provider),
-	}
+		HTTPClient:      host.newHTTPClient(auth, provider)}
 }
 
 func storageJSONFromAuth(auth *coreauth.Auth) []byte {
@@ -1104,8 +1093,7 @@ func mapExecutorStreamChunks(ctx context.Context, in <-chan pluginapi.ExecutorSt
 				}
 				mapped = coreexecutor.StreamChunk{
 					Payload: bytes.Clone(chunk.Payload),
-					Err:     chunk.Err,
-				}
+					Err:     chunk.Err}
 			}
 			select {
 			case <-ctx.Done():

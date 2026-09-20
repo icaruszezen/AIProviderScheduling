@@ -84,12 +84,10 @@ func TestAntigravityWebSearchModelForRequiresRequestedModelCapability(t *testing
 	registryRef := GetGlobalRegistry()
 	registryRef.RegisterClient("test-antigravity-websearch-route", "antigravity", []*ModelInfo{
 		{ID: "gemini-route-test"},
-		{ID: "gemini-web-search-test", SupportsWebSearch: true},
-	})
+		{ID: "gemini-web-search-test", SupportsWebSearch: true}})
 	registryRef.RegisterClient("test-gemini-websearch-route", "gemini", []*ModelInfo{
 		{ID: "gemini-cross-provider-route"},
-		{ID: "gemini-cross-provider-search", SupportsWebSearch: true},
-	})
+		{ID: "gemini-cross-provider-search", SupportsWebSearch: true}})
 	t.Cleanup(func() {
 		registryRef.UnregisterClient("test-antigravity-websearch-route")
 		registryRef.UnregisterClient("test-gemini-websearch-route")

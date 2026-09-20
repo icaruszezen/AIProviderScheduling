@@ -180,12 +180,13 @@ func TestXAIExecutorExecuteShapesResponsesRequest(t *testing.T) {
 		ID:       "xai-auth",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{
-			"access_token": "xai-token",
-			"email":        "user@example.com",
+
+			"email": "user@example.com",
 		},
 	}
 
@@ -404,9 +405,10 @@ func TestXAIExecutorExecuteFoldsNamespacesWhenToolsExceed200(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	turn1Payload := fmt.Sprintf(`{
@@ -513,9 +515,10 @@ func TestXAIExecutorExecuteStreamFoldsNamespacesWhenToolsExceed200(t *testing.T)
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	turn1Payload := fmt.Sprintf(`{
@@ -574,9 +577,10 @@ func TestXAIExecutorExecuteRestoresAdditionalToolsNamespaceCalls(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model: "grok-4.3",
@@ -646,8 +650,9 @@ func TestXAIExecutorExecuteNormalizesCustomToolCallHistory(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -737,9 +742,10 @@ func TestXAIExecutorExecuteStreamFiltersInternalXSearchCalls(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
 		Model:   "grok-4.5",
@@ -810,9 +816,10 @@ func TestXAIExecutorExecuteFiltersInternalXSearchCalls(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model:   "grok-4.5",
@@ -845,9 +852,10 @@ func TestXAIExecutorExecuteAcceptsResponseIncomplete(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model:   "grok-4.5",
@@ -880,9 +888,10 @@ func TestXAIExecutorExecuteStreamAcceptsResponseIncomplete(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
 		Model:   "grok-4.5",
@@ -1918,9 +1927,10 @@ func TestXAIExecutorExecutePreservesClientSameNameToolsWithXSearch(t *testing.T)
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model: "grok-4.5",
@@ -1990,9 +2000,10 @@ func TestXAIExecutorExecuteStreamPreservesClientSameNameToolsWithXSearch(t *test
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
 		Model: "grok-4.5",
@@ -2113,9 +2124,10 @@ func TestXAIExecutorExecutePreservesNormalizedCustomSameNameToolWithXSearch(t *t
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model: "grok-4.5",
@@ -2204,9 +2216,10 @@ func TestXAIExecutorExecuteStreamPreservesNormalizedCustomSameNameToolWithXSearc
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
 		Model: "grok-4.5",
@@ -2312,8 +2325,9 @@ func TestXAIExecutorExecuteStreamPreservesNormalizedCustomSameNameToolWithXSearc
 func TestXAIExecutorComposerSessionIsolation(t *testing.T) {
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider: "xai",
-		Metadata: map[string]any{"access_token": "xai-token"},
+		Attributes: map[string]string{"api_key": "xai-token", "auth_kind": "apikey"},
+		Provider:   "xai",
+		Metadata:   map[string]any{"access_token": "xai-token"},
 	}
 
 	tests := []struct {
@@ -2808,8 +2822,9 @@ func TestXAIExecutorOmitsUnsupportedReasoningEffort(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -2875,8 +2890,9 @@ func TestXAIExecutorKeepsReasoningEffortForGrok45(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -2926,8 +2942,9 @@ func TestXAIExecutorKeepsPayloadOverrideReasoningEffortForGrok45(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -2965,8 +2982,9 @@ func TestXAIExecutorAppliesThinkingSuffix(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -3005,9 +3023,10 @@ func TestXAIExecutorExecuteStreamFiltersToolSearchTool(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{XAI: config.XAIConfig{InjectXSearch: true}})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
@@ -3114,9 +3133,10 @@ func TestXAIExecutorExecuteStreamNormalizesReasoningTextEvents(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
@@ -3176,9 +3196,10 @@ func TestXAIExecutorExecuteNormalizesReasoningOutputForNonStreamTranslation(t *t
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3228,6 +3249,7 @@ func TestXAIExecutorExecuteImagesUsesImagesEndpointAndPublishesUsage(t *testing.
 			t.Fatalf("read body: %v", errRead)
 		}
 		w.Header().Set("Content-Type", "application/json")
+		time.Sleep(time.Millisecond)
 		_, _ = w.Write([]byte(`{"created":123,"data":[{"b64_json":"AA=="}],"usage":{"cost_in_usd_ticks":250000}}`))
 	}))
 	defer server.Close()
@@ -3241,8 +3263,9 @@ func TestXAIExecutorExecuteImagesUsesImagesEndpointAndPublishesUsage(t *testing.
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
@@ -3316,9 +3339,10 @@ func TestXAIExecutorExecuteImagesPublishesFailureUsage(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3431,9 +3455,10 @@ func TestXAIExecutorExecuteImagesUsesEditsEndpoint(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3557,9 +3582,10 @@ func TestXAIExecutorExecuteImagesRewritesImageURLToURL(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3601,6 +3627,7 @@ func TestXAIExecutorExecuteVideosCreate(t *testing.T) {
 			t.Fatalf("read body: %v", errRead)
 		}
 		w.Header().Set("Content-Type", "application/json")
+		time.Sleep(time.Millisecond)
 		_, _ = w.Write([]byte(`{"request_id":"vid_123"}`))
 	}))
 	defer server.Close()
@@ -3613,9 +3640,10 @@ func TestXAIExecutorExecuteVideosCreate(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3684,9 +3712,10 @@ func TestXAIExecutorExecuteVideosPublishesFailureUsage(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3760,9 +3789,10 @@ func TestXAIExecutorExecuteVideosRetrieve(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -3823,9 +3853,10 @@ func TestXAIExecutorExecuteVideosUsesNativeEndpointFromRequestPath(t *testing.T)
 
 			exec := NewXAIExecutor(&config.Config{})
 			auth := &cliproxyauth.Auth{
-				Provider:   "xai",
-				Attributes: map[string]string{"base_url": server.URL},
-				Metadata:   map[string]any{"access_token": "xai-token"},
+				Provider: "xai",
+				Attributes: map[string]string{
+					"api_key": "xai-token", "base_url": server.URL},
+				Metadata: map[string]any{"access_token": "xai-token"},
 			}
 
 			_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -4847,8 +4878,9 @@ func TestNormalizeXAIToolChoiceForTools_NoOpWhenBothAbsent(t *testing.T) {
 func TestXAIExecutorComposerReusesClaudeCodeSession(t *testing.T) {
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider: "xai",
-		Metadata: map[string]any{"access_token": "xai-token"},
+		Attributes: map[string]string{"api_key": "xai-token", "auth_kind": "apikey"},
+		Provider:   "xai",
+		Metadata:   map[string]any{"access_token": "xai-token"},
 	}
 	payload := []byte(`{"model":"grok-composer-2.5-fast","metadata":{"user_id":"{\"session_id\":\"cache-session-1\"}"},"input":"hello"}`)
 	req := cliproxyexecutor.Request{Model: "grok-composer-2.5-fast", Payload: payload}
@@ -4956,9 +4988,10 @@ func TestXAIExecutorReMergesReasoningAfterDroppingInvalidEncryptedContent(t *tes
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -5004,9 +5037,10 @@ func TestXAIExecutorDropsInvalidCompactionItem(t *testing.T) {
 
 	exec := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
 	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
@@ -5056,12 +5090,11 @@ func TestXAIExecutorReasoningReplayCacheStoresFinalDoneAndInjectsNextClaudeReque
 		ID:       "xai-auth-replay-1",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
-		Metadata: map[string]any{
-			"access_token": "xai-token",
-		},
+		Metadata: map[string]any{},
 	}
 	opts := cliproxyexecutor.Options{
 		SourceFormat: sdktranslator.FormatClaude,
@@ -5129,6 +5162,7 @@ func TestXAIExecutorResponsesSSEReplaysEncryptedReasoningAndAssistantMessage(t *
 		ID:       "xai-auth-responses-sse-replay",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":  "xai-token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
@@ -5339,10 +5373,11 @@ func TestXAIExecutorClaudeInjectsLatestCachedReasoningWhenHistoryHasOnlyOlderSig
 
 	executor := NewXAIExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		ID:         "xai-auth-claude-missing-latest-sig",
-		Provider:   "xai",
-		Attributes: map[string]string{"base_url": server.URL},
-		Metadata:   map[string]any{"access_token": "xai-token"},
+		ID:       "xai-auth-claude-missing-latest-sig",
+		Provider: "xai",
+		Attributes: map[string]string{
+			"api_key": "xai-token", "base_url": server.URL},
+		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 	opts := cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, Stream: false}
 	ctx := testContextWithAPIKey("claude-missing-sig-key")
@@ -5616,12 +5651,11 @@ func TestXAIExecutorReasoningReplayCacheReplaysFunctionCallForClaudeToolResult(t
 		ID:       "xai-auth-replay-tool",
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":   "xai-token",
 			"base_url":  server.URL,
-			"auth_kind": "oauth",
+			"auth_kind": "apikey",
 		},
-		Metadata: map[string]any{
-			"access_token": "xai-token",
-		},
+		Metadata: map[string]any{},
 	}
 	opts := cliproxyexecutor.Options{
 		SourceFormat: sdktranslator.FormatClaude,
@@ -6082,6 +6116,7 @@ func TestXAIExecutorExecuteChatUsesProxyHeadersOnlyForChatProxy(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
+			"api_key":       "xai-token",
 			"base_url":      server.URL,
 			xaiUsingAPIAttr: "false",
 		},
@@ -6150,27 +6185,27 @@ func TestXAIExecutorExecuteImagesOAuthBaseURLResolution(t *testing.T) {
 		wantURL string
 	}{
 		{
-			name: "oauth credential defaults to cli-chat-proxy",
+			name: "api key credential with official default stays on official api",
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 					"base_url":  xaiauth.DefaultAPIBaseURL,
 				},
-				Metadata: map[string]any{"access_token": "xai-oauth-token"},
 			},
-			wantURL: xaiauth.CLIChatProxyBaseURL + "/images/generations",
+			wantURL: xaiauth.DefaultAPIBaseURL + "/images/generations",
 		},
 		{
-			name: "oauth credential with empty base_url defaults to cli-chat-proxy",
+			name: "api key credential with empty base_url defaults to official api",
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 				},
-				Metadata: map[string]any{"access_token": "xai-oauth-token"},
 			},
-			wantURL: xaiauth.CLIChatProxyBaseURL + "/images/generations",
+			wantURL: xaiauth.DefaultAPIBaseURL + "/images/generations",
 		},
 		{
 			name: "api key credential defaults to official api",
@@ -6187,7 +6222,8 @@ func TestXAIExecutorExecuteImagesOAuthBaseURLResolution(t *testing.T) {
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 					"base_url":  "https://custom-gateway.example.com/v1",
 				},
 				Metadata: map[string]any{"access_token": "xai-oauth-token"},
@@ -6237,27 +6273,27 @@ func TestXAIExecutorExecuteVideosOAuthBaseURLResolution(t *testing.T) {
 		wantURL string
 	}{
 		{
-			name: "oauth credential defaults to cli-chat-proxy",
+			name: "api key credential with official default stays on official api",
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 					"base_url":  xaiauth.DefaultAPIBaseURL,
 				},
-				Metadata: map[string]any{"access_token": "xai-oauth-token"},
 			},
-			wantURL: xaiauth.CLIChatProxyBaseURL + "/videos/generations",
+			wantURL: xaiauth.DefaultAPIBaseURL + "/videos/generations",
 		},
 		{
-			name: "oauth credential with empty base_url defaults to cli-chat-proxy",
+			name: "api key credential with empty base_url defaults to official api",
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 				},
-				Metadata: map[string]any{"access_token": "xai-oauth-token"},
 			},
-			wantURL: xaiauth.CLIChatProxyBaseURL + "/videos/generations",
+			wantURL: xaiauth.DefaultAPIBaseURL + "/videos/generations",
 		},
 		{
 			name: "api key credential defaults to official api",
@@ -6274,7 +6310,8 @@ func TestXAIExecutorExecuteVideosOAuthBaseURLResolution(t *testing.T) {
 			auth: &cliproxyauth.Auth{
 				Provider: "xai",
 				Attributes: map[string]string{
-					"auth_kind": "oauth",
+					"api_key":   "xai-oauth-token",
+					"auth_kind": "apikey",
 					"base_url":  "https://custom-gateway.example.com/v1",
 				},
 				Metadata: map[string]any{"access_token": "xai-oauth-token"},

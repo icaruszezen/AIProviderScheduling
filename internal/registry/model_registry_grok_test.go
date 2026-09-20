@@ -5,11 +5,9 @@ import "testing"
 func TestGetAvailableModelInfosPreservesMetadataAndAvailability(t *testing.T) {
 	modelRegistry := newTestModelRegistry()
 	modelRegistry.RegisterClient("openai-client", "openai", []*ModelInfo{
-		{ID: "z-model", DisplayName: "Z Model", ContextLength: 1000},
-	})
+		{ID: "z-model", DisplayName: "Z Model", ContextLength: 1000}})
 	modelRegistry.RegisterClient("claude-client", "claude", []*ModelInfo{
-		{ID: "a-model", DisplayName: "A Model", ContextLength: 2000, Thinking: &ThinkingSupport{Levels: []string{"low", "high"}}},
-	})
+		{ID: "a-model", DisplayName: "A Model", ContextLength: 2000, Thinking: &ThinkingSupport{Levels: []string{"low", "high"}}}})
 	modelRegistry.RegisterClient("xai-client", "xai", []*ModelInfo{{ID: "x-model"}})
 	modelRegistry.RegisterClient("suspended-client", "xai", []*ModelInfo{{ID: "hidden-model"}})
 	modelRegistry.SuspendClientModel("suspended-client", "hidden-model", "manual")
@@ -49,22 +47,18 @@ func TestGetAvailableModelInfosHonorsQuotaAndSuspensionAvailability(t *testing.T
 		{
 			name:               "quota cooldown remains listed",
 			quotaExceeded:      true,
-			wantModelAvailable: true,
-		},
+			wantModelAvailable: true},
 		{
 			name:               "quota suspension reason remains listed",
 			quotaSuspended:     true,
-			wantModelAvailable: true,
-		},
+			wantModelAvailable: true},
 		{
 			name:               "quota and non-quota suspensions are hidden",
 			clientCount:        2,
 			quotaExceeded:      true,
 			quotaSuspended:     true,
 			manualSuspended:    true,
-			wantModelAvailable: false,
-		},
-	}
+			wantModelAvailable: false}}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

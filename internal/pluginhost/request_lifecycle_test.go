@@ -23,11 +23,8 @@ func TestRequestInterceptorTerminationStopsChain(t *testing.T) {
 						Terminate:       true,
 						StatusCode:      http.StatusForbidden,
 						ResponseHeaders: http.Header{"Content-Type": {"application/json"}},
-						ResponseBody:    []byte(`{"error":"blocked"}`),
-					}, nil
-				}),
-			}},
-		},
+						ResponseBody:    []byte(`{"error":"blocked"}`)}, nil
+				})}}},
 		capabilityRecord{
 			id:       "low",
 			priority: 10,
@@ -35,9 +32,7 @@ func TestRequestInterceptorTerminationStopsChain(t *testing.T) {
 				RequestInterceptor: requestInterceptorFunc(func(context.Context, pluginapi.RequestInterceptRequest) (pluginapi.RequestInterceptResponse, error) {
 					lowCalls++
 					return pluginapi.RequestInterceptResponse{}, nil
-				}),
-			}},
-		},
+				})}}},
 	)
 
 	response := host.InterceptRequestBeforeAuth(context.Background(), pluginapi.RequestInterceptRequest{RequestID: "request-1"})
@@ -67,17 +62,14 @@ func TestCompleteRequestUsesUncancelledContextAndClonesMetadata(t *testing.T) {
 				got = completion
 				completion.Metadata["nested"].(map[string]any)["value"] = "mutated"
 				close(done)
-			}),
-		}},
-	})
+			})}}})
 
 	host.CompleteRequest(ctx, pluginapi.RequestCompletion{
 		RequestID:   "request-1",
 		Outcome:     pluginapi.RequestCompletionCanceled,
 		StartedAt:   time.Now().Add(-time.Second),
 		CompletedAt: time.Now(),
-		Metadata:    map[string]any{"nested": originalNested},
-	})
+		Metadata:    map[string]any{"nested": originalNested}})
 	<-done
 
 	if callbackContextError != nil {
@@ -100,9 +92,7 @@ func TestCompleteRequestDoesNotWaitForBlockingPlugin(t *testing.T) {
 			RequestLifecyclePlugin: requestLifecyclePluginFunc(func(context.Context, pluginapi.RequestCompletion) {
 				close(started)
 				<-release
-			}),
-		}},
-	})
+			})}}})
 
 	returned := make(chan struct{})
 	go func() {
@@ -154,8 +144,7 @@ func TestRPCCapabilitiesAndAdapterIncludeRequestLifecycle(t *testing.T) {
 	}
 	if errComplete := registered.Capabilities.RequestLifecyclePlugin.HandleRequestComplete(context.Background(), pluginapi.RequestCompletion{
 		RequestID: "request-rpc",
-		Outcome:   pluginapi.RequestCompletionSucceeded,
-	}); errComplete != nil {
+		Outcome:   pluginapi.RequestCompletionSucceeded}); errComplete != nil {
 		t.Fatalf("HandleRequestComplete() error = %v", errComplete)
 	}
 	if got.RequestID != "request-rpc" || got.Outcome != pluginapi.RequestCompletionSucceeded {

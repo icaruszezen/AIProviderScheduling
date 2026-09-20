@@ -151,8 +151,7 @@ func CacheSignatureBestEffort(ctx context.Context, modelName, text, signature st
 
 	sc.entries[textHash] = SignatureEntry{
 		Signature: signature,
-		Timestamp: time.Now(),
-	}
+		Timestamp: time.Now()}
 	return true
 }
 

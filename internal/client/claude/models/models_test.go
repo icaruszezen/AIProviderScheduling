@@ -7,8 +7,7 @@ func TestBuildResponse(t *testing.T) {
 		{"id": "claude-z", "display_name": "Zebra", "max_tokens": 64000},
 		{"id": "gpt-4o", "display_name": "Alpha"},
 		{"id": "claude-c", "display_name": "Alpha"},
-		{"id": "claude-b", "display_name": "Beta"},
-	}
+		{"id": "claude-b", "display_name": "Beta"}}
 
 	response := BuildResponse(availableModels, false)
 	models, ok := response["data"].([]map[string]any)
@@ -20,8 +19,7 @@ func TestBuildResponse(t *testing.T) {
 		"claude-c",
 		"claude-fable-5-dd-o4-tpg",
 		"claude-b",
-		"claude-z",
-	}
+		"claude-z"}
 	if len(models) != len(wantIDs) {
 		t.Fatalf("len(data) = %d, want %d", len(models), len(wantIDs))
 	}
@@ -53,8 +51,7 @@ func TestBuildResponse(t *testing.T) {
 
 func TestBuildResponseWithCloakingDisabled(t *testing.T) {
 	availableModels := []map[string]any{
-		{"id": "gpt-4o", "display_name": "GPT-4o"},
-	}
+		{"id": "gpt-4o", "display_name": "GPT-4o"}}
 
 	response := BuildResponse(availableModels, true)
 	models, ok := response["data"].([]map[string]any)
@@ -100,8 +97,7 @@ func TestEnsureClaudeModelIDPrefix(t *testing.T) {
 		{"contains claude mid-string is reversed", "my-claude-custom", "claude-fable-5-dd-motsuc-edualc-ym"},
 		{"uppercase Claude prefix is reversed", "Claude-Opus-4", "claude-fable-5-dd-4-supO-edualC"},
 		{"gpt model is reversed", "gpt-4o", "claude-fable-5-dd-o4-tpg"},
-		{"gemini model is reversed", "gemini-2.5-pro", "claude-fable-5-dd-orp-5.2-inimeg"},
-	}
+		{"gemini model is reversed", "gemini-2.5-pro", "claude-fable-5-dd-orp-5.2-inimeg"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -125,8 +121,7 @@ func TestResolveClaudeModelIDPrefix(t *testing.T) {
 		{"encoded gemini model", "claude-fable-5-dd-orp-5.2-inimeg", "gemini-2.5-pro"},
 		{"empty encoded body unchanged", "claude-fable-5-dd-", "claude-fable-5-dd-"},
 		{"preserves thinking suffix", "claude-fable-5-dd-o4-tpg(high)", "gpt-4o(high)"},
-		{"round trip", EnsureClaudeModelIDPrefix("custom-model-x"), "custom-model-x"},
-	}
+		{"round trip", EnsureClaudeModelIDPrefix("custom-model-x"), "custom-model-x"}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

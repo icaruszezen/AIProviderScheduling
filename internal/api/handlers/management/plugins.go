@@ -31,8 +31,6 @@ type pluginListEntry struct {
 	Registered       bool                    `json:"registered"`
 	Enabled          bool                    `json:"enabled"`
 	EffectiveEnabled bool                    `json:"effective_enabled"`
-	SupportsOAuth    bool                    `json:"supports_oauth"`
-	OAuthProvider    string                  `json:"oauth_provider"`
 	Logo             string                  `json:"logo"`
 	ConfigFields     []pluginConfigFieldInfo `json:"config_fields"`
 	Menus            []pluginMenuInfo        `json:"menus"`
@@ -66,8 +64,7 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 	if h == nil || h.cfg == nil {
 		c.JSON(http.StatusOK, pluginListResponse{
 			PluginsDir: "plugins",
-			Plugins:    []pluginListEntry{},
-		})
+			Plugins:    []pluginListEntry{}})
 		return
 	}
 
@@ -99,8 +96,7 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 			Path:         htmlsanitize.String(file.Path),
 			Enabled:      false,
 			ConfigFields: []pluginConfigFieldInfo{},
-			Menus:        []pluginMenuInfo{},
-		}
+			Menus:        []pluginMenuInfo{}}
 	}
 	for id, item := range configs {
 		entry := entries[id]
@@ -120,8 +116,6 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 			entry := entries[info.ID]
 			entry.ID = htmlsanitize.String(info.ID)
 			entry.Registered = true
-			entry.SupportsOAuth = info.SupportsOAuth
-			entry.OAuthProvider = htmlsanitize.String(info.OAuthProvider)
 			entry.Logo = htmlsanitize.String(info.Metadata.Logo)
 			entry.ConfigFields = pluginConfigFields(info.Metadata.ConfigFields)
 			entry.Menus = pluginMenus(info.Menus)
@@ -151,8 +145,7 @@ func (h *Handler) ListPlugins(c *gin.Context) {
 	c.JSON(http.StatusOK, pluginListResponse{
 		PluginsEnabled: pluginsEnabled,
 		PluginsDir:     htmlsanitize.String(pluginsDir),
-		Plugins:        out,
-	})
+		Plugins:        out})
 }
 
 // GetPluginConfig returns the preserved plugins.configs.<id> object as JSON.
@@ -361,8 +354,7 @@ func (h *Handler) DeletePlugin(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{
 			"error":            "plugin_delete_requires_restart",
 			"message":          "loaded plugin cannot be deleted while the server is running",
-			"restart_required": true,
-		})
+			"restart_required": true})
 		return
 	}
 
@@ -387,8 +379,7 @@ func (h *Handler) DeletePlugin(c *gin.Context) {
 				"error":        "config_save_failed",
 				"message":      fmt.Sprintf("plugin deleted but saving config failed: %s", errSave.Error()),
 				"file_deleted": fileDeleted,
-				"path":         path,
-			})
+				"path":         path})
 			return
 		}
 	}
@@ -402,8 +393,7 @@ func (h *Handler) DeletePlugin(c *gin.Context) {
 		"path":               htmlsanitize.String(path),
 		"file_deleted":       fileDeleted,
 		"configured_removed": configured,
-		"restart_required":   false,
-	})
+		"restart_required":   false})
 }
 
 func normalizedPluginsDir(dir string) string {
@@ -466,8 +456,7 @@ func pluginConfigFields(fields []pluginapi.ConfigField) []pluginConfigFieldInfo 
 			Name:        htmlsanitize.String(field.Name),
 			Type:        htmlsanitize.String(string(field.Type)),
 			EnumValues:  htmlsanitize.Strings(field.EnumValues),
-			Description: htmlsanitize.String(field.Description),
-		})
+			Description: htmlsanitize.String(field.Description)})
 	}
 	return out
 }
@@ -478,8 +467,7 @@ func pluginMenus(menus []pluginhost.RegisteredPluginMenu) []pluginMenuInfo {
 		out = append(out, pluginMenuInfo{
 			Path:        htmlsanitize.String(menu.Path),
 			Menu:        htmlsanitize.String(menu.Menu),
-			Description: htmlsanitize.String(menu.Description),
-		})
+			Description: htmlsanitize.String(menu.Description)})
 	}
 	return out
 }
@@ -491,8 +479,7 @@ func pluginMetadata(meta pluginapi.Metadata) *pluginMetadataInfo {
 		Author:           htmlsanitize.String(meta.Author),
 		GitHubRepository: htmlsanitize.String(meta.GitHubRepository),
 		Logo:             htmlsanitize.String(meta.Logo),
-		ConfigFields:     pluginConfigFields(meta.ConfigFields),
-	}
+		ConfigFields:     pluginConfigFields(meta.ConfigFields)}
 }
 
 func pluginIDFromRequest(c *gin.Context) (string, bool) {

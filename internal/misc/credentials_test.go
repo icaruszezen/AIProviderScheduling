@@ -7,15 +7,13 @@ import (
 func TestMergeMetadata(t *testing.T) {
 	source := map[string]any{
 		"type":         "codex",
-		"access_token": "token-123",
-	}
+		"access_token": "token-123"}
 	metadata := map[string]any{
 		"disabled":   false,
 		"email":      "test@example.com",
 		"prefix":     "custom-prefix",
 		"websockets": false,
-		"note":       "custom note",
-	}
+		"note":       "custom note"}
 
 	result, err := MergeMetadata(source, metadata)
 	if err != nil {

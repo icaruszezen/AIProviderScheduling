@@ -38,8 +38,7 @@ func (b *modelStreamBridge) open(ownerCallbackID string, chunks <-chan handlers.
 	b.streams[id] = modelStreamEntry{
 		ownerCallbackID: ownerCallbackID,
 		chunks:          chunks,
-		cancel:          cancel,
-	}
+		cancel:          cancel}
 	b.mu.Unlock()
 	return id
 }

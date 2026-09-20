@@ -15,9 +15,7 @@ func TestResolvedAPIKeyModelInfoPropagatesIsCompat(t *testing.T) {
 		Models: []internalconfig.ClaudeModel{{
 			Name:     "deepseek-upstream",
 			Alias:    "deepseek-alias",
-			IsCompat: true,
-		}},
-	}}})
+			IsCompat: true}}}}})
 	auth := configuredCapabilityTestAuth("compat-auth", "compat-key")
 	registerCapabilityTestAuth(t, manager, auth)
 

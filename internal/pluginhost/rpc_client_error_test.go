@@ -25,9 +25,7 @@ func TestDecodeEnvelopeResultPreservesPluginHTTPStatus(t *testing.T) {
 		Error: &pluginabi.Error{
 			Code:       "plugin_error",
 			Message:    "license required",
-			HTTPStatus: http.StatusForbidden,
-		},
-	})
+			HTTPStatus: http.StatusForbidden}})
 	if errDecode == nil {
 		t.Fatal("decodeEnvelopeResult returned nil error")
 	}
@@ -49,9 +47,7 @@ func TestCallPluginReturnsPluginErrorWithoutMethodWrapper(t *testing.T) {
 		Error: &pluginabi.Error{
 			Code:       "plugin_error",
 			Message:    "license required",
-			HTTPStatus: http.StatusForbidden,
-		},
-	})
+			HTTPStatus: http.StatusForbidden}})
 	if errMarshal != nil {
 		t.Fatalf("marshal envelope: %v", errMarshal)
 	}

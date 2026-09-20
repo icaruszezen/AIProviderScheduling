@@ -49,11 +49,8 @@ func TestCloneForRuntimeDeepCopiesConfig(t *testing.T) {
 	if clone.APIKeys[0] != "client-key" {
 		t.Fatalf("clone.APIKeys[0] = %q, want client-key", clone.APIKeys[0])
 	}
-	if clone.OAuthExcludedModels["codex"][0] != "hidden-model" {
-		t.Fatalf("clone.OAuthExcludedModels[codex][0] = %q, want hidden-model", clone.OAuthExcludedModels["codex"][0])
-	}
-	if clone.OAuthModelAlias["codex"][0].Alias != "client-model" {
-		t.Fatalf("clone.OAuthModelAlias[codex][0].Alias = %q, want client-model", clone.OAuthModelAlias["codex"][0].Alias)
+	if clone.CodexKey[0].ExcludedModels[0] != "codex-hidden-key" {
+		t.Fatalf("clone.CodexKey[0].ExcludedModels[0] = %q, want codex-hidden-key", clone.CodexKey[0].ExcludedModels[0])
 	}
 	if got := pluginRawScalar(t, clone.Plugins.Configs["sample"].Raw, "mode"); got != "first" {
 		t.Fatalf("clone plugin raw mode = %q, want first", got)
@@ -66,8 +63,7 @@ func TestCloneForRuntimeDeepCopiesConfig(t *testing.T) {
 	}
 
 	clone.APIKeys[0] = "clone-client-key"
-	clone.OAuthExcludedModels["codex"][0] = "clone-hidden-model"
-	clone.OAuthModelAlias["codex"][0].Alias = "clone-client-model"
+	clone.CodexKey[0].ExcludedModels[0] = "clone-hidden-model"
 	clone.OpenAICompatibility[0].Models[0].Thinking.Levels[0] = "clone-low"
 	clone.Payload.Default[0].Params["object"].(map[string]any)["key"] = "clone-value"
 	plugin := clone.Plugins.Configs["sample"]
@@ -77,11 +73,8 @@ func TestCloneForRuntimeDeepCopiesConfig(t *testing.T) {
 	if cfg.APIKeys[0] != "mutated-client-key" {
 		t.Fatalf("cfg.APIKeys[0] = %q, want mutated-client-key", cfg.APIKeys[0])
 	}
-	if cfg.OAuthExcludedModels["codex"][0] != "mutated-hidden-model" {
-		t.Fatalf("cfg.OAuthExcludedModels[codex][0] = %q, want mutated-hidden-model", cfg.OAuthExcludedModels["codex"][0])
-	}
-	if cfg.OAuthModelAlias["codex"][0].Alias != "mutated-client-model" {
-		t.Fatalf("cfg.OAuthModelAlias[codex][0].Alias = %q, want mutated-client-model", cfg.OAuthModelAlias["codex"][0].Alias)
+	if cfg.CodexKey[0].ExcludedModels[0] != "mutated-hidden-key" {
+		t.Fatalf("cfg.CodexKey[0].ExcludedModels[0] = %q, want mutated-hidden-key", cfg.CodexKey[0].ExcludedModels[0])
 	}
 	if got := pluginRawScalar(t, cfg.Plugins.Configs["sample"].Raw, "mode"); got != "second" {
 		t.Fatalf("cfg plugin raw mode = %q, want second", got)
@@ -112,9 +105,7 @@ func sampleCloneRuntimeConfig() *Config {
 			APIKeys: []string{"client-key"},
 			Streaming: StreamingConfig{
 				KeepAliveSeconds: 3,
-				BootstrapRetries: 2,
-			},
-		},
+				BootstrapRetries: 2}},
 		Home: HomeConfig{
 			Enabled: true,
 			Host:    "home.local",
@@ -125,9 +116,7 @@ func sampleCloneRuntimeConfig() *Config {
 				CACert:              "ca",
 				ClientCert:          "cert",
 				ClientKey:           "key",
-				UseTargetServerName: true,
-			},
-		},
+				UseTargetServerName: true}},
 		Plugins: PluginsConfig{
 			Enabled:      true,
 			Dir:          "plugins",
@@ -136,24 +125,19 @@ func sampleCloneRuntimeConfig() *Config {
 				"sample": {
 					Enabled:  &pluginEnabled,
 					Priority: 10,
-					Raw:      samplePluginRawNode("first"),
-				},
-			},
-		},
+					Raw:      samplePluginRawNode("first")}}},
 		AntigravitySignatureCacheEnabled: &cacheStrict,
 		AntigravitySignatureBypassStrict: &bypassStrict,
 		GeminiKey: []GeminiKey{{
 			APIKey:         "gemini-key",
 			Models:         []GeminiModel{{Name: "gemini-upstream", Alias: "gemini-upstream-alias"}},
 			Headers:        map[string]string{"X-Gemini": "one"},
-			ExcludedModels: []string{"gemini-hidden"},
-		}},
+			ExcludedModels: []string{"gemini-hidden"}}},
 		CodexKey: []CodexKey{{
 			APIKey:         "codex-key",
 			Models:         []CodexModel{{Name: "codex-upstream", Alias: "codex-client"}},
 			Headers:        map[string]string{"X-Codex": "one"},
-			ExcludedModels: []string{"codex-hidden-key"},
-		}},
+			ExcludedModels: []string{"codex-hidden-key"}}},
 		ClaudeKey: []ClaudeKey{{
 			APIKey:         "claude-key",
 			Models:         []ClaudeModel{{Name: "claude-upstream", Alias: "claude-client"}},
@@ -161,57 +145,39 @@ func sampleCloneRuntimeConfig() *Config {
 			ExcludedModels: []string{"claude-hidden"},
 			Cloak: &CloakConfig{
 				SensitiveWords: []string{"secret"},
-				CacheUserID:    &cacheUserID,
-			},
-		}},
+				CacheUserID:    &cacheUserID}}},
 		OpenAICompatibility: []OpenAICompatibility{{
 			Name:          "compat",
 			APIKeyEntries: []OpenAICompatibilityAPIKey{{APIKey: "compat-key", ProxyURL: "http://proxy.local"}},
 			Models: []OpenAICompatibilityModel{{
 				Name:     "compat-upstream",
 				Alias:    "compat-client",
-				Thinking: &registry.ThinkingSupport{Levels: []string{"low", "high"}},
-			}},
-			Headers: map[string]string{"X-Compat": "one"},
-		}},
+				Thinking: &registry.ThinkingSupport{Levels: []string{"low", "high"}}}},
+			Headers: map[string]string{"X-Compat": "one"}}},
 		VertexCompatAPIKey: []VertexCompatKey{{
 			APIKey:         "vertex-key",
 			Headers:        map[string]string{"X-Vertex": "one"},
 			Models:         []VertexCompatModel{{Name: "vertex-upstream", Alias: "vertex-client"}},
-			ExcludedModels: []string{"vertex-hidden"},
-		}},
-		OAuthExcludedModels: map[string][]string{
-			"codex": {"hidden-model"},
-		},
-		OAuthModelAlias: map[string][]OAuthModelAlias{
-			"codex": {{Name: "upstream-model", Alias: "client-model", Fork: true}},
-		},
+			ExcludedModels: []string{"vertex-hidden"}}},
 		Payload: PayloadConfig{
 			Default: []PayloadRule{{
 				Models: []PayloadModelRule{{
 					Name:    "model-*",
 					Headers: map[string]string{"X-Tier": "gold"},
 					Match:   []map[string]any{{"tier": "gold"}},
-					Exist:   []string{"$.messages"},
-				}},
+					Exist:   []string{"$.messages"}}},
 				Params: map[string]any{
 					"object": map[string]any{"key": "value"},
-					"array":  []any{"first", map[string]any{"nested": "value"}},
-				},
-			}},
+					"array":  []any{"first", map[string]any{"nested": "value"}}}}},
 			Filter: []PayloadFilterRule{{
 				Models: []PayloadModelRule{{Name: "model-*"}},
-				Params: []string{"$.secret"},
-			}},
-		},
-	}
+				Params: []string{"$.secret"}}}}}
 }
 
 func mutateOriginalConfig(cfg *Config) {
 	cfg.Home.Host = "mutated-home.local"
 	cfg.APIKeys[0] = "mutated-client-key"
-	cfg.OAuthExcludedModels["codex"][0] = "mutated-hidden-model"
-	cfg.OAuthModelAlias["codex"][0].Alias = "mutated-client-model"
+	cfg.CodexKey[0].ExcludedModels[0] = "mutated-hidden-key"
 	cfg.OpenAICompatibility[0].Models[0].Thinking.Levels[0] = "mutated-low"
 	cfg.Payload.Default[0].Params["object"].(map[string]any)["key"] = "mutated-value"
 	plugin := cfg.Plugins.Configs["sample"]
@@ -230,9 +196,7 @@ func samplePluginRawNode(mode string) yaml.Node {
 			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "mode"},
 			modeValue,
 			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "mode-alias"},
-			{Kind: yaml.AliasNode, Alias: modeValue},
-		},
-	}
+			{Kind: yaml.AliasNode, Alias: modeValue}}}
 }
 
 func pluginRawScalar(t *testing.T, node yaml.Node, key string) string {

@@ -40,8 +40,9 @@ type ObjectStoreConfig struct {
 	PathStyle bool
 }
 
-// ObjectTokenStore persists configuration and authentication metadata using an S3-compatible object storage backend.
+// ObjectTokenStore persists configuration using an S3-compatible object storage backend.
 // Files are mirrored to a local workspace so existing file-based flows continue to operate.
+// The "auths/" prefix is a historical object/workspace name; runtime credentials come from config.yaml.
 type ObjectTokenStore struct {
 	client     *minio.Client
 	cfg        ObjectStoreConfig
@@ -98,8 +99,7 @@ func NewObjectTokenStore(cfg ObjectStoreConfig) (*ObjectTokenStore, error) {
 	options := &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure: cfg.UseSSL,
-		Region: cfg.Region,
-	}
+		Region: cfg.Region}
 	if cfg.PathStyle {
 		options.BucketLookup = minio.BucketLookupPath
 	}
@@ -114,8 +114,7 @@ func NewObjectTokenStore(cfg ObjectStoreConfig) (*ObjectTokenStore, error) {
 		cfg:        cfg,
 		spoolRoot:  absRoot,
 		configPath: filepath.Join(configDir, "config.yaml"),
-		authDir:    authDir,
-	}, nil
+		authDir:    authDir}, nil
 }
 
 // SetBaseDir implements the optional interface used by authenticators; it is a no-op because
@@ -130,15 +129,7 @@ func (s *ObjectTokenStore) ConfigPath() string {
 	return s.configPath
 }
 
-// AuthDir returns the local directory containing mirrored auth files.
-func (s *ObjectTokenStore) AuthDir() string {
-	if s == nil {
-		return ""
-	}
-	return s.authDir
-}
-
-// Bootstrap ensures the target bucket exists and synchronizes data from the object storage backend.
+// Bootstrap ensures the target bucket exists and synchronizes configuration from the object storage backend.
 func (s *ObjectTokenStore) Bootstrap(ctx context.Context, exampleConfigPath string) error {
 	if s == nil {
 		return fmt.Errorf("object store: not initialized")
@@ -147,9 +138,6 @@ func (s *ObjectTokenStore) Bootstrap(ctx context.Context, exampleConfigPath stri
 		return err
 	}
 	if err := s.syncConfigFromBucket(ctx, exampleConfigPath); err != nil {
-		return err
-	}
-	if err := s.syncAuthFromBucket(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -240,9 +228,14 @@ func (s *ObjectTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (s
 
 // List enumerates auth JSON files from the mirrored workspace.
 func (s *ObjectTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
-	dir := strings.TrimSpace(s.AuthDir())
+	dir := strings.TrimSpace(s.authDir)
 	if dir == "" {
-		return nil, fmt.Errorf("object store: auth directory not configured")
+		return nil, nil
+	}
+	if _, statErr := os.Stat(dir); errors.Is(statErr, fs.ErrNotExist) {
+		return nil, nil
+	} else if statErr != nil {
+		return nil, fmt.Errorf("object store: stat auth directory: %w", statErr)
 	}
 	entries := make([]*cliproxyauth.Auth, 0, 32)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
@@ -260,7 +253,7 @@ func (s *ObjectTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error)
 			log.WithError(err).Warnf("object store: skip auth %s", path)
 			return nil
 		}
-		if auth != nil {
+		if auth != nil && !cliproxyauth.IsUnsupportedOAuthAuth(auth) {
 			entries = append(entries, auth)
 		}
 		return nil
@@ -410,8 +403,7 @@ func (s *ObjectTokenStore) syncAuthFromBucket(ctx context.Context) error {
 	prefix := s.prefixedKey(objectStoreAuthPrefix + "/")
 	objectCh := s.client.ListObjects(ctx, s.cfg.Bucket, minio.ListObjectsOptions{
 		Prefix:    prefix,
-		Recursive: true,
-	})
+		Recursive: true})
 	for object := range objectCh {
 		if object.Err != nil {
 			return fmt.Errorf("object store: list auth objects: %w", object.Err)
@@ -491,8 +483,7 @@ func (s *ObjectTokenStore) putObject(ctx context.Context, key string, data []byt
 	fullKey := s.prefixedKey(key)
 	reader := bytes.NewReader(data)
 	_, err := s.client.PutObject(ctx, s.cfg.Bucket, fullKey, reader, int64(len(data)), minio.PutObjectOptions{
-		ContentType: contentType,
-	})
+		ContentType: contentType})
 	if err != nil {
 		return fmt.Errorf("object store: put object %s: %w", fullKey, err)
 	}
@@ -597,8 +588,7 @@ func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Aut
 	rel = normalizeAuthID(rel)
 	attr := map[string]string{
 		cliproxyauth.AttributePath:          path,
-		cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceObjectStore,
-	}
+		cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceObjectStore}
 	if email := strings.TrimSpace(valueAsString(metadata["email"])); email != "" {
 		attr["email"] = email
 	}
@@ -613,8 +603,7 @@ func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Aut
 		CreatedAt:        info.ModTime(),
 		UpdatedAt:        info.ModTime(),
 		LastRefreshedAt:  time.Time{},
-		NextRefreshAfter: time.Time{},
-	}
+		NextRefreshAfter: time.Time{}}
 	cliproxyauth.ApplyCustomHeadersFromMetadata(auth)
 	if disabled, ok := metadata["disabled"].(bool); ok && disabled {
 		auth.Disabled = true

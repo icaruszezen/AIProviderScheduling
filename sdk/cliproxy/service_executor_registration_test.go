@@ -63,16 +63,14 @@ func TestRegisterAvailableExecutors(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 	expectedPluginHost = service.pluginHost
 	expectedManager = service.coreManager
 	service.ensureWebsocketGateway()
 
 	service.registerAvailableExecutors(nil, executorRegistrationOptions{
 		includeBaseline: true,
-		includePlugins:  true,
-	})
+		includePlugins:  true})
 
 	if pluginRegisterCalls != 1 {
 		t.Fatalf("plugin executor registration calls = %d, want 1", pluginRegisterCalls)
@@ -89,8 +87,7 @@ func TestRegisterAvailableExecutors(t *testing.T) {
 		"kimi",
 		"xai",
 		"openai-compatibility",
-		"plugin-provider",
-	}
+		"plugin-provider"}
 	for _, provider := range providers {
 		resolved, ok := service.coreManager.Executor(provider)
 		if !ok || resolved == nil {
@@ -139,24 +136,18 @@ func TestRegisterExecutorForAuth_OpenAICompatUsesNamespacedProviderKey(t *testin
 			name: "native first",
 			auths: []*coreauth.Auth{
 				{ID: "native-kimi", Provider: "kimi"},
-				openAICompatKimiAuth(),
-			},
-		},
+				openAICompatKimiAuth()}},
 		{
 			name: "compat first",
 			auths: []*coreauth.Auth{
 				openAICompatKimiAuth(),
-				{ID: "native-kimi", Provider: "kimi"},
-			},
-		},
-	}
+				{ID: "native-kimi", Provider: "kimi"}}}}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			service := &Service{
 				cfg:         &config.Config{},
-				coreManager: coreauth.NewManager(nil, nil, nil),
-			}
+				coreManager: coreauth.NewManager(nil, nil, nil)}
 
 			service.registerExecutorsForAuths(tt.auths, true)
 
@@ -186,7 +177,5 @@ func openAICompatKimiAuth() *coreauth.Auth {
 		Label:    "kimi",
 		Attributes: map[string]string{
 			"compat_name":  "kimi",
-			"provider_key": "kimi",
-		},
-	}
+			"provider_key": "kimi"}}
 }

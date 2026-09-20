@@ -122,8 +122,7 @@ func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxya
 		return nil, true, homeStatusErr{
 			code:       http.StatusServiceUnavailable,
 			msg:        "home refresh temporarily unavailable",
-			diagnostic: "Home refresh transport failed: " + logging.SafeErrorDiagnostic(err),
-		}
+			diagnostic: "Home refresh transport failed: " + logging.SafeErrorDiagnostic(err)}
 	}
 
 	var env homeErrorEnvelope
@@ -138,8 +137,7 @@ func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxya
 				msg:        string(env.Error.Upstream.Body),
 				diagnostic: env.Error.Diagnostic,
 				errorType:  code,
-				upstream:   true,
-			}
+				upstream:   true}
 		}
 		statusCode := statusFromHomeErrorCode(code)
 		message := "credential refresh temporarily unavailable"
@@ -157,8 +155,7 @@ func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxya
 		return nil, true, homeStatusErr{
 			code:       http.StatusBadGateway,
 			msg:        "home returned invalid auth payload",
-			diagnostic: "Home refresh response decode failed: " + logging.SafeErrorDiagnostic(errParse),
-		}
+			diagnostic: "Home refresh response decode failed: " + logging.SafeErrorDiagnostic(errParse)}
 	}
 	if updated.Disabled || updated.Status == cliproxyauth.StatusDisabled {
 		return nil, true, homeStatusErr{code: http.StatusUnauthorized, msg: "credential unauthorized"}

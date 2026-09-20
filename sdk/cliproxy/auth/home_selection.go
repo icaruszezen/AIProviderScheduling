@@ -178,8 +178,7 @@ func newHomeDispatchSelection(auth *Auth, executor ProviderExecutor, provider st
 		Provider:       strings.TrimSpace(provider),
 		scope:          scope,
 		resources:      resources,
-		attemptCancels: attemptCancels,
-	}, nil
+		attemptCancels: attemptCancels}, nil
 }
 
 // Bind adds a resource to be closed when this selection ends or drains.

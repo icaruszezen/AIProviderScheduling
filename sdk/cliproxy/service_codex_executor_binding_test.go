@@ -7,7 +7,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
 	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
@@ -16,13 +15,11 @@ import (
 func TestEnsureExecutorsForAuth_CodexDoesNotReplaceInNormalMode(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-	}
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	auth := &coreauth.Auth{
 		ID:       "codex-auth-1",
 		Provider: "codex",
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 
 	service.ensureExecutorsForAuth(auth)
 	firstExecutor, okFirst := service.coreManager.Executor("codex")
@@ -44,13 +41,11 @@ func TestEnsureExecutorsForAuth_CodexDoesNotReplaceInNormalMode(t *testing.T) {
 func TestEnsureExecutorsForAuthWithMode_CodexForceReplace(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-	}
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	auth := &coreauth.Auth{
 		ID:       "codex-auth-2",
 		Provider: "codex",
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 
 	service.ensureExecutorsForAuth(auth)
 	firstExecutor, okFirst := service.coreManager.Executor("codex")
@@ -78,8 +73,7 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 		{name: "codex standard mode", provider: "codex"},
 		{name: "codex home mode", provider: "codex", homeEnabled: true},
 		{name: "xai standard mode", provider: "xai"},
-		{name: "xai home mode", provider: "xai", homeEnabled: true},
-	}
+		{name: "xai home mode", provider: "xai", homeEnabled: true}}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,22 +83,18 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 			service := &Service{
 				cfg:         cfg,
 				coreManager: coreauth.NewManager(nil, nil, nil),
-				pluginHost:  pluginhost.New(),
-			}
+				pluginHost:  pluginhost.New()}
 			providerAuth := &coreauth.Auth{
 				ID:       tt.provider + "-auth",
 				Provider: tt.provider,
-				Status:   coreauth.StatusActive,
-			}
+				Status:   coreauth.StatusActive}
 			unrelatedAuth := &coreauth.Auth{
 				ID:       "unrelated-auth",
 				Provider: "claude",
-				Status:   coreauth.StatusActive,
-			}
+				Status:   coreauth.StatusActive}
 			t.Cleanup(func() {
 				GlobalModelRegistry().UnregisterClient(providerAuth.ID)
 				GlobalModelRegistry().UnregisterClient(unrelatedAuth.ID)
-				sdkAuth.RegisterPluginAuthParser(nil)
 				sdktranslator.SetPluginHooks(nil)
 			})
 
@@ -125,8 +115,7 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 			service.handleAuthUpdate(ctx, watcher.AuthUpdate{
 				Action: watcher.AuthUpdateActionModify,
 				ID:     updatedAuth.ID,
-				Auth:   updatedAuth,
-			})
+				Auth:   updatedAuth})
 
 			secondExecutor, okSecond := service.coreManager.Executor(tt.provider)
 			if !okSecond || secondExecutor == nil {
@@ -142,13 +131,11 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 func TestEnsureExecutorsForAuth_XAIDoesNotReplaceInNormalMode(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-	}
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	auth := &coreauth.Auth{
 		ID:       "xai-auth-1",
 		Provider: "xai",
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 
 	service.ensureExecutorsForAuth(auth)
 	firstExecutor, okFirst := service.coreManager.Executor("xai")
@@ -172,13 +159,11 @@ func TestEnsureExecutorsForAuth_XAIDoesNotReplaceInNormalMode(t *testing.T) {
 func TestEnsureExecutorsForAuthWithMode_XAIForceReplace(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-	}
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	auth := &coreauth.Auth{
 		ID:       "xai-auth-2",
 		Provider: "xai",
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 
 	service.ensureExecutorsForAuth(auth)
 	firstExecutor, okFirst := service.coreManager.Executor("xai")
@@ -203,17 +188,14 @@ func TestEnsureExecutorsForAuth_XAIReplacesExecutorAfterConfigUpdate(t *testing.
 	service := &Service{
 		cfg:         &config.Config{},
 		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New(),
-	}
+		pluginHost:  pluginhost.New()}
 	t.Cleanup(func() {
-		sdkAuth.RegisterPluginAuthParser(nil)
 		sdktranslator.SetPluginHooks(nil)
 	})
 	auth := &coreauth.Auth{
 		ID:       "xai-auth-config-update",
 		Provider: "xai",
-		Status:   coreauth.StatusActive,
-	}
+		Status:   coreauth.StatusActive}
 
 	service.ensureExecutorsForAuth(auth)
 	firstExecutor, okFirst := service.coreManager.Executor("xai")

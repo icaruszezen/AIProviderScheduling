@@ -108,9 +108,7 @@ func (h *BaseAPIHandler) newRequestLifecycleTracker(ctx context.Context, sourceF
 			RequestedModel: requestedModel,
 			Stream:         stream,
 			StartedAt:      time.Now(),
-			Metadata:       metadata,
-		},
-	}
+			Metadata:       metadata}}
 }
 
 func (t *requestLifecycleTracker) requestID() string {
@@ -179,8 +177,7 @@ func directTerminationError(statusCode int, headers http.Header, body []byte) *i
 		StatusCode:     normalizedTerminationStatus(statusCode),
 		DirectResponse: true,
 		Body:           cloneBytes(body),
-		Headers:        cloneHeader(headers),
-	}
+		Headers:        cloneHeader(headers)}
 }
 
 func cloneHeader(src http.Header) http.Header {
@@ -459,8 +456,7 @@ func (h *BaseAPIHandler) applyRequestInterceptorsBeforeAuth(ctx context.Context,
 		Stream:         opts.Stream,
 		Headers:        cloneHeader(opts.Headers),
 		Body:           cloneBytes(req.Payload),
-		Metadata:       opts.Metadata,
-	}, skipPluginID)
+		Metadata:       opts.Metadata}, skipPluginID)
 	opts.Headers = finalInterceptorHeaders(opts.Headers, resp.Headers)
 	if len(resp.Body) > 0 {
 		req.Payload = cloneBytes(resp.Body)
@@ -516,8 +512,7 @@ func (h *BaseAPIHandler) webSocketResponseObserver(requestID, skipPluginID strin
 			AuthType:       ev.AuthType,
 			EventType:      ev.EventType,
 			Payload:        ev.Payload,
-			Metadata:       ev.Metadata,
-		}
+			Metadata:       ev.Metadata}
 		if skipPluginID != "" && skipHost != nil {
 			skipHost.ObserveWebSocketResponseEventExcept(ctx, pluginEvent, skipPluginID)
 			return
@@ -541,8 +536,7 @@ func (h *BaseAPIHandler) applyRequestInterceptorsAfterAuth(ctx context.Context, 
 		Stream:         req.Stream,
 		Headers:        cloneHeader(req.Headers),
 		Body:           cloneBytes(req.Body),
-		Metadata:       req.Metadata,
-	}, skipPluginID)
+		Metadata:       req.Metadata}, skipPluginID)
 	return coreexecutor.RequestAfterAuthInterceptResponse{
 		Headers:         resp.Headers,
 		Body:            resp.Body,
@@ -550,8 +544,7 @@ func (h *BaseAPIHandler) applyRequestInterceptorsAfterAuth(ctx context.Context, 
 		Terminate:       resp.Terminate,
 		StatusCode:      normalizedTerminationStatus(resp.StatusCode),
 		ResponseHeaders: resp.ResponseHeaders,
-		ResponseBody:    resp.ResponseBody,
-	}
+		ResponseBody:    resp.ResponseBody}
 }
 
 func (h *BaseAPIHandler) applyResponseInterceptors(ctx context.Context, requestID, handlerType, normalizedModel, requestedModel string, opts coreexecutor.Options, rawResponseHeaders, responseHeaders http.Header, originalRequest, requestBody, body []byte, statusCode int, skipPluginID string) ([]byte, http.Header) {
@@ -571,8 +564,7 @@ func (h *BaseAPIHandler) applyResponseInterceptors(ctx context.Context, requestI
 		RequestBody:     cloneBytes(requestBody),
 		Body:            cloneBytes(body),
 		StatusCode:      statusCode,
-		Metadata:        opts.Metadata,
-	}, skipPluginID)
+		Metadata:        opts.Metadata}, skipPluginID)
 	responseHeaders = downstreamHeadersAfterInterceptors(rawResponseHeaders, finalInterceptorHeaders(rawResponseHeaders, resp.Headers), PassthroughHeadersEnabled(h.Cfg))
 	if len(resp.Body) > 0 {
 		body = cloneBytes(resp.Body)

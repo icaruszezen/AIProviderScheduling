@@ -72,8 +72,7 @@ func NewRequestScopedError(message string, httpStatus int) *Error {
 	return &Error{
 		Code:       ErrorCodeRequestScoped,
 		Message:    message,
-		HTTPStatus: httpStatus,
-	}
+		HTTPStatus: httpStatus}
 }
 
 type errorWithCause struct {
@@ -168,6 +167,5 @@ func WithCause(err *Error, cause error) error {
 	}
 	return &errorWithCause{
 		base:  err,
-		cause: cause,
-	}
+		cause: cause}
 }

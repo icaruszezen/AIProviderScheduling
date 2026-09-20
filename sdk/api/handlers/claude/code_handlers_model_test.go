@@ -17,8 +17,7 @@ func TestClaudeModelsResponseUsesConfiguredDisplayName(t *testing.T) {
 	const modelID = "claude-display-name-catalog-test"
 	registryRef := registry.GetGlobalRegistry()
 	registryRef.RegisterClient(clientID, "claude", []*registry.ModelInfo{{
-		ID: modelID, Object: "model", OwnedBy: "test", DisplayName: "Configured Claude Name",
-	}})
+		ID: modelID, Object: "model", OwnedBy: "test", DisplayName: "Configured Claude Name"}})
 	t.Cleanup(func() {
 		registryRef.UnregisterClient(clientID)
 	})
@@ -52,8 +51,7 @@ func TestClaudeModelsResponseDisablesModelListCloaking(t *testing.T) {
 	const modelID = "gpt-disable-model-list-cloaking-test"
 	registryRef := registry.GetGlobalRegistry()
 	registryRef.RegisterClient(clientID, "claude", []*registry.ModelInfo{{
-		ID: modelID, Object: "model", OwnedBy: "test",
-	}})
+		ID: modelID, Object: "model", OwnedBy: "test"}})
 	t.Cleanup(func() {
 		registryRef.UnregisterClient(clientID)
 	})
@@ -61,8 +59,7 @@ func TestClaudeModelsResponseDisablesModelListCloaking(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(recorder)
 	baseHandler := &handlers.BaseAPIHandler{Cfg: &sdkconfig.SDKConfig{
-		ClaudeCode: sdkconfig.ClaudeCodeConfig{DisableCloakingModelList: true},
-	}}
+		ClaudeCode: sdkconfig.ClaudeCodeConfig{DisableCloakingModelList: true}}}
 	NewClaudeCodeAPIHandler(baseHandler).ClaudeModels(ctx)
 
 	var response struct {
@@ -90,24 +87,19 @@ func TestRewriteClaudeDDModelInBody(t *testing.T) {
 		{
 			name:      "encoded model is decoded",
 			body:      `{"model":"claude-fable-5-dd-o4-tpg","messages":[]}`,
-			wantModel: "gpt-4o",
-		},
+			wantModel: "gpt-4o"},
 		{
 			name:      "plain claude model unchanged",
 			body:      `{"model":"claude-sonnet-4-6","messages":[]}`,
-			wantModel: "claude-sonnet-4-6",
-		},
+			wantModel: "claude-sonnet-4-6"},
 		{
 			name:      "encoded model with thinking suffix",
 			body:      `{"model":"claude-fable-5-dd-o4-tpg(high)","stream":true}`,
-			wantModel: "gpt-4o(high)",
-		},
+			wantModel: "gpt-4o(high)"},
 		{
 			name:      "missing model field unchanged",
 			body:      `{"messages":[]}`,
-			wantModel: "",
-		},
-	}
+			wantModel: ""}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

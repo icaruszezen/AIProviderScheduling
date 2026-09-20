@@ -248,8 +248,7 @@ func isCodexQuotaHeaderName(name string) bool {
 		"-window-minutes",
 		"-reset-after-seconds",
 		"-reset-at",
-		"-over-secondary-limit-percent",
-	} {
+		"-over-secondary-limit-percent"} {
 		if strings.Contains(lower, marker) {
 			return true
 		}

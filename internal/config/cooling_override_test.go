@@ -44,8 +44,7 @@ vertex-api-key:
 		"codex":                cfg.CodexKey[0].DisableCooling,
 		"xai":                  cfg.XAIKey[0].DisableCooling,
 		"openai compatibility": cfg.OpenAICompatibility[0].DisableCooling,
-		"vertex":               cfg.VertexCompatAPIKey[0].DisableCooling,
-	}
+		"vertex":               cfg.VertexCompatAPIKey[0].DisableCooling}
 	for name, override := range overrides {
 		if override == nil || *override {
 			t.Errorf("%s disable-cooling = %v, want explicit false", name, override)

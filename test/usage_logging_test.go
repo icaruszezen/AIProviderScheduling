@@ -36,12 +36,9 @@ func TestGeminiExecutorRecordsSuccessfulZeroUsageInQueue(t *testing.T) {
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key":  "test-upstream-key",
-			"base_url": server.URL,
-		},
+			"base_url": server.URL},
 		Metadata: map[string]any{
-			"email": source,
-		},
-	}
+			"email": source}}
 
 	prevQueueEnabled := redisqueue.Enabled()
 	prevUsageEnabled := redisqueue.UsageStatisticsEnabled()
@@ -56,11 +53,9 @@ func TestGeminiExecutorRecordsSuccessfulZeroUsageInQueue(t *testing.T) {
 
 	_, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
 		Model:   model,
-		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`),
-	}, cliproxyexecutor.Options{
+		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)}, cliproxyexecutor.Options{
 		SourceFormat:    sdktranslator.FormatGemini,
-		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`),
-	})
+		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)})
 	if err != nil {
 		t.Fatalf("Execute error: %v", err)
 	}

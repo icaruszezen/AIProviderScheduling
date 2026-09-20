@@ -38,6 +38,7 @@ func TestAntigravityReasoningReplayClearsOnInvalidSignature400(t *testing.T) {
 	auth := &cliproxyauth.Auth{
 		ID: "auth-pr3900-invalid-sig",
 		Attributes: map[string]string{
+			"api_key":  "token",
 			"base_url": server.URL,
 		},
 		Metadata: map[string]any{

@@ -39,14 +39,11 @@ func TestResolveClaudeFingerprintPolicy(t *testing.T) {
 		wantCancellation bool
 	}{
 		{
-			name:             "real oauth token",
+			name:             "oauth-looking token is not an oauth credential",
 			apiKey:           "sk-ant-oat-real",
 			attrs:            map[string]string{"api_key": "sk-ant-oat-real"},
-			wantAuthOAuth:    true,
-			wantProfileOAuth: true,
-			wantMCP:          true,
-			wantDiagnostics:  true,
-			wantCancellation: true,
+			wantAuthOAuth:    false,
+			wantProfileOAuth: false,
 		},
 		{
 			name:             "api key default",

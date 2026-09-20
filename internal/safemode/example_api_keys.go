@@ -8,8 +8,7 @@ import (
 var exampleAPIKeys = map[string]struct{}{
 	"your-api-key-1": {},
 	"your-api-key-2": {},
-	"your-api-key-3": {},
-}
+	"your-api-key-3": {}}
 
 // ExampleAPIKeys returns configured top-level API keys that still use template values.
 func ExampleAPIKeys(keys []string) []string {

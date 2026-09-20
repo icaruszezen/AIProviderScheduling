@@ -73,8 +73,7 @@ func (s *Service) syncHomePluginsWithClient(ctx context.Context, cfg *config.Con
 		SchemaVersion:     sdkpluginstore.PluginSyncSchemaVersion,
 		GOOS:              platform.GOOS,
 		GOARCH:            platform.GOARCH,
-		InstalledVersions: installedVersions,
-	}
+		InstalledVersions: installedVersions}
 	defer request.Clear()
 	response, errFetch := s.fetchHomePluginSyncWithClient(ctx, client, request)
 	if errors.Is(errFetch, home.ErrPluginSyncUnsupported) {

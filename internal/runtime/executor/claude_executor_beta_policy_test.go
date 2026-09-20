@@ -18,12 +18,15 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-const claudeRaceProbeOAuthKey = "sk-ant-oat-beta-policy"
+const claudeRaceProbeOAuthKey = "sk-ant-api-beta-policy"
 
 func claudeOAuthAuthForBetaPolicy() *cliproxyauth.Auth {
 	return &cliproxyauth.Auth{
-		ID:       "claude-beta-policy",
-		Metadata: map[string]any{"access_token": claudeRaceProbeOAuthKey},
+		ID: "claude-beta-policy",
+		Attributes: map[string]string{
+			"api_key":             claudeRaceProbeOAuthKey,
+			"fingerprint_profile": "claude-code-cli",
+		},
 	}
 }
 
@@ -142,9 +145,10 @@ func TestClaudeExecutor_ContextManagementNeverLeaksToOtherUpstreams(t *testing.T
 
 	executor := NewClaudeExecutor(&config.Config{})
 	auth := &cliproxyauth.Auth{
-		ID:         "claude-non-anthropic-upstream",
-		Attributes: map[string]string{"api_key": "sk-ant-oat-non-anthropic", "base_url": server.URL},
-		Metadata:   claudeOAuthTestMetadata(),
+		ID: "claude-non-anthropic-upstream",
+		Attributes: map[string]string{
+			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-non-anthropic", "base_url": server.URL},
+		Metadata: claudeOAuthTestMetadata(),
 	}
 	payload := []byte(`{"model":"claude-opus-5","system":"p","messages":[{"role":"user","content":"hi"}]}`)
 

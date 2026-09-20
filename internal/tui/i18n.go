@@ -44,14 +44,13 @@ func T(key string) string {
 
 var locales = map[string]map[string]string{
 	"zh": zhStrings,
-	"en": enStrings,
-}
+	"en": enStrings}
 
 // ──────────────────────────────────────────
 // Tab names
 // ──────────────────────────────────────────
-var zhTabNames = []string{"仪表盘", "配置", "认证文件", "API 密钥", "OAuth", "日志"}
-var enTabNames = []string{"Dashboard", "Config", "Auth Files", "API Keys", "OAuth", "Logs"}
+var zhTabNames = []string{"仪表盘", "配置", "API 密钥", "日志"}
+var enTabNames = []string{"Dashboard", "Config", "API Keys", "Logs"}
 
 // TabNames returns tab names in the current locale.
 func TabNames() []string {
@@ -99,7 +98,6 @@ var zhStrings = map[string]string{
 	"dashboard_help":   " [r] 刷新 • [↑↓] 滚动",
 	"connected":        "● 已连接",
 	"mgmt_keys":        "管理密钥",
-	"auth_files_label": "认证文件",
 	"active_suffix":    "活跃",
 	"total_requests":   "请求",
 	"success_label":    "成功",
@@ -133,19 +131,6 @@ var zhStrings = map[string]string{
 	"section_websocket": "WebSocket",
 	"section_other":     "其他",
 
-	// ── Auth Files ──
-	"auth_title":      "🔑 认证文件",
-	"auth_help1":      " [↑↓/jk] 导航 • [Enter] 展开 • [e] 启用/停用 • [d] 删除 • [r] 刷新",
-	"auth_help2":      " [1] 编辑 prefix • [2] 编辑 proxy_url • [3] 编辑 priority",
-	"no_auth_files":   "  无认证文件",
-	"confirm_delete":  "⚠ 删除 %s? [y/n]",
-	"deleted":         "已删除 %s",
-	"enabled":         "已启用",
-	"disabled":        "已停用",
-	"updated_field":   "已更新 %s 的 %s",
-	"status_active":   "活跃",
-	"status_disabled": "已停用",
-
 	// ── API Keys ──
 	"keys_title":         "🔐 API 密钥",
 	"keys_help":          " [↑↓/jk] 导航 • [a] 添加 • [e] 编辑 • [d] 删除 • [c] 复制 • [r] 刷新",
@@ -161,29 +146,6 @@ var zhStrings = map[string]string{
 	"edit_key_prompt":    "  Edit Key: ",
 	"enter_add":          "    Enter: 添加 • Esc: 取消",
 	"enter_save_esc":     "    Enter: 保存 • Esc: 取消",
-
-	// ── OAuth ──
-	"oauth_title":          "🔐 OAuth 登录",
-	"oauth_select":         "  选择提供商并按 [Enter] 开始 OAuth 登录:",
-	"oauth_help":           "  [↑↓/jk] 导航 • [Enter] 登录 • [Esc] 清除状态",
-	"oauth_initiating":     "⏳ 正在初始化 %s 登录...",
-	"oauth_success":        "认证成功! 请刷新 Auth Files 标签查看新凭证。",
-	"oauth_completed":      "认证流程已完成。",
-	"oauth_failed":         "认证失败",
-	"oauth_timeout":        "OAuth 流程超时",
-	"oauth_status_error":   "无法查询 OAuth 状态",
-	"oauth_press_esc":      "  按 [Esc] 取消",
-	"oauth_auth_url":       "  授权链接:",
-	"oauth_remote_hint":    "  远程浏览器模式：在浏览器中打开上述链接完成授权后，将回调 URL 粘贴到下方。",
-	"oauth_callback_url":   "  回调 URL:",
-	"oauth_press_c":        "  按 [c] 输入回调 URL • [Esc] 返回",
-	"oauth_submitting":     "⏳ 提交回调中...",
-	"oauth_submit_ok":      "✓ 回调已提交，等待处理...",
-	"oauth_submit_fail":    "✗ 提交回调失败",
-	"oauth_waiting":        "  等待认证中...",
-	"oauth_user_code":      "  用户码:",
-	"oauth_device_hint":    "  设备码登录：在浏览器打开上述链接并确认授权，无需粘贴回调 URL。",
-	"oauth_device_expires": "  设备码将在 %d 秒后过期。",
 
 	// ── Usage ──
 	"usage_title":         "📈 使用统计",
@@ -213,8 +175,7 @@ var zhStrings = map[string]string{
 	"logs_filter":      "过滤",
 	"logs_lines":       "行数",
 	"logs_help":        " [a] 自动滚动 • [c] 清除 • [1] 全部 [2] info+ [3] warn+ [4] error • [↑↓] 滚动",
-	"logs_waiting":     "  等待日志输出...",
-}
+	"logs_waiting":     "  等待日志输出..."}
 
 var enStrings = map[string]string{
 	// ── Common ──
@@ -254,7 +215,6 @@ var enStrings = map[string]string{
 	"dashboard_help":   " [r] Refresh • [↑↓] Scroll",
 	"connected":        "● Connected",
 	"mgmt_keys":        "Mgmt Keys",
-	"auth_files_label": "Auth Files",
 	"active_suffix":    "active",
 	"total_requests":   "Requests",
 	"success_label":    "Success",
@@ -288,19 +248,6 @@ var enStrings = map[string]string{
 	"section_websocket": "WebSocket",
 	"section_other":     "Other",
 
-	// ── Auth Files ──
-	"auth_title":      "🔑 Auth Files",
-	"auth_help1":      " [↑↓/jk] Navigate • [Enter] Expand • [e] Enable/Disable • [d] Delete • [r] Refresh",
-	"auth_help2":      " [1] Edit prefix • [2] Edit proxy_url • [3] Edit priority",
-	"no_auth_files":   "  No auth files found",
-	"confirm_delete":  "⚠ Delete %s? [y/n]",
-	"deleted":         "Deleted %s",
-	"enabled":         "Enabled",
-	"disabled":        "Disabled",
-	"updated_field":   "Updated %s on %s",
-	"status_active":   "active",
-	"status_disabled": "disabled",
-
 	// ── API Keys ──
 	"keys_title":         "🔐 API Keys",
 	"keys_help":          " [↑↓/jk] Navigate • [a] Add • [e] Edit • [d] Delete • [c] Copy • [r] Refresh",
@@ -316,29 +263,6 @@ var enStrings = map[string]string{
 	"edit_key_prompt":    "  Edit Key: ",
 	"enter_add":          "    Enter: Add • Esc: Cancel",
 	"enter_save_esc":     "    Enter: Save • Esc: Cancel",
-
-	// ── OAuth ──
-	"oauth_title":          "🔐 OAuth Login",
-	"oauth_select":         "  Select a provider and press [Enter] to start OAuth login:",
-	"oauth_help":           "  [↑↓/jk] Navigate • [Enter] Login • [Esc] Clear status",
-	"oauth_initiating":     "⏳ Initiating %s login...",
-	"oauth_success":        "Authentication successful! Refresh Auth Files tab to see the new credential.",
-	"oauth_completed":      "Authentication flow completed.",
-	"oauth_failed":         "Authentication failed",
-	"oauth_timeout":        "OAuth flow timed out",
-	"oauth_status_error":   "Failed to query OAuth status",
-	"oauth_press_esc":      "  Press [Esc] to cancel",
-	"oauth_auth_url":       "  Authorization URL:",
-	"oauth_remote_hint":    "  Remote browser mode: Open the URL above in browser, paste the callback URL below after authorization.",
-	"oauth_callback_url":   "  Callback URL:",
-	"oauth_press_c":        "  Press [c] to enter callback URL • [Esc] to go back",
-	"oauth_submitting":     "⏳ Submitting callback...",
-	"oauth_submit_ok":      "✓ Callback submitted, waiting...",
-	"oauth_submit_fail":    "✗ Callback submission failed",
-	"oauth_waiting":        "  Waiting for authentication...",
-	"oauth_user_code":      "  User code:",
-	"oauth_device_hint":    "  Device-code login: open the URL above and approve access. No callback URL paste is required.",
-	"oauth_device_expires": "  Device code expires in %d seconds.",
 
 	// ── Usage ──
 	"usage_title":         "📈 Usage Statistics",
@@ -368,5 +292,4 @@ var enStrings = map[string]string{
 	"logs_filter":      "Filter",
 	"logs_lines":       "Lines",
 	"logs_help":        " [a] Auto-scroll • [c] Clear • [1] All [2] info+ [3] warn+ [4] error • [↑↓] Scroll",
-	"logs_waiting":     "  Waiting for log output...",
-}
+	"logs_waiting":     "  Waiting for log output..."}

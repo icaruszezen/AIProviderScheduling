@@ -53,8 +53,7 @@ func NewSessionCacheWithCapacity(ttl time.Duration, maxEntries int) *SessionCach
 		evictionElements: make(map[string]*list.Element),
 		maxEntries:       maxEntries,
 		ttl:              ttl,
-		stopCh:           make(chan struct{}),
-	}
+		stopCh:           make(chan struct{})}
 	go c.cleanupLoop()
 	return c
 }

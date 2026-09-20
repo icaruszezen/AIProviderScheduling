@@ -36,10 +36,7 @@ const (
 	antigravityCountTokensPath             = "/v1internal:countTokens"
 	antigravityStreamPath                  = "/v1internal:streamGenerateContent"
 	antigravityGeneratePath                = "/v1internal:generateContent"
-	antigravityClientID                    = "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com"
-	antigravityClientSecret                = "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"
 	antigravityAuthType                    = "antigravity"
-	antigravityRequestTokenSafetyWindow    = 5 * time.Minute
 	antigravityCreditsHintRefreshInterval  = 10 * time.Minute
 	antigravityCreditsHintRefreshTimeout   = 5 * time.Second
 	antigravityShortQuotaCooldownThreshold = 5 * time.Minute
@@ -191,8 +188,7 @@ func antigravityHTTP11Transport(auth *cliproxyauth.Auth, base *http.Transport) *
 	}
 	key := antigravityTransportKey{
 		credential: antigravityTransportScope(auth),
-		base:       base,
-	}
+		base:       base}
 	transport, errGet := antigravityTransports.Get(key, func() (*http.Transport, error) {
 		return cloneTransportWithHTTP11(base), nil
 	})
@@ -217,8 +213,7 @@ func antigravityProxiedHTTP11Transport(auth *cliproxyauth.Auth, proxyURL string)
 	}
 	key := antigravityTransportKey{
 		credential: antigravityTransportScope(auth),
-		proxy:      proxyURL,
-	}
+		proxy:      proxyURL}
 	transport, errGet := antigravityTransports.Get(key, func() (*http.Transport, error) {
 		base, _, errBuild := proxyutil.BuildHTTPTransport(proxyURL)
 		if errBuild != nil {
@@ -257,20 +252,14 @@ func antigravityTransportScope(auth *cliproxyauth.Auth) string {
 			return "source:" + source
 		}
 	}
-	// Fall back to the credential material itself. Auth.Label is deliberately not used:
+	// Fall back to the provider API key. Auth.Label is deliberately not used:
 	// it is documented as an optional human readable label for logging and carries no
-	// uniqueness guarantee, so two different OAuth identities sharing one label would
+	// uniqueness guarantee, so two different credentials sharing one label would
 	// wrongly share a TCP/TLS pool.
-	//
-	// The refresh token is preferred over the access token because it stays stable
-	// across token rotation. Keying on the access token would move a credential to a new
-	// pool on every refresh, and would also strand refresh requests themselves, which
-	// run before any access token exists.
-	if refresh := strings.TrimSpace(metaStringValue(auth.Metadata, "refresh_token")); refresh != "" {
-		return antigravityCredentialScope("refresh:", refresh)
-	}
-	if access := strings.TrimSpace(metaStringValue(auth.Metadata, "access_token")); access != "" {
-		return antigravityCredentialScope("token:", access)
+	if auth.Attributes != nil {
+		if key := strings.TrimSpace(auth.Attributes["api_key"]); key != "" {
+			return antigravityCredentialScope("key:", key)
+		}
 	}
 	return antigravityAnonymousTransportScope
 }
@@ -481,8 +470,7 @@ func normalizeAntigravityGeminiFunctionResponseRoles(rawJSON []byte) []byte {
 			index:       contentIndex.Int(),
 			start:       start,
 			end:         end,
-			replacement: contentJSON,
-		})
+			replacement: contentJSON})
 		return true
 	})
 	if len(edits) == 0 {
@@ -684,8 +672,7 @@ func logAntigravitySignatureStrip(before, after int, stage, reason string) {
 		"action":          "drop_thinking_blocks",
 		"stage":           stage,
 		"reason":          reason,
-		"count":           removed,
-	}).Debug("antigravity executor: dropped Claude thinking blocks with invalid signatures")
+		"count":           removed}).Debug("antigravity executor: dropped Claude thinking blocks with invalid signatures")
 }
 
 // Identifier returns the executor identifier.

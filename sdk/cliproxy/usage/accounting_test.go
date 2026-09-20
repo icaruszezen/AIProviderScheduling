@@ -82,8 +82,7 @@ func TestEnsureTokenBreakdownForProviderUsesKnownSemantics(t *testing.T) {
 			detail:     Detail{InputTokens: 100, OutputTokens: 30, ReasoningTokens: 12, CacheReadTokens: 40, CacheCreationTokens: 10},
 			wantTotal:  130,
 			wantInput:  100,
-			wantOutput: 30,
-		},
+			wantOutput: 30},
 		{
 			name:         "OpenAI compatible executor takes precedence",
 			provider:     "anthropic",
@@ -91,25 +90,21 @@ func TestEnsureTokenBreakdownForProviderUsesKnownSemantics(t *testing.T) {
 			detail:       Detail{InputTokens: 100, OutputTokens: 30, ReasoningTokens: 12, CacheReadTokens: 40, CacheCreationTokens: 10},
 			wantTotal:    130,
 			wantInput:    100,
-			wantOutput:   30,
-		},
+			wantOutput:   30},
 		{
 			name:       "Gemini keeps reasoning separate",
 			provider:   "gemini",
 			detail:     Detail{InputTokens: 100, OutputTokens: 30, ReasoningTokens: 12, CacheReadTokens: 40, CacheCreationTokens: 10},
 			wantTotal:  142,
 			wantInput:  100,
-			wantOutput: 42,
-		},
+			wantOutput: 42},
 		{
 			name:       "Claude keeps cache and reasoning independent",
 			provider:   "anthropic",
 			detail:     Detail{InputTokens: 100, OutputTokens: 30, ReasoningTokens: 12, CacheReadTokens: 40, CacheCreationTokens: 10},
 			wantTotal:  192,
 			wantInput:  150,
-			wantOutput: 42,
-		},
-	}
+			wantOutput: 42}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			detail := EnsureTokenBreakdownForProvider(tt.detail, tt.provider, tt.executorType)

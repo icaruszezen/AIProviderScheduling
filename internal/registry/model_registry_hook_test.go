@@ -16,8 +16,7 @@ func newTestModelRegistry() *ModelRegistry {
 		clientEpochs:         make(map[string]uint64),
 		clientGenerations:    make(map[string]uint64),
 		availableModelsCache: make(map[string]availableModelsCacheEntry),
-		mutex:                &sync.RWMutex{},
-	}
+		mutex:                &sync.RWMutex{}}
 }
 
 type registeredCall struct {
@@ -48,14 +47,12 @@ func TestModelRegistryHook_OnModelsRegisteredCalled(t *testing.T) {
 	r := newTestModelRegistry()
 	hook := &capturingHook{
 		registeredCh:   make(chan registeredCall, 1),
-		unregisteredCh: make(chan unregisteredCall, 1),
-	}
+		unregisteredCh: make(chan unregisteredCall, 1)}
 	r.SetHook(hook)
 
 	inputModels := []*ModelInfo{
 		{ID: "m1", DisplayName: "Model One"},
-		{ID: "m2", DisplayName: "Model Two"},
-	}
+		{ID: "m2", DisplayName: "Model Two"}}
 	r.RegisterClient("client-1", "OpenAI", inputModels)
 
 	select {
@@ -84,8 +81,7 @@ func TestModelRegistryHook_OnModelsUnregisteredCalled(t *testing.T) {
 	r := newTestModelRegistry()
 	hook := &capturingHook{
 		registeredCh:   make(chan registeredCall, 1),
-		unregisteredCh: make(chan unregisteredCall, 1),
-	}
+		unregisteredCh: make(chan unregisteredCall, 1)}
 	r.SetHook(hook)
 
 	r.RegisterClient("client-1", "OpenAI", []*ModelInfo{{ID: "m1"}})
@@ -130,8 +126,7 @@ func TestModelRegistryHook_DoesNotBlockRegisterClient(t *testing.T) {
 	r := newTestModelRegistry()
 	hook := &blockingHook{
 		started: make(chan struct{}),
-		unblock: make(chan struct{}),
-	}
+		unblock: make(chan struct{})}
 	r.SetHook(hook)
 	defer close(hook.unblock)
 
@@ -181,8 +176,7 @@ func TestModelRegistryHook_PanicDoesNotAffectRegistry(t *testing.T) {
 	r := newTestModelRegistry()
 	hook := &panicHook{
 		registeredCalled:   make(chan struct{}, 1),
-		unregisteredCalled: make(chan struct{}, 1),
-	}
+		unregisteredCalled: make(chan struct{}, 1)}
 	r.SetHook(hook)
 
 	r.RegisterClient("client-1", "OpenAI", []*ModelInfo{{ID: "m1"}})

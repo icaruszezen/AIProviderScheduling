@@ -73,9 +73,7 @@ func ConfigFromJWT(ctx context.Context, rawJWT string) (config.HomeConfig, error
 			CACert:              paths.CACert,
 			ClientCert:          paths.ClientCert,
 			ClientKey:           paths.ClientKey,
-			UseTargetServerName: true,
-		},
-	}, nil
+			UseTargetServerName: true}}, nil
 }
 
 func parseHomeJWTClaims(rawJWT string) (homeJWTClaims, error) {
@@ -126,8 +124,7 @@ func defaultCertificatePaths() (certificatePaths, error) {
 		Dir:        dir,
 		ClientCert: filepath.Join(dir, "client-crt.pem"),
 		ClientKey:  filepath.Join(dir, "client-key.pem"),
-		CACert:     filepath.Join(dir, "home-ca-crt.pem"),
-	}, nil
+		CACert:     filepath.Join(dir, "home-ca-crt.pem")}, nil
 }
 
 func ensureHomeCertificateFiles(ctx context.Context, claims homeJWTClaims, paths certificatePaths) error {
@@ -288,9 +285,7 @@ func createClientCSR(certificateID string, key *rsa.PrivateKey) ([]byte, error) 
 	}
 	template := &x509.CertificateRequest{
 		Subject: pkix.Name{
-			CommonName: certificateID,
-		},
-	}
+			CommonName: certificateID}}
 	der, errCreate := x509.CreateCertificateRequest(rand.Reader, template, key)
 	if errCreate != nil {
 		return nil, errCreate

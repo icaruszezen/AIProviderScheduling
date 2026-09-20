@@ -22,8 +22,7 @@ type Registry struct {
 func NewRegistry() *Registry {
 	return &Registry{
 		requests:  make(map[Format]map[Format]RequestTransform),
-		responses: make(map[Format]map[Format]ResponseTransform),
-	}
+		responses: make(map[Format]map[Format]ResponseTransform)}
 }
 
 // Register stores request/response transforms between two formats.

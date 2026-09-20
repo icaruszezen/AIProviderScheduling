@@ -17,23 +17,13 @@ type ModelInfo = pluginapi.ModelInfo
 // ThinkingSupport describes plugin-provided thinking controls.
 type ThinkingSupport = pluginapi.ThinkingSupport
 
-// OAuthModelAlias defines a model ID alias for OAuth/file-backed auth channels.
-type OAuthModelAlias struct {
-	Name  string
-	Alias string
-	Fork  bool
-}
-
 // RuntimeConfig is the public plugin host configuration used by embedders.
 type RuntimeConfig struct {
-	Enabled             bool
-	Dir                 string
-	AuthDir             string
-	ProxyURL            string
-	ForceModelPrefix    bool
-	OAuthModelAlias     map[string][]OAuthModelAlias
-	OAuthExcludedModels map[string][]string
-	Configs             map[string]PluginInstanceConfig
+	Enabled          bool
+	Dir              string
+	ProxyURL         string
+	ForceModelPrefix bool
+	Configs          map[string]PluginInstanceConfig
 }
 
 // PluginInstanceConfig stores host-owned plugin settings and the original plugin YAML subtree.
@@ -135,8 +125,7 @@ func (h *Host) ModelsForAuth(ctx context.Context, auth *coreauth.Auth) AuthModel
 		Models:   registryModelsToPluginModels(result.Models),
 		Auth:     result.Auth,
 		Handled:  result.Handled,
-		Err:      result.Err,
-	}
+		Err:      result.Err}
 }
 
 // ModelsForProvider returns static models registered for a provider by plugins.
@@ -158,22 +147,6 @@ func (h *Host) RefreshAuth(ctx context.Context, auth *coreauth.Auth) (*coreauth.
 // HasAuthProvider reports whether an active plugin handles provider auth for provider.
 func (h *Host) HasAuthProvider(provider string) bool {
 	return h != nil && h.inner != nil && h.inner.HasAuthProvider(provider)
-}
-
-// StartLogin starts a provider login flow through an active auth-provider plugin.
-func (h *Host) StartLogin(ctx context.Context, provider string, baseURL string) (pluginapi.AuthLoginStartResponse, bool, error) {
-	if h == nil || h.inner == nil {
-		return pluginapi.AuthLoginStartResponse{}, false, nil
-	}
-	return h.inner.StartLogin(ctx, provider, baseURL)
-}
-
-// PollLogin polls a provider login flow through an active auth-provider plugin.
-func (h *Host) PollLogin(ctx context.Context, provider, state string, metadata ...map[string]any) (pluginapi.AuthLoginPollResponse, bool, error) {
-	if h == nil || h.inner == nil {
-		return pluginapi.AuthLoginPollResponse{}, false, nil
-	}
-	return h.inner.PollLogin(ctx, provider, state, metadata...)
 }
 
 // AuthDataToCoreAuth converts plugin auth data into a host auth record.
@@ -209,19 +182,12 @@ func runtimeConfigToInternalConfig(cfg RuntimeConfig) *internalconfig.Config {
 	out := &internalconfig.Config{
 		SDKConfig: internalconfig.SDKConfig{
 			ProxyURL:         cfg.ProxyURL,
-			ForceModelPrefix: cfg.ForceModelPrefix,
-		},
-		AuthDir:             cfg.AuthDir,
-		OAuthExcludedModels: cloneStringSliceMap(cfg.OAuthExcludedModels),
-		OAuthModelAlias:     oauthModelAliasToInternal(cfg.OAuthModelAlias),
+			ForceModelPrefix: cfg.ForceModelPrefix},
 		Plugins: internalconfig.PluginsConfig{
 			Enabled: cfg.Enabled,
 			Dir:     cfg.Dir,
-			Configs: pluginConfigsToInternal(cfg.Configs),
-		},
-	}
+			Configs: pluginConfigsToInternal(cfg.Configs)}}
 	out.NormalizePluginsConfig()
-	out.SanitizeOAuthModelAlias()
 	return out
 }
 
@@ -234,33 +200,7 @@ func pluginConfigsToInternal(in map[string]PluginInstanceConfig) map[string]inte
 		out[id] = internalconfig.PluginInstanceConfig{
 			Enabled:  item.Enabled,
 			Priority: item.Priority,
-			Raw:      *deepCopyYAMLNode(&item.Raw),
-		}
-	}
-	return out
-}
-
-func oauthModelAliasToInternal(in map[string][]OAuthModelAlias) map[string][]internalconfig.OAuthModelAlias {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make(map[string][]internalconfig.OAuthModelAlias, len(in))
-	for provider, aliases := range in {
-		if len(aliases) == 0 {
-			continue
-		}
-		items := make([]internalconfig.OAuthModelAlias, 0, len(aliases))
-		for _, alias := range aliases {
-			items = append(items, internalconfig.OAuthModelAlias{
-				Name:  alias.Name,
-				Alias: alias.Alias,
-				Fork:  alias.Fork,
-			})
-		}
-		out[provider] = items
-	}
-	if len(out) == 0 {
-		return nil
+			Raw:      *deepCopyYAMLNode(&item.Raw)}
 	}
 	return out
 }
@@ -302,8 +242,7 @@ func registryModelToPluginModel(model *internalregistry.ModelInfo) ModelInfo {
 		SupportedInputModalities:   cloneStringSlice(model.SupportedInputModalities),
 		SupportedOutputModalities:  cloneStringSlice(model.SupportedOutputModalities),
 		Thinking:                   thinkingSupportToPlugin(model.Thinking),
-		UserDefined:                model.UserDefined,
-	}
+		UserDefined:                model.UserDefined}
 }
 
 func thinkingSupportToPlugin(thinking *internalregistry.ThinkingSupport) *ThinkingSupport {
@@ -315,8 +254,7 @@ func thinkingSupportToPlugin(thinking *internalregistry.ThinkingSupport) *Thinki
 		Max:            thinking.Max,
 		ZeroAllowed:    thinking.ZeroAllowed,
 		DynamicAllowed: thinking.DynamicAllowed,
-		Levels:         cloneStringSlice(thinking.Levels),
-	}
+		Levels:         cloneStringSlice(thinking.Levels)}
 }
 
 func cloneStringSlice(in []string) []string {
@@ -324,17 +262,6 @@ func cloneStringSlice(in []string) []string {
 		return nil
 	}
 	return append([]string(nil), in...)
-}
-
-func cloneStringSliceMap(in map[string][]string) map[string][]string {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make(map[string][]string, len(in))
-	for key, values := range in {
-		out[key] = cloneStringSlice(values)
-	}
-	return out
 }
 
 func deepCopyYAMLNode(node *yaml.Node) *yaml.Node {

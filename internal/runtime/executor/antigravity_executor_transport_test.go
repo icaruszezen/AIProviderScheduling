@@ -26,8 +26,9 @@ func antigravityAuthWithProxy(proxyURL string) *cliproxyauth.Auth {
 
 func antigravityAuthWithIDAndProxy(id, proxyURL string) *cliproxyauth.Auth {
 	return &cliproxyauth.Auth{
-		ID:       id,
-		ProxyURL: proxyURL,
+		Attributes: map[string]string{"api_key": "test-access-token"},
+		ID:         id,
+		ProxyURL:   proxyURL,
 		Metadata: map[string]any{
 			"access_token": "test-access-token",
 			"project_id":   "test-project",
@@ -283,15 +284,18 @@ func TestAntigravityHTTP11TransportReusesPoolWithoutAuthID(t *testing.T) {
 
 	// An auth without an ID but with credential material stays isolated from both the
 	// anonymous pool and from a different credential.
-	tokenA := antigravityHTTP11Transport(&cliproxyauth.Auth{Metadata: map[string]any{"access_token": "token-a"}}, base)
-	tokenB := antigravityHTTP11Transport(&cliproxyauth.Auth{Metadata: map[string]any{"access_token": "token-b"}}, base)
+	tokenA := antigravityHTTP11Transport(&cliproxyauth.Auth{
+		Attributes: map[string]string{"api_key": "token-a"}, Metadata: map[string]any{"access_token": "token-a"}}, base)
+	tokenB := antigravityHTTP11Transport(&cliproxyauth.Auth{
+		Attributes: map[string]string{"api_key": "token-b"}, Metadata: map[string]any{"access_token": "token-b"}}, base)
 	if tokenA == first || tokenB == first {
-		t.Fatal("a credential with an access token must not fall back to the anonymous pool")
+		t.Fatal("a credential with an API key must not fall back to the anonymous pool")
 	}
 	if tokenA == tokenB {
 		t.Fatal("different access tokens must not share a connection pool")
 	}
-	if again := antigravityHTTP11Transport(&cliproxyauth.Auth{Metadata: map[string]any{"access_token": "token-a"}}, base); again != tokenA {
+	if again := antigravityHTTP11Transport(&cliproxyauth.Auth{
+		Attributes: map[string]string{"api_key": "token-a"}, Metadata: map[string]any{"access_token": "token-a"}}, base); again != tokenA {
 		t.Fatal("the same access token must resolve to the same pool across requests")
 	}
 
@@ -339,14 +343,19 @@ func TestAntigravityTransportScopeFallsBackToStableMarkers(t *testing.T) {
 			antigravityAnonymousTransportScope,
 		},
 		{
-			"refresh token preferred over access token",
-			&cliproxyauth.Auth{Metadata: map[string]any{"refresh_token": "r-1", "access_token": "a-1"}},
-			digest("refresh:", "r-1"),
+			"api key scopes the pool",
+			&cliproxyauth.Auth{
+				Attributes: map[string]string{"api_key": "a-1"},
+			},
+			digest("key:", "a-1"),
 		},
 		{
-			"access token fallback",
-			&cliproxyauth.Auth{Metadata: map[string]any{"access_token": "secret-token"}},
-			digest("token:", "secret-token"),
+			"api key is preferred over leftover oauth metadata",
+			&cliproxyauth.Auth{
+				Attributes: map[string]string{"api_key": "secret-token"},
+				Metadata:   map[string]any{"access_token": "secret-token"},
+			},
+			digest("key:", "secret-token"),
 		},
 	}
 	for _, tc := range cases {
@@ -362,8 +371,8 @@ func TestAntigravityTransportScopeFallsBackToStableMarkers(t *testing.T) {
 // Auth.Label as an identity: two different credentials that happen to share a label
 // must not end up on the same TCP/TLS pool.
 func TestAntigravityTransportScopeIgnoresNonUniqueLabel(t *testing.T) {
-	first := &cliproxyauth.Auth{Label: "shared-label", Metadata: map[string]any{"refresh_token": "refresh-a"}}
-	second := &cliproxyauth.Auth{Label: "shared-label", Metadata: map[string]any{"refresh_token": "refresh-b"}}
+	first := &cliproxyauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-a"}}
+	second := &cliproxyauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-b"}}
 	if antigravityTransportScope(first) == antigravityTransportScope(second) {
 		t.Fatal("credentials sharing only a label must not share a pool scope")
 	}
@@ -374,38 +383,30 @@ func TestAntigravityTransportScopeIgnoresNonUniqueLabel(t *testing.T) {
 	}
 }
 
-// TestAntigravityTransportScopeSurvivesAccessTokenRotation covers the refresh flow:
-// refreshing an access token must not move a credential onto a new pool, and a refresh
-// request that runs before any access token exists must resolve to the same scope.
-func TestAntigravityTransportScopeSurvivesAccessTokenRotation(t *testing.T) {
-	refreshOnly := &cliproxyauth.Auth{Metadata: map[string]any{"refresh_token": "stable-refresh"}}
-	beforeRotation := &cliproxyauth.Auth{Metadata: map[string]any{"refresh_token": "stable-refresh", "access_token": "access-1"}}
-	afterRotation := &cliproxyauth.Auth{Metadata: map[string]any{"refresh_token": "stable-refresh", "access_token": "access-2"}}
+func TestAntigravityTransportScopeUsesStableAPIKey(t *testing.T) {
+	first := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
+	again := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
+	other := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "other-key"}}
 
-	want := antigravityTransportScope(refreshOnly)
-	if got := antigravityTransportScope(beforeRotation); got != want {
-		t.Fatalf("scope before rotation = %q, want %q", got, want)
+	if antigravityTransportScope(first) != antigravityTransportScope(again) {
+		t.Fatal("the same API key must keep the same pool scope")
 	}
-	if got := antigravityTransportScope(afterRotation); got != want {
-		t.Fatalf("scope after rotation = %q, want %q (access token rotation must not churn pools)", got, want)
+	if antigravityTransportScope(first) == antigravityTransportScope(other) {
+		t.Fatal("different API keys must not share a pool scope")
 	}
 }
 
 // TestAntigravityTransportScopeNeverLeaksToken ensures the credential-derived scope
 // only carries a short digest, so a pool key can never reveal the credential.
 func TestAntigravityTransportScopeNeverLeaksToken(t *testing.T) {
-	const (
-		accessToken  = "ya29.super-secret-access-token"
-		refreshToken = "1//super-secret-refresh-token"
-	)
+	const accessToken = "ya29.super-secret-access-token"
 	for _, tc := range []struct {
 		name   string
 		auth   *cliproxyauth.Auth
 		secret string
 		prefix string
 	}{
-		{"access token", &cliproxyauth.Auth{Metadata: map[string]any{"access_token": accessToken}}, accessToken, "token:"},
-		{"refresh token", &cliproxyauth.Auth{Metadata: map[string]any{"refresh_token": refreshToken}}, refreshToken, "refresh:"},
+		{"api key", &cliproxyauth.Auth{Attributes: map[string]string{"api_key": accessToken}}, accessToken, "key:"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scope := antigravityTransportScope(tc.auth)

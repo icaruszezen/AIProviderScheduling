@@ -39,8 +39,7 @@ func claudeThinkingReplayScopeFromRequest(ctx context.Context, auth *cliproxyaut
 	sessionKey = xaiReasoningReplayIsolateSessionKey(ctx, sessionKey)
 	return claudeThinkingReplayScope{
 		modelFamily: claudeThinkingReplayModelFamily(auth, req.Model),
-		sessionKey:  sessionKey,
-	}
+		sessionKey:  sessionKey}
 }
 
 func claudeThinkingReplayModelFamily(auth *cliproxyauth.Auth, model string) string {

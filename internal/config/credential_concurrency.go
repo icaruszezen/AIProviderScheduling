@@ -89,8 +89,7 @@ func (c *CredentialConcurrencyConfig) UnmarshalYAML(value *yaml.Node) error {
 		releaseMaxBackoffPresent:          credentialConcurrencyFieldPresent(value, "release-max-backoff"),
 		busyRetryMinPresent:               credentialConcurrencyFieldPresent(value, "busy-retry-min"),
 		busyRetryMaxPresent:               credentialConcurrencyFieldPresent(value, "busy-retry-max"),
-		maxLimitPresent:                   credentialConcurrencyFieldPresent(value, "max-limit"),
-	}
+		maxLimitPresent:                   credentialConcurrencyFieldPresent(value, "max-limit")}
 	return nil
 }
 

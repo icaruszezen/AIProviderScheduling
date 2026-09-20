@@ -65,8 +65,7 @@ func newStreamBridgeStream() *streamBridgeStream {
 		closes:   make(chan streamBridgeClose),
 		closed:   make(chan struct{}),
 		finished: make(chan struct{}),
-		abort:    make(chan struct{}),
-	}
+		abort:    make(chan struct{})}
 	go stream.run()
 	return stream
 }
@@ -149,8 +148,7 @@ func (s *streamBridgeStream) emit(ctx context.Context, chunk pluginapi.ExecutorS
 	request := streamBridgeEmit{
 		ctx:   ctx,
 		chunk: chunk,
-		done:  make(chan error, 1),
-	}
+		done:  make(chan error, 1)}
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -167,8 +165,7 @@ func (s *streamBridgeStream) close(errorMessage string) {
 	}
 	request := streamBridgeClose{
 		errorMessage: errorMessage,
-		accepted:     make(chan struct{}),
-	}
+		accepted:     make(chan struct{})}
 	select {
 	case <-s.finished:
 		return

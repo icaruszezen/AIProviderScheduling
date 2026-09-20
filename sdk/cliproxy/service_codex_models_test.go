@@ -29,28 +29,21 @@ func TestRegisterModelsForAuthCodexAPIKeyModels(t *testing.T) {
 			name:        "defaults without explicit models",
 			entry:       config.CodexKey{APIKey: "default-key"},
 			wantIDs:     codexModelIDSet(defaultModels),
-			wantPresent: []string{"gpt-image-1.5", "gpt-image-2"},
-		},
+			wantPresent: []string{"gpt-image-1.5", "gpt-image-2"}},
 		{
 			name: "only explicitly configured models",
 			entry: config.CodexKey{
 				APIKey: "configured-key",
 				Models: []internalconfig.CodexModel{{
-					Name: "upstream-codex", Alias: "configured-codex",
-				}},
-			},
+					Name: "upstream-codex", Alias: "configured-codex"}}},
 			wantIDs:    map[string]struct{}{"configured-codex": {}},
-			wantAbsent: []string{"gpt-image-1.5", "gpt-image-2"},
-		},
+			wantAbsent: []string{"gpt-image-1.5", "gpt-image-2"}},
 		{
 			name: "exclusions apply to defaults",
 			entry: config.CodexKey{
 				APIKey:         "excluded-key",
-				ExcludedModels: []string{excludedModelID},
-			},
-			wantIDs: codexModelIDSet(defaultModels[1:]),
-		},
-	}
+				ExcludedModels: []string{excludedModelID}},
+			wantIDs: codexModelIDSet(defaultModels[1:])}}
 
 	for index := range tests {
 		testCase := tests[index]
@@ -68,9 +61,7 @@ func TestRegisterModelsForAuthCodexAPIKeyModels(t *testing.T) {
 				Attributes: map[string]string{
 					coreauth.AttributeAPIKey:      testCase.entry.APIKey,
 					coreauth.AttributeConfigIndex: "0",
-					coreauth.AttributeSource:      "config:codex:test",
-				},
-			}
+					coreauth.AttributeSource:      "config:codex:test"}}
 
 			service.registerModelsForAuth(context.Background(), auth)
 			gotIDs := codexModelIDSet(modelRegistry.GetModelsForClient(authID))
@@ -107,58 +98,44 @@ func TestRegisterModelsForAuthCodexAPIKeyDefaultRequiresConfigMatch(t *testing.T
 		{
 			name: "valid index with unmatched API key",
 			config: config.Config{CodexKey: []config.CodexKey{{
-				APIKey: "configured-key",
-			}}},
+				APIKey: "configured-key"}}},
 			attributes: map[string]string{
 				coreauth.AttributeAPIKey:      "stale-key",
 				coreauth.AttributeConfigIndex: "0",
-				coreauth.AttributeSource:      "config:codex:stale",
-			},
-			wantIDs: map[string]struct{}{},
-		},
+				coreauth.AttributeSource:      "config:codex:stale"},
+			wantIDs: map[string]struct{}{}},
 		{
 			name: "valid index with unmatched base URL",
 			config: config.Config{CodexKey: []config.CodexKey{{
-				APIKey: "configured-key", BaseURL: "https://new.example.com",
-			}}},
+				APIKey: "configured-key", BaseURL: "https://new.example.com"}}},
 			attributes: map[string]string{
 				coreauth.AttributeAPIKey:      "configured-key",
 				coreauth.AttributeConfigIndex: "0",
 				coreauth.AttributeSource:      "config:codex:stale",
-				"base_url":                    "https://old.example.com",
-			},
-			wantIDs: map[string]struct{}{},
-		},
+				"base_url":                    "https://old.example.com"},
+			wantIDs: map[string]struct{}{}},
 		{
 			name: "stale index falls back to matching credentials",
 			config: config.Config{CodexKey: []config.CodexKey{
 				{
 					APIKey: "wrong-key",
-					Models: []internalconfig.CodexModel{{Name: "wrong-model"}},
-				},
-				{APIKey: "configured-key"},
-			}},
+					Models: []internalconfig.CodexModel{{Name: "wrong-model"}}},
+				{APIKey: "configured-key"}}},
 			attributes: map[string]string{
 				coreauth.AttributeAPIKey:      "configured-key",
 				coreauth.AttributeConfigIndex: "0",
-				coreauth.AttributeSource:      "config:codex:stale",
-			},
-			wantIDs: defaultIDs,
-		},
+				coreauth.AttributeSource:      "config:codex:stale"},
+			wantIDs: defaultIDs},
 		{
 			name: "API key ignores OAuth plan type",
 			config: config.Config{CodexKey: []config.CodexKey{{
-				APIKey: "configured-key",
-			}}},
+				APIKey: "configured-key"}}},
 			attributes: map[string]string{
 				coreauth.AttributeAPIKey:      "configured-key",
 				coreauth.AttributeConfigIndex: "0",
 				coreauth.AttributeSource:      "config:codex:test",
-				"plan_type":                   "free",
-			},
-			wantIDs: defaultIDs,
-		},
-	}
+				"plan_type":                   "free"},
+			wantIDs: defaultIDs}}
 
 	for index := range tests {
 		testCase := tests[index]
@@ -174,8 +151,7 @@ func TestRegisterModelsForAuthCodexAPIKeyDefaultRequiresConfigMatch(t *testing.T
 				ID:         authID,
 				Provider:   "codex",
 				Status:     coreauth.StatusActive,
-				Attributes: testCase.attributes,
-			}
+				Attributes: testCase.attributes}
 
 			service.registerModelsForAuth(context.Background(), auth)
 			gotIDs := codexModelIDSet(modelRegistry.GetModelsForClient(authID))
@@ -202,24 +178,19 @@ func TestRegisterConfigAPIKeyAuthsCodexModelModes(t *testing.T) {
 		{
 			name:       "empty models uses defaults with images",
 			wantIDs:    defaultIDs,
-			wantImages: true,
-		},
+			wantImages: true},
 		{
 			name: "configured models replace defaults",
 			models: []internalconfig.CodexModel{{
-				Name: "runtime-upstream", Alias: "runtime-configured",
-			}},
-			wantIDs: map[string]struct{}{"runtime-configured": {}},
-		},
-	}
+				Name: "runtime-upstream", Alias: "runtime-configured"}},
+			wantIDs: map[string]struct{}{"runtime-configured": {}}}}
 
 	for index := range tests {
 		testCase := tests[index]
 		t.Run(testCase.name, func(t *testing.T) {
 			cfg := &config.Config{CodexKey: []config.CodexKey{{
 				APIKey: fmt.Sprintf("runtime-key-%d", index),
-				Models: testCase.models,
-			}}}
+				Models: testCase.models}}}
 			manager := coreauth.NewManager(nil, nil, nil)
 			service := &Service{cfg: cfg, coreManager: manager}
 			service.registerConfigAPIKeyAuths(context.Background(), cfg)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/api"
@@ -12,7 +11,6 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/redisqueue"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	sdkAuth "github.com/router-for-me/CLIProxyAPI/v7/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
@@ -64,12 +62,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}()
 
-	if !homeEnabled {
-		if errEnsureAuthDir := s.ensureAuthDir(); errEnsureAuthDir != nil {
-			return errEnsureAuthDir
-		}
-	}
-
 	s.applyRetryConfig(s.cfg)
 	s.configureCooldownStateStore(s.cfg)
 
@@ -79,10 +71,8 @@ func (s *Service) Run(ctx context.Context) error {
 			log.Warnf("failed to load auth store: %v", errLoad)
 		}
 		s.registerConfigAPIKeyAuths(coreauth.WithSkipPersist(ctx), s.cfg)
-		if s.cfg.SaveCooldownStatus {
-			if errRestoreCooldown := s.coreManager.RestoreCooldownStates(ctx); errRestoreCooldown != nil {
-				log.Warnf("failed to restore cooldown state: %v", errRestoreCooldown)
-			}
+		if errRestoreCooldown := s.coreManager.RestoreCooldownStates(ctx); errRestoreCooldown != nil {
+			log.Warnf("failed to restore cooldown state: %v", errRestoreCooldown)
 		}
 	}
 
@@ -109,8 +99,7 @@ func (s *Service) Run(ctx context.Context) error {
 	s.ensureWebsocketGateway()
 	if homeEnabled {
 		s.registerAvailableExecutors(ctx, executorRegistrationOptions{
-			includeBaseline: true,
-		})
+			includeBaseline: true})
 		// Home mode does not expose in-process Redis RESP usage output; usage is forwarded to home instead.
 		redisqueue.SetEnabled(true)
 	}
@@ -125,10 +114,6 @@ func (s *Service) Run(ctx context.Context) error {
 	s.syncPluginRuntimeConfig(ctx)
 	if homeEnabled {
 		s.syncPluginModelRuntime(ctx)
-	}
-
-	if s.authManager == nil {
-		s.authManager = newDefaultAuthManager()
 	}
 
 	if homeEnabled {
@@ -185,7 +170,7 @@ func (s *Service) Run(ctx context.Context) error {
 		var watcherWrapper *WatcherWrapper
 		reloadCallback := func(newCfg *config.Config) { s.applyWatcherConfigUpdate(newCfg) }
 
-		watcherWrapper, errCreate := s.watcherFactory(s.configPath, s.cfg.AuthDir, reloadCallback)
+		watcherWrapper, errCreate := s.watcherFactory(s.configPath, "", reloadCallback)
 		if errCreate != nil {
 			return fmt.Errorf("cliproxy: failed to create watcher: %w", errCreate)
 		}
@@ -202,18 +187,11 @@ func (s *Service) Run(ctx context.Context) error {
 		if errStart := watcherWrapper.Start(watcherCtx); errStart != nil {
 			return fmt.Errorf("cliproxy: failed to start watcher: %w", errStart)
 		}
-		log.Info("file watcher started for config and auth directory changes")
+		log.Info("file watcher started for config changes")
 		s.syncPluginModelRuntime(ctx)
 	}
 
 	s.registerModelRefreshCallback()
-
-	// Prefer core auth manager auto refresh if available.
-	if s.coreManager != nil && !homeEnabled {
-		interval := 15 * time.Minute
-		s.coreManager.StartAutoRefresh(context.Background(), interval)
-		log.Infof("core auth auto-refresh started (interval=%s)", interval)
-	}
 
 	select {
 	case <-ctx.Done():
@@ -342,15 +320,13 @@ func (s *Service) Shutdown(ctx context.Context) error {
 
 		if s.pluginHost != nil {
 			sdktranslator.SetPluginHooks(nil)
-			sdkAuth.RegisterPluginAuthParser(nil)
 			if s.watcher != nil {
 				s.watcher.SetPluginAuthParser(nil)
 			}
 			s.pluginHost.ApplyConfig(ctx, &config.Config{})
 			s.pluginHost.RegisterModels(ctx, registry.GetGlobalRegistry())
 			s.registerAvailableExecutors(ctx, executorRegistrationOptions{
-				includePlugins: true,
-			})
+				includePlugins: true})
 			s.pluginHost.RegisterFrontendAuthProviders()
 			s.pluginHost.ShutdownAllContext(ctx)
 			if s.accessManager != nil {
@@ -361,22 +337,4 @@ func (s *Service) Shutdown(ctx context.Context) error {
 		usage.StopDefault()
 	})
 	return shutdownErr
-}
-
-func (s *Service) ensureAuthDir() error {
-	info, err := os.Stat(s.cfg.AuthDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			if mkErr := os.MkdirAll(s.cfg.AuthDir, 0o755); mkErr != nil {
-				return fmt.Errorf("cliproxy: failed to create auth directory %s: %w", s.cfg.AuthDir, mkErr)
-			}
-			log.Infof("created missing auth directory: %s", s.cfg.AuthDir)
-			return nil
-		}
-		return fmt.Errorf("cliproxy: error checking auth directory %s: %w", s.cfg.AuthDir, err)
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("cliproxy: auth path exists but is not a directory: %s", s.cfg.AuthDir)
-	}
-	return nil
 }

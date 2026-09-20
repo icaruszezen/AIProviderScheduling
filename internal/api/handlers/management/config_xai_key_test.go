@@ -18,10 +18,8 @@ func TestPatchXAIKeyUpdatesExecutionFields(t *testing.T) {
 			Priority:       1,
 			BaseURL:        "https://api.x.ai/v1",
 			Websockets:     true,
-			DisableCooling: &disableCooling,
-		}}},
-		configFilePath: writeTestConfigFile(t),
-	}
+			DisableCooling: &disableCooling}}},
+		configFilePath: writeTestConfigFile(t)}
 
 	rec := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(rec)

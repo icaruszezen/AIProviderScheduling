@@ -413,8 +413,7 @@ func inspectClaudeChannelBlock(channelBlock []byte, encodingLayers int) (*Claude
 		EncodingLayers:      encodingLayers,
 		RoutingClass:        "unknown",
 		InfrastructureClass: "infra_unknown",
-		SchemaFeatures:      "unknown_schema_features",
-	}
+		SchemaFeatures:      "unknown_schema_features"}
 	haveChannelID := false
 	hasField6 := false
 	hasField7 := false

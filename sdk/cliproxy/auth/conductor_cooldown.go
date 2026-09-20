@@ -375,8 +375,7 @@ func (m *Manager) restoreCooldownRecordLocked(record CooldownStateRecord, now ti
 		NextRetryAfter: record.NextRetryAfter,
 		Quota:          quota,
 		LastError:      cloneError(record.LastError),
-		UpdatedAt:      updatedAt,
-	})
+		UpdatedAt:      updatedAt})
 	auth.Generation++
 	auth.UpdatedAt = updatedAt
 	updateAggregatedAvailability(auth, now)
@@ -679,8 +678,7 @@ func authCooldownStateRecord(auth *Auth, now time.Time) (CooldownStateRecord, bo
 		Reason:         cooldownReason(auth.StatusMessage, auth.Quota, auth.LastError),
 		Quota:          cooldownFieldsOf(auth.Quota),
 		LastError:      cloneError(auth.LastError),
-		UpdatedAt:      auth.UpdatedAt,
-	}, true
+		UpdatedAt:      auth.UpdatedAt}, true
 }
 
 func modelCooldownStateRecord(auth *Auth, model string, state *ModelState, now time.Time) (CooldownStateRecord, bool) {
@@ -698,8 +696,7 @@ func modelCooldownStateRecord(auth *Auth, model string, state *ModelState, now t
 		Reason:         cooldownReason(state.StatusMessage, state.Quota, state.LastError),
 		Quota:          cooldownFieldsOf(state.Quota),
 		LastError:      cloneError(state.LastError),
-		UpdatedAt:      state.UpdatedAt,
-	}, true
+		UpdatedAt:      state.UpdatedAt}, true
 }
 
 func cooldownReason(statusMessage string, quota QuotaState, lastErr *Error) string {
@@ -806,8 +803,7 @@ func (m *Manager) MarkResult(ctx context.Context, result Result) {
 							Exceeded:      true,
 							Reason:        "cloudflare challenge",
 							NextRecoverAt: next,
-							BackoffLevel:  backoffLevel,
-						})
+							BackoffLevel:  backoffLevel})
 					} else if isInvalidGrantResultError(result.Error) {
 						if disableCooling {
 							state.NextRetryAfter = time.Time{}
@@ -848,8 +844,7 @@ func (m *Manager) MarkResult(ctx context.Context, result Result) {
 								Exceeded:      true,
 								Reason:        "quota",
 								NextRecoverAt: next,
-								BackoffLevel:  backoffLevel,
-							})
+								BackoffLevel:  backoffLevel})
 							if result.CredentialScope && !disableCooling {
 								for _, otherState := range auth.ModelStates {
 									if otherState != nil && otherState != state {
@@ -864,8 +859,7 @@ func (m *Manager) MarkResult(ctx context.Context, result Result) {
 											Exceeded:      true,
 											Reason:        "credential_quota",
 											NextRecoverAt: otherNext,
-											BackoffLevel:  backoffLevel,
-										})
+											BackoffLevel:  backoffLevel})
 									}
 								}
 								auth.Unavailable = true
@@ -1085,10 +1079,8 @@ func mergeModelState(target, source *ModelState) *ModelState {
 			Exceeded:      target.Quota.Exceeded || source.Quota.Exceeded,
 			Reason:        preferred.Quota.Reason,
 			NextRecoverAt: target.Quota.NextRecoverAt,
-			BackoffLevel:  target.Quota.BackoffLevel,
-		},
-		UpdatedAt: target.UpdatedAt,
-	}
+			BackoffLevel:  target.Quota.BackoffLevel},
+		UpdatedAt: target.UpdatedAt}
 	merged.Quota = mergeQuotaObservation(merged.Quota, fallback.Quota)
 	merged.Quota = mergeQuotaObservation(merged.Quota, preferred.Quota)
 	if source.NextRetryAfter.After(merged.NextRetryAfter) {
@@ -1352,8 +1344,7 @@ func cloneError(err *Error) *Error {
 		Code:       err.Code,
 		Message:    err.Message,
 		Retryable:  err.Retryable,
-		HTTPStatus: err.HTTPStatus,
-	}
+		HTTPStatus: err.HTTPStatus}
 }
 
 func errorString(err error) string {
@@ -1572,8 +1563,7 @@ func isModelSupportErrorMessage(message string) bool {
 		"unsupported model",
 		"model unavailable",
 		"not available for your plan",
-		"not available for your account",
-	}
+		"not available for your account"}
 	for _, pattern := range patterns {
 		if strings.Contains(lower, pattern) {
 			return true
@@ -1993,8 +1983,7 @@ func applyAuthFailureState(auth *Auth, resultErr *Error, retryAfter *time.Durati
 			Exceeded:      true,
 			Reason:        "cloudflare challenge",
 			NextRecoverAt: next,
-			BackoffLevel:  backoffLevel,
-		})
+			BackoffLevel:  backoffLevel})
 		auth.NextRetryAfter = next
 		return
 	}

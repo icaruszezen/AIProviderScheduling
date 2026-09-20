@@ -130,8 +130,7 @@ func New() *Registry {
 		pending:          make(map[uint64]*PendingDispatch),
 		scopes:           make(map[uint64]*Scope),
 		releaseSequences: make(map[ReleaseGroup]int64),
-		changed:          make(chan struct{}),
-	}
+		changed:          make(chan struct{})}
 	registry.state.Store(uint32(StateAccepting))
 	return registry
 }

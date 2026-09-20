@@ -65,8 +65,7 @@ func codexReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslato
 	return codexReasoningReplayScope{
 		modelName:          modelName,
 		sessionKey:         codexReasoningReplaySessionKey(ctx, from, req, opts, body),
-		requestFingerprint: codexReplayInputPrefixFingerprint(inputItems, len(inputItems)),
-	}
+		requestFingerprint: codexReplayInputPrefixFingerprint(inputItems, len(inputItems))}
 }
 
 func codexReasoningReplayEnabledForSource(from sdktranslator.Format) bool {
@@ -295,8 +294,7 @@ func splitCodexReasoningReplayTurns(items [][]byte) []codexReasoningReplayTurn {
 			current = codexReasoningReplayTurn{
 				marked:               true,
 				assistantFingerprint: strings.TrimSpace(itemResult.Get("assistant_fingerprint").String()),
-				requestFingerprint:   strings.TrimSpace(itemResult.Get("request_fingerprint").String()),
-			}
+				requestFingerprint:   strings.TrimSpace(itemResult.Get("request_fingerprint").String())}
 			if callIDs := itemResult.Get("call_ids"); callIDs.IsArray() {
 				for _, callIDResult := range callIDs.Array() {
 					if callID := strings.TrimSpace(callIDResult.String()); callID != "" {
@@ -478,8 +476,7 @@ func newCodexReplayPrefixFingerprints(items []gjson.Result) *codexReplayPrefixFi
 	return &codexReplayPrefixFingerprints{
 		items:  items,
 		hasher: hasher,
-		sums:   []string{hex.EncodeToString(hasher.Sum(nil))},
-	}
+		sums:   []string{hex.EncodeToString(hasher.Sum(nil))}}
 }
 
 func (f *codexReplayPrefixFingerprints) at(end int) string {

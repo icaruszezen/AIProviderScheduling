@@ -135,8 +135,7 @@ func MarkPluginVirtualAuth(auth *Auth, sourcePath string, ordinal int) {
 		strings.ToLower(strings.TrimSpace(auth.Provider)),
 		sourcePath,
 		seedID,
-		strconv.Itoa(ordinal),
-	}, "|")
+		strconv.Itoa(ordinal)}, "|")
 }
 
 // IsPluginVirtualAuth reports whether an auth was expanded from a plugin-owned source file.
@@ -271,8 +270,7 @@ func (a *Auth) RecentRequestsSnapshot(now time.Time) []RecentRequestBucket {
 		idx := recentRequestBucketIndex(bucketID)
 		bucket := a.recentRequests.buckets[idx]
 		entry := RecentRequestBucket{
-			Time: formatRecentRequestBucketLabel(bucketID),
-		}
+			Time: formatRecentRequestBucketLabel(bucketID)}
 		if bucket.bucketID == bucketID {
 			entry.Success = bucket.success
 			entry.Failed = bucket.failed
@@ -438,8 +436,7 @@ func (m *ModelState) Clone() *ModelState {
 			Code:       m.LastError.Code,
 			Message:    m.LastError.Message,
 			Retryable:  m.LastError.Retryable,
-			HTTPStatus: m.LastError.HTTPStatus,
-		}
+			HTTPStatus: m.LastError.HTTPStatus}
 	}
 	return &copyState
 }
@@ -840,8 +837,7 @@ func parseTimeValue(v any) (time.Time, bool) {
 			time.RFC3339Nano,
 			"2006-01-02 15:04:05",
 			"2006-01-02 15:04",
-			"2006-01-02T15:04:05Z07:00",
-		}
+			"2006-01-02T15:04:05Z07:00"}
 		for _, layout := range layouts {
 			if ts, err := time.Parse(layout, s); err == nil {
 				return ts, true

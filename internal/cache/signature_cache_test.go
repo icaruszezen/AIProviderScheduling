@@ -132,9 +132,7 @@ func TestGetCachedSignatureRequiredHomeFailures(t *testing.T) {
 	}{
 		{name: "get", client: &fakeSignatureKVClient{values: make(map[string][]byte), getErr: errors.New("get failed")}},
 		{name: "expire", client: &fakeSignatureKVClient{values: map[string][]byte{
-			signatureKVKey(testModelName, "thinking text"): []byte("abc123validSignature1234567890123456789012345678901234567890"),
-		}, expireErr: errors.New("expire failed")}},
-	} {
+			signatureKVKey(testModelName, "thinking text"): []byte("abc123validSignature1234567890123456789012345678901234567890")}, expireErr: errors.New("expire failed")}}} {
 		t.Run(tc.name, func(t *testing.T) {
 			useFakeSignatureKVClient(t, tc.client, true, nil)
 			if _, errGet := GetCachedSignatureRequired(context.Background(), testModelName, "thinking text"); errGet == nil {
@@ -330,8 +328,7 @@ func TestHasValidSignature(t *testing.T) {
 		{"49 chars - invalid", testModelName, "1234567890123456789012345678901234567890123456789", false},
 		{"empty string", testModelName, "", false},
 		{"short signature", testModelName, "abc", false},
-		{"gemini sentinel", "gemini-3-pro-preview", "skip_thought_signature_validator", true},
-	}
+		{"gemini sentinel", "gemini-3-pro-preview", "skip_thought_signature_validator", true}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

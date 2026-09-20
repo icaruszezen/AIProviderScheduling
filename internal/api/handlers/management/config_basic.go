@@ -120,8 +120,7 @@ func (h *Handler) PutConfigYAML(c *gin.Context) {
 	if h.isSlaveConfigReadonly() {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":   "slave_node_readonly",
-			"message": "slave node: config is synced from master",
-		})
+			"message": "slave node: config is synced from master"})
 		return
 	}
 	body, err := io.ReadAll(c.Request.Body)

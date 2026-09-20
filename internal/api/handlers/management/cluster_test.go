@@ -72,15 +72,15 @@ func TestSlaveWriteGuardBlocksConfigYAML(t *testing.T) {
 	}
 }
 
-func TestSlaveWriteGuardAllowsAuthFiles(t *testing.T) {
+func TestSlaveWriteGuardAllowsLogs(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	h := &Handler{cfg: &config.Config{Cluster: config.ClusterConfig{Role: config.ClusterRoleSlave}}}
 	engine := gin.New()
-	engine.POST("/v0/management/auth-files", h.SlaveConfigWriteGuard(), func(c *gin.Context) {
+	engine.POST("/v0/management/logs", h.SlaveConfigWriteGuard(), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/v0/management/auth-files", nil)
+	req := httptest.NewRequest(http.MethodPost, "/v0/management/logs", nil)
 	engine.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status=%d", rec.Code)
@@ -93,8 +93,7 @@ const testClusterToken = "cluster-token-0123456789abcdefghij"
 func TestClusterRegisterAndExport(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	stub := &stubCluster{
-		exportPayload: &cluster.ExportPayload{Protocol: 1, Hash: "abc", ConfigYAML: "api-keys: [k]\n"},
-	}
+		exportPayload: &cluster.ExportPayload{Protocol: 1, Hash: "abc", ConfigYAML: "api-keys: [k]\n"}}
 	h := NewHandler(&config.Config{Cluster: config.ClusterConfig{Role: config.ClusterRoleMaster, Token: testClusterToken}}, "", nil)
 	h.SetClusterController(stub)
 	engine := gin.New()
@@ -145,8 +144,7 @@ func TestPostClusterSyncReportsPartialFailure(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	stub := &stubCluster{syncResults: []cluster.PushResult{
 		{NodeID: "n1", Status: cluster.PushStatusPushed},
-		{NodeID: "n2", Status: cluster.PushStatusFailed, Error: "dial tcp: refused"},
-	}}
+		{NodeID: "n2", Status: cluster.PushStatusFailed, Error: "dial tcp: refused"}}}
 	h := NewHandler(&config.Config{}, "", nil)
 	h.SetClusterController(stub)
 
@@ -199,8 +197,7 @@ func TestSlaveWriteAllowedPluginPaths(t *testing.T) {
 		{http.MethodPatch, "/v0/management/plugins/foo/enabled", false},
 		{http.MethodPut, "/v0/management/plugins/foo/config", false},
 		{http.MethodDelete, "/v0/management/plugins/", false},
-		{http.MethodDelete, "/v0/management/gemini-api-key", false},
-	}
+		{http.MethodDelete, "/v0/management/gemini-api-key", false}}
 	for _, tc := range tests {
 		if got := slaveWriteAllowed(tc.method, tc.path); got != tc.want {
 			t.Errorf("slaveWriteAllowed(%s, %s) = %v, want %v", tc.method, tc.path, got, tc.want)
@@ -218,8 +215,7 @@ func TestPatchClusterRejectsUnusableSettings(t *testing.T) {
 		{name: "unknown role", body: `{"role":"leader"}`, code: "invalid_role"},
 		{name: "slave without master", body: `{"role":"slave"}`, code: "master_url_required"},
 		{name: "sync interval too small", body: `{"sync_interval_seconds":1}`, code: "invalid_interval"},
-		{name: "heartbeat interval too small", body: `{"heartbeat_interval_seconds":2}`, code: "invalid_interval"},
-	}
+		{name: "heartbeat interval too small", body: `{"heartbeat_interval_seconds":2}`, code: "invalid_interval"}}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			h := &Handler{cfg: &config.Config{}, configFilePath: writeTestConfigFile(t)}

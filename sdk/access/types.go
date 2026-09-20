@@ -41,7 +41,6 @@ func MakeInlineAPIKeyProvider(keys []string) *AccessProvider {
 	provider := &AccessProvider{
 		Name:    DefaultAccessProviderName,
 		Type:    AccessProviderTypeConfigAPIKey,
-		APIKeys: append([]string(nil), keys...),
-	}
+		APIKeys: append([]string(nil), keys...)}
 	return provider
 }

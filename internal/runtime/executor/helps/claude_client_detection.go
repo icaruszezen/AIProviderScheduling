@@ -57,8 +57,7 @@ var claudeCodeSubclientByEntrypoint = map[string]string{
 	"claude-security":           "claude-security",
 	"ssh-remote":                "claude-ssh-remote",
 	"claude-coworker":           "claude-coworker",
-	"claude-coworker-terminal":  "claude-coworker-terminal",
-}
+	"claude-coworker-terminal":  "claude-coworker-terminal"}
 
 // Only product surfaces with verified 2.1.220 wire behavior are eligible for
 // pass-through. Other first-party-looking entrypoints are cloaked until their
@@ -66,8 +65,7 @@ var claudeCodeSubclientByEntrypoint = map[string]string{
 var nativeClaudeEntrypoints = map[string]bool{
 	"cli":           true,
 	"sdk-cli":       true,
-	"claude-vscode": true,
-}
+	"claude-vscode": true}
 
 type claudeCodeHelperShape uint8
 
@@ -99,8 +97,7 @@ var measuredClaudeCodeHelperBetaProfiles = map[string]claudeCodeHelperShape{
 	): claudeCodeHelperShapeStructured,
 	claudeCodeHelperBetaProfile(false,
 		"structured-outputs-2025-12-15",
-	): claudeCodeHelperShapeStructured,
-}
+	): claudeCodeHelperShapeStructured}
 
 // ClaudeCodeRequestDetection records the strong signals and first-party
 // subclient identity used to distinguish an official Claude Code request from
@@ -138,8 +135,7 @@ func DetectClaudeCodeRequest(headers http.Header, payload []byte, countTokens bo
 		BetasPresent:    headerContainsClaudeCodeBeta(headers),
 		Entrypoint:      entrypoint,
 		Subclient:       claudeCodeSubclientByEntrypoint[entrypoint],
-		AgentSDKVersion: agentSDKVersion,
-	}
+		AgentSDKVersion: agentSDKVersion}
 
 	metadataUserID := gjson.GetBytes(payload, "metadata.user_id")
 	detection.MetadataUserID = metadataUserID.Exists() && metadataUserID.Type == gjson.String && isValidUserID(metadataUserID.String())
@@ -243,8 +239,7 @@ func measuredClaudeCodeHelperHeadersMatch(headers http.Header, cfg *config.Confi
 		"X-Stainless-Retry-Count": "0",
 		"X-Stainless-Timeout":     claudeDefaultStainlessTimeout,
 		"Anthropic-Version":       claudeAnthropicVersion,
-		"Anthropic-Dangerous-Direct-Browser-Access": "true",
-	}
+		"Anthropic-Dangerous-Direct-Browser-Access": "true"}
 	for name, want := range expected {
 		if headerValue(headers, name) != want {
 			return false
@@ -255,8 +250,7 @@ func measuredClaudeCodeHelperHeadersMatch(headers http.Header, cfg *config.Confi
 		"X-Stainless-Package-Version",
 		"X-Stainless-Runtime-Version",
 		"X-Stainless-OS",
-		"X-Stainless-Arch",
-	} {
+		"X-Stainless-Arch"} {
 		if headerValue(headers, name) == "" {
 			return false
 		}
@@ -264,8 +258,7 @@ func measuredClaudeCodeHelperHeadersMatch(headers http.Header, cfg *config.Confi
 	candidate := ClaudeDeviceProfile{
 		UserAgent:      headerValue(headers, "User-Agent"),
 		PackageVersion: headerValue(headers, "X-Stainless-Package-Version"),
-		RuntimeVersion: headerValue(headers, "X-Stainless-Runtime-Version"),
-	}
+		RuntimeVersion: headerValue(headers, "X-Stainless-Runtime-Version")}
 	if version, ok := parseClaudeCLIVersion(candidate.UserAgent); ok {
 		candidate.version = version
 		candidate.hasVersion = true
@@ -297,7 +290,7 @@ func measuredClaudeCodeHelperSessionMatches(headers http.Header, payload []byte)
 		return false
 	}
 	// The native metadata builder is
-	//	{...extraMetadata, device_id, account_uuid, session_id, ...parentSessionId && {parent_session_id}}
+	//	{...extraMetadata, device_id, account_uuid, session_id, ...parentSessionId && {parent_session_id,}}
 	// in 2.1.220, 2.1.221 and 2.1.227 alike, so parent_session_id is a legitimate
 	// optional trailing key for sub-agent and forked sessions. Rejecting it would
 	// cloak the helper requests those sessions issue.

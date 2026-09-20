@@ -39,8 +39,7 @@ func newStreamBootstrapError(err error, headers http.Header) error {
 	err = unwrapUpstreamExecutionAttempt(err)
 	bootstrapErr := &streamBootstrapError{
 		cause:   err,
-		headers: cloneHTTPHeader(headers),
-	}
+		headers: cloneHTTPHeader(headers)}
 	if upstreamAttempt {
 		return markUpstreamExecutionAttempt(bootstrapErr)
 	}
@@ -74,8 +73,7 @@ func streamErrorResult(headers http.Header, err error) *cliproxyexecutor.StreamR
 	close(ch)
 	return &cliproxyexecutor.StreamResult{
 		Headers: cloneHTTPHeader(headers),
-		Chunks:  ch,
-	}
+		Chunks:  ch}
 }
 
 func validateStreamResult(result *cliproxyexecutor.StreamResult, err error) (*cliproxyexecutor.StreamResult, error) {

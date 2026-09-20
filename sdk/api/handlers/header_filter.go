@@ -14,8 +14,7 @@ var gatewayHeaderPrefixes = []string{
 	"x-portkey-",
 	"cf-aig-",
 	"x-kong-",
-	"x-bt-",
-}
+	"x-bt-"}
 
 // hopByHopHeaders lists RFC 7230 Section 6.1 hop-by-hop headers that MUST NOT
 // be forwarded by proxies, plus security-sensitive headers that should not leak.
@@ -33,8 +32,7 @@ var hopByHopHeaders = map[string]struct{}{
 	"Set-Cookie": {},
 	// CPA-managed (set by handlers, not upstream)
 	"Content-Length":   {},
-	"Content-Encoding": {},
-}
+	"Content-Encoding": {}}
 
 var cpaReservedResponseHeaders = map[string]struct{}{
 	"Access-Control-Allow-Credentials": {},
@@ -43,8 +41,7 @@ var cpaReservedResponseHeaders = map[string]struct{}{
 	"Access-Control-Allow-Origin":      {},
 	"Access-Control-Expose-Headers":    {},
 	"Access-Control-Max-Age":           {},
-	"X-Cpa-Trace-Id":                   {},
-}
+	"X-Cpa-Trace-Id":                   {}}
 
 // IsCPAReservedResponseHeader reports whether a downstream response header is managed by CPA.
 func IsCPAReservedResponseHeader(name string) bool {
