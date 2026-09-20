@@ -434,6 +434,10 @@ nonstream-keepalive-interval: 0
 #         match:
 #           - "context_window_exceeded"
 #         action: "stop-and-cooldown"
+#     # optional: drop matching first-token probes (exact strings, e.g. " " or "-")
+#     # and keep the stream uncommitted so a later in-stream error can still retry.
+#     # Omit or [] disables the feature. Do not trim entries: a space stays a space.
+#     stream-fake-first-tokens: [" ", "-"]
 #     base-url: "https://www.example.com" # use the custom codex API endpoint
 #     alpha-search: false # optional: allow this key to serve /v1/alpha/search via base-url + /alpha/search
 #     headers:

@@ -244,6 +244,9 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)
 		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
+		if provider == "codex" {
+			addStreamFakeFirstTokensToMetadata(entry.StreamFakeFirstTokens, metadata)
+		}
 		if entry.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(entry.Priority)
 		}

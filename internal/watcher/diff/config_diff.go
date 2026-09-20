@@ -328,6 +328,9 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 				changes = append(changes, fmt.Sprintf("codex[%d].excluded-models: updated (%d -> %d entries)", i, oldExcluded.count, newExcluded.count))
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("codex[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
+			if !equalStringSlicesExact(o.StreamFakeFirstTokens, n.StreamFakeFirstTokens) {
+				changes = append(changes, fmt.Sprintf("codex[%d].stream-fake-first-tokens: updated", i))
+			}
 		}
 	}
 
@@ -542,6 +545,18 @@ func equalStringMap(a, b map[string]string) bool {
 	}
 	for k, v := range a {
 		if b[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
+func equalStringSlicesExact(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
 			return false
 		}
 	}

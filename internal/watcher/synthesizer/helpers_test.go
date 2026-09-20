@@ -340,3 +340,17 @@ func TestAddHideNoAvailableChannelToMetadata(t *testing.T) {
 	}
 	addHideNoAvailableChannelToMetadata(true, nil)
 }
+
+func TestAddStreamFakeFirstTokensToMetadata(t *testing.T) {
+	metadata := map[string]any{}
+	addStreamFakeFirstTokensToMetadata(nil, metadata)
+	if _, exists := metadata["stream_fake_first_tokens"]; exists {
+		t.Fatal("empty tokens should be omitted")
+	}
+	addStreamFakeFirstTokensToMetadata([]string{" ", "-", " "}, metadata)
+	got, ok := metadata["stream_fake_first_tokens"].([]string)
+	if !ok || len(got) != 2 || got[0] != " " || got[1] != "-" {
+		t.Fatalf("stream_fake_first_tokens = %#v, want [\" \", \"-\"]", metadata["stream_fake_first_tokens"])
+	}
+	addStreamFakeFirstTokensToMetadata([]string{"-"}, nil)
+}

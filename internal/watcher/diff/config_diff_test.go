@@ -167,6 +167,17 @@ func TestBuildConfigChangeDetails_CodexAlphaSearch(t *testing.T) {
 	expectContains(t, changes, "codex[0].alpha-search: false -> true")
 }
 
+func TestBuildConfigChangeDetails_CodexStreamFakeFirstTokens(t *testing.T) {
+	oldCfg := &config.Config{CodexKey: []config.CodexKey{{APIKey: "key", BaseURL: "https://codex.example.com"}}}
+	newCfg := &config.Config{CodexKey: []config.CodexKey{{
+		APIKey:                "key",
+		BaseURL:               "https://codex.example.com",
+		StreamFakeFirstTokens: []string{" ", "-"}}}}
+
+	changes := BuildConfigChangeDetails(oldCfg, newCfg)
+	expectContains(t, changes, "codex[0].stream-fake-first-tokens: updated")
+}
+
 func TestBuildConfigChangeDetails_XAIKeys(t *testing.T) {
 	oldRetry := 1
 	newRetry := 0

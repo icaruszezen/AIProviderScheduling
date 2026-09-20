@@ -135,7 +135,9 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		return nil, err
 	}
 
-	buffering := e.cfg != nil && e.cfg.Codex.StreamBootstrapBuffering
+	fakeTokens := helps.StreamFakeFirstTokensFromAuth(auth)
+	fakeHold := len(fakeTokens) > 0
+	buffering := fakeHold || (e.cfg != nil && e.cfg.Codex.StreamBootstrapBuffering)
 
 	scanner := bufio.NewScanner(httpResp.Body)
 	scanner.Buffer(nil, 52_428_800) // 50MB
@@ -152,6 +154,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 	// delivered as an in-stream chunk after the buffered handshake so downstream behaviour stays
 	// identical to the unbuffered path instead of silently turning into a credential failover.
 	var bootstrapTerminalErr error
+	var upstreamEvent string
 
 	closeBootstrapBody := func() {
 		if errClose := httpResp.Body.Close(); errClose != nil {
@@ -159,44 +162,83 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		}
 	}
 
+	failFakeFirstTokenHold := func(err error) (*cliproxyexecutor.StreamResult, error) {
+		closeBootstrapBody()
+		if err == nil {
+			err = newCodexFakeFirstTokenHoldErr("")
+		}
+		helps.RecordAPIResponseError(ctx, e.cfg, err)
+		reporter.PublishFailure(ctx, err)
+		return nil, err
+	}
+
 	if buffering {
 		for scanner.Scan() {
 			line := applyCodexIdentityConfuseResponsePayload(scanner.Bytes(), identityState)
 			helps.AppendAPIResponseChunk(ctx, e.cfg, line)
+			trimmedLine := bytes.TrimSpace(line)
 			translatedLine := bytes.Clone(line)
 			isHandshake := false
 			terminalSuccess := false
+			dropFakeToken := false
+
+			if fakeHold && len(trimmedLine) == 0 {
+				continue
+			}
 
 			if transformed, ok := grokbuild.TransformKeepaliveSSELine(translatedLine, isGrokClient); ok {
 				translatedLine = transformed
 				isHandshake = true
+			} else if fakeHold && bytes.HasPrefix(trimmedLine, []byte("event:")) {
+				upstreamEvent = strings.TrimSpace(string(trimmedLine[len("event:"):]))
+				continue
+			} else if fakeHold && (bytes.HasPrefix(trimmedLine, []byte("{")) || bytes.HasPrefix(trimmedLine, []byte("["))) {
+				if holdErr, ok := openAICompatStreamDataError(trimmedLine, upstreamEvent); ok {
+					return failFakeFirstTokenHold(holdErr)
+				}
+				return failFakeFirstTokenHold(newCodexFakeFirstTokenHoldErr(string(trimmedLine)))
 			} else if bytes.HasPrefix(line, dataTag) {
 				data := bytes.TrimSpace(line[5:])
 				data = helps.RestoreCodexMultiAgentV2Response(data, optimizeMultiAgentV2)
-				observeCodexTokenEvent(reporter, data)
+				eventName := upstreamEvent
+				upstreamEvent = ""
+				if fakeHold {
+					if holdErr, ok := codexFakeFirstTokenHoldDataFailure(data, eventName); ok {
+						return failFakeFirstTokenHold(holdErr)
+					}
+				}
 				translatedLine = append([]byte("data: "), data...)
 				eventType := gjson.GetBytes(data, "type").String()
 				if streamErr, terminalBody, ok := codexTerminalFailureErr(data); ok {
-					closeBootstrapBody()
 					if errClearReplay := clearCodexReasoningReplayOnInvalidSignature(ctx, replayScope, streamErr.StatusCode(), terminalBody); errClearReplay != nil {
-						helps.RecordAPIResponseError(ctx, e.cfg, errClearReplay)
-						reporter.PublishFailure(ctx, errClearReplay)
-						return nil, errClearReplay
+						return failFakeFirstTokenHold(errClearReplay)
 					}
-					helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
-					reporter.PublishFailure(ctx, streamErr)
 					if isCodexOverloadBootstrapFailure(terminalBody) {
 						// Transient capacity rejection smuggled into an HTTP 200 stream. Fail the
 						// attempt before the downstream headers are committed so the conductor can
 						// transparently retry on another credential, and report the status the
 						// upstream refused to put on the wire.
 						helps.LogWithRequestID(ctx).Debugf("codex executor: bootstrap overload rejection after %d buffered handshake events, failing over", len(bufferedChunks))
+						closeBootstrapBody()
+						helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
+						reporter.PublishFailure(ctx, streamErr)
 						return nil, newCodexBootstrapOverloadErr(terminalBody)
 					}
+					if fakeHold {
+						return failFakeFirstTokenHold(streamErr)
+					}
+					closeBootstrapBody()
+					helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
+					reporter.PublishFailure(ctx, streamErr)
 					bootstrapTerminalErr = streamErr
 					break
 				}
-				if isCodexHandshakeMetadataEvent(eventType) {
+				if fakeHold && helps.IsStreamFakeFirstToken(data, fakeTokens) {
+					dropFakeToken = true
+				} else {
+					observeCodexTokenEvent(reporter, data)
+				}
+				if isCodexHandshakeMetadataEvent(eventType) || (fakeHold && helps.IsResponsesHoldableLifecycle(data)) {
 					isHandshake = true
 				}
 				switch eventType {
@@ -221,6 +263,13 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 				isHandshake = true
 			}
 
+			if dropFakeToken {
+				continue
+			}
+			if fakeHold && terminalSuccess {
+				return failFakeFirstTokenHold(newCodexFakeFirstTokenHoldErr("upstream stream completed without a real first token"))
+			}
+
 			translatedLine = applyCodexIdentityExposeResponsePayload(translatedLine, identityState)
 			chunks := helps.TranslateStreamWithClaudeInputTokens(ctx, to, responseFormat, req.Model, originalPayload, body, translatedLine, &param, claudeInputTokens)
 			if isHandshake && !terminalSuccess {
@@ -240,20 +289,29 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		}
 
 		if !streamStarted && bootstrapTerminalErr == nil {
-			closeBootstrapBody()
 			if errScan := scanner.Err(); errScan != nil {
 				// A cancelled downstream request must not be recorded as an upstream failure or
 				// penalise the credential; mirror the unbuffered goroutine's guard.
 				if ctx.Err() != nil {
+					closeBootstrapBody()
 					return nil, ctx.Err()
 				}
+				if fakeHold {
+					return failFakeFirstTokenHold(wrapCodexFakeFirstTokenHoldErr(errScan))
+				}
+				closeBootstrapBody()
 				helps.RecordAPIResponseError(ctx, e.cfg, errScan)
 				reporter.PublishFailure(ctx, errScan)
 				return nil, errScan
 			}
 			if ctx.Err() != nil {
+				closeBootstrapBody()
 				return nil, ctx.Err()
 			}
+			if fakeHold {
+				return failFakeFirstTokenHold(newCodexFakeFirstTokenHoldErr("upstream stream closed before a real first token"))
+			}
+			closeBootstrapBody()
 			streamErr := newCodexIncompleteStreamError()
 			helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
 			reporter.PublishFailure(ctx, streamErr)

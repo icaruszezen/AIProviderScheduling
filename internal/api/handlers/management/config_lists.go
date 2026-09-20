@@ -1218,6 +1218,7 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
 		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
+		StreamFakeFirstTokens    *[]string                        `json:"stream-fake-first-tokens"`
 	}
 	var body struct {
 		Index *int           `json:"index"`
@@ -1306,6 +1307,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 	}
 	if body.Value.HideNoAvailableChannel != nil {
 		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
+	}
+	if body.Value.StreamFakeFirstTokens != nil {
+		entry.StreamFakeFirstTokens = append([]string(nil), *body.Value.StreamFakeFirstTokens...)
 	}
 	normalizeCodexKey(&entry)
 	h.cfg.CodexKey[targetIndex] = entry

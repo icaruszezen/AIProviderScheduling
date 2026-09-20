@@ -115,6 +115,7 @@ func sanitizeCodexKeyEntries(entries []CodexKey) []CodexKey {
 		e.Headers = NormalizeHeaders(e.Headers)
 		e.ExcludedModels = NormalizeExcludedModels(e.ExcludedModels)
 		sanitizeProviderRetryFields(&e.ProviderRetryCount, &e.ProviderRetryStatusCodes)
+		e.StreamFakeFirstTokens = SanitizeStreamFakeFirstTokens(e.StreamFakeFirstTokens)
 		if e.BaseURL == "" {
 			continue
 		}

@@ -319,6 +319,49 @@ func TestConfigSynthesizer_CodexKeys(t *testing.T) {
 	}
 }
 
+func TestConfigSynthesizer_CodexStreamFakeFirstTokens(t *testing.T) {
+	synth := NewConfigSynthesizer()
+	ctx := &SynthesisContext{
+		Config: &config.Config{
+			CodexKey: []config.CodexKey{{
+				APIKey:                "codex-key-123",
+				BaseURL:               "https://api.openai.com",
+				StreamFakeFirstTokens: []string{" ", "-", ""}}},
+			XAIKey: []config.XAIKey{{
+				APIKey:                "xai-key-123",
+				BaseURL:               "https://api.x.ai/v1",
+				StreamFakeFirstTokens: []string{" "}}}},
+		Now:         time.Now(),
+		IDGenerator: NewStableIDGenerator()}
+
+	auths, err := synth.Synthesize(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(auths) != 2 {
+		t.Fatalf("auth count = %d, want 2", len(auths))
+	}
+	var codexAuth, xaiAuth *coreauth.Auth
+	for _, auth := range auths {
+		switch auth.Provider {
+		case "codex":
+			codexAuth = auth
+		case "xai":
+			xaiAuth = auth
+		}
+	}
+	if codexAuth == nil || xaiAuth == nil {
+		t.Fatalf("missing synthesized auths: codex=%v xai=%v", codexAuth, xaiAuth)
+	}
+	got, ok := codexAuth.Metadata["stream_fake_first_tokens"].([]string)
+	if !ok || len(got) != 2 || got[0] != " " || got[1] != "-" {
+		t.Fatalf("codex metadata = %#v, want [\" \", \"-\"]", codexAuth.Metadata["stream_fake_first_tokens"])
+	}
+	if _, exists := xaiAuth.Metadata["stream_fake_first_tokens"]; exists {
+		t.Fatal("xAI auth must not copy Codex fake first-token metadata")
+	}
+}
+
 func TestConfigSynthesizer_XAIKeys(t *testing.T) {
 	synth := NewConfigSynthesizer()
 	ctx := &SynthesisContext{

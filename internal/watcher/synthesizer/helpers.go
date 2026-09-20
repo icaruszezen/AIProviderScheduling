@@ -132,6 +132,18 @@ func addHideNoAvailableChannelToMetadata(hide bool, metadata map[string]any) {
 	metadata["hide_no_available_channel"] = true
 }
 
+// addStreamFakeFirstTokensToMetadata copies sanitized Codex probe tokens into metadata.
+func addStreamFakeFirstTokensToMetadata(tokens []string, metadata map[string]any) {
+	if metadata == nil {
+		return
+	}
+	sanitized := config.SanitizeStreamFakeFirstTokens(tokens)
+	if len(sanitized) == 0 {
+		return
+	}
+	metadata["stream_fake_first_tokens"] = sanitized
+}
+
 func fingerprintProfileFromMetadata(metadata map[string]any) string {
 	if metadata == nil {
 		return ""

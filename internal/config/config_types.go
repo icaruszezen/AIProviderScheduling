@@ -537,6 +537,14 @@ type CodexKey struct {
 	// payloads with a generic Service Unavailable envelope. Management connectivity
 	// tests still see the original upstream body.
 	HideNoAvailableChannel bool `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
+
+	// StreamFakeFirstTokens lists exact first-token strings this Codex credential may
+	// emit as a streaming probe (for example " " or "-") before real model output.
+	// A non-empty list enables hold-back: matching first tokens are dropped, handshake
+	// is not committed, and a later in-stream error fails the attempt so the conductor
+	// can retry. An empty or omitted list leaves streaming behaviour unchanged.
+	// Entries are matched exactly; surrounding whitespace is significant.
+	StreamFakeFirstTokens []string `yaml:"stream-fake-first-tokens,omitempty" json:"stream-fake-first-tokens,omitempty"`
 }
 
 func (k CodexKey) GetAPIKey() string { return k.APIKey }

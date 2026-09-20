@@ -440,6 +440,43 @@ func newCodexBootstrapOverloadErr(body []byte) statusErr {
 	return newCodexStatusErr(http.StatusServiceUnavailable, body)
 }
 
+func newCodexFakeFirstTokenHoldErr(msg string) statusErr {
+	if strings.TrimSpace(msg) == "" {
+		msg = "upstream stream failed during fake first-token probe"
+	}
+	return statusErr{code: http.StatusBadGateway, msg: msg}
+}
+
+func wrapCodexFakeFirstTokenHoldErr(err error) error {
+	if err == nil {
+		return newCodexFakeFirstTokenHoldErr("")
+	}
+	if coded, ok := err.(interface{ StatusCode() int }); ok {
+		status := coded.StatusCode()
+		if status >= http.StatusBadRequest && status <= 599 {
+			return err
+		}
+	}
+	return newCodexFakeFirstTokenHoldErr(err.Error())
+}
+
+func codexFakeFirstTokenHoldDataFailure(payload []byte, eventName string) (statusErr, bool) {
+	if _, _, ok := codexTerminalFailureErr(payload); ok {
+		return statusErr{}, false
+	}
+	if streamErr, ok := openAICompatStreamDataError(payload, eventName); ok {
+		return streamErr, true
+	}
+	if openAICompatErrorEvent(eventName) {
+		msg := strings.TrimSpace(string(payload))
+		if msg == "" {
+			msg = "upstream error event ended without data"
+		}
+		return newCodexFakeFirstTokenHoldErr(msg), true
+	}
+	return statusErr{}, false
+}
+
 // isCodexOverloadBootstrapFailure reports whether a terminal failure delivered inside an HTTP 200
 // stream is a transient capacity rejection that a different credential may be able to serve.
 // Only these failures justify replacing the whole attempt during bootstrap; every other terminal

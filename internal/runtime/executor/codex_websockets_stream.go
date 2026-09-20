@@ -273,7 +273,9 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 		sess.setMultiAgentV2Optimized(conn, optimizeMultiAgentV2 && !multiAgentV2Conflict)
 	}
 
-	buffering := e.cfg != nil && e.cfg.Codex.StreamBootstrapBuffering
+	fakeTokens := helps.StreamFakeFirstTokensFromAuth(auth)
+	fakeHold := len(fakeTokens) > 0
+	buffering := fakeHold || (e.cfg != nil && e.cfg.Codex.StreamBootstrapBuffering)
 
 	claudeInputTokens := helps.NewClaudeInputTokenState(from, to, responseFormat, originalPayload)
 	var param any
@@ -303,12 +305,19 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 			if errRead != nil {
 				mappedErr := mapCodexWebsocketReadError(errRead)
 				if sess != nil {
-					e.invalidateUpstreamConn(sess, conn, "read_error", mappedErr)
+					if fakeHold {
+						e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "read_error", mappedErr)
+					} else {
+						e.invalidateUpstreamConn(sess, conn, "read_error", mappedErr)
+					}
 					sess.clearActive(conn, readCh)
 					unlockStreamSession()
 				} else {
 					logCodexWebsocketDisconnected(executionSessionID, authID, wsURL, "read_error", mappedErr)
 					_ = closer.Close()
+				}
+				if fakeHold {
+					mappedErr = wrapCodexFakeFirstTokenHoldErr(mappedErr)
 				}
 				helps.RecordAPIWebsocketError(ctx, e.cfg, "read", mappedErr)
 				reporter.PublishFailure(ctx, mappedErr)
@@ -336,7 +345,6 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 			if len(payload) == 0 {
 				continue
 			}
-			observeCodexTokenEvent(reporter, payload)
 			payload = applyCodexIdentityConfuseResponsePayload(payload, identityState)
 			helps.AppendCodexAPIWebsocketResponse(ctx, e.cfg, payload)
 			helps.EmitWebSocketResponseEvent(ctx, opts, auth, e.Identifier(), req.Model, payload)
@@ -344,7 +352,11 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 
 			if wsErr, ok := parseCodexWebsocketError(payload); ok {
 				if sess != nil {
-					e.invalidateUpstreamConn(sess, conn, "upstream_error", wsErr)
+					if fakeHold {
+						e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "upstream_error", wsErr)
+					} else {
+						e.invalidateUpstreamConn(sess, conn, "upstream_error", wsErr)
+					}
 					sess.clearActive(conn, readCh)
 					unlockStreamSession()
 				} else {
@@ -366,7 +378,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 				// the disconnect here would close the client connection before the retry can
 				// deliver anything. Every other terminal failure is forwarded in-stream and
 				// legitimately terminates the session, so it keeps the notifying variant.
-				failoverPending := isCodexOverloadBootstrapFailure(terminalBody)
+				failoverPending := fakeHold || isCodexOverloadBootstrapFailure(terminalBody)
 				if sess != nil {
 					unlockStreamSession()
 					if failoverPending {
@@ -386,16 +398,38 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 				}
 				helps.RecordAPIWebsocketError(ctx, e.cfg, "upstream_error", streamErr)
 				reporter.PublishFailure(ctx, streamErr)
-				if failoverPending {
+				if isCodexOverloadBootstrapFailure(terminalBody) {
 					// Fail the attempt before the downstream headers are committed so the
 					// conductor can transparently retry on another credential, and report the
 					// status the upstream refused to put on the wire.
 					helps.LogWithRequestID(ctx).Debugf("codex websockets executor: bootstrap overload rejection after %d buffered handshake events, failing over", len(bufferedChunks))
 					return nil, newCodexBootstrapOverloadErr(terminalBody)
 				}
+				if fakeHold {
+					return nil, streamErr
+				}
 				bootstrapTerminalErr = streamErr
 				break
 			}
+			if fakeHold {
+				if holdErr, ok := codexFakeFirstTokenHoldDataFailure(payload, ""); ok {
+					if sess != nil {
+						unlockStreamSession()
+						e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "upstream_error", holdErr)
+						sess.clearActive(conn, readCh)
+					} else {
+						logCodexWebsocketDisconnected(executionSessionID, authID, wsURL, "upstream_error", holdErr)
+						_ = closer.Close()
+					}
+					helps.RecordAPIWebsocketError(ctx, e.cfg, "upstream_error", holdErr)
+					reporter.PublishFailure(ctx, holdErr)
+					return nil, holdErr
+				}
+				if helps.IsStreamFakeFirstToken(payload, fakeTokens) {
+					continue
+				}
+			}
+			observeCodexTokenEvent(reporter, payload)
 
 			eventType := gjson.GetBytes(payload, "type").String()
 			isTerminalEvent := eventType == "response.completed" || eventType == "response.done" || eventType == "response.incomplete" || eventType == "response.failed" || eventType == "error"
@@ -416,6 +450,21 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 				}
 			}
 
+			if fakeHold && isTerminalEvent {
+				holdErr := newCodexFakeFirstTokenHoldErr("upstream stream completed without a real first token")
+				if sess != nil {
+					unlockStreamSession()
+					e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "terminal_failure", holdErr)
+					sess.clearActive(conn, readCh)
+				} else {
+					logCodexWebsocketDisconnected(executionSessionID, authID, wsURL, "terminal_failure", holdErr)
+					_ = closer.Close()
+				}
+				helps.RecordAPIWebsocketError(ctx, e.cfg, "upstream_error", holdErr)
+				reporter.PublishFailure(ctx, holdErr)
+				return nil, holdErr
+			}
+
 			var currentChunks [][]byte
 			if cliproxyexecutor.DownstreamWebsocket(ctx) {
 				if eventType == "response.completed" || eventType == "response.done" || eventType == "response.incomplete" {
@@ -434,7 +483,8 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 				currentChunks = helps.TranslateStreamWithClaudeInputTokens(ctx, to, responseFormat, req.Model, originalPayload, clientBody, line, &param, claudeInputTokens)
 			}
 
-			if isCodexHandshakeMetadataEvent(eventType) && !isTerminalEvent {
+			holdable := isCodexHandshakeMetadataEvent(eventType) || (fakeHold && helps.IsResponsesHoldableLifecycle(payload))
+			if holdable && !isTerminalEvent {
 				if len(bufferedChunks) < codexBootstrapMaxBufferedEvents {
 					bufferedChunks = append(bufferedChunks, currentChunks...)
 					continue
