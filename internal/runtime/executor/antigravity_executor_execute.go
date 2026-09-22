@@ -331,7 +331,8 @@ func (e *AntigravityExecutor) executeClaudeNonStream(ctx context.Context, auth *
 			}
 		}()
 		scanner := bufio.NewScanner(resp.Body)
-		scanner.Buffer(nil, streamScannerBuffer)
+		releaseScanner := helps.BorrowSSEScannerBuffer(scanner, streamScannerBuffer)
+		defer releaseScanner()
 		for scanner.Scan() {
 			line := scanner.Bytes()
 			helps.AppendAPIResponseChunk(ctx, e.cfg, line)
@@ -352,7 +353,8 @@ func (e *AntigravityExecutor) executeClaudeNonStream(ctx context.Context, auth *
 				reporter.Publish(ctx, detail)
 			}
 
-			out <- cliproxyexecutor.StreamChunk{Payload: payload}
+			// payload aliases the pooled scanner buffer and is invalid after the next Scan or release.
+			out <- cliproxyexecutor.StreamChunk{Payload: bytes.Clone(payload)}
 		}
 		if errScan := scanner.Err(); errScan != nil {
 			helps.RecordAPIResponseError(ctx, e.cfg, errScan)

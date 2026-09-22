@@ -299,7 +299,8 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 		// If the response target is Claude, directly forward complete SSE events without translation.
 		if responseFormat == to {
 			scanner := bufio.NewScanner(decodedBody)
-			scanner.Buffer(nil, 52_428_800) // 50MB
+			releaseScanner := helps.BorrowSSEScannerBuffer(scanner, helps.SSEScannerMaxTokenSize)
+			defer releaseScanner()
 			var event bytes.Buffer
 			var upstreamMessageID string
 			upstreamCompleted := false
@@ -361,7 +362,8 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 
 		// For other formats, use translation
 		scanner := bufio.NewScanner(decodedBody)
-		scanner.Buffer(nil, 52_428_800) // 50MB
+		releaseScanner := helps.BorrowSSEScannerBuffer(scanner, helps.SSEScannerMaxTokenSize)
+		defer releaseScanner()
 		var param any
 		var upstreamMessageID string
 		upstreamCompleted := false
@@ -428,7 +430,8 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 
 func validateClaudeStreamingResponse(data []byte) error {
 	scanner := bufio.NewScanner(bytes.NewReader(data))
-	scanner.Buffer(nil, 52_428_800)
+	releaseScanner := helps.BorrowSSEScannerBuffer(scanner, helps.SSEScannerMaxTokenSize)
+	defer releaseScanner()
 
 	hasData := false
 	hasMessageStart := false

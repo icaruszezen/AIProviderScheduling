@@ -140,7 +140,13 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 	buffering := fakeHold || (e.cfg != nil && e.cfg.Codex.StreamBootstrapBuffering)
 
 	scanner := bufio.NewScanner(httpResp.Body)
-	scanner.Buffer(nil, 52_428_800) // 50MB
+	releaseScanner := helps.BorrowSSEScannerBuffer(scanner, helps.SSEScannerMaxTokenSize)
+	scannerOwnedByBackground := false
+	defer func() {
+		if !scannerOwnedByBackground {
+			releaseScanner()
+		}
+	}()
 	claudeInputTokens := helps.NewClaudeInputTokenState(from, to, responseFormat, originalPayload)
 	var param any
 	outputItemsByIndex := make(map[int64][]byte)
@@ -343,7 +349,9 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		return &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
 	}
 
+	scannerOwnedByBackground = true
 	go func() {
+		defer releaseScanner()
 		defer close(out)
 		defer func() {
 			if errClose := httpResp.Body.Close(); errClose != nil {

@@ -265,7 +265,8 @@ func (e *CodexExecutor) executeOpenAIImageStream(ctx context.Context, auth *clip
 		}
 
 		scanner := bufio.NewScanner(httpResp.Body)
-		scanner.Buffer(nil, 52_428_800) // 50MB
+		releaseScanner := helps.BorrowSSEScannerBuffer(scanner, helps.SSEScannerMaxTokenSize)
+		defer releaseScanner()
 		outputItemsByIndex := make(map[int64][]byte)
 		var outputItemsFallback [][]byte
 		for scanner.Scan() {

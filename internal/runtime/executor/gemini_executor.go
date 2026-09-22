@@ -348,7 +348,8 @@ func (e *GeminiExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			}
 		}()
 		scanner := bufio.NewScanner(httpResp.Body)
-		scanner.Buffer(nil, streamScannerBuffer)
+		releaseScanner := helps.BorrowSSEScannerBuffer(scanner, streamScannerBuffer)
+		defer releaseScanner()
 		claudeInputTokens := helps.NewClaudeInputTokenState(from, to, responseFormat, originalPayload)
 		var param any
 		for scanner.Scan() {
@@ -542,7 +543,8 @@ func (e *GeminiExecutor) executeInteractionsStream(ctx context.Context, auth *cl
 			}
 		}()
 		scanner := bufio.NewScanner(httpResp.Body)
-		scanner.Buffer(nil, streamScannerBuffer)
+		releaseScanner := helps.BorrowSSEScannerBuffer(scanner, streamScannerBuffer)
+		defer releaseScanner()
 		originalRequest := opts.OriginalRequest
 		if len(originalRequest) == 0 {
 			originalRequest = req.Payload

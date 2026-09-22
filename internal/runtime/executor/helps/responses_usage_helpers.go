@@ -11,7 +11,7 @@ import (
 // (defaulting reasoning_tokens to 0) and input_tokens_details (defaulting cached_tokens to 0).
 // It supports plain JSON payloads, single-line SSE data: lines, and multi-line SSE frames (e.g. event: ...\ndata: ...).
 func EnsureResponsesUsageDetails(payload []byte) []byte {
-	if len(payload) == 0 {
+	if len(payload) == 0 || !bytes.Contains(payload, []byte("usage")) {
 		return payload
 	}
 

@@ -120,6 +120,22 @@ func TestEnsureResponsesUsageDetails_HandlesNullOrEmptyDetails(t *testing.T) {
 	}
 }
 
+func TestEnsureResponsesUsageDetails_SkipsDeltaWithoutUsage(t *testing.T) {
+	raw := []byte(`data: {"type":"response.output_text.delta","delta":"hello"}`)
+	got := EnsureResponsesUsageDetails(raw)
+	if len(got) == 0 || &got[0] != &raw[0] {
+		t.Fatal("expected the original payload when usage is absent")
+	}
+}
+
+func TestEnsureResponsesUsageDetails_LeavesUsageWordInsideDelta(t *testing.T) {
+	raw := []byte(`data: {"type":"response.output_text.delta","delta":"token usage"}`)
+	got := EnsureResponsesUsageDetails(raw)
+	if !bytes.Equal(got, raw) {
+		t.Fatalf("expected delta text unchanged, got %s", string(got))
+	}
+}
+
 func TestEnsureResponsesUsageDetails_NonJSONAndDone(t *testing.T) {
 	cases := [][]byte{
 		[]byte("data: [DONE]"),
