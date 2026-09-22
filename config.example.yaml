@@ -149,6 +149,38 @@ error-logs-max-files: 10
 # When false, disable in-memory usage statistics aggregation
 usage-statistics-enabled: false
 
+# Passive upstream channel monitor. Aggregates real gateway traffic for the
+# provider workbench. It does not send probe requests.
+# database-path is node-local and is not copied by cluster sync.
+# Leave auth-indexes, providers, and models empty to include every credential.
+# channel-monitor:
+#   enabled: false
+#   refresh-interval-seconds: 300
+#   # database-path: ""
+#   # auth-indexes: []
+#   # providers: []
+#   # models: []
+#   # ignored-error-categories:
+#   #   - authentication
+#   #   - client_cancelled
+#   #   - content_policy
+#   #   - context_limit
+#   #   - model_unsupported
+#   #   - not_found
+#   #   - quota_or_balance
+#   # health-thresholds:
+#   #   minimum-sample: 50
+#   #   warning-error-rate: 0.05
+#   #   critical-error-rate: 0.20
+#   #   target-ttft-ms: 3000
+#   #   warning-ttft-ms: 3000
+#   #   critical-ttft-ms: 10000
+#   #   warning-cache-rate: 0
+#   #   critical-cache-rate: 0
+#   #   error-weight: 0.60
+#   #   ttft-weight: 0.20
+#   #   cache-weight: 0.20
+
 # How long (in seconds) usage queue items are retained in memory for the Management API.
 # The local Redis RESP usage output is disabled.
 # Default: 60. Max: 3600.

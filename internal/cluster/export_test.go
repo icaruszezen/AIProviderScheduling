@@ -24,6 +24,8 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 		AdvertiseURL: "http://also-local"}
 	cfg.Plugins.Dir = "/opt/local-plugins"
 	cfg.Plugins.Enabled = true
+	cfg.ChannelMonitor.Enabled = true
+	cfg.ChannelMonitor.DatabasePath = "/var/lib/node-local-channel-monitor.db"
 
 	payload, err := Export(cfg)
 	if err != nil {
@@ -43,6 +45,12 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 	}
 	if strings.Contains(payload.ConfigYAML, "/opt/local-plugins") {
 		t.Fatal("exported YAML leaked plugins.dir")
+	}
+	if strings.Contains(payload.ConfigYAML, "node-local-channel-monitor.db") {
+		t.Fatal("exported YAML leaked channel-monitor database-path")
+	}
+	if !strings.Contains(payload.ConfigYAML, "channel-monitor:") {
+		t.Fatal("expected channel-monitor settings to be exported")
 	}
 	if !strings.Contains(payload.ConfigYAML, "client-key-1") {
 		t.Fatal("expected inbound api-keys to be exported")
@@ -152,6 +160,8 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 		NodeID:    "slave-1",
 		MasterURL: "http://master:8317"}
 	local.Plugins.Dir = "/slave/plugins"
+	local.ChannelMonitor.DatabasePath = "/slave/channel-monitor.db"
+	local.ChannelMonitor.Enabled = false
 
 	incoming := &config.Config{}
 	incoming.Host = "should-ignore"
@@ -162,6 +172,8 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	incoming.Cluster.Token = "must-not-win"
 	incoming.Plugins.Dir = "plugins"
 	incoming.Plugins.Enabled = true
+	incoming.ChannelMonitor.Enabled = true
+	incoming.ChannelMonitor.DatabasePath = "/master/channel-monitor.db"
 
 	merged := MergeLocal(local, incoming)
 	if merged.Host != "10.0.0.8" || merged.Port != 9000 {
@@ -184,6 +196,12 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	}
 	if merged.RequestRetry != 3 {
 		t.Fatalf("request-retry not synced: %d", merged.RequestRetry)
+	}
+	if !merged.ChannelMonitor.Enabled {
+		t.Fatal("channel-monitor.enabled was not synced")
+	}
+	if merged.ChannelMonitor.DatabasePath != "/slave/channel-monitor.db" {
+		t.Fatalf("database-path = %q", merged.ChannelMonitor.DatabasePath)
 	}
 }
 

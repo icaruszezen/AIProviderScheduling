@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	managementHandlers "github.com/router-for-me/CLIProxyAPI/v7/internal/api/handlers/management"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/api/middleware"
+	"github.com/router-for-me/CLIProxyAPI/v7/internal/channelmonitor"
 	codexlive "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/live"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
@@ -392,6 +393,14 @@ func (s *Server) Stop(ctx context.Context) error {
 
 	log.Debug("API server stopped")
 	return nil
+}
+
+// SetChannelMonitor attaches the passive upstream traffic monitor.
+func (s *Server) SetChannelMonitor(monitor *channelmonitor.Service) {
+	if s == nil || s.mgmt == nil {
+		return
+	}
+	s.mgmt.SetChannelMonitor(monitor)
 }
 
 // SetClusterController attaches the master/slave sync runtime to management handlers.

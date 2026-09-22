@@ -57,6 +57,10 @@ type Config struct {
 	// UsageStatisticsEnabled toggles in-memory usage aggregation; when false, usage data is discarded.
 	UsageStatisticsEnabled bool `yaml:"usage-statistics-enabled" json:"usage-statistics-enabled"`
 
+	// ChannelMonitor aggregates real upstream traffic for the management workbench.
+	// It does not probe providers. DatabasePath is node-local and is not cluster-synced.
+	ChannelMonitor ChannelMonitorConfig `yaml:"channel-monitor" json:"channel-monitor"`
+
 	// RedisUsageQueueRetentionSeconds controls how long usage queue items are retained
 	// in memory for Management API consumers.
 	// Default: 60. Max: 3600.

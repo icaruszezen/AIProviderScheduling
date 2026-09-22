@@ -37,6 +37,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 	if oldCfg.UsageStatisticsEnabled != newCfg.UsageStatisticsEnabled {
 		changes = append(changes, fmt.Sprintf("usage-statistics-enabled: %t -> %t", oldCfg.UsageStatisticsEnabled, newCfg.UsageStatisticsEnabled))
 	}
+	changes = appendChannelMonitorChanges(changes, oldCfg.ChannelMonitor, newCfg.ChannelMonitor)
 	if oldCfg.RedisUsageQueueRetentionSeconds != newCfg.RedisUsageQueueRetentionSeconds {
 		changes = append(changes, fmt.Sprintf("redis-usage-queue-retention-seconds: %d -> %d", oldCfg.RedisUsageQueueRetentionSeconds, newCfg.RedisUsageQueueRetentionSeconds))
 	}
@@ -552,6 +553,46 @@ func equalStringMap(a, b map[string]string) bool {
 }
 
 func equalStringSlicesExact(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func appendChannelMonitorChanges(changes []string, oldCfg, newCfg config.ChannelMonitorConfig) []string {
+	if oldCfg.Enabled != newCfg.Enabled {
+		changes = append(changes, fmt.Sprintf("channel-monitor.enabled: %t -> %t", oldCfg.Enabled, newCfg.Enabled))
+	}
+	if oldCfg.RefreshIntervalSeconds != newCfg.RefreshIntervalSeconds {
+		changes = append(changes, fmt.Sprintf("channel-monitor.refresh-interval-seconds: %d -> %d", oldCfg.RefreshIntervalSeconds, newCfg.RefreshIntervalSeconds))
+	}
+	if strings.TrimSpace(oldCfg.DatabasePath) != strings.TrimSpace(newCfg.DatabasePath) {
+		changes = append(changes, "channel-monitor.database-path: updated")
+	}
+	if !stringSlicesEqual(oldCfg.AuthIndexes, newCfg.AuthIndexes) {
+		changes = append(changes, "channel-monitor.auth-indexes: updated")
+	}
+	if !stringSlicesEqual(oldCfg.Providers, newCfg.Providers) {
+		changes = append(changes, "channel-monitor.providers: updated")
+	}
+	if !stringSlicesEqual(oldCfg.Models, newCfg.Models) {
+		changes = append(changes, "channel-monitor.models: updated")
+	}
+	if !stringSlicesEqual(oldCfg.IgnoredErrorCategories, newCfg.IgnoredErrorCategories) {
+		changes = append(changes, "channel-monitor.ignored-error-categories: updated")
+	}
+	if oldCfg.HealthThresholds != newCfg.HealthThresholds {
+		changes = append(changes, "channel-monitor.health-thresholds: updated")
+	}
+	return changes
+}
+
+func stringSlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}

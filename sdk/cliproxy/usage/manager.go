@@ -255,6 +255,7 @@ type Manager struct {
 	cond   *sync.Cond
 	queue  []queueItem
 	closed bool
+	done   chan struct{}
 
 	pluginsMu sync.RWMutex
 	plugins   []Plugin
@@ -279,11 +280,18 @@ func (m *Manager) Start(ctx context.Context) {
 		}
 		var workerCtx context.Context
 		workerCtx, m.cancel = context.WithCancel(ctx)
-		go m.run(workerCtx)
+		done := make(chan struct{})
+		m.mu.Lock()
+		m.done = done
+		m.mu.Unlock()
+		go func() {
+			defer close(done)
+			m.run(workerCtx)
+		}()
 	})
 }
 
-// Stop stops the dispatcher and drains the queue.
+// Stop stops the dispatcher and waits until queued records have been delivered.
 func (m *Manager) Stop() {
 	if m == nil {
 		return
@@ -294,8 +302,12 @@ func (m *Manager) Stop() {
 		}
 		m.mu.Lock()
 		m.closed = true
+		done := m.done
 		m.mu.Unlock()
 		m.cond.Broadcast()
+		if done != nil {
+			<-done
+		}
 	})
 }
 

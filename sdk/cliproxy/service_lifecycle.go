@@ -111,6 +111,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if s.server != nil && s.clusterService != nil {
 		s.server.SetClusterController(s.clusterService)
 	}
+	s.ensureChannelMonitor()
 	s.syncPluginRuntimeConfig(ctx)
 	if homeEnabled {
 		s.syncPluginModelRuntime(ctx)
@@ -335,6 +336,9 @@ func (s *Service) Shutdown(ctx context.Context) error {
 		}
 
 		usage.StopDefault()
+		if s.channelMonitor != nil {
+			s.channelMonitor.Stop()
+		}
 	})
 	return shutdownErr
 }

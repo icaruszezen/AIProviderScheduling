@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/api"
+	"github.com/router-for-me/CLIProxyAPI/v7/internal/channelmonitor"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/cluster"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/home"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/homeplugins"
@@ -123,4 +124,26 @@ type Service struct {
 	homePluginDeleteTask         func(context.Context, *config.Config, home.PluginTask) homeplugins.SyncReport
 
 	clusterService *cluster.Service
+
+	channelMonitor *channelmonitor.Service
+}
+
+func (s *Service) ensureChannelMonitor() {
+	if s == nil {
+		return
+	}
+	monitorCfg := config.Config{}.ChannelMonitor
+	s.cfgMu.RLock()
+	if s.cfg != nil {
+		monitorCfg = s.cfg.ChannelMonitor
+	}
+	s.cfgMu.RUnlock()
+	if s.channelMonitor == nil {
+		s.channelMonitor = channelmonitor.New(s.configPath, monitorCfg)
+	}
+	s.channelMonitor.ApplyConfig(monitorCfg)
+	s.channelMonitor.Start(context.Background())
+	if s.server != nil {
+		s.server.SetChannelMonitor(s.channelMonitor)
+	}
 }

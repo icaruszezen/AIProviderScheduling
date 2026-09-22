@@ -196,6 +196,9 @@ func (s *Service) applyConfigRuntime(ctx context.Context, commit configCommit, s
 		s.clusterService.SyncRuntime()
 		s.clusterService.EnqueuePush()
 	}
+	if s.channelMonitor != nil && cfg != nil {
+		s.channelMonitor.ApplyConfig(cfg.ChannelMonitor)
+	}
 	return ctx.Err() == nil
 }
 

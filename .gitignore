@@ -6,6 +6,11 @@ cli-proxy-api
 config.yaml
 .env
 
+# Node-local channel monitor database
+channel-monitor.db
+channel-monitor.db-wal
+channel-monitor.db-shm
+
 # Generated content
 bin/*
 /logs

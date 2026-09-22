@@ -144,6 +144,7 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	if cfg.NormalizeCluster() && strings.TrimSpace(configFile) != "" {
 		_ = SaveConfigPreserveCommentsUpdateNestedScalar(configFile, []string{"cluster", "node-id"}, cfg.Cluster.NodeID)
 	}
+	cfg.ChannelMonitor = cfg.ChannelMonitor.Normalized()
 
 	cfg.NormalizePluginsConfig()
 	if errResolvePluginsDir := cfg.ResolvePluginsDir(); errResolvePluginsDir != nil && cfg.Plugins.Enabled {

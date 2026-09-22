@@ -86,6 +86,13 @@ func (s *Server) registerManagementRoutes() {
 		mgmt.DELETE("/api-keys", s.mgmt.DeleteAPIKeys)
 		mgmt.GET("/api-key-usage", s.mgmt.GetAPIKeyUsage)
 		mgmt.GET("/usage-queue", s.mgmt.GetUsageQueue)
+		mgmt.GET("/channel-monitor/config", s.mgmt.GetChannelMonitorConfig)
+		mgmt.PUT("/channel-monitor/config", s.mgmt.PutChannelMonitorConfig)
+		mgmt.PATCH("/channel-monitor/config", s.mgmt.PutChannelMonitorConfig)
+		mgmt.GET("/channel-monitor/summaries", s.mgmt.GetChannelMonitorSummaries)
+		mgmt.GET("/channel-monitor/snapshot", s.mgmt.GetChannelMonitorSnapshot)
+		mgmt.GET("/channel-monitor/models", s.mgmt.GetChannelMonitorModels)
+		mgmt.GET("/channel-monitor/errors", s.mgmt.GetChannelMonitorErrors)
 
 		mgmt.GET("/gemini-api-key", s.mgmt.GetGeminiKeys)
 		mgmt.PUT("/gemini-api-key", s.mgmt.PutGeminiKeys)

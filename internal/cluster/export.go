@@ -43,6 +43,7 @@ func StripLocalIdentity(cfg *config.Config) *config.Config {
 	out.Home = config.HomeConfig{}
 	out.Pprof = config.PprofConfig{}
 	out.Plugins.Dir = ""
+	out.ChannelMonitor.DatabasePath = ""
 	return out
 }
 
@@ -67,6 +68,7 @@ func MergeLocal(local, incoming *config.Config) *config.Config {
 	out.Home = preserved.Home
 	out.Pprof = preserved.Pprof
 	out.Plugins.Dir = preserved.Plugins.Dir
+	out.ChannelMonitor.DatabasePath = preserved.ChannelMonitor.DatabasePath
 	return out
 }
 
