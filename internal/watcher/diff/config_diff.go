@@ -174,6 +174,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("gemini[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("gemini[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			changes = appendOptionalBoolChange(changes, fmt.Sprintf("gemini[%d].disable-cooling", i), o.DisableCooling, n.DisableCooling)
 			changes = appendBoolChange(changes, fmt.Sprintf("gemini[%d].hide-no-available-channel", i), o.HideNoAvailableChannel, n.HideNoAvailableChannel)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
@@ -210,6 +211,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("interactions[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("interactions[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			changes = appendOptionalBoolChange(changes, fmt.Sprintf("interactions[%d].disable-cooling", i), o.DisableCooling, n.DisableCooling)
 			changes = appendBoolChange(changes, fmt.Sprintf("interactions[%d].hide-no-available-channel", i), o.HideNoAvailableChannel, n.HideNoAvailableChannel)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
@@ -248,6 +250,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("claude[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("claude[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			changes = appendOptionalBoolChange(changes, fmt.Sprintf("claude[%d].disable-cooling", i), o.DisableCooling, n.DisableCooling)
 			changes = appendBoolChange(changes, fmt.Sprintf("claude[%d].hide-no-available-channel", i), o.HideNoAvailableChannel, n.HideNoAvailableChannel)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
@@ -303,6 +306,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("codex[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("codex[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			if o.Websockets != n.Websockets {
 				changes = append(changes, fmt.Sprintf("codex[%d].websockets: %t -> %t", i, o.Websockets, n.Websockets))
 			}
@@ -351,6 +355,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("xai[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("xai[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			if o.Priority != n.Priority {
 				changes = append(changes, fmt.Sprintf("xai[%d].priority: %d -> %d", i, o.Priority, n.Priority))
 			}
@@ -405,6 +410,10 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 		}
 	}
 
+	if !reflect.DeepEqual(oldCfg.ChannelGroups, newCfg.ChannelGroups) {
+		changes = append(changes, "channel-groups: updated")
+	}
+
 	// OpenAI compatibility providers (summarized)
 	if compat := DiffOpenAICompatibility(oldCfg.OpenAICompatibility, newCfg.OpenAICompatibility); len(compat) > 0 {
 		changes = append(changes, "openai-compatibility:")
@@ -429,6 +438,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			if strings.TrimSpace(o.Prefix) != strings.TrimSpace(n.Prefix) {
 				changes = append(changes, fmt.Sprintf("vertex[%d].prefix: %s -> %s", i, strings.TrimSpace(o.Prefix), strings.TrimSpace(n.Prefix)))
 			}
+			changes = appendNameGroupChange(changes, fmt.Sprintf("vertex[%d]", i), o.Name, n.Name, o.Group, n.Group)
 			changes = appendOptionalBoolChange(changes, fmt.Sprintf("vertex[%d].disable-cooling", i), o.DisableCooling, n.DisableCooling)
 			changes = appendBoolChange(changes, fmt.Sprintf("vertex[%d].hide-no-available-channel", i), o.HideNoAvailableChannel, n.HideNoAvailableChannel)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
@@ -642,4 +652,14 @@ func formatURL(raw string) string {
 		return host
 	}
 	return scheme + "://" + host
+}
+
+func appendNameGroupChange(changes []string, label, oldName, newName, oldGroup, newGroup string) []string {
+	if strings.TrimSpace(oldName) != strings.TrimSpace(newName) {
+		changes = append(changes, fmt.Sprintf("%s.name: %s -> %s", label, strings.TrimSpace(oldName), strings.TrimSpace(newName)))
+	}
+	if strings.TrimSpace(oldGroup) != strings.TrimSpace(newGroup) {
+		changes = append(changes, fmt.Sprintf("%s.group: %s -> %s", label, strings.TrimSpace(oldGroup), strings.TrimSpace(newGroup)))
+	}
+	return changes
 }

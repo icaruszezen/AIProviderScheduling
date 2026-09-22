@@ -142,6 +142,48 @@ func TestEnsureIndexUsesCredentialIdentity(t *testing.T) {
 	}
 }
 
+func TestEnsureIndexSplitsNamedChannels(t *testing.T) {
+	t.Parallel()
+
+	unnamed := &Auth{
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":  "shared-key",
+			"base_url": "https://codex.example",
+			"source":   "config:codex[aaa]"}}
+	unnamedOtherSource := &Auth{
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":      "shared-key",
+			"base_url":     "https://codex.example",
+			"channel_name": "   ",
+			"source":       "config:codex[bbb]"}}
+	tokyo := &Auth{
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":      "shared-key",
+			"base_url":     "https://codex.example",
+			"channel_name": "tokyo",
+			"source":       "config:codex[ccc]"}}
+	osaka := &Auth{
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":      "shared-key",
+			"base_url":     "https://codex.example",
+			"channel_name": "osaka",
+			"source":       "config:codex[ddd]"}}
+
+	unnamedIndex := unnamed.EnsureIndex()
+	if unnamedIndex == "" || unnamedIndex != unnamedOtherSource.EnsureIndex() {
+		t.Fatalf("unnamed indexes = %q %q", unnamedIndex, unnamedOtherSource.EnsureIndex())
+	}
+	tokyoIndex := tokyo.EnsureIndex()
+	osakaIndex := osaka.EnsureIndex()
+	if tokyoIndex == "" || osakaIndex == "" || tokyoIndex == osakaIndex || tokyoIndex == unnamedIndex || osakaIndex == unnamedIndex {
+		t.Fatalf("named indexes were not distinct: unnamed=%q tokyo=%q osaka=%q", unnamedIndex, tokyoIndex, osakaIndex)
+	}
+}
+
 func TestEnsureIndexUsesOAuthTypeAndAbsolutePath(t *testing.T) {
 	t.Parallel()
 

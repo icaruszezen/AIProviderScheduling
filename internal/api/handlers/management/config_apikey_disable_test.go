@@ -80,7 +80,7 @@ func TestToggleConfigAPIKeyExcludedAll_Vertex_NoBaseURL(t *testing.T) {
 		VertexCompatAPIKey: []config.VertexCompatKey{{
 			APIKey: "vertex-key-only"}}}
 	idGen := synthesizer.NewStableIDGenerator()
-	authID, _ := idGen.Next("vertex:apikey", "vertex-key-only", "", "")
+	authID, _ := idGen.Next("vertex:apikey", config.VertexChannelIDParts("vertex-key-only", "", "", "", nil)...)
 	auth := &coreauth.Auth{
 		ID:       authID,
 		Provider: "vertex",
@@ -88,6 +88,60 @@ func TestToggleConfigAPIKeyExcludedAll_Vertex_NoBaseURL(t *testing.T) {
 			"auth_kind": "apikey",
 			"api_key":   "vertex-key-only",
 			"source":    "config:vertex[xyz]"}}
+
+	handled, errToggle := toggleConfigAPIKeyExcludedAll(cfg, auth, true)
+	if errToggle != nil || !handled {
+		t.Fatalf("toggle disable: handled=%v err=%v", handled, errToggle)
+	}
+	if len(cfg.VertexCompatAPIKey[0].ExcludedModels) != 1 || cfg.VertexCompatAPIKey[0].ExcludedModels[0] != "*" {
+		t.Fatalf("excluded-models = %#v, want [*]", cfg.VertexCompatAPIKey[0].ExcludedModels)
+	}
+}
+
+func TestToggleConfigAPIKeyExcludedAll_NamedCodexChannel(t *testing.T) {
+	cfg := &config.Config{
+		CodexKey: []config.CodexKey{
+			{Name: "tokyo", APIKey: "shared-key", BaseURL: "https://codex.example"},
+			{Name: "osaka", APIKey: "shared-key", BaseURL: "https://codex.example"},
+		}}
+	idGen := synthesizer.NewStableIDGenerator()
+	tokyoID, _ := idGen.Next("codex:apikey", config.APIKeyChannelIDParts("shared-key", "https://codex.example", "", "", "tokyo", nil)...)
+	auth := &coreauth.Auth{
+		ID:       tokyoID,
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":      "shared-key",
+			"base_url":     "https://codex.example",
+			"channel_name": "tokyo",
+			"source":       "config:codex[tokyo]"}}
+
+	handled, err := toggleConfigAPIKeyExcludedAll(cfg, auth, true)
+	if err != nil || !handled {
+		t.Fatalf("toggle disable: handled=%v err=%v", handled, err)
+	}
+	if len(cfg.CodexKey[0].ExcludedModels) != 1 || cfg.CodexKey[0].ExcludedModels[0] != "*" {
+		t.Fatalf("tokyo excluded-models = %#v", cfg.CodexKey[0].ExcludedModels)
+	}
+	if len(cfg.CodexKey[1].ExcludedModels) != 0 {
+		t.Fatalf("osaka excluded-models = %#v", cfg.CodexKey[1].ExcludedModels)
+	}
+}
+
+func TestToggleConfigAPIKeyExcludedAll_VertexServiceAccount(t *testing.T) {
+	account := map[string]any{"client_email": "vertex@example.iam.gserviceaccount.com"}
+	cfg := &config.Config{
+		VertexCompatAPIKey: []config.VertexCompatKey{{
+			BaseURL:        "https://vertex.example",
+			ServiceAccount: account}}}
+	idGen := synthesizer.NewStableIDGenerator()
+	authID, _ := idGen.Next("vertex:apikey", config.VertexChannelIDParts("", "https://vertex.example", "", "", account)...)
+	auth := &coreauth.Auth{
+		ID:       authID,
+		Provider: "vertex",
+		Attributes: map[string]string{
+			"auth_kind": "apikey",
+			"base_url":  "https://vertex.example",
+			"source":    "config:vertex[sa]"}}
 
 	handled, errToggle := toggleConfigAPIKeyExcludedAll(cfg, auth, true)
 	if errToggle != nil || !handled {

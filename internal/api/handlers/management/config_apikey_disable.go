@@ -43,14 +43,10 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 
 	for i := range cfg.GeminiKey {
 		entry := &cfg.GeminiKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
-		if key == "" && base == "" {
+		if strings.TrimSpace(entry.APIKey) == "" && strings.TrimSpace(entry.BaseURL) == "" {
 			continue
 		}
-		id, _ := idGen.Next("gemini:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, _ := idGen.Next("gemini:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil
@@ -58,14 +54,10 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 	}
 	for i := range cfg.InteractionsKey {
 		entry := &cfg.InteractionsKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
-		if key == "" && base == "" {
+		if strings.TrimSpace(entry.APIKey) == "" && strings.TrimSpace(entry.BaseURL) == "" {
 			continue
 		}
-		id, _ := idGen.Next("gemini-interactions:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, _ := idGen.Next("gemini-interactions:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil
@@ -73,14 +65,10 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 	}
 	for i := range cfg.ClaudeKey {
 		entry := &cfg.ClaudeKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
-		if key == "" && base == "" {
+		if strings.TrimSpace(entry.APIKey) == "" && strings.TrimSpace(entry.BaseURL) == "" {
 			continue
 		}
-		id, _ := idGen.Next("claude:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, _ := idGen.Next("claude:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil
@@ -88,14 +76,10 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 	}
 	for i := range cfg.CodexKey {
 		entry := &cfg.CodexKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
-		if key == "" && base == "" {
+		if strings.TrimSpace(entry.APIKey) == "" && strings.TrimSpace(entry.BaseURL) == "" {
 			continue
 		}
-		id, _ := idGen.Next("codex:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, _ := idGen.Next("codex:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil
@@ -103,14 +87,10 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 	}
 	for i := range cfg.XAIKey {
 		entry := &cfg.XAIKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
-		if key == "" && base == "" {
+		if strings.TrimSpace(entry.APIKey) == "" && strings.TrimSpace(entry.BaseURL) == "" {
 			continue
 		}
-		id, _ := idGen.Next("xai:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, _ := idGen.Next("xai:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil
@@ -118,10 +98,7 @@ func toggleConfigAPIKeyExcludedAll(cfg *config.Config, auth *coreauth.Auth, disa
 	}
 	for i := range cfg.VertexCompatAPIKey {
 		entry := &cfg.VertexCompatAPIKey[i]
-		key := strings.TrimSpace(entry.APIKey)
-		base := strings.TrimSpace(entry.BaseURL)
-		proxy := strings.TrimSpace(entry.ProxyURL)
-		id, _ := idGen.Next("vertex:apikey", key, base, proxy)
+		id, _ := idGen.Next("vertex:apikey", config.VertexChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Name, entry.ServiceAccount)...)
 		if id == authID {
 			entry.ExcludedModels = setConfigAPIKeyExcludedAll(entry.ExcludedModels, disable)
 			return true, nil

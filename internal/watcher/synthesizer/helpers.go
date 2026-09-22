@@ -12,6 +12,15 @@ import (
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 )
 
+func applyChannelNameAttr(attrs map[string]string, name string) {
+	if attrs == nil {
+		return
+	}
+	if trimmed := strings.TrimSpace(name); trimmed != "" {
+		attrs["channel_name"] = trimmed
+	}
+}
+
 // StableIDGenerator generates stable, deterministic IDs for auth entries.
 // It uses SHA256 hashing with collision handling via counters.
 // It is not safe for concurrent use.

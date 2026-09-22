@@ -345,6 +345,13 @@ type ClaudeKey struct {
 	// APIKey is the authentication key for accessing Claude API services.
 	APIKey string `yaml:"api-key" json:"api-key"`
 
+	// Name is the unique channel identity within claude-api-key.
+	// An empty name is a legacy channel and is not required to be unique.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
+	// Group assigns this channel to one custom group. Empty means ungrouped.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
+
 	// Priority controls selection preference when multiple credentials match.
 	// Higher values are preferred; defaults to 0.
 	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
@@ -473,6 +480,13 @@ func (m ClaudeModel) GetThinking() *registry.ThinkingSupport { return m.Thinking
 type CodexKey struct {
 	// APIKey is the authentication key for accessing Codex API services.
 	APIKey string `yaml:"api-key" json:"api-key"`
+
+	// Name is the unique channel identity within this provider list.
+	// An empty name is a legacy channel and is not required to be unique.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
+	// Group assigns this channel to one custom group. Empty means ungrouped.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
 
 	// Priority controls selection preference when multiple credentials match.
 	// Higher values are preferred; defaults to 0.
@@ -606,6 +620,13 @@ type GeminiKey struct {
 	// APIKey is the authentication key for accessing Gemini API services.
 	APIKey string `yaml:"api-key" json:"api-key"`
 
+	// Name is the unique channel identity within this provider list.
+	// An empty name is a legacy channel and is not required to be unique.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
+	// Group assigns this channel to one custom group. Empty means ungrouped.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
+
 	// Priority controls selection preference when multiple credentials match.
 	// Higher values are preferred; defaults to 0.
 	Priority int `yaml:"priority,omitempty" json:"priority,omitempty"`
@@ -661,6 +682,8 @@ type GeminiKey struct {
 // AntigravityKey configures a native Antigravity API key credential.
 type AntigravityKey struct {
 	APIKey                   string            `yaml:"api-key" json:"api-key"`
+	Name                     string            `yaml:"name,omitempty" json:"name,omitempty"`
+	Group                    string            `yaml:"group,omitempty" json:"group,omitempty"`
 	ProjectID                string            `yaml:"project-id,omitempty" json:"project-id,omitempty"`
 	Priority                 int               `yaml:"priority,omitempty" json:"priority,omitempty"`
 	Weight                   *int              `yaml:"weight,omitempty" json:"weight,omitempty"`
@@ -724,7 +747,11 @@ func (m GeminiModel) GetThinking() *registry.ThinkingSupport { return m.Thinking
 // with external providers, allowing model aliases to be routed through OpenAI API format.
 type OpenAICompatibility struct {
 	// Name is the identifier for this OpenAI compatibility configuration.
+	// Non-empty names are unique within openai-compatibility.
 	Name string `yaml:"name" json:"name"`
+
+	// Group assigns this provider to one custom group. Empty means ungrouped.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
 
 	// Priority controls selection preference when multiple providers or credentials match.
 	// Higher values are preferred; defaults to 0.

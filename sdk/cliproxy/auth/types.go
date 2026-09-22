@@ -334,11 +334,13 @@ func (a *Auth) indexSeed() string {
 	compatName := ""
 	baseURL := ""
 	apiKey := ""
+	channelName := ""
 	filePath := ""
 	if a.Attributes != nil {
 		compatName = strings.TrimSpace(a.Attributes["compat_name"])
 		baseURL = strings.TrimSpace(a.Attributes["base_url"])
 		apiKey = strings.TrimSpace(a.Attributes["api_key"])
+		channelName = strings.TrimSpace(a.Attributes["channel_name"])
 		filePath = strings.TrimSpace(a.Attributes["path"])
 		if filePath == "" {
 			filePath = strings.TrimSpace(a.Attributes["source"])
@@ -392,7 +394,13 @@ func (a *Auth) indexSeed() string {
 		}
 	}
 	if apiPrefix != "" {
-		return apiPrefix + ":" + strings.TrimSpace(baseURL) + "+" + strings.TrimSpace(apiKey)
+		// Unnamed channels keep the historical seed. A non-empty channel name is
+		// appended with a NUL so it cannot collide with that seed.
+		seed := apiPrefix + ":" + strings.TrimSpace(baseURL) + "+" + strings.TrimSpace(apiKey)
+		if channelName != "" {
+			seed += "\x00" + channelName
+		}
+		return seed
 	}
 
 	if id := strings.TrimSpace(a.ID); id != "" {

@@ -89,6 +89,9 @@ func describeOpenAICompatibilityUpdate(oldEntry, newEntry config.OpenAICompatibi
 	if oldEntry.HideNoAvailableChannel != newEntry.HideNoAvailableChannel {
 		details = append(details, fmt.Sprintf("hide-no-available-channel %t -> %t", oldEntry.HideNoAvailableChannel, newEntry.HideNoAvailableChannel))
 	}
+	if strings.TrimSpace(oldEntry.Group) != strings.TrimSpace(newEntry.Group) {
+		details = append(details, fmt.Sprintf("group %q -> %q", strings.TrimSpace(oldEntry.Group), strings.TrimSpace(newEntry.Group)))
+	}
 	if !optionalIntEqual(oldEntry.RequestRetry, newEntry.RequestRetry) {
 		details = append(details, fmt.Sprintf("request-retry %s -> %s", formatOptionalInt(oldEntry.RequestRetry), formatOptionalInt(newEntry.RequestRetry)))
 	}

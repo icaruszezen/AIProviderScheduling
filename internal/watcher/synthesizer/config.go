@@ -87,10 +87,11 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 		}
 		prefix := strings.TrimSpace(entry.Prefix)
 		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		id, token := idGen.Next(idKind, key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, token := idGen.Next(idKind, config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:%s[%s]", sourceName, token),
 			"config_index": strconv.Itoa(i)}
+		applyChannelNameAttr(attrs, entry.Name)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -149,10 +150,11 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 		}
 		prefix := strings.TrimSpace(ck.Prefix)
 		proxyURL := strings.TrimSpace(ck.ProxyURL)
-		id, token := idGen.Next("claude:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(ck.Headers))
+		id, token := idGen.Next("claude:apikey", config.APIKeyChannelIDParts(ck.APIKey, ck.BaseURL, ck.ProxyURL, ck.Prefix, ck.Name, ck.Headers)...)
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:claude[%s]", token),
 			"config_index": strconv.Itoa(i)}
+		applyChannelNameAttr(attrs, ck.Name)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -226,10 +228,11 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 		}
 		prefix := strings.TrimSpace(entry.Prefix)
 		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		id, token := idGen.Next(provider+":apikey", key, baseURL, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+		id, token := idGen.Next(provider+":apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:%s[%s]", provider, token),
 			"config_index": strconv.Itoa(i)}
+		applyChannelNameAttr(attrs, entry.Name)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -270,7 +273,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 			Label:      provider + "-apikey",
 			Prefix:     prefix,
 			Status:     coreauth.StatusActive,
-			ProxyURL:   strings.TrimSpace(entry.ProxyURL),
+			ProxyURL:   proxyURL,
 			Attributes: attrs,
 			Metadata:   metadata,
 			CreatedAt:  now,
@@ -415,12 +418,13 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 		prefix := strings.TrimSpace(compat.Prefix)
 		proxyURL := strings.TrimSpace(compat.ProxyURL)
 		idKind := "vertex:apikey"
-		id, token := idGen.Next(idKind, key, base, proxyURL, config.ServiceAccountIdentity(compat.ServiceAccount))
+		id, token := idGen.Next(idKind, config.VertexChannelIDParts(compat.APIKey, compat.BaseURL, compat.ProxyURL, compat.Name, compat.ServiceAccount)...)
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:vertex-apikey[%s]", token),
 			"base_url":     base,
 			"provider_key": providerName,
 			"config_index": strconv.Itoa(i)}
+		applyChannelNameAttr(attrs, compat.Name)
 		if compat.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(compat.Priority)
 		}
@@ -494,10 +498,11 @@ func (s *ConfigSynthesizer) synthesizeAntigravityKeys(ctx *SynthesisContext) []*
 		}
 		prefix := strings.TrimSpace(entry.Prefix)
 		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		id, token := idGen.Next("antigravity:apikey", key, base, proxyURL, prefix, strings.TrimSpace(entry.ProjectID), config.FormatSortedHeaders(entry.Headers))
+		id, token := idGen.Next("antigravity:apikey", config.AntigravityChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.ProjectID, entry.Name, entry.Headers)...)
 		attrs := map[string]string{
 			"source":       fmt.Sprintf("config:antigravity[%s]", token),
 			"config_index": strconv.Itoa(i)}
+		applyChannelNameAttr(attrs, entry.Name)
 		if key != "" {
 			attrs["api_key"] = key
 		}

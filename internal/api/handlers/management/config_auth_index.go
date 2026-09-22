@@ -57,6 +57,7 @@ type openAICompatibilityWithAuthIndex struct {
 	RequestRetry           *int                                     `json:"request-retry,omitempty"`
 	RequestScopedErrors    []config.RequestScopedErrorRule          `json:"request-scoped-errors,omitempty"`
 	HideNoAvailableChannel bool                                     `json:"hide-no-available-channel,omitempty"`
+	Group                  string                                   `json:"group,omitempty"`
 	AuthIndex              string                                   `json:"auth-index,omitempty"`
 }
 
@@ -111,10 +112,8 @@ func (h *Handler) geminiKeysWithAuthIndex() []geminiKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("gemini:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("gemini:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = geminiKeyWithAuthIndex{
@@ -143,10 +142,8 @@ func (h *Handler) interactionsKeysWithAuthIndex() []geminiKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("gemini-interactions:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("gemini-interactions:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = geminiKeyWithAuthIndex{
@@ -175,10 +172,8 @@ func (h *Handler) claudeKeysWithAuthIndex() []claudeKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("claude:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("claude:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = claudeKeyWithAuthIndex{
@@ -207,10 +202,8 @@ func (h *Handler) codexKeysWithAuthIndex() []codexKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("codex:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("codex:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = codexKeyWithAuthIndex{
@@ -239,10 +232,8 @@ func (h *Handler) xaiKeysWithAuthIndex() []xaiKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("xai:apikey", key, base, proxyURL, prefix, config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("xai:apikey", config.APIKeyChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = xaiKeyWithAuthIndex{
@@ -268,7 +259,7 @@ func (h *Handler) vertexCompatKeysWithAuthIndex() []vertexCompatKeyWithAuthIndex
 	out := make([]vertexCompatKeyWithAuthIndex, len(h.cfg.VertexCompatAPIKey))
 	for i := range h.cfg.VertexCompatAPIKey {
 		entry := h.cfg.VertexCompatAPIKey[i]
-		id, _ := idGen.Next("vertex:apikey", entry.APIKey, entry.BaseURL, entry.ProxyURL, config.ServiceAccountIdentity(entry.ServiceAccount))
+		id, _ := idGen.Next("vertex:apikey", config.VertexChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Name, entry.ServiceAccount)...)
 		authIndex := liveIndexByID[id]
 		out[i] = vertexCompatKeyWithAuthIndex{
 			VertexCompatKey: entry,
@@ -296,10 +287,8 @@ func (h *Handler) antigravityKeysWithAuthIndex() []antigravityKeyWithAuthIndex {
 		authIndex := ""
 		key := strings.TrimSpace(entry.APIKey)
 		base := strings.TrimSpace(entry.BaseURL)
-		proxyURL := strings.TrimSpace(entry.ProxyURL)
-		prefix := strings.TrimSpace(entry.Prefix)
 		if key != "" || base != "" {
-			id, _ := idGen.Next("antigravity:apikey", key, base, proxyURL, prefix, strings.TrimSpace(entry.ProjectID), config.FormatSortedHeaders(entry.Headers))
+			id, _ := idGen.Next("antigravity:apikey", config.AntigravityChannelIDParts(entry.APIKey, entry.BaseURL, entry.ProxyURL, entry.Prefix, entry.ProjectID, entry.Name, entry.Headers)...)
 			authIndex = liveIndexByID[id]
 		}
 		out[i] = antigravityKeyWithAuthIndex{
@@ -345,6 +334,7 @@ func (h *Handler) openAICompatibilityWithAuthIndex() []openAICompatibilityWithAu
 			RequestRetry:           entry.RequestRetry,
 			RequestScopedErrors:    entry.RequestScopedErrors,
 			HideNoAvailableChannel: entry.HideNoAvailableChannel,
+			Group:                  entry.Group,
 			AuthIndex:              ""}
 		if len(entry.APIKeyEntries) == 0 {
 			id, _ := idGen.Next(idKind, entry.BaseURL)

@@ -30,10 +30,17 @@ func (h *Handler) PutAntigravityKeys(c *gin.Context) {
 		}
 		arr = obj.Items
 	}
+	names := make([]string, len(arr))
 	for index := range arr {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("antigravity-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
+		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
+		names[index] = arr[index].Name
+	}
+	if rejectDuplicateChannelNames(c, "antigravity-api-key", names) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -153,6 +160,16 @@ func (h *Handler) PatchAntigravityKey(c *gin.Context) {
 func (h *Handler) DeleteAntigravityKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.AntigravityKey, name, func(entry config.AntigravityKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.AntigravityKey = append(h.cfg.AntigravityKey[:idx], h.cfg.AntigravityKey[idx+1:]...)
+		h.cfg.SanitizeAntigravityKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		matchIndex := -1
 		matchCount := 0

@@ -68,7 +68,7 @@ func (cfg *Config) SanitizeOpenAICompatibility() {
 	out := make([]OpenAICompatibility, 0, len(cfg.OpenAICompatibility))
 	for i := range cfg.OpenAICompatibility {
 		e := cfg.OpenAICompatibility[i]
-		e.Name = strings.TrimSpace(e.Name)
+		normalizeChannelIdentity(&e.Name, &e.Group)
 		e.Prefix = normalizeModelPrefix(e.Prefix)
 		e.BaseURL = strings.TrimSpace(e.BaseURL)
 		e.Headers = NormalizeHeaders(e.Headers)
@@ -110,6 +110,7 @@ func sanitizeCodexKeyEntries(entries []CodexKey) []CodexKey {
 	out := make([]CodexKey, 0, len(entries))
 	for i := range entries {
 		e := entries[i]
+		normalizeChannelIdentity(&e.Name, &e.Group)
 		e.Prefix = normalizeModelPrefix(e.Prefix)
 		e.BaseURL = strings.TrimSpace(e.BaseURL)
 		e.Headers = NormalizeHeaders(e.Headers)
@@ -131,6 +132,7 @@ func (cfg *Config) SanitizeClaudeKeys() {
 	}
 	for i := range cfg.ClaudeKey {
 		entry := &cfg.ClaudeKey[i]
+		normalizeChannelIdentity(&entry.Name, &entry.Group)
 		entry.Prefix = normalizeModelPrefix(entry.Prefix)
 		entry.Headers = NormalizeHeaders(entry.Headers)
 		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
@@ -147,7 +149,7 @@ func (cfg *Config) SanitizeClaudeKeys() {
 }
 
 func sanitizeGeminiKeyEntries(entries []GeminiKey) []GeminiKey {
-	seen := make(map[string]struct{}, len(entries))
+	seenUnnamed := make(map[string]struct{}, len(entries))
 	out := entries[:0]
 	for i := range entries {
 		entry := entries[i]
@@ -156,16 +158,19 @@ func sanitizeGeminiKeyEntries(entries []GeminiKey) []GeminiKey {
 		if entry.APIKey == "" && entry.BaseURL == "" {
 			continue
 		}
+		normalizeChannelIdentity(&entry.Name, &entry.Group)
 		entry.Prefix = normalizeModelPrefix(entry.Prefix)
 		entry.ProxyURL = strings.TrimSpace(entry.ProxyURL)
 		entry.Headers = NormalizeHeaders(entry.Headers)
 		entry.ExcludedModels = NormalizeExcludedModels(entry.ExcludedModels)
 		sanitizeProviderRetryFields(&entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes)
-		uniqueKey := formatGeminiKeyDedupID(entry)
-		if _, exists := seen[uniqueKey]; exists {
-			continue
+		if entry.Name == "" {
+			uniqueKey := formatGeminiKeyDedupID(entry)
+			if _, exists := seenUnnamed[uniqueKey]; exists {
+				continue
+			}
+			seenUnnamed[uniqueKey] = struct{}{}
 		}
-		seen[uniqueKey] = struct{}{}
 		out = append(out, entry)
 	}
 	return out
@@ -205,8 +210,9 @@ func FormatSortedHeaders(headers map[string]string) string {
 	return b.String()
 }
 
-// SanitizeGeminiKeys deduplicates and normalizes Gemini credentials.
-// It uses API key, base URL, proxy URL, prefix, and custom headers as the uniqueness key.
+// SanitizeGeminiKeys normalizes Gemini credentials.
+// Unnamed entries that share the legacy credential key are collapsed.
+// Named channels stay distinct even when the API key and base URL match.
 func (cfg *Config) SanitizeGeminiKeys() {
 	if cfg == nil {
 		return
@@ -214,8 +220,9 @@ func (cfg *Config) SanitizeGeminiKeys() {
 	cfg.GeminiKey = sanitizeGeminiKeyEntries(cfg.GeminiKey)
 }
 
-// SanitizeInteractionsKeys deduplicates and normalizes native Interactions credentials.
-// It uses API key, base URL, proxy URL, prefix, and custom headers as the uniqueness key.
+// SanitizeInteractionsKeys normalizes native Interactions credentials.
+// Unnamed entries that share the legacy credential key are collapsed.
+// Named channels stay distinct even when the API key and base URL match.
 func (cfg *Config) SanitizeInteractionsKeys() {
 	if cfg == nil {
 		return
@@ -223,16 +230,19 @@ func (cfg *Config) SanitizeInteractionsKeys() {
 	cfg.InteractionsKey = sanitizeGeminiKeyEntries(cfg.InteractionsKey)
 }
 
-// SanitizeAntigravityKeys deduplicates and normalizes Antigravity API key credentials.
+// SanitizeAntigravityKeys normalizes Antigravity API key credentials.
+// Unnamed entries that share the legacy credential key are collapsed.
+// Entries that share a base URL and API key stay distinct when their names differ.
 func (cfg *Config) SanitizeAntigravityKeys() {
 	if cfg == nil {
 		return
 	}
-	seen := make(map[string]struct{}, len(cfg.AntigravityKey))
+	seenUnnamed := make(map[string]struct{}, len(cfg.AntigravityKey))
 	out := cfg.AntigravityKey[:0]
 	for i := range cfg.AntigravityKey {
 		entry := cfg.AntigravityKey[i]
 		entry.APIKey = strings.TrimSpace(entry.APIKey)
+		normalizeChannelIdentity(&entry.Name, &entry.Group)
 		entry.ProjectID = strings.TrimSpace(entry.ProjectID)
 		entry.Prefix = normalizeModelPrefix(entry.Prefix)
 		entry.BaseURL = strings.TrimSpace(entry.BaseURL)
@@ -243,11 +253,13 @@ func (cfg *Config) SanitizeAntigravityKeys() {
 		if entry.APIKey == "" && entry.BaseURL == "" {
 			continue
 		}
-		uniqueKey := entry.APIKey + "\x00" + entry.BaseURL + "\x00" + entry.ProxyURL + "\x00" + entry.Prefix + "\x00" + entry.ProjectID + "\x00" + FormatSortedHeaders(entry.Headers)
-		if _, exists := seen[uniqueKey]; exists {
-			continue
+		if entry.Name == "" {
+			uniqueKey := entry.APIKey + "\x00" + entry.BaseURL + "\x00" + entry.ProxyURL + "\x00" + entry.Prefix + "\x00" + entry.ProjectID + "\x00" + FormatSortedHeaders(entry.Headers)
+			if _, exists := seenUnnamed[uniqueKey]; exists {
+				continue
+			}
+			seenUnnamed[uniqueKey] = struct{}{}
 		}
-		seen[uniqueKey] = struct{}{}
 		out = append(out, entry)
 	}
 	cfg.AntigravityKey = out

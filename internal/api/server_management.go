@@ -94,6 +94,10 @@ func (s *Server) registerManagementRoutes() {
 		mgmt.GET("/channel-monitor/models", s.mgmt.GetChannelMonitorModels)
 		mgmt.GET("/channel-monitor/errors", s.mgmt.GetChannelMonitorErrors)
 
+		mgmt.GET("/channel-groups", s.mgmt.GetChannelGroups)
+		mgmt.PUT("/channel-groups", s.mgmt.PutChannelGroups)
+		mgmt.PATCH("/channel-groups", s.mgmt.PutChannelGroups)
+
 		mgmt.GET("/gemini-api-key", s.mgmt.GetGeminiKeys)
 		mgmt.PUT("/gemini-api-key", s.mgmt.PutGeminiKeys)
 		mgmt.PATCH("/gemini-api-key", s.mgmt.PatchGeminiKey)

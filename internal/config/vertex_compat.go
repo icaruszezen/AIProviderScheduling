@@ -17,6 +17,13 @@ type VertexCompatKey struct {
 	// Maps to the x-goog-api-key header. Optional when ServiceAccount is set.
 	APIKey string `yaml:"api-key" json:"api-key"`
 
+	// Name is the unique channel identity within vertex-api-key.
+	// An empty name is a legacy channel and is not required to be unique.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
+	// Group assigns this channel to one custom group. Empty means ungrouped.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
+
 	// ServiceAccount is optional official Google Cloud service-account JSON.
 	// When present, the Vertex executor uses ADC-style service account auth.
 	ServiceAccount map[string]any `yaml:"service-account,omitempty" json:"service-account,omitempty"`
@@ -114,17 +121,20 @@ func (m VertexCompatModel) GetThinking() *registry.ThinkingSupport {
 	return m.Thinking
 }
 
-// SanitizeVertexCompatKeys deduplicates and normalizes Vertex-compatible API key credentials.
+// SanitizeVertexCompatKeys normalizes Vertex-compatible API key credentials.
+// Unnamed entries that share an API key, base URL, and service account are collapsed.
+// Entries that share a base URL and API key stay distinct when their names differ.
 func (cfg *Config) SanitizeVertexCompatKeys() {
 	if cfg == nil {
 		return
 	}
 
-	seen := make(map[string]struct{}, len(cfg.VertexCompatAPIKey))
+	seenUnnamed := make(map[string]struct{}, len(cfg.VertexCompatAPIKey))
 	out := cfg.VertexCompatAPIKey[:0]
 	for i := range cfg.VertexCompatAPIKey {
 		entry := cfg.VertexCompatAPIKey[i]
 		entry.APIKey = strings.TrimSpace(entry.APIKey)
+		normalizeChannelIdentity(&entry.Name, &entry.Group)
 		entry.ProjectID = strings.TrimSpace(entry.ProjectID)
 		entry.Location = strings.TrimSpace(entry.Location)
 		entry.Email = strings.TrimSpace(entry.Email)
@@ -149,12 +159,13 @@ func (cfg *Config) SanitizeVertexCompatKeys() {
 			}
 		}
 		entry.Models = sanitizedModels
-
-		uniqueKey := entry.APIKey + "|" + entry.BaseURL + "|" + ServiceAccountIdentity(entry.ServiceAccount)
-		if _, exists := seen[uniqueKey]; exists {
-			continue
+		if entry.Name == "" {
+			uniqueKey := entry.APIKey + "|" + entry.BaseURL + "|" + ServiceAccountIdentity(entry.ServiceAccount)
+			if _, exists := seenUnnamed[uniqueKey]; exists {
+				continue
+			}
+			seenUnnamed[uniqueKey] = struct{}{}
 		}
-		seen[uniqueKey] = struct{}{}
 		out = append(out, entry)
 	}
 	cfg.VertexCompatAPIKey = out

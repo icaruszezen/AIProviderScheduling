@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 )
 
@@ -54,7 +55,8 @@ func apiKeyUsageProviderKey(auth *coreauth.Auth) string {
 }
 
 // GetAPIKeyUsage returns recent request buckets for all in-memory api_key auths,
-// grouped by provider and keyed by "base_url|api_key".
+// grouped by provider. Named channels are keyed by name plus "base_url|api_key".
+// Unnamed legacy channels stay keyed by "base_url|api_key".
 func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 	if h == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "handler not initialized"})
@@ -84,13 +86,15 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 			continue
 		}
 		baseURL := ""
+		channelName := ""
 		if auth.Attributes != nil {
 			baseURL = strings.TrimSpace(auth.Attributes["base_url"])
 			if baseURL == "" {
 				baseURL = strings.TrimSpace(auth.Attributes["base-url"])
 			}
+			channelName = strings.TrimSpace(auth.Attributes["channel_name"])
 		}
-		compositeKey := baseURL + "|" + apiKey
+		compositeKey := config.UsageCompositeKey(baseURL, apiKey, channelName)
 		provider := apiKeyUsageProviderKey(auth)
 
 		recent := auth.RecentRequestsSnapshot(now)

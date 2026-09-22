@@ -177,10 +177,17 @@ func (h *Handler) PutGeminiKeys(c *gin.Context) {
 		}
 		arr = obj.Items
 	}
+	names := make([]string, len(arr))
 	for index := range arr {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("gemini-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
+		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
+		names[index] = arr[index].Name
+	}
+	if rejectDuplicateChannelNames(c, "gemini-api-key", names) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -305,6 +312,16 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 func (h *Handler) DeleteGeminiKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.GeminiKey, name, func(entry config.GeminiKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.GeminiKey = append(h.cfg.GeminiKey[:idx], h.cfg.GeminiKey[idx+1:]...)
+		h.cfg.SanitizeGeminiKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
@@ -388,10 +405,17 @@ func (h *Handler) PutInteractionsKeys(c *gin.Context) {
 		}
 		arr = obj.Items
 	}
+	names := make([]string, len(arr))
 	for index := range arr {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("interactions-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
+		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
+		names[index] = arr[index].Name
+	}
+	if rejectDuplicateChannelNames(c, "interactions-api-key", names) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -517,6 +541,16 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 func (h *Handler) DeleteInteractionsKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.InteractionsKey, name, func(entry config.GeminiKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.InteractionsKey = append(h.cfg.InteractionsKey[:idx], h.cfg.InteractionsKey[idx+1:]...)
+		h.cfg.SanitizeInteractionsKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
@@ -599,14 +633,21 @@ func (h *Handler) PutClaudeKeys(c *gin.Context) {
 		}
 		arr = obj.Items
 	}
+	names := make([]string, len(arr))
 	for i := range arr {
 		normalizeClaudeKey(&arr[i])
+		arr[i].Name = config.NormalizeChannelName(arr[i].Name)
+		arr[i].Group = config.NormalizeChannelGroup(arr[i].Group)
+		names[i] = arr[i].Name
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("claude-api-key[%d].weight", i), arr[i].Weight) {
 			return
 		}
 		if rejectInvalidFingerprintProfile(c, fmt.Sprintf("claude-api-key[%d].fingerprint-profile", i), arr[i].FingerprintProfile) {
 			return
 		}
+	}
+	if rejectDuplicateChannelNames(c, "claude-api-key", names) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -726,9 +767,23 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 func (h *Handler) DeleteClaudeKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.ClaudeKey, name, func(entry config.ClaudeKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.ClaudeKey = append(h.cfg.ClaudeKey[:idx], h.cfg.ClaudeKey[idx+1:]...)
+		h.cfg.SanitizeClaudeKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
+			if countAPIKeyBaseMatches(h.cfg.ClaudeKey, val, base, func(entry config.ClaudeKey) string { return entry.APIKey }, func(entry config.ClaudeKey) string { return entry.BaseURL }) > 1 {
+				c.JSON(400, gin.H{"error": "multiple items match api-key and base-url; name or index is required"})
+				return
+			}
 			out := make([]config.ClaudeKey, 0, len(h.cfg.ClaudeKey))
 			for _, v := range h.cfg.ClaudeKey {
 				if strings.TrimSpace(v.APIKey) == val && strings.TrimSpace(v.BaseURL) == base {
@@ -800,6 +855,8 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 	filtered := make([]config.OpenAICompatibility, 0, len(arr))
 	for i := range arr {
 		normalizeOpenAICompatibilityEntry(&arr[i])
+		arr[i].Name = config.NormalizeChannelName(arr[i].Name)
+		arr[i].Group = config.NormalizeChannelGroup(arr[i].Group)
 		if strings.TrimSpace(arr[i].BaseURL) == "" {
 			continue
 		}
@@ -810,6 +867,13 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 			}
 		}
 		filtered = append(filtered, arr[i])
+	}
+	openAINames := make([]string, len(filtered))
+	for i := range filtered {
+		openAINames[i] = filtered[i].Name
+	}
+	if rejectDuplicateChannelNames(c, "openai-compatibility", openAINames) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -918,6 +982,17 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 		entry.HideNoAvailableChannel = *body.Value.HideNoAvailableChannel
 	}
 	normalizeOpenAICompatibilityEntry(&entry)
+	names := make([]string, len(h.cfg.OpenAICompatibility))
+	for i := range h.cfg.OpenAICompatibility {
+		if i == targetIndex {
+			names[i] = entry.Name
+			continue
+		}
+		names[i] = h.cfg.OpenAICompatibility[i].Name
+	}
+	if rejectDuplicateChannelNames(c, "openai-compatibility", names) {
+		return
+	}
 	h.cfg.OpenAICompatibility[targetIndex] = entry
 	h.cfg.SanitizeOpenAICompatibility()
 	h.persistLocked(c)
@@ -926,14 +1001,12 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 func (h *Handler) DeleteOpenAICompat(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if name := c.Query("name"); name != "" {
-		out := make([]config.OpenAICompatibility, 0, len(h.cfg.OpenAICompatibility))
-		for _, v := range h.cfg.OpenAICompatibility {
-			if v.Name != name {
-				out = append(out, v)
-			}
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.OpenAICompatibility, name, func(entry config.OpenAICompatibility) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
 		}
-		h.cfg.OpenAICompatibility = out
+		h.cfg.OpenAICompatibility = append(h.cfg.OpenAICompatibility[:idx], h.cfg.OpenAICompatibility[idx+1:]...)
 		h.cfg.SanitizeOpenAICompatibility()
 		h.persistLocked(c)
 		return
@@ -972,8 +1045,12 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 		}
 		arr = obj.Items
 	}
+	names := make([]string, len(arr))
 	for i := range arr {
 		normalizeVertexCompatKey(&arr[i])
+		arr[i].Name = config.NormalizeChannelName(arr[i].Name)
+		arr[i].Group = config.NormalizeChannelGroup(arr[i].Group)
+		names[i] = arr[i].Name
 		if arr[i].APIKey == "" && len(arr[i].ServiceAccount) == 0 {
 			c.JSON(400, gin.H{"error": fmt.Sprintf("vertex-api-key[%d].api-key or service-account is required", i)})
 			return
@@ -981,6 +1058,9 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("vertex-api-key[%d].weight", i), arr[i].Weight) {
 			return
 		}
+	}
+	if rejectDuplicateChannelNames(c, "vertex-api-key", names) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -1110,9 +1190,23 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 func (h *Handler) DeleteVertexCompatKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.VertexCompatAPIKey, name, func(entry config.VertexCompatKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.VertexCompatAPIKey = append(h.cfg.VertexCompatAPIKey[:idx], h.cfg.VertexCompatAPIKey[idx+1:]...)
+		h.cfg.SanitizeVertexCompatKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
+			if countAPIKeyBaseMatches(h.cfg.VertexCompatAPIKey, val, base, func(entry config.VertexCompatKey) string { return entry.APIKey }, func(entry config.VertexCompatKey) string { return entry.BaseURL }) > 1 {
+				c.JSON(400, gin.H{"error": "multiple items match api-key and base-url; name or index is required"})
+				return
+			}
 			out := make([]config.VertexCompatKey, 0, len(h.cfg.VertexCompatAPIKey))
 			for _, v := range h.cfg.VertexCompatAPIKey {
 				if strings.TrimSpace(v.APIKey) == val && strings.TrimSpace(v.BaseURL) == base {
@@ -1186,6 +1280,8 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 	for i := range arr {
 		entry := arr[i]
 		normalizeCodexKey(&entry)
+		entry.Name = config.NormalizeChannelName(entry.Name)
+		entry.Group = config.NormalizeChannelGroup(entry.Group)
 		if entry.BaseURL == "" {
 			continue
 		}
@@ -1193,6 +1289,13 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 			return
 		}
 		filtered = append(filtered, entry)
+	}
+	codexNames := make([]string, len(filtered))
+	for i := range filtered {
+		codexNames[i] = filtered[i].Name
+	}
+	if rejectDuplicateChannelNames(c, "codex-api-key", codexNames) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -1320,9 +1423,23 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 func (h *Handler) DeleteCodexKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.CodexKey, name, func(entry config.CodexKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.CodexKey = append(h.cfg.CodexKey[:idx], h.cfg.CodexKey[idx+1:]...)
+		h.cfg.SanitizeCodexKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
+			if countAPIKeyBaseMatches(h.cfg.CodexKey, val, base, func(entry config.CodexKey) string { return entry.APIKey }, func(entry config.CodexKey) string { return entry.BaseURL }) > 1 {
+				c.JSON(400, gin.H{"error": "multiple items match api-key and base-url; name or index is required"})
+				return
+			}
 			out := make([]config.CodexKey, 0, len(h.cfg.CodexKey))
 			for _, v := range h.cfg.CodexKey {
 				if strings.TrimSpace(v.APIKey) == val && strings.TrimSpace(v.BaseURL) == base {
@@ -1396,6 +1513,8 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 	for i := range arr {
 		entry := arr[i]
 		normalizeCodexKey(&entry)
+		entry.Name = config.NormalizeChannelName(entry.Name)
+		entry.Group = config.NormalizeChannelGroup(entry.Group)
 		if entry.BaseURL == "" {
 			continue
 		}
@@ -1403,6 +1522,13 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 			return
 		}
 		filtered = append(filtered, entry)
+	}
+	xaiNames := make([]string, len(filtered))
+	for i := range filtered {
+		xaiNames[i] = filtered[i].Name
+	}
+	if rejectDuplicateChannelNames(c, "xai-api-key", xaiNames) {
+		return
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -1527,9 +1653,23 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 func (h *Handler) DeleteXAIKey(c *gin.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if name := strings.TrimSpace(c.Query("name")); name != "" {
+		idx, count := findNamedChannel(h.cfg.XAIKey, name, func(entry config.XAIKey) string { return entry.Name })
+		if rejectNamedChannelLookup(c, count) {
+			return
+		}
+		h.cfg.XAIKey = append(h.cfg.XAIKey[:idx], h.cfg.XAIKey[idx+1:]...)
+		h.cfg.SanitizeXAIKeys()
+		h.persistLocked(c)
+		return
+	}
 	if val := strings.TrimSpace(c.Query("api-key")); val != "" {
 		if baseRaw, okBase := c.GetQuery("base-url"); okBase {
 			base := strings.TrimSpace(baseRaw)
+			if countAPIKeyBaseMatches(h.cfg.XAIKey, val, base, func(entry config.XAIKey) string { return entry.APIKey }, func(entry config.XAIKey) string { return entry.BaseURL }) > 1 {
+				c.JSON(400, gin.H{"error": "multiple items match api-key and base-url; name or index is required"})
+				return
+			}
 			out := make([]config.XAIKey, 0, len(h.cfg.XAIKey))
 			for _, entry := range h.cfg.XAIKey {
 				if strings.TrimSpace(entry.APIKey) == val && strings.TrimSpace(entry.BaseURL) == base {
