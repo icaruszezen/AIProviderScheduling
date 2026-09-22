@@ -21,6 +21,94 @@ func applyChannelNameAttr(attrs map[string]string, name string) {
 	}
 }
 
+func applyChannelGroupAttr(attrs map[string]string, group, defaultPanel, baseURL string) {
+	if attrs == nil {
+		return
+	}
+	panel := resolveChannelPanel(defaultPanel, baseURL)
+	if panel != "" {
+		attrs[coreauth.AttributeChannelPanel] = panel
+	}
+	if trimmed := strings.TrimSpace(group); trimmed != "" {
+		attrs[coreauth.AttributeChannelGroup] = trimmed
+	}
+}
+
+const (
+	kimiLegacyOpenAIBaseURL      = "https://api.moonshot.ai"
+	kimiDomesticBaseURL          = "https://api.moonshot.cn"
+	kimiOpenAIBaseURL            = "https://api.moonshot.ai/v1"
+	kimiDomesticOpenAIBaseURL    = "https://api.moonshot.cn/v1"
+	kimiAnthropicBaseURL         = "https://api.moonshot.ai/anthropic"
+	kimiDomesticAnthropicBaseURL = "https://api.moonshot.cn/anthropic"
+	lmuAIBaseURL                 = "https://api.lmuai.com"
+	lmuAIOpenAIBaseURL           = "https://api.lmuai.com/v1"
+)
+
+func resolveChannelPanel(defaultPanel, baseURL string) string {
+	panel := strings.TrimSpace(defaultPanel)
+	normalized := normalizeChannelPanelBaseURL(baseURL)
+	if normalized == "" {
+		return panel
+	}
+	switch panel {
+	case "codex":
+		if isKimiCodexBaseURL(normalized) {
+			return "kimi"
+		}
+		if isLmuAIOpenAIBaseURL(normalized) {
+			return "lmu-ai"
+		}
+	case "claude":
+		if isKimiClaudeBaseURL(normalized) {
+			return "kimi"
+		}
+		if isLmuAIClaudeBaseURL(normalized) {
+			return "lmu-ai"
+		}
+	case "openai-compatibility":
+		if isKimiOpenAIBaseURL(normalized) {
+			return "kimi"
+		}
+		if isLmuAIOpenAIBaseURL(normalized) {
+			return "lmu-ai"
+		}
+	case "gemini":
+		if isLmuAIGeminiBaseURL(normalized) {
+			return "lmu-ai"
+		}
+	}
+	return panel
+}
+
+func normalizeChannelPanelBaseURL(baseURL string) string {
+	return strings.TrimRight(strings.ToLower(strings.TrimSpace(baseURL)), "/")
+}
+
+func isKimiCodexBaseURL(normalized string) bool {
+	return normalized == kimiOpenAIBaseURL || normalized == kimiDomesticOpenAIBaseURL
+}
+
+func isKimiClaudeBaseURL(normalized string) bool {
+	return normalized == kimiAnthropicBaseURL || normalized == kimiDomesticAnthropicBaseURL
+}
+
+func isKimiOpenAIBaseURL(normalized string) bool {
+	return isKimiCodexBaseURL(normalized) || normalized == kimiLegacyOpenAIBaseURL || normalized == kimiDomesticBaseURL
+}
+
+func isLmuAIOpenAIBaseURL(normalized string) bool {
+	return normalized == lmuAIOpenAIBaseURL
+}
+
+func isLmuAIClaudeBaseURL(normalized string) bool {
+	return normalized == lmuAIBaseURL
+}
+
+func isLmuAIGeminiBaseURL(normalized string) bool {
+	return normalized == lmuAIBaseURL
+}
+
 // StableIDGenerator generates stable, deterministic IDs for auth entries.
 // It uses SHA256 hashing with collision handling via counters.
 // It is not safe for concurrent use.

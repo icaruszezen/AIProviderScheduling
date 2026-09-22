@@ -188,6 +188,21 @@ func requestExecutionMetadata(ctx context.Context) map[string]any {
 	if executionSessionID := executionSessionIDFromContext(ctx); executionSessionID != "" {
 		meta[coreexecutor.ExecutionSessionMetadataKey] = executionSessionID
 	}
+	if ginCtx != nil {
+		if rawMetadata, exists := ginCtx.Get("accessMetadata"); exists {
+			if accessMetadata, ok := rawMetadata.(map[string]string); ok {
+				for _, metadataKey := range []string{
+					coreauth.ChannelGroupProviderMetadataKey,
+					coreauth.ChannelGroupMetadataKey,
+					coreauth.ChannelGroupPolicyMetadataKey,
+				} {
+					if value := strings.TrimSpace(accessMetadata[metadataKey]); value != "" {
+						meta[metadataKey] = value
+					}
+				}
+			}
+		}
+	}
 	if callerScope := requestCallerScope(ginCtx); callerScope != "" {
 		meta[coreexecutor.CallerScopeMetadataKey] = callerScope
 	}

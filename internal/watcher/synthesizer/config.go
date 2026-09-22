@@ -92,6 +92,7 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 			"source":       fmt.Sprintf("config:%s[%s]", sourceName, token),
 			"config_index": strconv.Itoa(i)}
 		applyChannelNameAttr(attrs, entry.Name)
+		applyChannelGroupAttr(attrs, entry.Group, sourceName, base)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -155,6 +156,7 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 			"source":       fmt.Sprintf("config:claude[%s]", token),
 			"config_index": strconv.Itoa(i)}
 		applyChannelNameAttr(attrs, ck.Name)
+		applyChannelGroupAttr(attrs, ck.Group, "claude", base)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -233,6 +235,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 			"source":       fmt.Sprintf("config:%s[%s]", provider, token),
 			"config_index": strconv.Itoa(i)}
 		applyChannelNameAttr(attrs, entry.Name)
+		applyChannelGroupAttr(attrs, entry.Group, provider, baseURL)
 		if key != "" {
 			attrs["api_key"] = key
 		}
@@ -322,6 +325,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				"compat_name":  compat.Name,
 				"provider_key": internalProviderKey,
 				"config_index": strconv.Itoa(i)}
+			applyChannelGroupAttr(attrs, compat.Group, "openai-compatibility", base)
 			metadata := map[string]any{}
 			if disableCooling != nil {
 				metadata["disable_cooling"] = *disableCooling
@@ -368,6 +372,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				"compat_name":  compat.Name,
 				"provider_key": internalProviderKey,
 				"config_index": strconv.Itoa(i)}
+			applyChannelGroupAttr(attrs, compat.Group, "openai-compatibility", base)
 			metadata := map[string]any{}
 			if disableCooling != nil {
 				metadata["disable_cooling"] = *disableCooling
@@ -425,6 +430,7 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 			"provider_key": providerName,
 			"config_index": strconv.Itoa(i)}
 		applyChannelNameAttr(attrs, compat.Name)
+		applyChannelGroupAttr(attrs, compat.Group, "vertex", base)
 		if compat.Priority != 0 {
 			attrs["priority"] = strconv.Itoa(compat.Priority)
 		}
@@ -503,6 +509,7 @@ func (s *ConfigSynthesizer) synthesizeAntigravityKeys(ctx *SynthesisContext) []*
 			"source":       fmt.Sprintf("config:antigravity[%s]", token),
 			"config_index": strconv.Itoa(i)}
 		applyChannelNameAttr(attrs, entry.Name)
+		applyChannelGroupAttr(attrs, entry.Group, "antigravity", base)
 		if key != "" {
 			attrs["api_key"] = key
 		}

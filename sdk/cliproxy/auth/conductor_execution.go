@@ -124,12 +124,13 @@ func (m *Manager) Execute(ctx context.Context, providers []string, req cliproxye
 	if len(normalized) == 0 {
 		return cliproxyexecutor.Response{}, &Error{Code: "provider_not_found", Message: "no provider supplied"}
 	}
-	if m.HomeEnabled() {
+	if m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped {
 		resp, errHome := m.executeHome(ctx, normalized, req, opts, false)
 		return resp, unwrapExecutionBoundaryError(errHome)
 	}
 
 	defaultRequestRetry, maxRetryCredentials, maxWait := m.retrySettings()
+	defaultRequestRetry, maxRetryCredentials = applyChannelGroupRetryBudget(opts, defaultRequestRetry, maxRetryCredentials)
 
 	var lastErr error
 	var preferredUpstreamErr error
@@ -146,6 +147,9 @@ func (m *Manager) Execute(ctx context.Context, providers []string, req cliproxye
 			preferredUpstreamErr = errExec
 		}
 		lastErr = errExec
+		if channelGroupPolicyFromOptions(opts).scoped {
+			break
+		}
 		wait, shouldRetry := m.shouldRetryAfterErrorWithHomeRetryLimit(ctx, opts, errExec, attempt, normalized, retryModel, maxWait, -1, defaultRequestRetry)
 		if !shouldRetry {
 			break
@@ -181,12 +185,13 @@ func (m *Manager) ExecuteCount(ctx context.Context, providers []string, req clip
 	if len(normalized) == 0 {
 		return cliproxyexecutor.Response{}, &Error{Code: "provider_not_found", Message: "no provider supplied"}
 	}
-	if m.HomeEnabled() {
+	if m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped {
 		resp, errHome := m.executeHome(ctx, normalized, req, opts, true)
 		return resp, unwrapExecutionBoundaryError(errHome)
 	}
 
 	defaultRequestRetry, maxRetryCredentials, maxWait := m.retrySettings()
+	defaultRequestRetry, maxRetryCredentials = applyChannelGroupRetryBudget(opts, defaultRequestRetry, maxRetryCredentials)
 
 	var lastErr error
 	var preferredUpstreamErr error
@@ -203,6 +208,9 @@ func (m *Manager) ExecuteCount(ctx context.Context, providers []string, req clip
 			preferredUpstreamErr = errExec
 		}
 		lastErr = errExec
+		if channelGroupPolicyFromOptions(opts).scoped {
+			break
+		}
 		wait, shouldRetry := m.shouldRetryAfterErrorWithHomeRetryLimit(ctx, opts, errExec, attempt, normalized, retryModel, maxWait, -1, defaultRequestRetry)
 		if !shouldRetry {
 			break
@@ -238,6 +246,7 @@ func (m *Manager) ExecuteStream(ctx context.Context, providers []string, req cli
 	}
 
 	defaultRequestRetry, maxRetryCredentials, maxWait := m.retrySettings()
+	defaultRequestRetry, maxRetryCredentials = applyChannelGroupRetryBudget(opts, defaultRequestRetry, maxRetryCredentials)
 
 	var lastErr error
 	var preferredUpstreamErr error
@@ -272,6 +281,9 @@ func (m *Manager) ExecuteStream(ctx context.Context, providers []string, req cli
 			return nil, unwrapExecutionBoundaryError(errStream)
 		}
 		lastErr = errStream
+		if channelGroupPolicyFromOptions(opts).scoped {
+			break
+		}
 		wait, shouldRetry := m.shouldRetryAfterErrorWithHomeRetryLimit(ctx, opts, errStream, attempt, normalized, retryModel, maxWait, homeRetryLimit, defaultRequestRetry)
 		if !shouldRetry {
 			break
@@ -417,7 +429,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 	routeModel := authSelectionModelFromOptions(opts, req.Model)
 	executionModel, restoreExecutionModel := executionModelForAuthSelection(opts, req.Model)
 	opts = ensureRequestedModelMetadata(opts, routeModel)
-	homeMode := m.HomeEnabled()
+	homeMode := m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped
 	homeAuthCount := 1
 	tried := make(map[string]struct{})
 	if !homeMode {
@@ -480,6 +492,9 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 			result := Result{AuthID: auth.ID, Provider: provider, Model: stateModel, RouteModel: routeModel, Success: false, Error: resultErrorFromError(errPrepare), Options: pickOpts}
 			m.MarkResult(execCtx, result)
 			lastErr = errPrepare
+			if stopChannelGroupFailover(opts, errPrepare) {
+				return cliproxyexecutor.Response{}, errPrepare
+			}
 			continue
 		}
 		var authErr error
@@ -606,6 +621,9 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 					return cliproxyexecutor.Response{}, wrapRequestStopError(authErr)
 				}
 				lastErr = authErr
+				if stopChannelGroupFailover(opts, authErr) {
+					return cliproxyexecutor.Response{}, authErr
+				}
 				if homeMode {
 					homeAuthCount++
 				}
@@ -615,6 +633,9 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 				return cliproxyexecutor.Response{}, authErr
 			}
 			lastErr = authErr
+			if stopChannelGroupFailover(opts, authErr) {
+				return cliproxyexecutor.Response{}, authErr
+			}
 			if homeMode {
 				homeAuthCount++
 			}
@@ -630,7 +651,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 	routeModel := authSelectionModelFromOptions(opts, req.Model)
 	executionModel, restoreExecutionModel := executionModelForAuthSelection(opts, req.Model)
 	opts = ensureRequestedModelMetadata(opts, routeModel)
-	homeMode := m.HomeEnabled()
+	homeMode := m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped
 	homeAuthCount := 1
 	tried := make(map[string]struct{})
 	if !homeMode {
@@ -693,6 +714,9 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 			result := Result{AuthID: auth.ID, Provider: provider, Model: stateModel, RouteModel: routeModel, Success: false, Error: resultErrorFromError(errPrepare), Options: pickOpts, SkipQuotaObservation: true}
 			m.MarkResult(execCtx, result)
 			lastErr = errPrepare
+			if stopChannelGroupFailover(opts, errPrepare) {
+				return cliproxyexecutor.Response{}, errPrepare
+			}
 			continue
 		}
 		var authErr error
@@ -823,6 +847,9 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 					return cliproxyexecutor.Response{}, wrapRequestStopError(authErr)
 				}
 				lastErr = authErr
+				if stopChannelGroupFailover(opts, authErr) {
+					return cliproxyexecutor.Response{}, authErr
+				}
 				if homeMode {
 					homeAuthCount++
 				}
@@ -832,6 +859,9 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 				return cliproxyexecutor.Response{}, authErr
 			}
 			lastErr = authErr
+			if stopChannelGroupFailover(opts, authErr) {
+				return cliproxyexecutor.Response{}, authErr
+			}
 			if homeMode {
 				homeAuthCount++
 			}
@@ -848,7 +878,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 	responseAlias := requestedModelAliasFromOptions(opts, routeModel)
 	executionModel, restoreExecutionModel := executionModelForAuthSelection(opts, req.Model)
 	opts = ensureRequestedModelMetadata(opts, routeModel)
-	homeMode := m.HomeEnabled()
+	homeMode := m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped
 	homeAuthCount := 1
 	tried := make(map[string]struct{})
 	if !homeMode {
@@ -1052,6 +1082,9 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 					return nil, errEnd
 				}
 			}
+			if stopChannelGroupFailover(opts, errPrepare) {
+				return nil, errPrepare
+			}
 			continue
 		}
 		execReq := sanitizeDownstreamWebsocketFallbackRequest(execCtx, auth, req)
@@ -1098,6 +1131,9 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 					return nil, wrapRequestStopError(errStream)
 				}
 				lastErr = errStream
+				if stopChannelGroupFailover(opts, errStream) {
+					return nil, errStream
+				}
 				if homeMode {
 					roundTiming.Observe(lastErr)
 				}
@@ -1110,6 +1146,9 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 				return nil, errStream
 			}
 			lastErr = errStream
+			if stopChannelGroupFailover(opts, errStream) {
+				return nil, errStream
+			}
 			if homeMode {
 				roundTiming.Observe(lastErr)
 			}

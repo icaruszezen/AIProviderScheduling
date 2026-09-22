@@ -102,13 +102,15 @@ func configCodexKeys() []CodexKey {
 	}
 }
 
-func TestNormalizeChannelGroupsDropsBlanksAndDuplicates(t *testing.T) {
-	cfg := &Config{ChannelGroups: map[string][]string{
-		" codex ": {" 生产 ", "", "生产", "备用"},
+func TestNormalizeChannelGroupsDropsBlanks(t *testing.T) {
+	cfg := &Config{ChannelGroups: map[string][]ChannelGroup{
+		" codex ": {{Name: " 生产 "}, {Name: ""}, {Name: "备用"}},
 	}}
-	cfg.NormalizeChannelGroups()
+	if err := cfg.NormalizeChannelGroups(); err != nil {
+		t.Fatal(err)
+	}
 	got := cfg.ChannelGroups["codex"]
-	if len(got) != 2 || got[0] != "生产" || got[1] != "备用" {
+	if len(got) != 2 || got[0].Name != "生产" || got[1].Name != "备用" {
 		t.Fatalf("groups = %#v", cfg.ChannelGroups)
 	}
 }

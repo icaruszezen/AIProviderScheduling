@@ -107,7 +107,9 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	cfg.SanitizeClaudeKeys()
 	cfg.SanitizeOpenAICompatibility()
 	cfg.SanitizePayloadRules()
-	cfg.NormalizeChannelGroups()
+	if errNormalizeGroups := cfg.NormalizeChannelGroups(); errNormalizeGroups != nil {
+		return nil, errNormalizeGroups
+	}
 	if errValidateNames := cfg.ValidateChannelNames(); errValidateNames != nil {
 		return nil, errValidateNames
 	}

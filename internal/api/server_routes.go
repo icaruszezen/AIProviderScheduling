@@ -500,6 +500,7 @@ func isAnthropicModelsRequest(c *gin.Context) bool {
 // route to the Claude handler, otherwise they route to the OpenAI handler.
 func (s *Server) unifiedModelsHandler(openaiHandler *openai.OpenAIAPIHandler, claudeHandler *claude.ClaudeCodeAPIHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		groupScoped := openaiHandler != nil && openaiHandler.UsesChannelGroup(c)
 		if grokbuild.IsGrokShellUserAgent(c.GetHeader("User-Agent")) {
 			s.handleGrokModels(c)
 			return
@@ -507,15 +508,15 @@ func (s *Server) unifiedModelsHandler(openaiHandler *openai.OpenAIAPIHandler, cl
 
 		if _, ok := c.Request.URL.Query()["client_version"]; ok {
 			clientVersion := c.Query("client_version")
-			if s != nil && s.cfg != nil && s.cfg.Home.Enabled {
-				s.handleHomeCodexClientModels(c, clientVersion)
+			if groupScoped || s == nil || s.cfg == nil || !s.cfg.Home.Enabled {
+				openaiHandler.OpenAIModels(c)
 				return
 			}
-			openaiHandler.OpenAIModels(c)
+			s.handleHomeCodexClientModels(c, clientVersion)
 			return
 		}
 
-		if s != nil && s.cfg != nil && s.cfg.Home.Enabled {
+		if !groupScoped && s != nil && s.cfg != nil && s.cfg.Home.Enabled {
 			s.handleHomeModels(c)
 			return
 		}
@@ -559,6 +560,12 @@ func grokModelsFromRegistryInfos(infos []*registry.ModelInfo) []grokbuild.ModelI
 }
 
 func (s *Server) handleGrokModels(c *gin.Context) {
+	if s != nil && s.handlers != nil {
+		if infos, scoped := s.handlers.ChannelGroupModelInfos(c); scoped {
+			c.JSON(http.StatusOK, grokbuild.BuildResponse(grokModelsFromRegistryInfos(infos)))
+			return
+		}
+	}
 	var models []grokbuild.ModelInfo
 	if s != nil && s.cfg != nil && s.cfg.Home.Enabled {
 		entries, ok := s.loadHomeModelEntries(c)
@@ -606,7 +613,8 @@ func (s *Server) handleHomeCodexClientModels(c *gin.Context, clientVersion strin
 
 func (s *Server) geminiModelsHandler(geminiHandler *gemini.GeminiAPIHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if s != nil && s.cfg != nil && s.cfg.Home.Enabled {
+		groupScoped := geminiHandler != nil && geminiHandler.UsesChannelGroup(c)
+		if !groupScoped && s != nil && s.cfg != nil && s.cfg.Home.Enabled {
 			s.handleHomeGeminiModels(c)
 			return
 		}

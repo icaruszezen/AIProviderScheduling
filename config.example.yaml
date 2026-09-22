@@ -667,9 +667,22 @@ nonstream-keepalive-interval: 0
 # Channel groups are per provider. Omit group, or leave it empty, to keep a channel ungrouped.
 # A non-empty name is unique inside that provider's list. The same base URL and API key
 # may be used by more than one named channel.
+# A group may list one or more client API keys. Calls that use those keys stay inside
+# that provider's group. The global api-keys list is unchanged and is not limited by group.
+# channel-retry-count is how many times to switch channels after one channel, including
+# its own provider-retry, still fails. 0 or omit means do not switch. Status codes and
+# error substrings are OR-matched; if both lists are empty, nothing matches and the
+# request does not switch channels.
 # channel-groups:
 #   codex:
 #     - "production"
+#     - name: "batch"
+#       api-keys:
+#         - "replace-with-a-group-api-key"
+#       channel-retry-count: 2
+#       channel-retry-status-codes: [429, 500, 502, 503]
+#       channel-retry-error-contains:
+#         - "overloaded"
 #   claude:
 #     - "official"
 

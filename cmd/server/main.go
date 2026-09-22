@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	configaccess "github.com/router-for-me/CLIProxyAPI/v7/internal/access/config_access"
+	"github.com/router-for-me/CLIProxyAPI/v7/internal/access"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/api"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/cmd"
@@ -562,7 +562,7 @@ func main() {
 	}
 
 	// Register built-in access providers before constructing services.
-	configaccess.Register(&cfg.SDKConfig)
+	access.RegisterConfigAccess(cfg)
 	pluginHost.ApplyConfig(context.Background(), cfg)
 	if configLoadedFromHome && homePluginStatusReady {
 		errHomePluginLoad := homeplugins.MarkLoadResults(&homePluginSyncReport, pluginHost)

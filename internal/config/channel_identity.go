@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -84,56 +83,6 @@ func normalizeChannelIdentity(name, group *string) {
 	if group != nil {
 		*group = NormalizeChannelGroup(*group)
 	}
-}
-
-// NormalizeChannelGroups trims group catalog entries, drops blanks, and
-// deduplicates names within each provider. An absent catalog leaves every
-// channel ungrouped.
-func (cfg *Config) NormalizeChannelGroups() {
-	if cfg == nil || len(cfg.ChannelGroups) == 0 {
-		if cfg != nil {
-			cfg.ChannelGroups = nil
-		}
-		return
-	}
-	keys := make([]string, 0, len(cfg.ChannelGroups))
-	for rawKey := range cfg.ChannelGroups {
-		keys = append(keys, rawKey)
-	}
-	sort.Strings(keys)
-	out := make(map[string][]string, len(keys))
-	for _, rawKey := range keys {
-		key := strings.TrimSpace(rawKey)
-		if key == "" {
-			continue
-		}
-		seen := make(map[string]struct{})
-		cleaned := make([]string, 0, len(cfg.ChannelGroups[rawKey]))
-		appendUnique := func(groups []string) {
-			for _, group := range groups {
-				name := strings.TrimSpace(group)
-				if name == "" {
-					continue
-				}
-				if _, exists := seen[name]; exists {
-					continue
-				}
-				seen[name] = struct{}{}
-				cleaned = append(cleaned, name)
-			}
-		}
-		appendUnique(out[key])
-		appendUnique(cfg.ChannelGroups[rawKey])
-		if len(cleaned) == 0 {
-			continue
-		}
-		out[key] = cleaned
-	}
-	if len(out) == 0 {
-		cfg.ChannelGroups = nil
-		return
-	}
-	cfg.ChannelGroups = out
 }
 
 // ValidateUniqueChannelNames rejects repeated non-empty names in one provider list.

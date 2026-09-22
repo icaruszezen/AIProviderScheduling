@@ -153,11 +153,12 @@ type Config struct {
 	// AntigravityKey defines Antigravity API key configurations.
 	AntigravityKey []AntigravityKey `yaml:"antigravity-api-key" json:"antigravity-api-key"`
 
-	// ChannelGroups lists custom channel group names for each provider panel.
+	// ChannelGroups lists custom channel groups for each provider panel.
 	// Missing or empty group values on a channel mean that channel is ungrouped.
 	// Keys match management provider ids: gemini, interactions, codex, xai, claude,
 	// vertex, antigravity, openai-compatibility, kimi, lmu-ai.
-	ChannelGroups map[string][]string `yaml:"channel-groups,omitempty" json:"channel-groups,omitempty"`
+	// Each entry accepts a group name string or a ChannelGroup object.
+	ChannelGroups map[string][]ChannelGroup `yaml:"channel-groups,omitempty" json:"channel-groups,omitempty"`
 
 	// Payload defines default and override rules for provider payload parameters.
 	Payload PayloadConfig `yaml:"payload" json:"payload"`

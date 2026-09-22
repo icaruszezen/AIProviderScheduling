@@ -58,6 +58,8 @@ type authSelectionEligibility struct {
 	requiredKind     string
 	credentialPolicy string
 	disallowFreeAuth bool
+	channelPanel     string
+	channelGroup     string
 }
 
 func withRequiredAuthKind(ctx context.Context, requiredKind string) context.Context {
@@ -77,7 +79,12 @@ func credentialPolicyFromContext(ctx context.Context) string {
 }
 
 func authSelectionEligibilityForRequest(ctx context.Context, opts cliproxyexecutor.Options) authSelectionEligibility {
-	eligibility := authSelectionEligibility{disallowFreeAuth: disallowFreeAuthFromMetadata(opts.Metadata)}
+	panel, group := channelGroupScopeFromMetadata(opts.Metadata)
+	eligibility := authSelectionEligibility{
+		disallowFreeAuth: disallowFreeAuthFromMetadata(opts.Metadata),
+		channelPanel:     panel,
+		channelGroup:     group,
+	}
 	if ctx != nil {
 		eligibility.requiredKind, _ = ctx.Value(requiredAuthKindContextKey{}).(string)
 		eligibility.credentialPolicy, _ = ctx.Value(credentialPolicyContextKey{}).(string)
@@ -94,6 +101,17 @@ func (e authSelectionEligibility) allows(auth *Auth) bool {
 	}
 	if e.credentialPolicy != "" && !credentialPolicyAllows(e.credentialPolicy, auth) {
 		return false
+	}
+	if e.channelGroup != "" {
+		if auth.Attributes == nil {
+			return false
+		}
+		if auth.Attributes[AttributeChannelGroup] != e.channelGroup {
+			return false
+		}
+		if e.channelPanel != "" && auth.Attributes[AttributeChannelPanel] != e.channelPanel {
+			return false
+		}
 	}
 	return !e.disallowFreeAuth || !isFreeCodexAuth(auth)
 }
@@ -1694,7 +1712,7 @@ func (m *Manager) SelectHomeAuthByKind(ctx context.Context, provider string, mod
 
 func (m *Manager) pickNext(ctx context.Context, provider, model string, opts cliproxyexecutor.Options, tried map[string]struct{}) (*Auth, ProviderExecutor, error) {
 	opts.EnsureMetadata()
-	if m.HomeEnabled() {
+	if m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped {
 		auth, exec, _, err := m.pickNextViaHome(ctx, model, opts, tried)
 		return auth, exec, err
 	}
@@ -1753,7 +1771,7 @@ func (m *Manager) pickNext(ctx context.Context, provider, model string, opts cli
 }
 
 func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, model string, opts cliproxyexecutor.Options, tried map[string]struct{}) (*Auth, ProviderExecutor, string, error) {
-	if m.HomeEnabled() {
+	if m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped {
 		return m.pickNextViaHome(ctx, model, opts, tried)
 	}
 
@@ -1867,7 +1885,7 @@ func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, m
 
 func (m *Manager) pickNextMixed(ctx context.Context, providers []string, model string, opts cliproxyexecutor.Options, tried map[string]struct{}) (*Auth, ProviderExecutor, string, error) {
 	opts.EnsureMetadata()
-	if m.HomeEnabled() {
+	if m.HomeEnabled() && !channelGroupPolicyFromOptions(opts).scoped {
 		return m.pickNextViaHome(ctx, model, opts, tried)
 	}
 	opts.Metadata[cliproxyexecutor.SessionAffinityProviderMetadataKey] = "mixed"

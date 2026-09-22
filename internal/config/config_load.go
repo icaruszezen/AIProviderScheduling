@@ -179,7 +179,9 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	// Sanitize OpenAI compatibility providers: drop entries without base-url
 	cfg.SanitizeOpenAICompatibility()
 
-	cfg.NormalizeChannelGroups()
+	if errNormalizeGroups := cfg.NormalizeChannelGroups(); errNormalizeGroups != nil {
+		return nil, errNormalizeGroups
+	}
 	if errValidateNames := cfg.ValidateChannelNames(); errValidateNames != nil {
 		return nil, errValidateNames
 	}

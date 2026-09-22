@@ -1168,6 +1168,145 @@ func cloneModelMapValue(value any) any {
 	}
 }
 
+// GetAvailableModelsForClients returns handler-formatted models registered by the given clients.
+// Availability follows the global model list, counting only these clients.
+func (r *ModelRegistry) GetAvailableModelsForClients(handlerType string, clientIDs []string) []map[string]any {
+	infos := r.availableModelInfosForClients(clientIDs)
+	if len(infos) == 0 {
+		return []map[string]any{}
+	}
+	models := make([]map[string]any, 0, len(infos))
+	for _, info := range infos {
+		if converted := r.convertModelToMap(info, handlerType); converted != nil {
+			models = append(models, converted)
+		}
+	}
+	return models
+}
+
+// GetAvailableModelInfosForClients returns cloned model metadata registered by the given clients.
+// Availability follows the global model list, counting only these clients.
+func (r *ModelRegistry) GetAvailableModelInfosForClients(clientIDs []string) []*ModelInfo {
+	infos := r.availableModelInfosForClients(clientIDs)
+	if infos == nil {
+		return []*ModelInfo{}
+	}
+	return infos
+}
+
+type scopedClientModel struct {
+	info         *ModelInfo
+	count        int
+	contributors map[string]struct{}
+}
+
+func (r *ModelRegistry) availableModelInfosForClients(clientIDs []string) []*ModelInfo {
+	if r == nil || len(clientIDs) == 0 {
+		return []*ModelInfo{}
+	}
+	wanted := make(map[string]struct{}, len(clientIDs))
+	for _, clientID := range clientIDs {
+		clientID = strings.TrimSpace(clientID)
+		if clientID == "" {
+			continue
+		}
+		wanted[clientID] = struct{}{}
+	}
+	if len(wanted) == 0 {
+		return []*ModelInfo{}
+	}
+
+	now := time.Now()
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	scoped := make(map[string]*scopedClientModel)
+	for clientID := range wanted {
+		seenModel := make(map[string]struct{})
+		for _, modelID := range r.clientModels[clientID] {
+			modelID = strings.TrimSpace(modelID)
+			if modelID == "" {
+				continue
+			}
+			if _, duplicate := seenModel[modelID]; duplicate {
+				continue
+			}
+			seenModel[modelID] = struct{}{}
+			entry := scoped[modelID]
+			if entry == nil {
+				entry = &scopedClientModel{contributors: make(map[string]struct{})}
+				scoped[modelID] = entry
+			}
+			entry.count++
+			entry.contributors[clientID] = struct{}{}
+			if entry.info != nil {
+				continue
+			}
+			if clientInfos := r.clientModelInfos[clientID]; clientInfos != nil {
+				entry.info = clientInfos[modelID]
+			}
+			if entry.info == nil {
+				if registration := r.models[modelID]; registration != nil {
+					entry.info = registration.Info
+				}
+			}
+		}
+	}
+
+	modelIDs := make([]string, 0, len(scoped))
+	for modelID, entry := range scoped {
+		if entry == nil || entry.info == nil {
+			continue
+		}
+		registration := r.models[modelID]
+		if !scopedModelAvailable(registration, entry.contributors, entry.count, now) {
+			continue
+		}
+		modelIDs = append(modelIDs, modelID)
+	}
+	sort.Strings(modelIDs)
+	infos := make([]*ModelInfo, 0, len(modelIDs))
+	for _, modelID := range modelIDs {
+		infos = append(infos, cloneModelInfo(scoped[modelID].info))
+	}
+	return infos
+}
+
+func scopedModelAvailable(registration *ModelRegistration, contributors map[string]struct{}, availableClients int, now time.Time) bool {
+	if availableClients <= 0 {
+		return false
+	}
+	expiredClients := 0
+	cooldownSuspended := 0
+	otherSuspended := 0
+	if registration != nil {
+		for clientID, quotaTime := range registration.QuotaExceededClients {
+			if _, wanted := contributors[clientID]; !wanted || quotaTime == nil {
+				continue
+			}
+			recoveryAt := quotaTime.Add(modelQuotaExceededWindow)
+			if now.Before(recoveryAt) {
+				expiredClients++
+			}
+		}
+		for clientID, reason := range registration.SuspendedClients {
+			if _, wanted := contributors[clientID]; !wanted {
+				continue
+			}
+			if strings.EqualFold(reason, "quota") {
+				cooldownSuspended++
+				continue
+			}
+			otherSuspended++
+		}
+	}
+	effectiveClients := availableClients - expiredClients - otherSuspended
+	if effectiveClients < 0 {
+		effectiveClients = 0
+	}
+	return effectiveClients > 0 || ((expiredClients > 0 || cooldownSuspended > 0) && otherSuspended == 0)
+}
+
 // GetAvailableModelsByProvider returns models available for the given provider identifier.
 // Parameters:
 //   - provider: Provider identifier (e.g., "codex", "gemini", "antigravity")

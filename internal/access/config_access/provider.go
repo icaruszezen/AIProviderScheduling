@@ -6,34 +6,39 @@ import (
 	"strings"
 
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 )
 
-// Register ensures the config-access provider is available to the access manager.
-func Register(cfg *sdkconfig.SDKConfig) {
-	if cfg == nil {
-		sdkaccess.UnregisterProvider(sdkaccess.AccessProviderTypeConfigAPIKey)
-		return
-	}
+// GroupCredential binds one client API key to a provider-panel group.
+type GroupCredential struct {
+	Panel      string
+	Group      string
+	PolicyJSON string
+}
 
-	keys := normalizeKeys(cfg.APIKeys)
-	if len(keys) == 0 {
+// Register ensures the config-access provider is available to the access manager.
+// Global api-keys keep the existing result. Group keys add panel and retry metadata.
+func Register(apiKeys []string, groups map[string]GroupCredential) {
+	keys := normalizeKeys(apiKeys)
+	groupKeys := normalizeGroupCredentials(groups)
+	if len(keys) == 0 && len(groupKeys) == 0 {
 		sdkaccess.UnregisterProvider(sdkaccess.AccessProviderTypeConfigAPIKey)
 		return
 	}
 
 	sdkaccess.RegisterProvider(
 		sdkaccess.AccessProviderTypeConfigAPIKey,
-		newProvider(sdkaccess.DefaultAccessProviderName, keys),
+		newProvider(sdkaccess.DefaultAccessProviderName, keys, groupKeys),
 	)
 }
 
 type provider struct {
-	name string
-	keys map[string]struct{}
+	name   string
+	keys   map[string]struct{}
+	groups map[string]GroupCredential
 }
 
-func newProvider(name string, keys []string) *provider {
+func newProvider(name string, keys []string, groups map[string]GroupCredential) *provider {
 	providerName := strings.TrimSpace(name)
 	if providerName == "" {
 		providerName = sdkaccess.DefaultAccessProviderName
@@ -42,7 +47,7 @@ func newProvider(name string, keys []string) *provider {
 	for _, key := range keys {
 		keySet[key] = struct{}{}
 	}
-	return &provider{name: providerName, keys: keySet}
+	return &provider{name: providerName, keys: keySet, groups: groups}
 }
 
 func (p *provider) Identifier() string {
@@ -56,7 +61,7 @@ func (p *provider) Authenticate(_ context.Context, r *http.Request) (*sdkaccess.
 	if p == nil {
 		return nil, sdkaccess.NewNotHandledError()
 	}
-	if len(p.keys) == 0 {
+	if len(p.keys) == 0 && len(p.groups) == 0 {
 		return nil, sdkaccess.NewNotHandledError()
 	}
 	authHeader := r.Header.Get("Authorization")
@@ -95,6 +100,16 @@ func (p *provider) Authenticate(_ context.Context, r *http.Request) (*sdkaccess.
 				Metadata: map[string]string{
 					"source": candidate.source}}, nil
 		}
+		if group, ok := p.groups[candidate.value]; ok {
+			return &sdkaccess.Result{
+				Provider:  p.Identifier(),
+				Principal: candidate.value,
+				Metadata: map[string]string{
+					"source":                                 candidate.source,
+					coreauth.ChannelGroupProviderMetadataKey: group.Panel,
+					coreauth.ChannelGroupMetadataKey:         group.Group,
+					coreauth.ChannelGroupPolicyMetadataKey:   group.PolicyJSON}}, nil
+		}
 	}
 
 	return nil, sdkaccess.NewInvalidCredentialError()
@@ -112,6 +127,30 @@ func extractBearerToken(header string) string {
 		return header
 	}
 	return strings.TrimSpace(parts[1])
+}
+
+func normalizeGroupCredentials(groups map[string]GroupCredential) map[string]GroupCredential {
+	if len(groups) == 0 {
+		return nil
+	}
+	out := make(map[string]GroupCredential, len(groups))
+	for key, group := range groups {
+		trimmed := strings.TrimSpace(key)
+		panel := strings.TrimSpace(group.Panel)
+		name := strings.TrimSpace(group.Group)
+		if trimmed == "" || panel == "" || name == "" {
+			continue
+		}
+		out[trimmed] = GroupCredential{
+			Panel:      panel,
+			Group:      name,
+			PolicyJSON: strings.TrimSpace(group.PolicyJSON),
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func normalizeKeys(keys []string) []string {

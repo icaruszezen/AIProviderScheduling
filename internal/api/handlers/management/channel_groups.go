@@ -2,51 +2,68 @@ package management
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 )
 
 func (h *Handler) GetChannelGroups(c *gin.Context) {
 	if h == nil || h.cfg == nil {
-		c.JSON(500, gin.H{"error": "handler not initialized"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "handler not initialized"})
 		return
 	}
 	h.mu.Lock()
 	groups := h.cfg.ChannelGroups
 	h.mu.Unlock()
 	if groups == nil {
-		groups = map[string][]string{}
+		groups = map[string][]config.ChannelGroup{}
 	}
-	c.JSON(200, gin.H{"channel-groups": groups})
+	c.JSON(http.StatusOK, gin.H{"channel-groups": groups})
 }
 
 func (h *Handler) PutChannelGroups(c *gin.Context) {
 	if h == nil || h.cfg == nil {
-		c.JSON(500, gin.H{"error": "handler not initialized"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "handler not initialized"})
 		return
 	}
 	data, errRead := c.GetRawData()
 	if errRead != nil {
-		c.JSON(400, gin.H{"error": "failed to read body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read body"})
 		return
 	}
-	var wrapped struct {
-		Groups map[string][]string `json:"channel-groups"`
-	}
-	if errUnmarshal := json.Unmarshal(data, &wrapped); errUnmarshal != nil {
-		c.JSON(400, gin.H{"error": "invalid body"})
+	groups, errDecode := decodeChannelGroups(data)
+	if errDecode != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
 		return
-	}
-	groups := wrapped.Groups
-	if groups == nil {
-		if errDirect := json.Unmarshal(data, &groups); errDirect != nil {
-			c.JSON(400, gin.H{"error": "invalid body"})
-			return
-		}
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.cfg.ChannelGroups = groups
-	h.cfg.NormalizeChannelGroups()
+	candidate := &config.Config{
+		SDKConfig:     h.cfg.SDKConfig,
+		ChannelGroups: groups,
+	}
+	if errNormalize := candidate.NormalizeChannelGroups(); errNormalize != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errNormalize.Error()})
+		return
+	}
+	h.cfg.ChannelGroups = candidate.ChannelGroups
 	h.persistLocked(c)
+}
+
+func decodeChannelGroups(data []byte) (map[string][]config.ChannelGroup, error) {
+	var wrapped struct {
+		Groups map[string][]config.ChannelGroup `json:"channel-groups"`
+	}
+	if errUnmarshal := json.Unmarshal(data, &wrapped); errUnmarshal != nil {
+		return nil, errUnmarshal
+	}
+	if wrapped.Groups != nil {
+		return wrapped.Groups, nil
+	}
+	var groups map[string][]config.ChannelGroup
+	if errDirect := json.Unmarshal(data, &groups); errDirect != nil {
+		return nil, errDirect
+	}
+	return groups, nil
 }
