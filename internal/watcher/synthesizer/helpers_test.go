@@ -286,6 +286,33 @@ func TestAddRequestRetryToMetadata(t *testing.T) {
 	addRequestRetryToMetadata(&positive, nil)
 }
 
+func TestAddStreamFirstTokenTimeoutToMetadata(t *testing.T) {
+	zero := 0
+	positive := 15
+	negative := -1
+
+	metadata := map[string]any{}
+	addStreamFirstTokenTimeoutToMetadata(&positive, metadata)
+	if got, ok := metadata["stream_first_token_timeout_seconds"].(int); !ok || got != 15 {
+		t.Fatalf("positive timeout = %v, want 15", metadata["stream_first_token_timeout_seconds"])
+	}
+
+	metadata = map[string]any{}
+	addStreamFirstTokenTimeoutToMetadata(&zero, metadata)
+	if _, exists := metadata["stream_first_token_timeout_seconds"]; exists {
+		t.Fatalf("zero timeout should be omitted, got %v", metadata["stream_first_token_timeout_seconds"])
+	}
+
+	metadata = map[string]any{}
+	addStreamFirstTokenTimeoutToMetadata(&negative, metadata)
+	addStreamFirstTokenTimeoutToMetadata(nil, metadata)
+	if _, exists := metadata["stream_first_token_timeout_seconds"]; exists {
+		t.Fatalf("disabled timeout should be omitted, got %v", metadata["stream_first_token_timeout_seconds"])
+	}
+
+	addStreamFirstTokenTimeoutToMetadata(&positive, nil)
+}
+
 func TestAddProviderRetryToMetadata(t *testing.T) {
 	zero := 0
 	positive := 3

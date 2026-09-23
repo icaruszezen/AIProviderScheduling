@@ -35,6 +35,9 @@ func (h *Handler) PutAntigravityKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("antigravity-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("antigravity-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -51,19 +54,20 @@ func (h *Handler) PutAntigravityKeys(c *gin.Context) {
 
 func (h *Handler) PatchAntigravityKey(c *gin.Context) {
 	type antigravityKeyPatch struct {
-		APIKey                   *string            `json:"api-key"`
-		ProjectID                *string            `json:"project-id"`
-		Weight                   json.RawMessage    `json:"weight"`
-		Prefix                   *string            `json:"prefix"`
-		BaseURL                  *string            `json:"base-url"`
-		ProxyURL                 *string            `json:"proxy-url"`
-		Headers                  *map[string]string `json:"headers"`
-		ExcludedModels           *[]string          `json:"excluded-models"`
-		DisableCooling           json.RawMessage    `json:"disable-cooling"`
-		RequestRetry             *int               `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage    `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage    `json:"provider-retry-status-codes"`
-		HideNoAvailableChannel   *bool              `json:"hide-no-available-channel"`
+		APIKey                         *string            `json:"api-key"`
+		ProjectID                      *string            `json:"project-id"`
+		Weight                         json.RawMessage    `json:"weight"`
+		Prefix                         *string            `json:"prefix"`
+		BaseURL                        *string            `json:"base-url"`
+		ProxyURL                       *string            `json:"proxy-url"`
+		Headers                        *map[string]string `json:"headers"`
+		ExcludedModels                 *[]string          `json:"excluded-models"`
+		DisableCooling                 json.RawMessage    `json:"disable-cooling"`
+		RequestRetry                   *int               `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage    `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage    `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage    `json:"provider-retry-status-codes"`
+		HideNoAvailableChannel         *bool              `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int                 `json:"index"`
@@ -139,6 +143,9 @@ func (h *Handler) PatchAntigravityKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return

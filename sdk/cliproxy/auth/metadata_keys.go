@@ -22,6 +22,8 @@ func CanonicalCredentialMetadataKey(key string) string {
 		return "proxy_url"
 	case "request-retry":
 		return "request_retry"
+	case "stream-first-token-timeout-seconds":
+		return "stream_first_token_timeout_seconds"
 	case "request-scoped-errors":
 		return "request_scoped_errors"
 	case "hide-no-available-channel":

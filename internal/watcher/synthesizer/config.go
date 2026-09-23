@@ -101,6 +101,7 @@ func (s *ConfigSynthesizer) synthesizeGeminiKeyEntries(ctx *SynthesisContext, en
 			metadata["disable_cooling"] = *entry.DisableCooling
 		}
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
+		addStreamFirstTokenTimeoutToMetadata(entry.StreamFirstTokenTimeoutSeconds, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)
 		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
@@ -165,6 +166,7 @@ func (s *ConfigSynthesizer) synthesizeClaudeKeys(ctx *SynthesisContext) []*corea
 			metadata["disable_cooling"] = *ck.DisableCooling
 		}
 		addRequestRetryToMetadata(ck.RequestRetry, metadata)
+		addStreamFirstTokenTimeoutToMetadata(ck.StreamFirstTokenTimeoutSeconds, metadata)
 		addProviderRetryToMetadata(ck.ProviderRetryCount, ck.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(ck.RequestScopedErrors, metadata)
 		addHideNoAvailableChannelToMetadata(ck.HideNoAvailableChannel, metadata)
@@ -247,6 +249,7 @@ func (s *ConfigSynthesizer) synthesizeCodexStyleKeys(ctx *SynthesisContext, entr
 			metadata["local_compact"] = *entry.LocalCompact
 		}
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
+		addStreamFirstTokenTimeoutToMetadata(entry.StreamFirstTokenTimeoutSeconds, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addRequestScopedErrorsToMetadata(entry.RequestScopedErrors, metadata)
 		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
@@ -331,6 +334,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				metadata["disable_cooling"] = *disableCooling
 			}
 			addRequestRetryToMetadata(compat.RequestRetry, metadata)
+			addStreamFirstTokenTimeoutToMetadata(compat.StreamFirstTokenTimeoutSeconds, metadata)
 			addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
 			addRequestScopedErrorsToMetadata(compat.RequestScopedErrors, metadata)
 			addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
@@ -378,6 +382,7 @@ func (s *ConfigSynthesizer) synthesizeOpenAICompat(ctx *SynthesisContext) []*cor
 				metadata["disable_cooling"] = *disableCooling
 			}
 			addRequestRetryToMetadata(compat.RequestRetry, metadata)
+			addStreamFirstTokenTimeoutToMetadata(compat.StreamFirstTokenTimeoutSeconds, metadata)
 			addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
 			addRequestScopedErrorsToMetadata(compat.RequestScopedErrors, metadata)
 			addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
@@ -467,6 +472,7 @@ func (s *ConfigSynthesizer) synthesizeVertexCompat(ctx *SynthesisContext) []*cor
 			metadata["disable_cooling"] = *compat.DisableCooling
 		}
 		addRequestRetryToMetadata(compat.RequestRetry, metadata)
+		addStreamFirstTokenTimeoutToMetadata(compat.StreamFirstTokenTimeoutSeconds, metadata)
 		addProviderRetryToMetadata(compat.ProviderRetryCount, compat.ProviderRetryStatusCodes, metadata)
 		addHideNoAvailableChannelToMetadata(compat.HideNoAvailableChannel, metadata)
 		a := &coreauth.Auth{
@@ -529,6 +535,7 @@ func (s *ConfigSynthesizer) synthesizeAntigravityKeys(ctx *SynthesisContext) []*
 			metadata["disable_cooling"] = *entry.DisableCooling
 		}
 		addRequestRetryToMetadata(entry.RequestRetry, metadata)
+		addStreamFirstTokenTimeoutToMetadata(entry.StreamFirstTokenTimeoutSeconds, metadata)
 		addProviderRetryToMetadata(entry.ProviderRetryCount, entry.ProviderRetryStatusCodes, metadata)
 		addHideNoAvailableChannelToMetadata(entry.HideNoAvailableChannel, metadata)
 		a := &coreauth.Auth{

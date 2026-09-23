@@ -8,7 +8,7 @@ func shouldRetrySameCredential(auth *Auth, err error, used int) bool {
 	if auth == nil || err == nil {
 		return false
 	}
-	if isRequestStopError(err) || isRequestTerminatedError(err) {
+	if isStreamFirstTokenTimeout(err) || isRequestStopError(err) || isRequestTerminatedError(err) {
 		return false
 	}
 	count := auth.ProviderRetryCount()

@@ -36,6 +36,14 @@ func rejectInvalidCredentialWeight(c *gin.Context, field string, weight *int) bo
 	return false
 }
 
+func rejectInvalidStreamFirstTokenTimeout(c *gin.Context, field string, seconds *int) bool {
+	if errValidate := config.ValidateStreamFirstTokenTimeout(seconds); errValidate != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("%s: %v", field, errValidate)})
+		return true
+	}
+	return false
+}
+
 // rejectInvalidFingerprintProfile fails a write that carries a value the request
 // path would silently ignore, so a typo surfaces here instead of as a warning
 // behind every later request.
@@ -182,6 +190,9 @@ func (h *Handler) PutGeminiKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("gemini-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("gemini-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -197,19 +208,20 @@ func (h *Handler) PutGeminiKeys(c *gin.Context) {
 }
 func (h *Handler) PatchGeminiKey(c *gin.Context) {
 	type geminiKeyPatch struct {
-		APIKey                   *string                          `json:"api-key"`
-		Weight                   json.RawMessage                  `json:"weight"`
-		Prefix                   *string                          `json:"prefix"`
-		BaseURL                  *string                          `json:"base-url"`
-		ProxyURL                 *string                          `json:"proxy-url"`
-		Headers                  *map[string]string               `json:"headers"`
-		ExcludedModels           *[]string                        `json:"excluded-models"`
-		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry             *int                             `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
+		APIKey                         *string                          `json:"api-key"`
+		Weight                         json.RawMessage                  `json:"weight"`
+		Prefix                         *string                          `json:"prefix"`
+		BaseURL                        *string                          `json:"base-url"`
+		ProxyURL                       *string                          `json:"proxy-url"`
+		Headers                        *map[string]string               `json:"headers"`
+		ExcludedModels                 *[]string                        `json:"excluded-models"`
+		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry                   *int                             `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -288,6 +300,9 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -410,6 +425,9 @@ func (h *Handler) PutInteractionsKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("interactions-api-key[%d].weight", index), arr[index].Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("interactions-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -425,19 +443,20 @@ func (h *Handler) PutInteractionsKeys(c *gin.Context) {
 }
 func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 	type geminiKeyPatch struct {
-		APIKey                   *string                          `json:"api-key"`
-		Weight                   json.RawMessage                  `json:"weight"`
-		Prefix                   *string                          `json:"prefix"`
-		BaseURL                  *string                          `json:"base-url"`
-		ProxyURL                 *string                          `json:"proxy-url"`
-		Headers                  *map[string]string               `json:"headers"`
-		ExcludedModels           *[]string                        `json:"excluded-models"`
-		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry             *int                             `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
+		APIKey                         *string                          `json:"api-key"`
+		Weight                         json.RawMessage                  `json:"weight"`
+		Prefix                         *string                          `json:"prefix"`
+		BaseURL                        *string                          `json:"base-url"`
+		ProxyURL                       *string                          `json:"proxy-url"`
+		Headers                        *map[string]string               `json:"headers"`
+		ExcludedModels                 *[]string                        `json:"excluded-models"`
+		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry                   *int                             `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -517,6 +536,9 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -642,6 +664,9 @@ func (h *Handler) PutClaudeKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("claude-api-key[%d].weight", i), arr[i].Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("claude-api-key[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		if rejectInvalidFingerprintProfile(c, fmt.Sprintf("claude-api-key[%d].fingerprint-profile", i), arr[i].FingerprintProfile) {
 			return
 		}
@@ -657,22 +682,23 @@ func (h *Handler) PutClaudeKeys(c *gin.Context) {
 }
 func (h *Handler) PatchClaudeKey(c *gin.Context) {
 	type claudeKeyPatch struct {
-		APIKey                   *string                          `json:"api-key"`
-		FingerprintProfile       *string                          `json:"fingerprint-profile"`
-		Weight                   json.RawMessage                  `json:"weight"`
-		Prefix                   *string                          `json:"prefix"`
-		BaseURL                  *string                          `json:"base-url"`
-		ProxyURL                 *string                          `json:"proxy-url"`
-		Models                   *[]config.ClaudeModel            `json:"models"`
-		Headers                  *map[string]string               `json:"headers"`
-		ExcludedModels           *[]string                        `json:"excluded-models"`
-		RebuildMidSystemMessage  *bool                            `json:"rebuild-mid-system-message"`
-		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry             *int                             `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
+		APIKey                         *string                          `json:"api-key"`
+		FingerprintProfile             *string                          `json:"fingerprint-profile"`
+		Weight                         json.RawMessage                  `json:"weight"`
+		Prefix                         *string                          `json:"prefix"`
+		BaseURL                        *string                          `json:"base-url"`
+		ProxyURL                       *string                          `json:"proxy-url"`
+		Models                         *[]config.ClaudeModel            `json:"models"`
+		Headers                        *map[string]string               `json:"headers"`
+		ExcludedModels                 *[]string                        `json:"excluded-models"`
+		RebuildMidSystemMessage        *bool                            `json:"rebuild-mid-system-message"`
+		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry                   *int                             `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int            `json:"index"`
@@ -748,6 +774,9 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -866,6 +895,9 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 				return
 			}
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("openai-compatibility[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		filtered = append(filtered, arr[i])
 	}
 	openAINames := make([]string, len(filtered))
@@ -883,20 +915,21 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 }
 func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 	type openAICompatPatch struct {
-		Name                     *string                             `json:"name"`
-		Prefix                   *string                             `json:"prefix"`
-		Disabled                 *bool                               `json:"disabled"`
-		DisableCooling           json.RawMessage                     `json:"disable-cooling"`
-		BaseURL                  *string                             `json:"base-url"`
-		APIKeyEntries            *[]config.OpenAICompatibilityAPIKey `json:"api-key-entries"`
-		Models                   *[]config.OpenAICompatibilityModel  `json:"models"`
-		Headers                  *map[string]string                  `json:"headers"`
-		SupportPromptCacheKey    *bool                               `json:"support-prompt-cache-key"`
-		RequestRetry             *int                                `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                     `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                     `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                               `json:"hide-no-available-channel"`
+		Name                           *string                             `json:"name"`
+		Prefix                         *string                             `json:"prefix"`
+		Disabled                       *bool                               `json:"disabled"`
+		DisableCooling                 json.RawMessage                     `json:"disable-cooling"`
+		BaseURL                        *string                             `json:"base-url"`
+		APIKeyEntries                  *[]config.OpenAICompatibilityAPIKey `json:"api-key-entries"`
+		Models                         *[]config.OpenAICompatibilityModel  `json:"models"`
+		Headers                        *map[string]string                  `json:"headers"`
+		SupportPromptCacheKey          *bool                               `json:"support-prompt-cache-key"`
+		RequestRetry                   *int                                `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                     `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                     `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                     `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                               `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Name  *string            `json:"name"`
@@ -943,6 +976,9 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -1058,6 +1094,9 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("vertex-api-key[%d].weight", i), arr[i].Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("vertex-api-key[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 	}
 	if rejectDuplicateChannelNames(c, "vertex-api-key", names) {
 		return
@@ -1070,23 +1109,24 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 }
 func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	type vertexCompatPatch struct {
-		APIKey                   *string                     `json:"api-key"`
-		ServiceAccount           *map[string]any             `json:"service-account"`
-		ProjectID                *string                     `json:"project-id"`
-		Location                 *string                     `json:"location"`
-		Email                    *string                     `json:"email"`
-		Weight                   json.RawMessage             `json:"weight"`
-		Prefix                   *string                     `json:"prefix"`
-		BaseURL                  *string                     `json:"base-url"`
-		ProxyURL                 *string                     `json:"proxy-url"`
-		Headers                  *map[string]string          `json:"headers"`
-		Models                   *[]config.VertexCompatModel `json:"models"`
-		ExcludedModels           *[]string                   `json:"excluded-models"`
-		DisableCooling           json.RawMessage             `json:"disable-cooling"`
-		RequestRetry             *int                        `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage             `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage             `json:"provider-retry-status-codes"`
-		HideNoAvailableChannel   *bool                       `json:"hide-no-available-channel"`
+		APIKey                         *string                     `json:"api-key"`
+		ServiceAccount                 *map[string]any             `json:"service-account"`
+		ProjectID                      *string                     `json:"project-id"`
+		Location                       *string                     `json:"location"`
+		Email                          *string                     `json:"email"`
+		Weight                         json.RawMessage             `json:"weight"`
+		Prefix                         *string                     `json:"prefix"`
+		BaseURL                        *string                     `json:"base-url"`
+		ProxyURL                       *string                     `json:"proxy-url"`
+		Headers                        *map[string]string          `json:"headers"`
+		Models                         *[]config.VertexCompatModel `json:"models"`
+		ExcludedModels                 *[]string                   `json:"excluded-models"`
+		DisableCooling                 json.RawMessage             `json:"disable-cooling"`
+		RequestRetry                   *int                        `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage             `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage             `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage             `json:"provider-retry-status-codes"`
+		HideNoAvailableChannel         *bool                       `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int               `json:"index"`
@@ -1174,6 +1214,9 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -1288,6 +1331,9 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("codex-api-key[%d].weight", i), entry.Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("codex-api-key[%d].stream-first-token-timeout-seconds", i), entry.StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		filtered = append(filtered, entry)
 	}
 	codexNames := make([]string, len(filtered))
@@ -1305,23 +1351,24 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 }
 func (h *Handler) PatchCodexKey(c *gin.Context) {
 	type codexKeyPatch struct {
-		APIKey                   *string                          `json:"api-key"`
-		Weight                   json.RawMessage                  `json:"weight"`
-		Prefix                   *string                          `json:"prefix"`
-		BaseURL                  *string                          `json:"base-url"`
-		ProxyURL                 *string                          `json:"proxy-url"`
-		AlphaSearch              *bool                            `json:"alpha-search"`
-		Models                   *[]config.CodexModel             `json:"models"`
-		Headers                  *map[string]string               `json:"headers"`
-		ExcludedModels           *[]string                        `json:"excluded-models"`
-		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
-		LocalCompact             json.RawMessage                  `json:"local-compact"`
-		RequestRetry             *int                             `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
-		StreamFakeFirstTokens    *[]string                        `json:"stream-fake-first-tokens"`
+		APIKey                         *string                          `json:"api-key"`
+		Weight                         json.RawMessage                  `json:"weight"`
+		Prefix                         *string                          `json:"prefix"`
+		BaseURL                        *string                          `json:"base-url"`
+		ProxyURL                       *string                          `json:"proxy-url"`
+		AlphaSearch                    *bool                            `json:"alpha-search"`
+		Models                         *[]config.CodexModel             `json:"models"`
+		Headers                        *map[string]string               `json:"headers"`
+		ExcludedModels                 *[]string                        `json:"excluded-models"`
+		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
+		LocalCompact                   json.RawMessage                  `json:"local-compact"`
+		RequestRetry                   *int                             `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                            `json:"hide-no-available-channel"`
+		StreamFakeFirstTokens          *[]string                        `json:"stream-fake-first-tokens"`
 	}
 	var body struct {
 		Index *int           `json:"index"`
@@ -1401,6 +1448,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -1521,6 +1571,9 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 		if rejectInvalidCredentialWeight(c, fmt.Sprintf("xai-api-key[%d].weight", i), entry.Weight) {
 			return
 		}
+		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("xai-api-key[%d].stream-first-token-timeout-seconds", i), entry.StreamFirstTokenTimeoutSeconds) {
+			return
+		}
 		filtered = append(filtered, entry)
 	}
 	xaiNames := make([]string, len(filtered))
@@ -1539,22 +1592,23 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 
 func (h *Handler) PatchXAIKey(c *gin.Context) {
 	type xaiKeyPatch struct {
-		APIKey                   *string                          `json:"api-key"`
-		Priority                 *int                             `json:"priority"`
-		Weight                   json.RawMessage                  `json:"weight"`
-		Prefix                   *string                          `json:"prefix"`
-		BaseURL                  *string                          `json:"base-url"`
-		Websockets               *bool                            `json:"websockets"`
-		ProxyURL                 *string                          `json:"proxy-url"`
-		Models                   *[]config.XAIModel               `json:"models"`
-		Headers                  *map[string]string               `json:"headers"`
-		ExcludedModels           *[]string                        `json:"excluded-models"`
-		DisableCooling           json.RawMessage                  `json:"disable-cooling"`
-		RequestRetry             *int                             `json:"request-retry"`
-		ProviderRetryCount       json.RawMessage                  `json:"provider-retry-count"`
-		ProviderRetryStatusCodes json.RawMessage                  `json:"provider-retry-status-codes"`
-		RequestScopedErrors      *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
-		HideNoAvailableChannel   *bool                            `json:"hide-no-available-channel"`
+		APIKey                         *string                          `json:"api-key"`
+		Priority                       *int                             `json:"priority"`
+		Weight                         json.RawMessage                  `json:"weight"`
+		Prefix                         *string                          `json:"prefix"`
+		BaseURL                        *string                          `json:"base-url"`
+		Websockets                     *bool                            `json:"websockets"`
+		ProxyURL                       *string                          `json:"proxy-url"`
+		Models                         *[]config.XAIModel               `json:"models"`
+		Headers                        *map[string]string               `json:"headers"`
+		ExcludedModels                 *[]string                        `json:"excluded-models"`
+		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
+		RequestRetry                   *int                             `json:"request-retry"`
+		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
+		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
+		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
+		HideNoAvailableChannel         *bool                            `json:"hide-no-available-channel"`
 	}
 	var body struct {
 		Index *int         `json:"index"`
@@ -1634,6 +1688,9 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 	}
 	if body.Value.RequestRetry != nil {
 		entry.RequestRetry = body.Value.RequestRetry
+	}
+	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
 		return
@@ -1749,6 +1806,30 @@ func applyProviderRetryPatch(c *gin.Context, countRaw, codesRaw json.RawMessage,
 			*codes = &value
 		}
 	}
+	return true
+}
+
+// applyStreamFirstTokenTimeoutPatch applies a per-channel first-token wait.
+// An absent field leaves the credential untouched. JSON null clears it.
+func applyStreamFirstTokenTimeoutPatch(c *gin.Context, raw json.RawMessage, target **int) bool {
+	if len(raw) == 0 {
+		return true
+	}
+	if strings.TrimSpace(string(raw)) == "null" {
+		*target = nil
+		return true
+	}
+	var value int
+	if errUnmarshal := json.Unmarshal(raw, &value); errUnmarshal != nil {
+		c.JSON(400, gin.H{"error": "stream-first-token-timeout-seconds must be an integer or null"})
+		return false
+	}
+	if errValidate := config.ValidateStreamFirstTokenTimeout(&value); errValidate != nil {
+		c.JSON(400, gin.H{"error": errValidate.Error()})
+		return false
+	}
+	copied := value
+	*target = &copied
 	return true
 }
 

@@ -293,6 +293,9 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 	if buffering {
 		for {
 			if ctx != nil && ctx.Err() != nil {
+				if sess != nil && cliproxyexecutor.StreamFirstTokenTimeoutCanceled(ctx) {
+					e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "first_token_timeout", context.Cause(ctx))
+				}
 				if sess != nil {
 					sess.clearActive(conn, readCh)
 					unlockStreamSession()
@@ -303,6 +306,9 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 			}
 			msgType, payload, errRead := readCodexWebsocketMessage(ctx, sess, conn, readCh)
 			if errRead != nil {
+				if ctx != nil && ctx.Err() != nil {
+					continue
+				}
 				mappedErr := mapCodexWebsocketReadError(errRead)
 				if sess != nil {
 					if fakeHold {
@@ -539,6 +545,9 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 		defer close(out)
 		defer func() {
 			if sess != nil {
+				if cliproxyexecutor.StreamFirstTokenTimeoutCanceled(ctx) {
+					e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "first_token_timeout", context.Cause(ctx))
+				}
 				sess.clearActive(conn, readCh)
 				unlockStreamSession()
 				return
@@ -571,7 +580,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 			}
 			msgType, payload, errRead := readCodexWebsocketMessage(ctx, sess, conn, readCh)
 			if errRead != nil {
-				if sess != nil && ctx != nil && ctx.Err() != nil {
+				if ctx != nil && ctx.Err() != nil {
 					terminateReason = "context_done"
 					terminateErr = ctx.Err()
 					_ = send(cliproxyexecutor.StreamChunk{Err: ctx.Err()})

@@ -382,6 +382,7 @@ nonstream-keepalive-interval: 0
 #     prefix: "test" # optional: require calls like "test/gemini-3-pro-preview" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -426,6 +427,7 @@ nonstream-keepalive-interval: 0
 #     prefix: "native" # optional: require calls like "native/gemini-3-pro-preview" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -459,6 +461,7 @@ nonstream-keepalive-interval: 0
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     local-compact: true # optional override: true handles /v1/responses/compact locally, false forwards it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -507,6 +510,7 @@ nonstream-keepalive-interval: 0
 #     prefix: "xai" # optional: require calls like "xai/grok-4.5" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -544,6 +548,7 @@ nonstream-keepalive-interval: 0
 #     prefix: "test" # optional: require calls like "test/claude-sonnet-latest" to target this credential
 #     disable-cooling: false # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3 # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -697,6 +702,7 @@ nonstream-keepalive-interval: 0
 #     disable-cooling: false # optional provider override: true disables cooling, false enables it; omit to inherit global
 #     hide-no-available-channel: false # optional on any provider entry: replace downstream 503 "No available channel for model" with a generic 503; panel tests still show the original
 #     request-retry: 3 # optional per-provider override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15 # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3 # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429] # optional; omit uses 401/403/429 when count > 0; [] disables
 #     request-scoped-errors: # optional: custom rules to classify upstream errors by status and body patterns
@@ -747,6 +753,7 @@ nonstream-keepalive-interval: 0
 #   - api-key: "ag-123..."
 #     project-id: "my-gcp-project"                 # required for Antigravity request routing
 #     prefix: "ag"                                 # optional model prefix
+#     stream-first-token-timeout-seconds: 15       # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     excluded-models: []
 
 # Vertex API keys (Vertex-compatible endpoints, base-url is optional).
@@ -763,6 +770,7 @@ nonstream-keepalive-interval: 0
 #     prefix: "test"                              # optional: require calls like "test/vertex-pro" to target this credential
 #     disable-cooling: false                       # optional override: true disables cooling, false enables it; omit to inherit global
 #     request-retry: 3                             # optional per-auth override; 0 disables additional rounds; omit or set < 0 to inherit global
+#     stream-first-token-timeout-seconds: 15       # optional: cancel a stream and try the next channel when no first token arrives; 0 or omit disables; max 3600
 #     provider-retry-count: 3                       # optional same-credential retries before failover; 0/omit disables; max 10
 #     provider-retry-status-codes: [401, 403, 429]  # optional; omit uses 401/403/429 when count > 0; [] disables
 #     base-url: "https://example.com/api"         # optional, e.g. https://zenmux.ai/api; falls back to Google Vertex when omitted

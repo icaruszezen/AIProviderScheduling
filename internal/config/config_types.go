@@ -390,6 +390,11 @@ type ClaudeKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// StreamFirstTokenTimeoutSeconds cancels a streaming attempt and fails over to
+	// the next channel when no first token arrives within this many seconds.
+	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
+	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -535,6 +540,11 @@ type CodexKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// StreamFirstTokenTimeoutSeconds cancels a streaming attempt and fails over to
+	// the next channel when no first token arrives within this many seconds.
+	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
+	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -661,6 +671,11 @@ type GeminiKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// StreamFirstTokenTimeoutSeconds cancels a streaming attempt and fails over to
+	// the next channel when no first token arrives within this many seconds.
+	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
+	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -681,22 +696,23 @@ type GeminiKey struct {
 
 // AntigravityKey configures a native Antigravity API key credential.
 type AntigravityKey struct {
-	APIKey                   string            `yaml:"api-key" json:"api-key"`
-	Name                     string            `yaml:"name,omitempty" json:"name,omitempty"`
-	Group                    string            `yaml:"group,omitempty" json:"group,omitempty"`
-	ProjectID                string            `yaml:"project-id,omitempty" json:"project-id,omitempty"`
-	Priority                 int               `yaml:"priority,omitempty" json:"priority,omitempty"`
-	Weight                   *int              `yaml:"weight,omitempty" json:"weight,omitempty"`
-	Prefix                   string            `yaml:"prefix,omitempty" json:"prefix,omitempty"`
-	BaseURL                  string            `yaml:"base-url,omitempty" json:"base-url,omitempty"`
-	ProxyURL                 string            `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
-	Headers                  map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
-	ExcludedModels           []string          `yaml:"excluded-models,omitempty" json:"excluded-models,omitempty"`
-	DisableCooling           *bool             `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
-	RequestRetry             *int              `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
-	ProviderRetryCount       *int              `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
-	ProviderRetryStatusCodes *[]int            `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
-	HideNoAvailableChannel   bool              `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
+	APIKey                         string            `yaml:"api-key" json:"api-key"`
+	Name                           string            `yaml:"name,omitempty" json:"name,omitempty"`
+	Group                          string            `yaml:"group,omitempty" json:"group,omitempty"`
+	ProjectID                      string            `yaml:"project-id,omitempty" json:"project-id,omitempty"`
+	Priority                       int               `yaml:"priority,omitempty" json:"priority,omitempty"`
+	Weight                         *int              `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Prefix                         string            `yaml:"prefix,omitempty" json:"prefix,omitempty"`
+	BaseURL                        string            `yaml:"base-url,omitempty" json:"base-url,omitempty"`
+	ProxyURL                       string            `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
+	Headers                        map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
+	ExcludedModels                 []string          `yaml:"excluded-models,omitempty" json:"excluded-models,omitempty"`
+	DisableCooling                 *bool             `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
+	RequestRetry                   *int              `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
+	StreamFirstTokenTimeoutSeconds *int              `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+	ProviderRetryCount             *int              `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+	ProviderRetryStatusCodes       *[]int            `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+	HideNoAvailableChannel         bool              `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k GeminiKey) GetAPIKey() string { return k.APIKey }
@@ -785,6 +801,11 @@ type OpenAICompatibility struct {
 	// RequestRetry optionally overrides the global request-retry for this provider.
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
+
+	// StreamFirstTokenTimeoutSeconds cancels a streaming attempt and fails over to
+	// the next channel when no first token arrives within this many seconds.
+	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
+	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
 
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.

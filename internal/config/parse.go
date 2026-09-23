@@ -113,6 +113,9 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	if errValidateNames := cfg.ValidateChannelNames(); errValidateNames != nil {
 		return nil, errValidateNames
 	}
+	if errValidateTimeout := cfg.ValidateStreamFirstTokenTimeouts(); errValidateTimeout != nil {
+		return nil, errValidateTimeout
+	}
 
 	return &cfg, nil
 }

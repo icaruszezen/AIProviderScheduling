@@ -237,7 +237,7 @@ modelLoop:
 			}
 			entry := logEntryWithRequestID(ctx)
 			startStream := time.Now()
-			streamResult, errStream := executor.ExecuteStream(ctx, auth, execReq, execOpts)
+			streamResult, errStream := executeStreamObservingFirstToken(ctx, executor, auth, execReq, execOpts)
 			errStream = markUpstreamExecutionAttemptFromContext(ctx, errStream)
 			errStream = maybeMarkHideNoAvailableChannel(auth, errStream)
 			if hasUpstreamExecutionAttempt(errStream) {
@@ -257,7 +257,7 @@ modelLoop:
 						didRefreshOnUnauthorized = true
 						ctx = newUpstreamAttemptContext(ctx)
 						startRetry := time.Now()
-						streamResult, errStream = executor.ExecuteStream(ctx, auth, execReq, execOpts)
+						streamResult, errStream = executeStreamObservingFirstToken(ctx, executor, auth, execReq, execOpts)
 						errStream = markUpstreamExecutionAttemptFromContext(ctx, errStream)
 						errStream = maybeMarkHideNoAvailableChannel(auth, errStream)
 						if hasUpstreamExecutionAttempt(errStream) {
@@ -308,6 +308,16 @@ modelLoop:
 					m.recordAvailabilityNeutralResult(ctx, result)
 					continue
 				}
+				if isStreamFirstTokenTimeout(errStream) {
+					// A slow first token switches channels without the 504 transient cooldown.
+					if ephemeralResult {
+						m.reportHomeResult(ctx, result, auth)
+					} else {
+						m.recordAvailabilityNeutralResult(ctx, result)
+					}
+					lastErr = errStream
+					continue modelLoop
+				}
 				applyRequestScopedActionToResult(action, okAction, &result)
 				m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 				if okAction {
@@ -345,7 +355,7 @@ modelLoop:
 						didRefreshOnUnauthorized = true
 						ctx = newUpstreamAttemptContext(ctx)
 						startRetry := time.Now()
-						retryStream, retryErr := executor.ExecuteStream(ctx, auth, execReq, execOpts)
+						retryStream, retryErr := executeStreamObservingFirstToken(ctx, executor, auth, execReq, execOpts)
 						retryErr = markUpstreamExecutionAttemptFromContext(ctx, retryErr)
 						retryErr = maybeMarkHideNoAvailableChannel(auth, retryErr)
 						retryStream, retryErr = validateStreamResult(retryStream, retryErr)

@@ -666,6 +666,9 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 		defer close(out)
 		defer func() {
 			if sess != nil {
+				if cliproxyexecutor.StreamFirstTokenTimeoutCanceled(ctx) {
+					e.invalidateUpstreamConnWithoutDisconnectNotify(sess, conn, "first_token_timeout", context.Cause(ctx))
+				}
 				sess.clearActive(conn, readCh)
 				sess.reqMu.Unlock()
 				return
@@ -705,7 +708,7 @@ func (e *XAIWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *cliprox
 			}
 			msgType, payload, errRead := readXAIWebsocketMessage(ctx, sess, conn, readCh)
 			if errRead != nil {
-				if sess != nil && ctx != nil && ctx.Err() != nil {
+				if ctx != nil && ctx.Err() != nil {
 					terminateReason = "context_done"
 					terminateErr = ctx.Err()
 					_ = send(cliproxyexecutor.StreamChunk{Err: ctx.Err()})
@@ -1186,8 +1189,7 @@ func readXAIWebsocketMessage(ctx context.Context, sess *codexWebsocketSession, c
 		if conn == nil {
 			return 0, nil, fmt.Errorf("xai websockets executor: websocket conn is nil")
 		}
-		msgType, payload, errRead := conn.ReadMessage()
-		return msgType, payload, errRead
+		return readWebsocketMessageUntilCancel(ctx, conn, 0)
 	}
 	if conn == nil {
 		return 0, nil, fmt.Errorf("xai websockets executor: websocket conn is nil")

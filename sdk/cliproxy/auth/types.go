@@ -543,6 +543,29 @@ func (a *Auth) RequestRetryOverride() (int, bool) {
 	return 0, false
 }
 
+// StreamFirstTokenTimeout returns the per-channel wait for the first streaming
+// token. Zero means the wait is disabled.
+func (a *Auth) StreamFirstTokenTimeout() time.Duration {
+	if a == nil || a.Metadata == nil {
+		return 0
+	}
+	for _, key := range []string{"stream_first_token_timeout_seconds", "stream-first-token-timeout-seconds"} {
+		val, ok := a.Metadata[key]
+		if !ok {
+			continue
+		}
+		parsed, okParse := parseIntAny(val)
+		if !okParse || parsed <= 0 {
+			return 0
+		}
+		if parsed > 3600 {
+			parsed = 3600
+		}
+		return time.Duration(parsed) * time.Second
+	}
+	return 0
+}
+
 // ProviderRetryCount returns the same-credential retry budget for this auth.
 // Unset or negative values disable same-credential retry. Values above 10 are clamped.
 func (a *Auth) ProviderRetryCount() int {

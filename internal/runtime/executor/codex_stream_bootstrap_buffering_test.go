@@ -3,11 +3,14 @@ package executor
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
@@ -474,5 +477,116 @@ func TestCodexWebsocketsExecutor_BootstrapNonOverload_StillNotifiesDownstreamDis
 	}
 	if !notified {
 		t.Fatal("a terminal failure that is delivered in-stream must still signal the downstream disconnect")
+	}
+}
+
+func TestCodexWebsocketsExecutor_FirstTokenTimeoutCancelUnblocksSessionlessRead(t *testing.T) {
+	server := codexWebsocketServerHoldingConnection(t, codexCreatedEvent)
+	defer server.Close()
+
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(context.Canceled)
+	req, opts := codexWebsocketRequest()
+	done := make(chan error, 1)
+	go func() {
+		_, err := NewCodexWebsocketsExecutor(codexBufferingConfig(true)).ExecuteStream(ctx, codexTestAuth(server.URL), req, opts)
+		done <- err
+	}()
+	time.Sleep(200 * time.Millisecond)
+	cancel(cliproxyexecutor.ErrStreamFirstTokenTimeout)
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("error = %v, want context cancellation", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("sessionless websocket read ignored first-token cancellation")
+	}
+}
+
+func TestCodexWebsocketsExecutor_FirstTokenTimeoutDoesNotNotifyDownstream(t *testing.T) {
+	var calls atomic.Int32
+	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		if _, _, errRead := conn.ReadMessage(); errRead != nil {
+			t.Errorf("read websocket message: %v", errRead)
+			return
+		}
+		if calls.Add(1) == 1 {
+			_ = conn.WriteMessage(websocket.TextMessage, []byte(codexCreatedEvent))
+			for {
+				if _, _, errRead := conn.ReadMessage(); errRead != nil {
+					return
+				}
+			}
+		}
+		for _, frame := range []string{
+			codexCreatedEvent,
+			`{"type":"response.output_text.delta","delta":"hello"}`,
+			codexCompletedEventBody,
+		} {
+			_ = conn.WriteMessage(websocket.TextMessage, []byte(frame))
+		}
+		for {
+			if _, _, errRead := conn.ReadMessage(); errRead != nil {
+				return
+			}
+		}
+	}))
+	defer server.Close()
+
+	exec := NewCodexWebsocketsExecutor(codexBufferingConfig(true))
+	exec.store = &codexWebsocketSessionStore{sessions: make(map[string]*codexWebsocketSession)}
+	const sessionID = "first-token-timeout-session"
+	disconnectCh := exec.UpstreamDisconnectChan(sessionID)
+	if disconnectCh == nil {
+		t.Fatal("expected a disconnect channel")
+	}
+
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(context.Canceled)
+	req, opts := codexWebsocketRequest()
+	opts.Metadata = map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: sessionID}
+	done := make(chan error, 1)
+	go func() {
+		_, err := exec.ExecuteStream(ctx, codexTestAuth(server.URL), req, opts)
+		done <- err
+	}()
+	time.Sleep(200 * time.Millisecond)
+	cancel(cliproxyexecutor.ErrStreamFirstTokenTimeout)
+	select {
+	case err := <-done:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("error = %v, want context cancellation", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("session websocket read ignored first-token cancellation")
+	}
+	select {
+	case errDisconnect := <-disconnectCh:
+		t.Fatalf("first-token timeout notified downstream: %v", errDisconnect)
+	default:
+	}
+
+	nextCtx, nextCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer nextCancel()
+	result, err := exec.ExecuteStream(nextCtx, codexTestAuth(server.URL), req, opts)
+	if err != nil {
+		t.Fatalf("next channel ExecuteStream() error = %v", err)
+	}
+	combined, streamErr := drainChunks(result)
+	if !strings.Contains(combined, "hello") {
+		t.Fatalf("next stream = %q, err = %v, want hello", combined, streamErr)
+	}
+	select {
+	case errDisconnect := <-disconnectCh:
+		t.Fatalf("downstream notified after the next channel wrote: %v", errDisconnect)
+	default:
 	}
 }

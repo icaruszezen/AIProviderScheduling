@@ -148,6 +148,9 @@ func applyChannelGroupRetryBudget(opts cliproxyexecutor.Options, requestRetry, m
 }
 
 func stopChannelGroupFailover(opts cliproxyexecutor.Options, err error) bool {
+	if isStreamFirstTokenTimeout(err) {
+		return false
+	}
 	policy := channelGroupPolicyFromOptions(opts)
 	if !policy.scoped || err == nil {
 		return false

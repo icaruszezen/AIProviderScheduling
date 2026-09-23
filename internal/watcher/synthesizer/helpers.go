@@ -198,6 +198,15 @@ func addRequestRetryToMetadata(requestRetry *int, metadata map[string]any) {
 	metadata["request_retry"] = *requestRetry
 }
 
+// addStreamFirstTokenTimeoutToMetadata copies a positive per-channel first-token
+// wait into metadata. Nil and non-positive values leave the feature disabled.
+func addStreamFirstTokenTimeoutToMetadata(seconds *int, metadata map[string]any) {
+	if seconds == nil || *seconds <= 0 || metadata == nil {
+		return
+	}
+	metadata["stream_first_token_timeout_seconds"] = *seconds
+}
+
 // addProviderRetryToMetadata copies same-credential retry settings into metadata.
 // A nil count is omitted. A non-nil status-code slice is always written, including
 // an empty list that disables status-code-triggered retries.

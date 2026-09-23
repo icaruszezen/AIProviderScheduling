@@ -74,6 +74,11 @@ type VertexCompatKey struct {
 	// Nil or a negative value means "use the global request-retry". 0 disables additional retry rounds.
 	RequestRetry *int `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 
+	// StreamFirstTokenTimeoutSeconds cancels a streaming attempt and fails over to
+	// the next channel when no first token arrives within this many seconds.
+	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
+	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -127,9 +128,7 @@ func readCodexWebsocketMessage(ctx context.Context, sess *codexWebsocketSession,
 		if conn == nil {
 			return 0, nil, fmt.Errorf("codex websockets executor: websocket conn is nil")
 		}
-		_ = conn.SetReadDeadline(time.Now().Add(codexResponsesWebsocketIdleTimeout))
-		msgType, payload, errRead := conn.ReadMessage()
-		return msgType, payload, errRead
+		return readWebsocketMessageUntilCancel(ctx, conn, codexResponsesWebsocketIdleTimeout)
 	}
 	if conn == nil {
 		return 0, nil, fmt.Errorf("codex websockets executor: websocket conn is nil")
@@ -154,6 +153,46 @@ func readCodexWebsocketMessage(ctx context.Context, sess *codexWebsocketSession,
 			return ev.msgType, ev.payload, nil
 		}
 	}
+}
+
+// readWebsocketMessageUntilCancel reads one websocket message. A positive idle
+// bounds a quiet connection. Context cancellation interrupts the read immediately
+// so a first-token timeout does not wait out the idle deadline. idle <= 0 leaves
+// the read unbounded except for cancellation.
+func readWebsocketMessageUntilCancel(ctx context.Context, conn *websocket.Conn, idle time.Duration) (int, []byte, error) {
+	if conn == nil {
+		return 0, nil, fmt.Errorf("websocket conn is nil")
+	}
+	if ctx == nil {
+		if idle > 0 {
+			_ = conn.SetReadDeadline(time.Now().Add(idle))
+		}
+		return conn.ReadMessage()
+	}
+	if err := ctx.Err(); err != nil {
+		return 0, nil, err
+	}
+	stop := make(chan struct{})
+	var once sync.Once
+	finish := func() { once.Do(func() { close(stop) }) }
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = conn.SetReadDeadline(time.Now())
+		case <-stop:
+		}
+	}()
+	defer finish()
+	if idle > 0 {
+		if err := conn.SetReadDeadline(time.Now().Add(idle)); err != nil {
+			return 0, nil, err
+		}
+	}
+	msgType, payload, errRead := conn.ReadMessage()
+	if err := ctx.Err(); err != nil {
+		return 0, nil, err
+	}
+	return msgType, payload, errRead
 }
 
 func newProxyAwareWebsocketDialer(cfg *config.Config, auth *cliproxyauth.Auth) *websocket.Dialer {

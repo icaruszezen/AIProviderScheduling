@@ -44,21 +44,22 @@ type openAICompatibilityAPIKeyWithAuthIndex struct {
 }
 
 type openAICompatibilityWithAuthIndex struct {
-	Name                   string                                   `json:"name"`
-	Priority               int                                      `json:"priority,omitempty"`
-	Disabled               bool                                     `json:"disabled"`
-	Prefix                 string                                   `json:"prefix,omitempty"`
-	BaseURL                string                                   `json:"base-url"`
-	APIKeyEntries          []openAICompatibilityAPIKeyWithAuthIndex `json:"api-key-entries,omitempty"`
-	Models                 []config.OpenAICompatibilityModel        `json:"models,omitempty"`
-	Headers                map[string]string                        `json:"headers,omitempty"`
-	SupportPromptCacheKey  bool                                     `json:"support-prompt-cache-key,omitempty"`
-	DisableCooling         *bool                                    `json:"disable-cooling,omitempty"`
-	RequestRetry           *int                                     `json:"request-retry,omitempty"`
-	RequestScopedErrors    []config.RequestScopedErrorRule          `json:"request-scoped-errors,omitempty"`
-	HideNoAvailableChannel bool                                     `json:"hide-no-available-channel,omitempty"`
-	Group                  string                                   `json:"group,omitempty"`
-	AuthIndex              string                                   `json:"auth-index,omitempty"`
+	Name                           string                                   `json:"name"`
+	Priority                       int                                      `json:"priority,omitempty"`
+	Disabled                       bool                                     `json:"disabled"`
+	Prefix                         string                                   `json:"prefix,omitempty"`
+	BaseURL                        string                                   `json:"base-url"`
+	APIKeyEntries                  []openAICompatibilityAPIKeyWithAuthIndex `json:"api-key-entries,omitempty"`
+	Models                         []config.OpenAICompatibilityModel        `json:"models,omitempty"`
+	Headers                        map[string]string                        `json:"headers,omitempty"`
+	SupportPromptCacheKey          bool                                     `json:"support-prompt-cache-key,omitempty"`
+	DisableCooling                 *bool                                    `json:"disable-cooling,omitempty"`
+	RequestRetry                   *int                                     `json:"request-retry,omitempty"`
+	StreamFirstTokenTimeoutSeconds *int                                     `json:"stream-first-token-timeout-seconds,omitempty"`
+	RequestScopedErrors            []config.RequestScopedErrorRule          `json:"request-scoped-errors,omitempty"`
+	HideNoAvailableChannel         bool                                     `json:"hide-no-available-channel,omitempty"`
+	Group                          string                                   `json:"group,omitempty"`
+	AuthIndex                      string                                   `json:"auth-index,omitempty"`
 }
 
 func (h *Handler) liveAuthIndexByID() map[string]string {
@@ -322,20 +323,21 @@ func (h *Handler) openAICompatibilityWithAuthIndex() []openAICompatibilityWithAu
 		idKind := fmt.Sprintf("openai-compatibility:%s", providerName)
 
 		response := openAICompatibilityWithAuthIndex{
-			Name:                   entry.Name,
-			Priority:               entry.Priority,
-			Disabled:               entry.Disabled,
-			Prefix:                 entry.Prefix,
-			BaseURL:                entry.BaseURL,
-			Models:                 entry.Models,
-			Headers:                entry.Headers,
-			SupportPromptCacheKey:  entry.SupportPromptCacheKey,
-			DisableCooling:         entry.DisableCooling,
-			RequestRetry:           entry.RequestRetry,
-			RequestScopedErrors:    entry.RequestScopedErrors,
-			HideNoAvailableChannel: entry.HideNoAvailableChannel,
-			Group:                  entry.Group,
-			AuthIndex:              ""}
+			Name:                           entry.Name,
+			Priority:                       entry.Priority,
+			Disabled:                       entry.Disabled,
+			Prefix:                         entry.Prefix,
+			BaseURL:                        entry.BaseURL,
+			Models:                         entry.Models,
+			Headers:                        entry.Headers,
+			SupportPromptCacheKey:          entry.SupportPromptCacheKey,
+			DisableCooling:                 entry.DisableCooling,
+			RequestRetry:                   entry.RequestRetry,
+			StreamFirstTokenTimeoutSeconds: entry.StreamFirstTokenTimeoutSeconds,
+			RequestScopedErrors:            entry.RequestScopedErrors,
+			HideNoAvailableChannel:         entry.HideNoAvailableChannel,
+			Group:                          entry.Group,
+			AuthIndex:                      ""}
 		if len(entry.APIKeyEntries) == 0 {
 			id, _ := idGen.Next(idKind, entry.BaseURL)
 			response.AuthIndex = liveIndexByID[id]

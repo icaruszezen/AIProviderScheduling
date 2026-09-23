@@ -185,6 +185,9 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	if errValidateNames := cfg.ValidateChannelNames(); errValidateNames != nil {
 		return nil, errValidateNames
 	}
+	if errValidateTimeout := cfg.ValidateStreamFirstTokenTimeouts(); errValidateTimeout != nil {
+		return nil, errValidateTimeout
+	}
 
 	// Validate raw payload rules and drop invalid entries.
 	cfg.SanitizePayloadRules()
