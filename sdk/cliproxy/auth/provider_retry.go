@@ -28,7 +28,10 @@ func providerRetryOverridesHardcodedStop(auth *Auth, err error) bool {
 	return auth.IsProviderRetryableStatus(statusCodeFromError(err))
 }
 
-func shouldStopOnRequestInvalid(auth *Auth, err error) bool {
+func shouldStopOnRequestInvalid(auth *Auth, opts cliproxyexecutor.Options, err error) bool {
+	if channelGroupStatusListed(opts, err) {
+		return false
+	}
 	if !isRequestInvalidError(err) {
 		return false
 	}
@@ -36,6 +39,9 @@ func shouldStopOnRequestInvalid(auth *Auth, err error) bool {
 }
 
 func shouldStopOnRequestOrCompactFault(auth *Auth, opts cliproxyexecutor.Options, err error) bool {
+	if channelGroupStatusListed(opts, err) {
+		return false
+	}
 	if providerRetryOverridesHardcodedStop(auth, err) {
 		return false
 	}

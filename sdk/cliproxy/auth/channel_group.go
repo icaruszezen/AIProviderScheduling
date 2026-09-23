@@ -155,6 +155,25 @@ func stopChannelGroupFailover(opts cliproxyexecutor.Options, err error) bool {
 	return !policy.matches(err)
 }
 
+// channelGroupStatusListed reports whether the group's retry status list contains
+// this error's HTTP status. A listed status overrides hardcoded stops that would
+// otherwise refuse to switch channels. Error-text matches do not.
+func channelGroupStatusListed(opts cliproxyexecutor.Options, err error) bool {
+	if err == nil {
+		return false
+	}
+	policy := channelGroupPolicyFromOptions(opts)
+	if !policy.scoped || len(policy.statusCodes) == 0 {
+		return false
+	}
+	status := statusCodeFromError(err)
+	if status == 0 {
+		return false
+	}
+	_, ok := policy.statusCodes[status]
+	return ok
+}
+
 // AuthIDsForChannelGroup returns enabled auth IDs that belong to one panel group.
 func (m *Manager) AuthIDsForChannelGroup(panel, group string) []string {
 	panel = strings.TrimSpace(panel)

@@ -591,7 +591,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 					m.MarkResult(execCtx, result)
 				}
 				if okAction {
-					if isRequestScopedStop(action, okAction) {
+					if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(execOpts, errExec) {
 						return cliproxyexecutor.Response{}, wrapRequestStopError(errExec)
 					}
 					authErr = errExec
@@ -617,7 +617,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 		if authErr != nil {
 			action, okAction := matchRequestScopedErrorAction(auth, authErr, m.runtimeConfigSnapshot())
 			if okAction {
-				if isRequestScopedStop(action, okAction) {
+				if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(opts, authErr) {
 					return cliproxyexecutor.Response{}, wrapRequestStopError(authErr)
 				}
 				lastErr = authErr
@@ -817,7 +817,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 					m.MarkResult(execCtx, result)
 				}
 				if okAction {
-					if isRequestScopedStop(action, okAction) {
+					if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(execOpts, errExec) {
 						return cliproxyexecutor.Response{}, wrapRequestStopError(errExec)
 					}
 					authErr = errExec
@@ -826,7 +826,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 					}
 					continue
 				}
-				if shouldStopOnRequestInvalid(auth, errExec) {
+				if shouldStopOnRequestInvalid(auth, execOpts, errExec) {
 					return cliproxyexecutor.Response{}, errExec
 				}
 				authErr = errExec
@@ -843,7 +843,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 		if authErr != nil {
 			action, okAction := matchRequestScopedErrorAction(auth, authErr, m.runtimeConfigSnapshot())
 			if okAction {
-				if isRequestScopedStop(action, okAction) {
+				if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(opts, authErr) {
 					return cliproxyexecutor.Response{}, wrapRequestStopError(authErr)
 				}
 				lastErr = authErr
@@ -855,7 +855,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 				}
 				continue
 			}
-			if shouldStopOnRequestInvalid(auth, authErr) {
+			if shouldStopOnRequestInvalid(auth, opts, authErr) {
 				return cliproxyexecutor.Response{}, authErr
 			}
 			lastErr = authErr
@@ -1127,7 +1127,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 			}
 			action, okAction := matchRequestScopedErrorAction(auth, errStream, m.runtimeConfigSnapshot())
 			if okAction {
-				if isRequestScopedStop(action, okAction) {
+				if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(opts, errStream) {
 					return nil, wrapRequestStopError(errStream)
 				}
 				lastErr = errStream
@@ -1142,7 +1142,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 				}
 				continue
 			}
-			if shouldStopOnRequestInvalid(auth, errStream) {
+			if shouldStopOnRequestInvalid(auth, opts, errStream) {
 				return nil, errStream
 			}
 			lastErr = errStream

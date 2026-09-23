@@ -293,12 +293,12 @@ modelLoop:
 				if isCredentialScopedError(errStream) {
 					result.CredentialScope = true
 				}
-				if okAction && isRequestScopedStop(action, okAction) {
+				if okAction && isRequestScopedStop(action, okAction) && !channelGroupStatusListed(execOpts, errStream) {
 					applyRequestScopedActionToResult(action, okAction, &result)
 					m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 					return nil, wrapRequestStopError(errStream)
 				}
-				if shouldStopOnRequestInvalid(auth, errStream) {
+				if shouldStopOnRequestInvalid(auth, execOpts, errStream) {
 					applyRequestScopedActionToResult(action, okAction, &result)
 					m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 					return nil, errStream
@@ -405,7 +405,7 @@ modelLoop:
 					applyRequestScopedActionToResult(action, okAction, &result)
 					m.recordExecutionResult(ctx, result, auth, ephemeralResult)
 					discardStreamChunks(streamResult.Chunks)
-					if isRequestScopedStop(action, okAction) {
+					if isRequestScopedStop(action, okAction) && !channelGroupStatusListed(execOpts, bootstrapErr) {
 						return nil, wrapRequestStopError(bootstrapErr)
 					}
 					lastErr = bootstrapErr
@@ -415,7 +415,7 @@ modelLoop:
 					}
 					continue modelLoop
 				}
-				if shouldStopOnRequestInvalid(auth, bootstrapErr) {
+				if shouldStopOnRequestInvalid(auth, execOpts, bootstrapErr) {
 					rerr := resultErrorFromError(bootstrapErr)
 					result := Result{AuthID: auth.ID, Provider: provider, Model: resultModel, RouteModel: routeModel, Success: false, Error: rerr, Options: execOpts}
 					result.RetryAfter = retryAfterFromError(bootstrapErr)

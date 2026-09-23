@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	internalconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
 )
@@ -197,6 +198,111 @@ func TestExecuteChannelGroupDoesNotSwitchOnUnmatchedError(t *testing.T) {
 	}
 	if got := executor.calledIDs(); len(got) != 1 || got[0] != "auth-a" {
 		t.Fatalf("calls = %#v, want only auth-a", got)
+	}
+}
+
+func TestExecuteChannelGroupSwitchesOnListedRequestFault(t *testing.T) {
+	manager := NewManager(nil, providerRetrySelector{}, nil)
+	executor := &channelGroupExecutor{
+		failFor: map[string]int{"auth-a": 1},
+		status:  http.StatusBadRequest,
+		message: "bad request",
+	}
+	manager.RegisterExecutor(executor)
+	model := "gpt-channel-group-request-fault"
+	registerChannelGroupAuth(t, manager, "auth-a", "team", "10", nil, model)
+	registerChannelGroupAuth(t, manager, "auth-b", "team", "1", nil, model)
+
+	resp, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, channelGroupOptions(1, []int{http.StatusBadRequest}, nil))
+	if errExecute != nil {
+		t.Fatalf("Execute() error = %v", errExecute)
+	}
+	if string(resp.Payload) != "ok" {
+		t.Fatalf("payload = %q", resp.Payload)
+	}
+	if got := executor.calledIDs(); len(got) != 2 || got[0] != "auth-a" || got[1] != "auth-b" {
+		t.Fatalf("calls = %#v, want auth-a then auth-b", got)
+	}
+}
+
+func TestExecuteChannelGroupKeepsUnlistedRequestFault(t *testing.T) {
+	manager := NewManager(nil, providerRetrySelector{}, nil)
+	executor := &channelGroupExecutor{
+		failFor: map[string]int{"auth-a": 1, "auth-b": 1},
+		status:  http.StatusBadRequest,
+		message: "bad request",
+	}
+	manager.RegisterExecutor(executor)
+	model := "gpt-channel-group-unlisted-fault"
+	registerChannelGroupAuth(t, manager, "auth-a", "team", "10", nil, model)
+	registerChannelGroupAuth(t, manager, "auth-b", "team", "1", nil, model)
+
+	if _, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, channelGroupOptions(1, []int{http.StatusTooManyRequests}, nil)); errExecute == nil {
+		t.Fatal("expected unlisted request fault to stop")
+	}
+	if got := executor.calledIDs(); len(got) != 1 || got[0] != "auth-a" {
+		t.Fatalf("calls = %#v, want only auth-a", got)
+	}
+}
+
+func TestExecuteStreamChannelGroupSwitchesOnListedRequestFault(t *testing.T) {
+	manager := NewManager(nil, providerRetrySelector{}, nil)
+	executor := &channelGroupExecutor{
+		failFor: map[string]int{"auth-a": 1},
+		status:  http.StatusBadRequest,
+		message: "bad request",
+	}
+	manager.RegisterExecutor(executor)
+	model := "gpt-channel-group-stream-fault"
+	registerChannelGroupAuth(t, manager, "auth-a", "team", "10", nil, model)
+	registerChannelGroupAuth(t, manager, "auth-b", "team", "1", nil, model)
+
+	result, errExecute := manager.ExecuteStream(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, channelGroupOptions(1, []int{http.StatusBadRequest}, nil))
+	if errExecute != nil {
+		t.Fatalf("ExecuteStream() error = %v", errExecute)
+	}
+	drainChannelGroupStream(t, result)
+	if got := executor.calledIDs(); len(got) != 2 || got[0] != "auth-a" || got[1] != "auth-b" {
+		t.Fatalf("calls = %#v, want auth-a then auth-b", got)
+	}
+}
+
+func TestExecuteChannelGroupSwitchesOnListedRequestScopedStop(t *testing.T) {
+	manager := NewManager(nil, providerRetrySelector{}, nil)
+	executor := &channelGroupExecutor{
+		failFor: map[string]int{"auth-a": 1},
+		status:  http.StatusBadRequest,
+		message: "bad request",
+	}
+	manager.RegisterExecutor(executor)
+	model := "gpt-channel-group-scoped-stop"
+	registerChannelGroupAuth(t, manager, "auth-a", "team", "10", map[string]any{
+		"request_scoped_errors": []internalconfig.RequestScopedErrorRule{{
+			Status: http.StatusBadRequest,
+			Match:  []string{"bad request"},
+			Action: "stop",
+		}},
+	}, model)
+	registerChannelGroupAuth(t, manager, "auth-b", "team", "1", nil, model)
+
+	resp, errExecute := manager.Execute(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, channelGroupOptions(1, []int{http.StatusBadRequest}, nil))
+	if errExecute != nil {
+		t.Fatalf("Execute() error = %v", errExecute)
+	}
+	if string(resp.Payload) != "ok" {
+		t.Fatalf("payload = %q", resp.Payload)
+	}
+	if got := executor.calledIDs(); len(got) != 2 || got[0] != "auth-a" || got[1] != "auth-b" {
+		t.Fatalf("calls = %#v, want auth-a then auth-b", got)
+	}
+}
+
+func drainChannelGroupStream(t *testing.T, result *cliproxyexecutor.StreamResult) {
+	t.Helper()
+	if result == nil || result.Chunks == nil {
+		t.Fatal("expected stream chunks")
+	}
+	for range result.Chunks {
 	}
 }
 
