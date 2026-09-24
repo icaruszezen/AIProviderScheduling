@@ -33,6 +33,20 @@ func newResponsesStreamTestHandler(t *testing.T) (*OpenAIResponsesAPIHandler, *h
 	return h, recorder, c, flusher
 }
 
+func TestResponsesSSEFramerEmitsTypedDataLineImmediately(t *testing.T) {
+	var output bytes.Buffer
+	framer := &responsesSSEFramer{}
+
+	framer.WriteChunk(&output, []byte(`data: {"type":"response.output_text.delta","delta":" "}`))
+	got := output.String()
+	if !strings.Contains(got, `"delta":" "`) || framer.dataFrames != 1 {
+		t.Fatalf("typed data line was held for the next event: frames=%d output=%q", framer.dataFrames, got)
+	}
+	if len(framer.pending) != 0 {
+		t.Fatalf("typed data line remained pending: %q", framer.pending)
+	}
+}
+
 func TestResponsesSSEFramerWaitsForEventFieldAfterData(t *testing.T) {
 	var output bytes.Buffer
 	framer := &responsesSSEFramer{}

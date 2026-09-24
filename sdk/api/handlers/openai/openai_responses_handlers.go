@@ -92,7 +92,7 @@ func (f *responsesSSEFramer) WriteChunk(w io.Writer, chunk []byte) {
 		f.pending = f.pending[:0]
 		return
 	}
-	if len(f.pending) == 0 || !responsesSSECanEmitWithoutDelimiter(f.pending) {
+	if len(f.pending) == 0 || (!responsesSSECanEmitWithoutDelimiter(f.pending) && !responsesSSECanEmitTypedDataLine(f.pending)) {
 		return
 	}
 	f.writeFrame(w, f.pending)
@@ -373,6 +373,21 @@ func responsesSSEHasField(chunk []byte, prefix []byte) bool {
 		}
 	}
 	return false
+}
+
+// responsesSSECanEmitTypedDataLine reports whether chunk is one complete data-only
+// SSE line whose JSON already names the event. Those lines do not need a following
+// event field or the next data frame before they can be forwarded.
+func responsesSSECanEmitTypedDataLine(chunk []byte) bool {
+	trimmed := bytes.TrimSpace(chunk)
+	if len(trimmed) == 0 || responsesSSEHasField(trimmed, []byte("event:")) || !responsesSSEHasField(trimmed, []byte("data:")) {
+		return false
+	}
+	payload, ok := responsesSSEDataPayload(trimmed)
+	if !ok || len(payload) == 0 || !json.Valid(payload) {
+		return false
+	}
+	return gjson.GetBytes(payload, "type").String() != ""
 }
 
 func responsesSSECanEmitWithoutDelimiter(chunk []byte) bool {
