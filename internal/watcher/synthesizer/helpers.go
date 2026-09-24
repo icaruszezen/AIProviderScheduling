@@ -207,6 +207,15 @@ func addStreamFirstTokenTimeoutToMetadata(seconds *int, metadata map[string]any)
 	metadata["stream_first_token_timeout_seconds"] = *seconds
 }
 
+// addMaxConcurrentConnectionsToMetadata copies a positive per-channel connection
+// cap into metadata. Nil and non-positive values leave the channel unlimited.
+func addMaxConcurrentConnectionsToMetadata(limit *int, metadata map[string]any) {
+	if limit == nil || *limit <= 0 || metadata == nil {
+		return
+	}
+	metadata["max_concurrent_connections"] = *limit
+}
+
 // addProviderRetryToMetadata copies same-credential retry settings into metadata.
 // A nil count is omitted. A non-nil status-code slice is always written, including
 // an empty list that disables status-code-triggered retries.

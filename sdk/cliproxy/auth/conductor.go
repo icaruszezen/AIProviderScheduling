@@ -161,6 +161,9 @@ type Manager struct {
 	rtProvider RoundTripperProvider
 
 	requestPrepareLocks sync.Map
+	// channelConnections counts in-flight requests per auth ID. The counter is
+	// independent of Auth clones so management snapshots see the live occupancy.
+	channelConnections sync.Map
 	// refreshLocks serializes credential refresh per auth ID so concurrent
 	// 401 recoveries and auto-refresh workers do not race the same refresh_token.
 	refreshLocks sync.Map

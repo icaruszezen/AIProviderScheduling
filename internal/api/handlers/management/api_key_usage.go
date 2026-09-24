@@ -11,9 +11,18 @@ import (
 )
 
 type apiKeyUsageEntry struct {
-	Success        int64                          `json:"success"`
-	Failed         int64                          `json:"failed"`
-	RecentRequests []coreauth.RecentRequestBucket `json:"recent_requests"`
+	Success           int64                          `json:"success"`
+	Failed            int64                          `json:"failed"`
+	ActiveConnections int64                          `json:"active_connections"`
+	MaxConnections    int                            `json:"max_connections"`
+	RecentRequests    []coreauth.RecentRequestBucket `json:"recent_requests"`
+}
+
+func mergeMaxConnections(current, next int) int {
+	if current <= 0 || next <= 0 {
+		return 0
+	}
+	return current + next
 }
 
 func mergeRecentRequestBuckets(dst, src []coreauth.RecentRequestBucket) []coreauth.RecentRequestBucket {
@@ -98,6 +107,8 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 		provider := apiKeyUsageProviderKey(auth)
 
 		recent := auth.RecentRequestsSnapshot(now)
+		activeConnections := manager.ActiveChannelConnections(auth.ID)
+		maxConnections := auth.MaxConcurrentConnections()
 		providerBucket, ok := out[provider]
 		if !ok {
 			providerBucket = make(map[string]apiKeyUsageEntry)
@@ -106,14 +117,18 @@ func (h *Handler) GetAPIKeyUsage(c *gin.Context) {
 		if existing, exists := providerBucket[compositeKey]; exists {
 			existing.Success += auth.Success
 			existing.Failed += auth.Failed
+			existing.ActiveConnections += activeConnections
+			existing.MaxConnections = mergeMaxConnections(existing.MaxConnections, maxConnections)
 			existing.RecentRequests = mergeRecentRequestBuckets(existing.RecentRequests, recent)
 			providerBucket[compositeKey] = existing
 			continue
 		}
 		providerBucket[compositeKey] = apiKeyUsageEntry{
-			Success:        auth.Success,
-			Failed:         auth.Failed,
-			RecentRequests: recent}
+			Success:           auth.Success,
+			Failed:            auth.Failed,
+			ActiveConnections: activeConnections,
+			MaxConnections:    maxConnections,
+			RecentRequests:    recent}
 	}
 
 	c.JSON(http.StatusOK, out)

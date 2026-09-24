@@ -134,3 +134,38 @@ func TestGetAPIKeyUsage_GroupsOpenAICompatibleByCompatName(t *testing.T) {
 		t.Fatalf("vast totals = %d/%d, want 1/0", vastEntry.Success, vastEntry.Failed)
 	}
 }
+
+func TestGetAPIKeyUsage_ReportsConnectionCapacity(t *testing.T) {
+	t.Setenv("MANAGEMENT_PASSWORD", "")
+
+	manager := coreauth.NewManager(nil, nil, nil)
+	if _, err := manager.Register(context.Background(), &coreauth.Auth{
+		ID:       "codex-auth",
+		Provider: "codex",
+		Attributes: map[string]string{
+			"api_key":  "codex-key",
+			"base_url": "https://codex.example.com",
+		},
+		Metadata: map[string]any{"max_concurrent_connections": 4},
+	}); err != nil {
+		t.Fatalf("register codex auth: %v", err)
+	}
+
+	h := NewHandlerWithoutConfigFilePath(&config.Config{}, manager)
+	rec := httptest.NewRecorder()
+	ginCtx, _ := gin.CreateTestContext(rec)
+	ginCtx.Request = httptest.NewRequest(http.MethodGet, "/v0/management/api-key-usage", nil)
+	h.GetAPIKeyUsage(ginCtx)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", rec.Code, rec.Body.String())
+	}
+
+	var payload map[string]map[string]apiKeyUsageEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+	entry := payload["codex"]["https://codex.example.com|codex-key"]
+	if entry.ActiveConnections != 0 || entry.MaxConnections != 4 {
+		t.Fatalf("connections = %d/%d, want 0/4", entry.ActiveConnections, entry.MaxConnections)
+	}
+}

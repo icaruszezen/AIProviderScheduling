@@ -188,6 +188,9 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 	if errValidateTimeout := cfg.ValidateStreamFirstTokenTimeouts(); errValidateTimeout != nil {
 		return nil, errValidateTimeout
 	}
+	if errValidateConnections := cfg.ValidateMaxConcurrentConnectionLimits(); errValidateConnections != nil {
+		return nil, errValidateConnections
+	}
 
 	// Validate raw payload rules and drop invalid entries.
 	cfg.SanitizePayloadRules()

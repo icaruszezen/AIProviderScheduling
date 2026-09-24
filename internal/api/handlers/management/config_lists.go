@@ -44,6 +44,14 @@ func rejectInvalidStreamFirstTokenTimeout(c *gin.Context, field string, seconds 
 	return false
 }
 
+func rejectInvalidMaxConcurrentConnections(c *gin.Context, field string, limit *int) bool {
+	if errValidate := config.ValidateMaxConcurrentConnections(limit); errValidate != nil {
+		c.JSON(400, gin.H{"error": fmt.Sprintf("%s: %v", field, errValidate)})
+		return true
+	}
+	return false
+}
+
 // rejectInvalidFingerprintProfile fails a write that carries a value the request
 // path would silently ignore, so a typo surfaces here instead of as a warning
 // behind every later request.
@@ -193,6 +201,9 @@ func (h *Handler) PutGeminiKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("gemini-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("gemini-api-key[%d].max-concurrent-connections", index), arr[index].MaxConcurrentConnections) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -218,6 +229,7 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
 		RequestRetry                   *int                             `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                  `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
@@ -302,6 +314,9 @@ func (h *Handler) PatchGeminiKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -428,6 +443,9 @@ func (h *Handler) PutInteractionsKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("interactions-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("interactions-api-key[%d].max-concurrent-connections", index), arr[index].MaxConcurrentConnections) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -453,6 +471,7 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
 		RequestRetry                   *int                             `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                  `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
@@ -538,6 +557,9 @@ func (h *Handler) PatchInteractionsKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -667,6 +689,9 @@ func (h *Handler) PutClaudeKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("claude-api-key[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("claude-api-key[%d].max-concurrent-connections", i), arr[i].MaxConcurrentConnections) {
+			return
+		}
 		if rejectInvalidFingerprintProfile(c, fmt.Sprintf("claude-api-key[%d].fingerprint-profile", i), arr[i].FingerprintProfile) {
 			return
 		}
@@ -695,6 +720,7 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
 		RequestRetry                   *int                             `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                  `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
@@ -776,6 +802,9 @@ func (h *Handler) PatchClaudeKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -898,6 +927,9 @@ func (h *Handler) PutOpenAICompat(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("openai-compatibility[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("openai-compatibility[%d].max-concurrent-connections", i), arr[i].MaxConcurrentConnections) {
+			return
+		}
 		filtered = append(filtered, arr[i])
 	}
 	openAINames := make([]string, len(filtered))
@@ -926,6 +958,7 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 		SupportPromptCacheKey          *bool                               `json:"support-prompt-cache-key"`
 		RequestRetry                   *int                                `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                     `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                     `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                     `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                     `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule    `json:"request-scoped-errors"`
@@ -978,6 +1011,9 @@ func (h *Handler) PatchOpenAICompat(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -1097,6 +1133,9 @@ func (h *Handler) PutVertexCompatKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("vertex-api-key[%d].stream-first-token-timeout-seconds", i), arr[i].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("vertex-api-key[%d].max-concurrent-connections", i), arr[i].MaxConcurrentConnections) {
+			return
+		}
 	}
 	if rejectDuplicateChannelNames(c, "vertex-api-key", names) {
 		return
@@ -1124,6 +1163,7 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage             `json:"disable-cooling"`
 		RequestRetry                   *int                        `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage             `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage             `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage             `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage             `json:"provider-retry-status-codes"`
 		HideNoAvailableChannel         *bool                       `json:"hide-no-available-channel"`
@@ -1216,6 +1256,9 @@ func (h *Handler) PatchVertexCompatKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -1334,6 +1377,9 @@ func (h *Handler) PutCodexKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("codex-api-key[%d].stream-first-token-timeout-seconds", i), entry.StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("codex-api-key[%d].max-concurrent-connections", i), entry.MaxConcurrentConnections) {
+			return
+		}
 		filtered = append(filtered, entry)
 	}
 	codexNames := make([]string, len(filtered))
@@ -1364,6 +1410,7 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		LocalCompact                   json.RawMessage                  `json:"local-compact"`
 		RequestRetry                   *int                             `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                  `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
@@ -1450,6 +1497,9 @@ func (h *Handler) PatchCodexKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -1574,6 +1624,9 @@ func (h *Handler) PutXAIKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("xai-api-key[%d].stream-first-token-timeout-seconds", i), entry.StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("xai-api-key[%d].max-concurrent-connections", i), entry.MaxConcurrentConnections) {
+			return
+		}
 		filtered = append(filtered, entry)
 	}
 	xaiNames := make([]string, len(filtered))
@@ -1605,6 +1658,7 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage                  `json:"disable-cooling"`
 		RequestRetry                   *int                             `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage                  `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage                  `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage                  `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage                  `json:"provider-retry-status-codes"`
 		RequestScopedErrors            *[]config.RequestScopedErrorRule `json:"request-scoped-errors"`
@@ -1690,6 +1744,9 @@ func (h *Handler) PatchXAIKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {
@@ -1825,6 +1882,30 @@ func applyStreamFirstTokenTimeoutPatch(c *gin.Context, raw json.RawMessage, targ
 		return false
 	}
 	if errValidate := config.ValidateStreamFirstTokenTimeout(&value); errValidate != nil {
+		c.JSON(400, gin.H{"error": errValidate.Error()})
+		return false
+	}
+	copied := value
+	*target = &copied
+	return true
+}
+
+// applyMaxConcurrentConnectionsPatch applies a per-channel in-flight connection cap.
+// An absent field leaves the credential untouched. JSON null clears it. Zero means unlimited.
+func applyMaxConcurrentConnectionsPatch(c *gin.Context, raw json.RawMessage, target **int) bool {
+	if len(raw) == 0 {
+		return true
+	}
+	if strings.TrimSpace(string(raw)) == "null" {
+		*target = nil
+		return true
+	}
+	var value int
+	if errUnmarshal := json.Unmarshal(raw, &value); errUnmarshal != nil {
+		c.JSON(400, gin.H{"error": "max-concurrent-connections must be an integer or null"})
+		return false
+	}
+	if errValidate := config.ValidateMaxConcurrentConnections(&value); errValidate != nil {
 		c.JSON(400, gin.H{"error": errValidate.Error()})
 		return false
 	}

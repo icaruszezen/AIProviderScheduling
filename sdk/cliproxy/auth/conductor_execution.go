@@ -440,12 +440,16 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 	attempted := make(map[string]struct{})
 	var lastErr error
 	var upstreamErr error
+	var connectionLimitBlocked bool
+	var connectionReleases channelConnectionReleases
+	defer connectionReleases.releaseAll()
 	for {
+		connectionReleases.releaseAll()
 		if maxRetryCredentials > 0 && len(attempted) >= maxRetryCredentials {
 			if lastErr != nil {
 				return cliproxyexecutor.Response{}, preferredExecutionAttemptError(lastErr, upstreamErr)
 			}
-			return cliproxyexecutor.Response{}, &Error{Code: "auth_not_found", Message: "no auth available"}
+			return cliproxyexecutor.Response{}, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, &Error{Code: "auth_not_found", Message: "no auth available"})
 		}
 		pickOpts := opts
 		if homeMode {
@@ -458,7 +462,7 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 			if shouldReturnLastErrorOnPickFailure(homeMode, lastErr, errPick) {
 				return cliproxyexecutor.Response{}, preferredExecutionAttemptError(lastErr, upstreamErr)
 			}
-			return cliproxyexecutor.Response{}, errPick
+			return cliproxyexecutor.Response{}, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, errPick)
 		}
 
 		entry := logEntryWithRequestID(ctx)
@@ -466,6 +470,10 @@ func (m *Manager) executeMixedOnce(ctx context.Context, providers []string, req 
 		publishSelectedAuthMetadata(opts.Metadata, auth)
 
 		tried[auth.ID] = struct{}{}
+		if !m.holdChannelConnection(homeMode, auth, &connectionReleases) {
+			connectionLimitBlocked = true
+			continue
+		}
 		execCtx := ctx
 		if rt := m.roundTripperFor(auth); rt != nil {
 			execCtx = context.WithValue(execCtx, roundTripperContextKey{}, rt)
@@ -662,12 +670,16 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 	attempted := make(map[string]struct{})
 	var lastErr error
 	var upstreamErr error
+	var connectionLimitBlocked bool
+	var connectionReleases channelConnectionReleases
+	defer connectionReleases.releaseAll()
 	for {
+		connectionReleases.releaseAll()
 		if maxRetryCredentials > 0 && len(attempted) >= maxRetryCredentials {
 			if lastErr != nil {
 				return cliproxyexecutor.Response{}, preferredExecutionAttemptError(lastErr, upstreamErr)
 			}
-			return cliproxyexecutor.Response{}, &Error{Code: "auth_not_found", Message: "no auth available"}
+			return cliproxyexecutor.Response{}, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, &Error{Code: "auth_not_found", Message: "no auth available"})
 		}
 		pickOpts := opts
 		if homeMode {
@@ -680,7 +692,7 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 			if shouldReturnLastErrorOnPickFailure(homeMode, lastErr, errPick) {
 				return cliproxyexecutor.Response{}, preferredExecutionAttemptError(lastErr, upstreamErr)
 			}
-			return cliproxyexecutor.Response{}, errPick
+			return cliproxyexecutor.Response{}, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, errPick)
 		}
 
 		entry := logEntryWithRequestID(ctx)
@@ -688,6 +700,10 @@ func (m *Manager) executeCountMixedOnce(ctx context.Context, providers []string,
 		publishSelectedAuthMetadata(opts.Metadata, auth)
 
 		tried[auth.ID] = struct{}{}
+		if !m.holdChannelConnection(homeMode, auth, &connectionReleases) {
+			connectionLimitBlocked = true
+			continue
+		}
 		execCtx := ctx
 		if rt := m.roundTripperFor(auth); rt != nil {
 			execCtx = context.WithValue(execCtx, roundTripperContextKey{}, rt)
@@ -893,8 +909,12 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 	attempted := make(map[string]struct{})
 	var lastErr error
 	var upstreamErr error
+	var connectionLimitBlocked bool
 	var roundTiming homeRetryRoundTiming
+	var connectionReleases channelConnectionReleases
+	defer connectionReleases.releaseAll()
 	for {
+		connectionReleases.releaseAll()
 		allowSameAuthRetry := homeMode && homeSameAuthRetryPending && lastHomeAuthID != "" && homeSameAuthRetries[lastHomeAuthID] == 0
 		if maxRetryCredentials > 0 && len(attempted) >= maxRetryCredentials && !allowSameAuthRetry {
 			if lastErr != nil {
@@ -904,7 +924,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 				}
 				return nil, preferredErr
 			}
-			return nil, &Error{Code: "auth_not_found", Message: "no auth available"}
+			return nil, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, &Error{Code: "auth_not_found", Message: "no auth available"})
 		}
 		pickOpts := opts
 		if homeMode {
@@ -941,7 +961,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 				}
 				return nil, preferredErr
 			}
-			return nil, errPick
+			return nil, preferChannelConnectionLimitError(connectionLimitBlocked, lastErr, errPick)
 		}
 		if auth == nil || executor == nil {
 			if selection != nil {
@@ -1005,6 +1025,10 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 		publishSelectedAuthMetadata(opts.Metadata, auth)
 
 		tried[auth.ID] = struct{}{}
+		if !m.holdChannelConnection(homeMode, auth, &connectionReleases) {
+			connectionLimitBlocked = true
+			continue
+		}
 		execCtx := ctx
 		releaseAttempt := func() {}
 		if selection != nil {
@@ -1163,7 +1187,7 @@ func (m *Manager) executeStreamMixedOnce(ctx context.Context, providers []string
 			}
 			return wrapHomeStream(ctx, streamResult, selection, releaseAttempt), nil
 		}
-		return streamResult, nil
+		return wrapChannelConnectionStream(ctx, streamResult, connectionReleases.detachLatest()), nil
 	}
 }
 

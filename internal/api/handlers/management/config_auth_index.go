@@ -56,6 +56,7 @@ type openAICompatibilityWithAuthIndex struct {
 	DisableCooling                 *bool                                    `json:"disable-cooling,omitempty"`
 	RequestRetry                   *int                                     `json:"request-retry,omitempty"`
 	StreamFirstTokenTimeoutSeconds *int                                     `json:"stream-first-token-timeout-seconds,omitempty"`
+	MaxConcurrentConnections       *int                                     `json:"max-concurrent-connections,omitempty"`
 	RequestScopedErrors            []config.RequestScopedErrorRule          `json:"request-scoped-errors,omitempty"`
 	HideNoAvailableChannel         bool                                     `json:"hide-no-available-channel,omitempty"`
 	Group                          string                                   `json:"group,omitempty"`
@@ -334,6 +335,7 @@ func (h *Handler) openAICompatibilityWithAuthIndex() []openAICompatibilityWithAu
 			DisableCooling:                 entry.DisableCooling,
 			RequestRetry:                   entry.RequestRetry,
 			StreamFirstTokenTimeoutSeconds: entry.StreamFirstTokenTimeoutSeconds,
+			MaxConcurrentConnections:       entry.MaxConcurrentConnections,
 			RequestScopedErrors:            entry.RequestScopedErrors,
 			HideNoAvailableChannel:         entry.HideNoAvailableChannel,
 			Group:                          entry.Group,

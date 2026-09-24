@@ -79,6 +79,10 @@ type VertexCompatKey struct {
 	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
 	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
 
+	// MaxConcurrentConnections limits how many requests may occupy this channel at once.
+	// Nil or 0 means unlimited. Values must be between 0 and 1,000,000.
+	MaxConcurrentConnections *int `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`

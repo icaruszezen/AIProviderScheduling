@@ -395,6 +395,10 @@ type ClaudeKey struct {
 	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
 	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
 
+	// MaxConcurrentConnections limits how many requests may occupy this channel at once.
+	// Nil or 0 means unlimited. Values must be between 0 and 1,000,000.
+	MaxConcurrentConnections *int `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -545,6 +549,10 @@ type CodexKey struct {
 	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
 	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
 
+	// MaxConcurrentConnections limits how many requests may occupy this channel at once.
+	// Nil or 0 means unlimited. Values must be between 0 and 1,000,000.
+	MaxConcurrentConnections *int `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -676,6 +684,10 @@ type GeminiKey struct {
 	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
 	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
 
+	// MaxConcurrentConnections limits how many requests may occupy this channel at once.
+	// Nil or 0 means unlimited. Values must be between 0 and 1,000,000.
+	MaxConcurrentConnections *int `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
+
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.
 	ProviderRetryCount *int `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
@@ -710,9 +722,11 @@ type AntigravityKey struct {
 	DisableCooling                 *bool             `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
 	RequestRetry                   *int              `yaml:"request-retry,omitempty" json:"request-retry,omitempty"`
 	StreamFirstTokenTimeoutSeconds *int              `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
-	ProviderRetryCount             *int              `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
-	ProviderRetryStatusCodes       *[]int            `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
-	HideNoAvailableChannel         bool              `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
+	// MaxConcurrentConnections limits in-flight requests. Nil or 0 means unlimited.
+	MaxConcurrentConnections *int   `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
+	ProviderRetryCount       *int   `yaml:"provider-retry-count,omitempty" json:"provider-retry-count,omitempty"`
+	ProviderRetryStatusCodes *[]int `yaml:"provider-retry-status-codes,omitempty" json:"provider-retry-status-codes,omitempty"`
+	HideNoAvailableChannel   bool   `yaml:"hide-no-available-channel,omitempty" json:"hide-no-available-channel,omitempty"`
 }
 
 func (k GeminiKey) GetAPIKey() string { return k.APIKey }
@@ -806,6 +820,10 @@ type OpenAICompatibility struct {
 	// the next channel when no first token arrives within this many seconds.
 	// Nil or 0 leaves the wait disabled. Values must be between 0 and 3600.
 	StreamFirstTokenTimeoutSeconds *int `yaml:"stream-first-token-timeout-seconds,omitempty" json:"stream-first-token-timeout-seconds,omitempty"`
+
+	// MaxConcurrentConnections limits how many requests may occupy this channel at once.
+	// Nil or 0 means unlimited. Values must be between 0 and 1,000,000.
+	MaxConcurrentConnections *int `yaml:"max-concurrent-connections,omitempty" json:"max-concurrent-connections,omitempty"`
 
 	// ProviderRetryCount is the number of same-credential retries before failover.
 	// Nil or a negative value disables same-credential retry. Values above 10 are clamped to 10.

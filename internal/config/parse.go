@@ -116,6 +116,9 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	if errValidateTimeout := cfg.ValidateStreamFirstTokenTimeouts(); errValidateTimeout != nil {
 		return nil, errValidateTimeout
 	}
+	if errValidateConnections := cfg.ValidateMaxConcurrentConnectionLimits(); errValidateConnections != nil {
+		return nil, errValidateConnections
+	}
 
 	return &cfg, nil
 }

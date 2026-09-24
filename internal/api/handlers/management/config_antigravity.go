@@ -38,6 +38,9 @@ func (h *Handler) PutAntigravityKeys(c *gin.Context) {
 		if rejectInvalidStreamFirstTokenTimeout(c, fmt.Sprintf("antigravity-api-key[%d].stream-first-token-timeout-seconds", index), arr[index].StreamFirstTokenTimeoutSeconds) {
 			return
 		}
+		if rejectInvalidMaxConcurrentConnections(c, fmt.Sprintf("antigravity-api-key[%d].max-concurrent-connections", index), arr[index].MaxConcurrentConnections) {
+			return
+		}
 		arr[index].Name = config.NormalizeChannelName(arr[index].Name)
 		arr[index].Group = config.NormalizeChannelGroup(arr[index].Group)
 		names[index] = arr[index].Name
@@ -65,6 +68,7 @@ func (h *Handler) PatchAntigravityKey(c *gin.Context) {
 		DisableCooling                 json.RawMessage    `json:"disable-cooling"`
 		RequestRetry                   *int               `json:"request-retry"`
 		StreamFirstTokenTimeoutSeconds json.RawMessage    `json:"stream-first-token-timeout-seconds"`
+		MaxConcurrentConnections       json.RawMessage    `json:"max-concurrent-connections"`
 		ProviderRetryCount             json.RawMessage    `json:"provider-retry-count"`
 		ProviderRetryStatusCodes       json.RawMessage    `json:"provider-retry-status-codes"`
 		HideNoAvailableChannel         *bool              `json:"hide-no-available-channel"`
@@ -145,6 +149,9 @@ func (h *Handler) PatchAntigravityKey(c *gin.Context) {
 		entry.RequestRetry = body.Value.RequestRetry
 	}
 	if !applyStreamFirstTokenTimeoutPatch(c, body.Value.StreamFirstTokenTimeoutSeconds, &entry.StreamFirstTokenTimeoutSeconds) {
+		return
+	}
+	if !applyMaxConcurrentConnectionsPatch(c, body.Value.MaxConcurrentConnections, &entry.MaxConcurrentConnections) {
 		return
 	}
 	if !applyProviderRetryPatch(c, body.Value.ProviderRetryCount, body.Value.ProviderRetryStatusCodes, &entry.ProviderRetryCount, &entry.ProviderRetryStatusCodes) {

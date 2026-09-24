@@ -98,6 +98,9 @@ func describeOpenAICompatibilityUpdate(oldEntry, newEntry config.OpenAICompatibi
 	if !optionalIntEqual(oldEntry.StreamFirstTokenTimeoutSeconds, newEntry.StreamFirstTokenTimeoutSeconds) {
 		details = append(details, fmt.Sprintf("stream-first-token-timeout-seconds %s -> %s", formatOptionalInt(oldEntry.StreamFirstTokenTimeoutSeconds), formatOptionalInt(newEntry.StreamFirstTokenTimeoutSeconds)))
 	}
+	if !optionalIntEqual(oldEntry.MaxConcurrentConnections, newEntry.MaxConcurrentConnections) {
+		details = append(details, fmt.Sprintf("max-concurrent-connections %s -> %s", formatOptionalInt(oldEntry.MaxConcurrentConnections), formatOptionalInt(newEntry.MaxConcurrentConnections)))
+	}
 	if oldKeyCount != newKeyCount {
 		details = append(details, fmt.Sprintf("api-keys %d -> %d", oldKeyCount, newKeyCount))
 	}

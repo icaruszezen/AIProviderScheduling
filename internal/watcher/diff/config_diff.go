@@ -195,6 +195,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("gemini[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("gemini[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("gemini[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 		}
 	}
 	if len(oldCfg.InteractionsKey) != len(newCfg.InteractionsKey) {
@@ -233,6 +234,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("interactions[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("interactions[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("interactions[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 		}
 	}
 
@@ -279,6 +281,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("claude[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("claude[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("claude[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 			if o.Cloak != nil && n.Cloak != nil {
 				if strings.TrimSpace(o.Cloak.Mode) != strings.TrimSpace(n.Cloak.Mode) {
 					changes = append(changes, fmt.Sprintf("claude[%d].cloak.mode: %s -> %s", i, o.Cloak.Mode, n.Cloak.Mode))
@@ -337,6 +340,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("codex[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("codex[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("codex[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 			if !equalStringSlicesExact(o.StreamFakeFirstTokens, n.StreamFakeFirstTokens) {
 				changes = append(changes, fmt.Sprintf("codex[%d].stream-fake-first-tokens: updated", i))
 			}
@@ -370,6 +374,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			changes = appendBoolChange(changes, fmt.Sprintf("xai[%d].hide-no-available-channel", i), o.HideNoAvailableChannel, n.HideNoAvailableChannel)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("xai[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("xai[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("xai[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 			if strings.TrimSpace(o.APIKey) != strings.TrimSpace(n.APIKey) {
 				changes = append(changes, fmt.Sprintf("xai[%d].api-key: updated", i))
 			}
@@ -464,6 +469,7 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 			}
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("vertex[%d].request-retry", i), o.RequestRetry, n.RequestRetry)
 			changes = appendOptionalIntChange(changes, fmt.Sprintf("vertex[%d].stream-first-token-timeout-seconds", i), o.StreamFirstTokenTimeoutSeconds, n.StreamFirstTokenTimeoutSeconds)
+			changes = appendOptionalIntChange(changes, fmt.Sprintf("vertex[%d].max-concurrent-connections", i), o.MaxConcurrentConnections, n.MaxConcurrentConnections)
 		}
 	}
 

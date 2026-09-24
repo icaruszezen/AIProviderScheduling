@@ -313,6 +313,33 @@ func TestAddStreamFirstTokenTimeoutToMetadata(t *testing.T) {
 	addStreamFirstTokenTimeoutToMetadata(&positive, nil)
 }
 
+func TestAddMaxConcurrentConnectionsToMetadata(t *testing.T) {
+	zero := 0
+	positive := 4
+	negative := -1
+
+	metadata := map[string]any{}
+	addMaxConcurrentConnectionsToMetadata(&positive, metadata)
+	if got, ok := metadata["max_concurrent_connections"].(int); !ok || got != 4 {
+		t.Fatalf("positive limit = %v, want 4", metadata["max_concurrent_connections"])
+	}
+
+	metadata = map[string]any{}
+	addMaxConcurrentConnectionsToMetadata(&zero, metadata)
+	if _, exists := metadata["max_concurrent_connections"]; exists {
+		t.Fatalf("zero limit should be omitted, got %v", metadata["max_concurrent_connections"])
+	}
+
+	metadata = map[string]any{}
+	addMaxConcurrentConnectionsToMetadata(&negative, metadata)
+	addMaxConcurrentConnectionsToMetadata(nil, metadata)
+	if _, exists := metadata["max_concurrent_connections"]; exists {
+		t.Fatalf("disabled limit should be omitted, got %v", metadata["max_concurrent_connections"])
+	}
+
+	addMaxConcurrentConnectionsToMetadata(&positive, nil)
+}
+
 func TestAddProviderRetryToMetadata(t *testing.T) {
 	zero := 0
 	positive := 3

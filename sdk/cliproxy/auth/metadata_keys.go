@@ -24,6 +24,8 @@ func CanonicalCredentialMetadataKey(key string) string {
 		return "request_retry"
 	case "stream-first-token-timeout-seconds":
 		return "stream_first_token_timeout_seconds"
+	case "max-concurrent-connections":
+		return "max_concurrent_connections"
 	case "request-scoped-errors":
 		return "request_scoped_errors"
 	case "hide-no-available-channel":
