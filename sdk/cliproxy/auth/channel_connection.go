@@ -236,10 +236,28 @@ func wrapChannelConnectionStream(ctx context.Context, result *cliproxyexecutor.S
 	out := make(chan cliproxyexecutor.StreamChunk)
 	go func() {
 		defer close(out)
-		defer release()
+		released := false
+		releaseOnce := func() {
+			if released {
+				return
+			}
+			released = true
+			release()
+		}
+		defer releaseOnce()
+		// Release the concurrency permit before discarding the rest of the upstream
+		// stream. A cancelled request must not keep the channel slot until the producer closes.
+		drain := func() {
+			releaseOnce()
+			go func() {
+				for range result.Chunks {
+				}
+			}()
+		}
 		for {
 			select {
 			case <-ctx.Done():
+				drain()
 				return
 			case chunk, ok := <-result.Chunks:
 				if !ok {
@@ -247,6 +265,7 @@ func wrapChannelConnectionStream(ctx context.Context, result *cliproxyexecutor.S
 				}
 				select {
 				case <-ctx.Done():
+					drain()
 					return
 				case out <- chunk:
 				}
