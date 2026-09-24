@@ -276,6 +276,77 @@ func TestExecuteStreamFirstTokenTimeoutRespectsChannelGroupBudget(t *testing.T) 
 	}
 }
 
+type passthroughHandshakeExecutor struct {
+	release <-chan struct{}
+}
+
+func (e *passthroughHandshakeExecutor) Identifier() string { return "codex" }
+func (e *passthroughHandshakeExecutor) Execute(context.Context, *Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+	return cliproxyexecutor.Response{}, nil
+}
+func (e *passthroughHandshakeExecutor) ExecuteStream(context.Context, *Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
+	chunks := make(chan cliproxyexecutor.StreamChunk)
+	go func() {
+		defer close(chunks)
+		chunks <- cliproxyexecutor.StreamChunk{Payload: []byte(streamTimeoutHandshake)}
+		<-e.release
+		chunks <- cliproxyexecutor.StreamChunk{Payload: []byte(streamTimeoutToken)}
+	}()
+	return &cliproxyexecutor.StreamResult{Chunks: chunks}, nil
+}
+func (e *passthroughHandshakeExecutor) Refresh(context.Context, *Auth) (*Auth, error) {
+	return nil, nil
+}
+func (e *passthroughHandshakeExecutor) CountTokens(context.Context, *Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+	return cliproxyexecutor.Response{}, nil
+}
+func (e *passthroughHandshakeExecutor) HttpRequest(context.Context, *Auth, *http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
+func TestExecuteStreamWithoutFirstTokenTimeoutForwardsHandshakeImmediately(t *testing.T) {
+	release := make(chan struct{})
+	manager := NewManager(nil, providerRetrySelector{}, nil)
+	manager.RegisterExecutor(&passthroughHandshakeExecutor{release: release})
+	model := "gpt-first-token-passthrough"
+	registerStreamTimeoutAuth(t, manager, "plain", map[string]any{"disable_cooling": true}, model)
+
+	done := make(chan *cliproxyexecutor.StreamResult, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		result, errExecute := manager.ExecuteStream(context.Background(), []string{"codex"}, cliproxyexecutor.Request{Model: model}, cliproxyexecutor.Options{
+			Stream:       true,
+			SourceFormat: sdktranslator.FormatOpenAI,
+		})
+		if errExecute != nil {
+			errCh <- errExecute
+			return
+		}
+		done <- result
+	}()
+
+	var result *cliproxyexecutor.StreamResult
+	select {
+	case errExecute := <-errCh:
+		t.Fatalf("ExecuteStream() error = %v", errExecute)
+	case result = <-done:
+	case <-time.After(time.Second):
+		t.Fatal("ExecuteStream blocked on a non-token chunk while first-token timeout is disabled")
+	}
+	select {
+	case chunk := <-result.Chunks:
+		if chunk.Err != nil || !strings.Contains(string(chunk.Payload), `"role":"assistant"`) {
+			t.Fatalf("chunk = %#v, want the handshake", chunk)
+		}
+		if strings.Contains(string(chunk.Payload), "hi") {
+			t.Fatal("substantive token was required before the handshake could be forwarded")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("handshake was not forwarded")
+	}
+	close(release)
+}
+
 func TestExecuteStreamDisabledFirstTokenTimeoutWaits(t *testing.T) {
 	manager := NewManager(nil, providerRetrySelector{}, nil)
 	executor := &streamTimeoutExecutor{}
