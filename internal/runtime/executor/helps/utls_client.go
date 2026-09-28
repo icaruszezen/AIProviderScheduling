@@ -403,7 +403,21 @@ func isolateUpstreamHTTP1(base *http.Transport) *http.Transport {
 		clone = &http.Transport{}
 	}
 	clone.ForceAttemptHTTP2 = false
+	// Go 1.26 enables HTTP/2 from Transport.Protocols and from any NextProtos
+	// copied off http.DefaultTransport. Clearing TLSNextProto alone still
+	// advertises h2, the server answers with HTTP/2 frames, and the HTTP/1
+	// reader reports a malformed response. Pin both the protocol set and ALPN
+	// to HTTP/1.1.
+	http1 := http.Protocols{}
+	http1.SetHTTP1(true)
+	clone.Protocols = &http1
 	clone.TLSNextProto = make(map[string]func(string, *cryptotls.Conn) http.RoundTripper)
+	if clone.TLSClientConfig == nil {
+		clone.TLSClientConfig = &cryptotls.Config{}
+	} else {
+		clone.TLSClientConfig = clone.TLSClientConfig.Clone()
+	}
+	clone.TLSClientConfig.NextProtos = []string{"http/1.1"}
 	if clone.MaxIdleConnsPerHost >= 0 && clone.MaxIdleConnsPerHost < genericUpstreamMaxIdleConnsPerHost {
 		clone.MaxIdleConnsPerHost = genericUpstreamMaxIdleConnsPerHost
 	}

@@ -451,6 +451,12 @@ func TestGenericUpstreamTransportIsolatesHTTP1(t *testing.T) {
 	if transport.ForceAttemptHTTP2 || len(transport.TLSNextProto) != 0 {
 		t.Fatal("generic upstream transport still negotiates HTTP/2")
 	}
+	if transport.Protocols == nil || !transport.Protocols.HTTP1() || transport.Protocols.HTTP2() {
+		t.Fatal("generic upstream transport must allow only HTTP/1.1")
+	}
+	if transport.TLSClientConfig == nil || len(transport.TLSClientConfig.NextProtos) != 1 || transport.TLSClientConfig.NextProtos[0] != "http/1.1" {
+		t.Fatalf("ALPN = %v, want [http/1.1]", transport.TLSClientConfig)
+	}
 	if transport.MaxIdleConnsPerHost < genericUpstreamMaxIdleConnsPerHost {
 		t.Fatalf("MaxIdleConnsPerHost = %d, want >= %d", transport.MaxIdleConnsPerHost, genericUpstreamMaxIdleConnsPerHost)
 	}
