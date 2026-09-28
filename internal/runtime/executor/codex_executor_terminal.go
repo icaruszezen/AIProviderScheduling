@@ -411,6 +411,20 @@ func parseCodexRetryAfter(statusCode int, errorBody []byte, now time.Time) *time
 // limit is reached the stream is released and the original unbuffered semantics apply.
 const codexBootstrapMaxBufferedEvents = 16
 
+// codexStreamReadAhead is how many SSE lines the upstream reader may pull
+// ahead of the downstream writer. The channel used to be unbuffered, so Scan
+// stopped at the first chunk the client had not consumed yet. Under a few
+// hundred requests per minute those stalled reads pile up on one shared
+// connection and later requests wait minutes for their fake first token.
+const codexStreamReadAhead = 256
+
+func codexStreamChunkCapacity(reserved int) int {
+	if reserved < codexStreamReadAhead {
+		return codexStreamReadAhead
+	}
+	return reserved
+}
+
 // isCodexHandshakeMetadataEvent reports whether an event carries no generated output and is
 // therefore safe to hold back before the downstream response headers are committed. Keeping a type
 // allow-list rather than a fixed event count matters for the websocket transport, where the

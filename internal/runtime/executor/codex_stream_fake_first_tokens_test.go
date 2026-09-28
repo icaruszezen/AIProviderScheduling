@@ -254,6 +254,15 @@ func TestCodexWebsocketsExecutor_FakeFirstToken_DisabledForwardsSpaceBeforeRealT
 	}
 }
 
+func TestCodexStreamChunkCapacityKeepsReadAhead(t *testing.T) {
+	if got := codexStreamChunkCapacity(0); got != codexStreamReadAhead {
+		t.Fatalf("empty reservation capacity = %d, want %d", got, codexStreamReadAhead)
+	}
+	if got := codexStreamChunkCapacity(codexStreamReadAhead + 3); got != codexStreamReadAhead+3 {
+		t.Fatalf("large reservation capacity = %d, want %d", got, codexStreamReadAhead+3)
+	}
+}
+
 func TestCodexExecutor_FakeFirstToken_DisabledHighConcurrencyKeepsSpaceTTFT(t *testing.T) {
 	const (
 		concurrency = 300

@@ -2,6 +2,7 @@ package helps
 
 import (
 	"context"
+	cryptotls "crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -353,6 +354,65 @@ func (f *fallbackRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	return f.fallback.RoundTrip(req)
 }
 
+const genericUpstreamMaxIdleConnsPerHost = 256
+
+var (
+	genericUpstreamOnce     sync.Once
+	genericUpstream         *http.Transport
+	proxyUpstreamTransports sync.Map
+)
+
+// genericUpstreamTransport is the shared HTTP/1.1 pool for hosts that are not
+// Anthropic or chatgpt.com. It is created once so requests reuse connections
+// instead of allocating a transport per call.
+func genericUpstreamTransport() *http.Transport {
+	genericUpstreamOnce.Do(func() {
+		genericUpstream = isolateUpstreamHTTP1(nil)
+	})
+	return genericUpstream
+}
+
+func cachedProxyUpstreamTransport(proxyURL string) *http.Transport {
+	if existing, ok := proxyUpstreamTransports.Load(proxyURL); ok {
+		if transport, ok := existing.(*http.Transport); ok && transport != nil {
+			return transport
+		}
+	}
+	transport := buildProxyTransport(proxyURL)
+	if transport == nil {
+		return nil
+	}
+	isolated := isolateUpstreamHTTP1(transport)
+	actual, _ := proxyUpstreamTransports.LoadOrStore(proxyURL, isolated)
+	if transport, ok := actual.(*http.Transport); ok && transport != nil {
+		return transport
+	}
+	return isolated
+}
+
+// isolateUpstreamHTTP1 copies base (or http.DefaultTransport) into an HTTP/1.1
+// pool wide enough for concurrent streaming. A zero or small idle limit would
+// close connections after every request and turn RPM 200 into a handshake queue.
+func isolateUpstreamHTTP1(base *http.Transport) *http.Transport {
+	var clone *http.Transport
+	if base != nil {
+		clone = base.Clone()
+	} else if transport, ok := http.DefaultTransport.(*http.Transport); ok && transport != nil {
+		clone = transport.Clone()
+	} else {
+		clone = &http.Transport{}
+	}
+	clone.ForceAttemptHTTP2 = false
+	clone.TLSNextProto = make(map[string]func(string, *cryptotls.Conn) http.RoundTripper)
+	if clone.MaxIdleConnsPerHost >= 0 && clone.MaxIdleConnsPerHost < genericUpstreamMaxIdleConnsPerHost {
+		clone.MaxIdleConnsPerHost = genericUpstreamMaxIdleConnsPerHost
+	}
+	if clone.MaxIdleConns > 0 && clone.MaxIdleConns < clone.MaxIdleConnsPerHost {
+		clone.MaxIdleConns = clone.MaxIdleConnsPerHost
+	}
+	return clone
+}
+
 // NewUtlsHTTPClient creates an HTTP client using provider-specific TLS
 // fingerprints for protected hosts. It uses Claude Code's Node/OpenSSL profile
 // for Anthropic and a Chrome profile for ChatGPT, with a standard-transport
@@ -373,9 +433,14 @@ func NewUtlsHTTPClient(ctx context.Context, cfg *config.Config, auth *cliproxyau
 
 	var chromeRT http.RoundTripper = newUtlsRoundTripper(proxyURL)
 	var anthropicRT http.RoundTripper = cachedClaudeCodeRoundTripper(proxyURL)
-	var standardTransport http.RoundTripper = http.DefaultTransport
+	// Third-party gateways (Codex API-key base URLs included) must not share
+	// http.DefaultTransport. That transport is one HTTP/2 connection per host.
+	// Once in-flight streams stall, every later request on the host waits for
+	// a stream slot and first-token time climbs for minutes. HTTP/1.1 gives
+	// each in-flight request its own connection.
+	var standardTransport http.RoundTripper = genericUpstreamTransport()
 	if proxyURL != "" {
-		if transport := buildProxyTransport(proxyURL); transport != nil {
+		if transport := cachedProxyUpstreamTransport(proxyURL); transport != nil {
 			standardTransport = transport
 		}
 	} else if ctxRoundTripper != nil {

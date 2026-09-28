@@ -433,6 +433,32 @@ func TestFallbackRoundTripperSelectsProviderFingerprint(t *testing.T) {
 	}
 }
 
+func TestGenericUpstreamTransportIsolatesHTTP1(t *testing.T) {
+	t.Parallel()
+
+	client := NewUtlsHTTPClient(context.Background(), nil, nil, 0)
+	fallback, ok := client.Transport.(*fallbackRoundTripper)
+	if !ok {
+		t.Fatalf("transport type = %T, want *fallbackRoundTripper", client.Transport)
+	}
+	transport, ok := fallback.fallback.(*http.Transport)
+	if !ok {
+		t.Fatalf("fallback type = %T, want *http.Transport", fallback.fallback)
+	}
+	if transport == http.DefaultTransport {
+		t.Fatal("generic upstream transport must not be http.DefaultTransport")
+	}
+	if transport.ForceAttemptHTTP2 || len(transport.TLSNextProto) != 0 {
+		t.Fatal("generic upstream transport still negotiates HTTP/2")
+	}
+	if transport.MaxIdleConnsPerHost < genericUpstreamMaxIdleConnsPerHost {
+		t.Fatalf("MaxIdleConnsPerHost = %d, want >= %d", transport.MaxIdleConnsPerHost, genericUpstreamMaxIdleConnsPerHost)
+	}
+	if transport.MaxIdleConns > 0 && transport.MaxIdleConns < transport.MaxIdleConnsPerHost {
+		t.Fatalf("MaxIdleConns = %d, want >= MaxIdleConnsPerHost %d", transport.MaxIdleConns, transport.MaxIdleConnsPerHost)
+	}
+}
+
 func TestNewUtlsHTTPClientUsesContextRoundTripperForProtectedHost(t *testing.T) {
 	t.Parallel()
 

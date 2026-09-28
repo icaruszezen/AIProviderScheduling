@@ -510,7 +510,7 @@ func (e *CodexWebsocketsExecutor) ExecuteStream(ctx context.Context, auth *clipr
 	if bootstrapTerminalErr != nil {
 		chanCapacity++
 	}
-	out := make(chan cliproxyexecutor.StreamChunk, chanCapacity)
+	out := make(chan cliproxyexecutor.StreamChunk, codexStreamChunkCapacity(chanCapacity))
 	for _, chunk := range bufferedChunks {
 		out <- cliproxyexecutor.StreamChunk{Payload: chunk}
 	}
