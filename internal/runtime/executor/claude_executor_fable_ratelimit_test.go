@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 func TestClassifyClaudeUpstreamError_FableOnlyRejectionIsModelScoped(t *testing.T) {
@@ -190,11 +190,11 @@ func TestClaudeExecutor_AuthManager_FableOnlyRejectionDoesNotBlockOpus(t *testin
 	}))
 	defer server.Close()
 
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 0)
 	manager.RegisterExecutor(NewClaudeExecutor(&config.Config{DisableCooling: false}))
 
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       uuid.NewString() + "-fable-model-scope",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -210,10 +210,10 @@ func TestClaudeExecutor_AuthManager_FableOnlyRejectionDoesNotBlockOpus(t *testin
 	}
 
 	payloadFable := []byte(`{"model":"claude-fable-5","messages":[{"role":"user","content":[{"type":"text","text":"test"}]}]}`)
-	_, errFable := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errFable := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-fable-5",
 		Payload: payloadFable,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errFable == nil {
 		t.Fatal("expected Fable request to be rate limited")
 	}
@@ -235,10 +235,10 @@ func TestClaudeExecutor_AuthManager_FableOnlyRejectionDoesNotBlockOpus(t *testin
 	}
 
 	payloadOpus := []byte(`{"model":"claude-opus-5","messages":[{"role":"user","content":[{"type":"text","text":"test"}]}]}`)
-	_, errOpus := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errOpus := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-opus-5",
 		Payload: payloadOpus,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errOpus != nil {
 		t.Fatalf("expected Opus to reach upstream on the same credential, got: %v", errOpus)
 	}

@@ -22,7 +22,7 @@ import (
 	"github.com/go-git/go-git/v6/plumbing/transport"
 	"github.com/go-git/go-git/v6/plumbing/transport/http"
 	"github.com/go-git/go-git/v6/storage/filesystem/dotgit"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -398,12 +398,12 @@ func (s *GitTokenStore) ensureRepositoryLocked() (errResult error) {
 }
 
 // Save persists token storage and metadata to the resolved auth file path.
-func (s *GitTokenStore) Save(_ context.Context, auth *cliproxyauth.Auth) (string, error) {
+func (s *GitTokenStore) Save(_ context.Context, auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("auth filestore: auth is nil")
 	}
-	cliproxyauth.NormalizeCredentialMetadata(auth.Metadata)
-	if errWeight := cliproxyauth.ValidateAuthWeight(auth); errWeight != nil {
+	apsauth.NormalizeCredentialMetadata(auth.Metadata)
+	if errWeight := apsauth.ValidateAuthWeight(auth); errWeight != nil {
 		return "", fmt.Errorf("auth filestore: %w", errWeight)
 	}
 
@@ -475,8 +475,8 @@ func (s *GitTokenStore) Save(_ context.Context, auth *cliproxyauth.Auth) (string
 	if auth.Attributes == nil {
 		auth.Attributes = make(map[string]string)
 	}
-	auth.Attributes[cliproxyauth.AttributePath] = path
-	auth.Attributes[cliproxyauth.AttributeSourceBackend] = cliproxyauth.AuthSourceGit
+	auth.Attributes[apsauth.AttributePath] = path
+	auth.Attributes[apsauth.AttributeSourceBackend] = apsauth.AuthSourceGit
 
 	if strings.TrimSpace(auth.FileName) == "" {
 		auth.FileName = auth.ID
@@ -494,7 +494,7 @@ func (s *GitTokenStore) Save(_ context.Context, auth *cliproxyauth.Auth) (string
 }
 
 // List enumerates all auth JSON files under the configured directory.
-func (s *GitTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
+func (s *GitTokenStore) List(_ context.Context) ([]*apsauth.Auth, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -505,7 +505,7 @@ func (s *GitTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
 	if dir == "" {
 		return nil, fmt.Errorf("auth filestore: directory not configured")
 	}
-	entries := make([]*cliproxyauth.Auth, 0)
+	entries := make([]*apsauth.Auth, 0)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -520,7 +520,7 @@ func (s *GitTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
 		if err != nil {
 			return nil
 		}
-		if auth != nil && !cliproxyauth.IsUnsupportedOAuthAuth(auth) {
+		if auth != nil && !apsauth.IsUnsupportedOAuthAuth(auth) {
 			entries = append(entries, auth)
 		}
 		return nil
@@ -683,7 +683,7 @@ func (s *GitTokenStore) resolveDeletePath(id string) (string, error) {
 	return filepath.Join(dir, id), nil
 }
 
-func (s *GitTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, error) {
+func (s *GitTokenStore) readAuthFile(path, baseDir string) (*apsauth.Auth, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
@@ -695,8 +695,8 @@ func (s *GitTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, 
 	if err = json.Unmarshal(data, &metadata); err != nil {
 		return nil, fmt.Errorf("unmarshal auth json: %w", err)
 	}
-	cliproxyauth.NormalizeCredentialMetadata(metadata)
-	if errWeight := cliproxyauth.ValidateAuthWeight(&cliproxyauth.Auth{Metadata: metadata}); errWeight != nil {
+	apsauth.NormalizeCredentialMetadata(metadata)
+	if errWeight := apsauth.ValidateAuthWeight(&apsauth.Auth{Metadata: metadata}); errWeight != nil {
 		return nil, errWeight
 	}
 	provider, _ := metadata["type"].(string)
@@ -708,15 +708,15 @@ func (s *GitTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, 
 		return nil, fmt.Errorf("stat file: %w", err)
 	}
 	id := s.idFor(path, baseDir)
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       id,
 		Provider: provider,
 		FileName: id,
 		Label:    s.labelFor(metadata),
-		Status:   cliproxyauth.StatusActive,
+		Status:   apsauth.StatusActive,
 		Attributes: map[string]string{
-			cliproxyauth.AttributePath:          path,
-			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceGit},
+			apsauth.AttributePath:          path,
+			apsauth.AttributeSourceBackend: apsauth.AuthSourceGit},
 		Metadata:         metadata,
 		CreatedAt:        info.ModTime(),
 		UpdatedAt:        info.ModTime(),
@@ -725,10 +725,10 @@ func (s *GitTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, 
 	if email, ok := metadata["email"].(string); ok && email != "" {
 		auth.Attributes["email"] = email
 	}
-	cliproxyauth.ApplyCustomHeadersFromMetadata(auth)
+	apsauth.ApplyCustomHeadersFromMetadata(auth)
 	if disabled, ok := metadata["disabled"].(bool); ok && disabled {
 		auth.Disabled = true
-		auth.Status = cliproxyauth.StatusDisabled
+		auth.Status = apsauth.StatusDisabled
 	}
 	return auth, nil
 }
@@ -744,7 +744,7 @@ func (s *GitTokenStore) idFor(path, baseDir string) string {
 	return rel
 }
 
-func (s *GitTokenStore) resolveAuthPath(auth *cliproxyauth.Auth) (string, error) {
+func (s *GitTokenStore) resolveAuthPath(auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("auth filestore: auth is nil")
 	}
@@ -1721,8 +1721,8 @@ func (s *GitTokenStore) commitAndPushWithOptionsLocked(message string, allowMiss
 		message = "Update auth store"
 	}
 	signature := &object.Signature{
-		Name:  "CLIProxyAPI",
-		Email: "cliproxy@local",
+		Name:  "AIProviderScheduling",
+		Email: "aps@local",
 		When:  time.Now()}
 	commitHash, err := worktree.Commit(message, &git.CommitOptions{
 		Author: signature})

@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 func TestRequestLoggingDoesNotMarkUpstreamAttempt(t *testing.T) {
@@ -34,9 +34,9 @@ func TestRequestLoggingDoesNotMarkUpstreamAttempt(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
+			ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
 			test.record(ctx)
-			if cliproxyexecutor.UpstreamAttempted(ctx) {
+			if apsexecutor.UpstreamAttempted(ctx) {
 				t.Fatal("request logging marked an upstream attempt before transport")
 			}
 		})

@@ -11,15 +11,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
-func newCodexOpenAIImageTestAuth(serverURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func newCodexOpenAIImageTestAuth(serverURL string) *apsauth.Auth {
+	return &apsauth.Auth{
 		Provider: "codex",
 		Attributes: map[string]string{
 			"base_url": serverURL,
@@ -28,12 +28,12 @@ func newCodexOpenAIImageTestAuth(serverURL string) *cliproxyauth.Auth {
 	}
 }
 
-func codexOpenAIImageTestOptions(path string, stream bool) cliproxyexecutor.Options {
-	return cliproxyexecutor.Options{
+func codexOpenAIImageTestOptions(path string, stream bool) apsexecutor.Options {
+	return apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString(codexOpenAIImageSourceFormat),
 		Stream:       stream,
 		Metadata: map[string]any{
-			cliproxyexecutor.RequestPathMetadataKey: path,
+			apsexecutor.RequestPathMetadataKey: path,
 		},
 	}
 }
@@ -76,7 +76,7 @@ func TestCodexExecutorDirectOpenAIImageGenerationUsesImagesEndpoint(t *testing.T
 		"Originator":            "Codex Desktop",
 	})
 	executor := NewCodexExecutor(&config.Config{})
-	resp, errExecute := executor.Execute(ctx, newCodexOpenAIImageTestAuth(server.URL), cliproxyexecutor.Request{
+	resp, errExecute := executor.Execute(ctx, newCodexOpenAIImageTestAuth(server.URL), apsexecutor.Request{
 		Model:   "codex/gpt-image-1.5",
 		Payload: []byte(`{"model":"codex/gpt-image-1.5","prompt":"A cute baby sea otter","n":1,"size":"1024x1024","quality":"high","background":"opaque","output_format":"jpeg","output_compression":70,"moderation":"low","extra":{"preserve":true},"stream":false}`),
 	}, codexOpenAIImageTestOptions(codexImagesGenerationsPath, false))
@@ -144,7 +144,7 @@ func TestCodexExecutorDirectOpenAIImageGenerationStreamsImagesEndpoint(t *testin
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{})
-	stream, errStream := executor.ExecuteStream(context.Background(), newCodexOpenAIImageTestAuth(server.URL), cliproxyexecutor.Request{
+	stream, errStream := executor.ExecuteStream(context.Background(), newCodexOpenAIImageTestAuth(server.URL), apsexecutor.Request{
 		Model:   "gpt-image-2",
 		Payload: []byte(`{"model":"gpt-image-2","prompt":"A cute baby sea otter","partial_images":2}`),
 	}, codexOpenAIImageTestOptions(codexImagesGenerationsPath, true))
@@ -194,7 +194,7 @@ func TestCodexExecutorDirectOpenAIImageEditUsesImagesEditEndpointForJSON(t *test
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{})
-	_, errExecute := executor.Execute(context.Background(), newCodexOpenAIImageTestAuth(server.URL), cliproxyexecutor.Request{
+	_, errExecute := executor.Execute(context.Background(), newCodexOpenAIImageTestAuth(server.URL), apsexecutor.Request{
 		Model:   "gpt-image-2",
 		Payload: []byte(`{"model":"gpt-image-2","prompt":"Replace the background","images":[{"file_id":"file-abc123"}],"mask":{"file_id":"file-mask123"},"size":"1024x1024","quality":"high","output_format":"png","output_compression":100,"stream":false}`),
 	}, codexOpenAIImageTestOptions(codexImagesEditsPath, false))
@@ -274,7 +274,7 @@ func TestCodexExecutorDirectOpenAIImageEditUsesImagesEditEndpointForMultipart(t 
 	opts := codexOpenAIImageTestOptions(codexImagesEditsPath, false)
 	opts.Headers = http.Header{"Content-Type": []string{writer.FormDataContentType()}}
 	executor := NewCodexExecutor(&config.Config{})
-	_, errExecute := executor.Execute(context.Background(), newCodexOpenAIImageTestAuth(server.URL), cliproxyexecutor.Request{
+	_, errExecute := executor.Execute(context.Background(), newCodexOpenAIImageTestAuth(server.URL), apsexecutor.Request{
 		Model:   "codex/gpt-image-1.5",
 		Payload: body.Bytes(),
 	}, opts)

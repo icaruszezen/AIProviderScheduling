@@ -13,12 +13,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	homekv "github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	homekv "github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 // resetAntigravityCreditsRetryState clears the package-level credits state
@@ -268,7 +268,7 @@ func TestAntigravityExecute_DoesNotUseRequestRetryForInternalRetries(t *testing.
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 3})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "auth-transient-429",
 		Attributes: map[string]string{
 			"api_key":  "token",
@@ -281,10 +281,10 @@ func TestAntigravityExecute_DoesNotUseRequestRetryForInternalRetries(t *testing.
 		},
 	}
 
-	resp, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	resp, err := exec.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-sonnet-4-6",
 		Payload: []byte(`{"request":{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatAntigravity,
 	})
 	if err == nil {
@@ -324,7 +324,7 @@ func TestAntigravityExecute_CreditsInjectedWhenConductorRequests(t *testing.T) {
 	exec := NewAntigravityExecutor(&config.Config{
 		QuotaExceeded: config.QuotaExceeded{AntigravityCredits: true},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: fmt.Sprintf("auth-credits-conductor-%d", time.Now().UnixNano()),
 		Attributes: map[string]string{
 			"api_key":  "token",
@@ -338,12 +338,12 @@ func TestAntigravityExecute_CreditsInjectedWhenConductorRequests(t *testing.T) {
 	}
 
 	// Simulate conductor setting credits requested flag in context
-	ctx := cliproxyauth.WithAntigravityCredits(context.Background())
+	ctx := apsauth.WithAntigravityCredits(context.Background())
 
-	resp, err := exec.Execute(ctx, auth, cliproxyexecutor.Request{
+	resp, err := exec.Execute(ctx, auth, apsexecutor.Request{
 		Model:   "claude-sonnet-4-6",
 		Payload: []byte(`{"request":{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatAntigravity,
 	})
 	if err != nil {
@@ -389,7 +389,7 @@ func TestAntigravityExecute_NoCreditsWithoutConductorFlag(t *testing.T) {
 	exec := NewAntigravityExecutor(&config.Config{
 		QuotaExceeded: config.QuotaExceeded{AntigravityCredits: true},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "auth-no-conductor-flag",
 		Attributes: map[string]string{
 			"api_key":  "token",
@@ -403,10 +403,10 @@ func TestAntigravityExecute_NoCreditsWithoutConductorFlag(t *testing.T) {
 	}
 
 	// No conductor credits flag set in context
-	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := exec.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-sonnet-4-6",
 		Payload: []byte(`{"request":{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatAntigravity,
 	})
 	if err == nil {
@@ -424,7 +424,7 @@ func TestAntigravityExecute_NoCreditsWithoutConductorFlag(t *testing.T) {
 func TestAntigravityAuthHasCredits(t *testing.T) {
 	t.Run("sufficient balance", func(t *testing.T) {
 		resetAntigravityCreditsRetryState()
-		auth := &cliproxyauth.Auth{ID: "test-sufficient"}
+		auth := &apsauth.Auth{ID: "test-sufficient"}
 		antigravityCreditsBalanceByAuth.Store("test-sufficient", antigravityCreditsBalance{
 			CreditAmount:    25000,
 			MinCreditAmount: 50,
@@ -437,7 +437,7 @@ func TestAntigravityAuthHasCredits(t *testing.T) {
 
 	t.Run("insufficient balance", func(t *testing.T) {
 		resetAntigravityCreditsRetryState()
-		auth := &cliproxyauth.Auth{ID: "test-insufficient"}
+		auth := &apsauth.Auth{ID: "test-insufficient"}
 		antigravityCreditsBalanceByAuth.Store("test-insufficient", antigravityCreditsBalance{
 			CreditAmount:    30,
 			MinCreditAmount: 50,
@@ -450,7 +450,7 @@ func TestAntigravityAuthHasCredits(t *testing.T) {
 
 	t.Run("no balance stored returns true (optimistic)", func(t *testing.T) {
 		resetAntigravityCreditsRetryState()
-		auth := &cliproxyauth.Auth{ID: "test-no-balance"}
+		auth := &apsauth.Auth{ID: "test-no-balance"}
 		if !antigravityAuthHasCredits(auth) {
 			t.Fatal("antigravityAuthHasCredits() = false with no balance stored, want true (optimistic default)")
 		}
@@ -463,7 +463,7 @@ func TestAntigravityAuthHasCredits(t *testing.T) {
 	})
 
 	t.Run("empty ID returns false", func(t *testing.T) {
-		auth := &cliproxyauth.Auth{}
+		auth := &apsauth.Auth{}
 		if antigravityAuthHasCredits(auth) {
 			t.Fatal("antigravityAuthHasCredits(empty ID) = true, want false")
 		}
@@ -471,7 +471,7 @@ func TestAntigravityAuthHasCredits(t *testing.T) {
 
 	t.Run("unknown balance returns false", func(t *testing.T) {
 		resetAntigravityCreditsRetryState()
-		auth := &cliproxyauth.Auth{ID: "test-unknown"}
+		auth := &apsauth.Auth{ID: "test-unknown"}
 		antigravityCreditsBalanceByAuth.Store("test-unknown", antigravityCreditsBalance{
 			Known: false,
 		})
@@ -498,7 +498,7 @@ func TestAntigravityAuthHasCreditsRequiredHomeBalanceUsesKV(t *testing.T) {
 		Known:           true,
 	})
 
-	ok, errCredits := antigravityAuthHasCreditsRequired(context.Background(), &cliproxyauth.Auth{ID: authID})
+	ok, errCredits := antigravityAuthHasCreditsRequired(context.Background(), &apsauth.Auth{ID: authID})
 	if errCredits != nil {
 		t.Fatalf("antigravityAuthHasCreditsRequired() error = %v", errCredits)
 	}
@@ -536,7 +536,7 @@ func TestAntigravityShortCooldownRequiredHomeKV(t *testing.T) {
 	t.Cleanup(resetAntigravityCreditsRetryState)
 	client := newFakeAntigravityKVClient()
 	useFakeAntigravityKVClient(t, client, true, nil)
-	auth := &cliproxyauth.Auth{ID: "home-cooldown-auth"}
+	auth := &apsauth.Auth{ID: "home-cooldown-auth"}
 	now := time.Now()
 	duration := 30 * time.Second
 
@@ -557,7 +557,7 @@ func TestAntigravityShortCooldownRequiredHomeKV(t *testing.T) {
 }
 
 func TestAntigravityShortCooldownRequiredHomeKVFailures(t *testing.T) {
-	auth := &cliproxyauth.Auth{ID: "home-cooldown-failure-auth"}
+	auth := &apsauth.Auth{ID: "home-cooldown-failure-auth"}
 	for _, tc := range []struct {
 		name   string
 		client *fakeAntigravityKVClient
@@ -596,8 +596,8 @@ func TestMaybeRefreshAntigravityCreditsHintHomeRefreshThrottleUsesSetNX(t *testi
 	exec := NewAntigravityExecutor(&config.Config{
 		QuotaExceeded: config.QuotaExceeded{AntigravityCredits: true},
 	})
-	auth := &cliproxyauth.Auth{ID: "home-refresh-throttle-auth"}
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	auth := &apsauth.Auth{ID: "home-refresh-throttle-auth"}
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		t.Fatalf("refresh request should not run when Home KV throttle lock is not acquired")
 		return nil, nil
 	}))
@@ -622,7 +622,7 @@ func TestEnsureAccessToken_WarmTokenLoadsCreditsHint(t *testing.T) {
 	exec := NewAntigravityExecutor(&config.Config{
 		QuotaExceeded: config.QuotaExceeded{AntigravityCredits: true},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token"},
 		ID:         fmt.Sprintf("auth-warm-token-credits-%d", time.Now().UnixNano()),
 		Metadata: map[string]any{
@@ -631,7 +631,7 @@ func TestEnsureAccessToken_WarmTokenLoadsCreditsHint(t *testing.T) {
 		},
 	}
 	refreshDone := make(chan struct{})
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		if req.URL.String() != "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist" {
 			t.Fatalf("unexpected request url %s", req.URL.String())
 		}
@@ -660,10 +660,10 @@ func TestEnsureAccessToken_WarmTokenLoadsCreditsHint(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for background credits refresh")
 	}
-	if !cliproxyauth.HasKnownAntigravityCreditsHint(auth.ID) {
+	if !apsauth.HasKnownAntigravityCreditsHint(auth.ID) {
 		t.Fatal("expected credits hint to be populated for warm token auth")
 	}
-	hint, ok := cliproxyauth.GetAntigravityCreditsHint(auth.ID)
+	hint, ok := apsauth.GetAntigravityCreditsHint(auth.ID)
 	if !ok {
 		t.Fatal("expected credits hint lookup to succeed")
 	}
@@ -682,11 +682,11 @@ func TestUpdateAntigravityCreditsBalance_LoadCodeAssistUserAgent(t *testing.T) {
 	exec := NewAntigravityExecutor(&config.Config{})
 	const configuredUserAgent = "antigravity/hub/1.23.2 windows/amd64 google-api-nodejs-client/10.3.0"
 	const loadCodeAssistUserAgent = "antigravity/hub/1.23.2 windows/amd64"
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:         "auth-load-code-assist-ua",
 		Attributes: map[string]string{"user_agent": configuredUserAgent},
 	}
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		if req.URL.String() != "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist" {
 			t.Fatalf("unexpected request url %s", req.URL.String())
 		}

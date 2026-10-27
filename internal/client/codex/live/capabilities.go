@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -106,7 +106,7 @@ func (h *Handler) HandleHangup(c *gin.Context) {
 		writeRealtimeError(c, http.StatusServiceUnavailable, "Codex auth unavailable", "server_error", "codex_auth_unavailable")
 		return
 	}
-	logging.SetGinCPATraceID(c, selected.EnsureIndex())
+	logging.SetGinAPSTraceID(c, selected.EnsureIndex())
 
 	body, errRead := readBody(c.Request.Body)
 	if errRead != nil {

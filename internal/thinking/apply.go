@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
@@ -810,7 +810,7 @@ func extractOpenAIConfig(body []byte) ThinkingConfig {
 // Native fields take precedence over reasoning_effort. In particular,
 // thinking.type="enabled" without an explicit effort means "use the upstream
 // default" and therefore returns an empty config so ApplyThinking preserves the
-// request unchanged instead of interpreting it as CPA's ModeAuto.
+// request unchanged instead of interpreting it as APS's ModeAuto.
 func extractKimiConfig(body []byte) ThinkingConfig {
 	thinkingType := gjson.GetBytes(body, "thinking.type")
 	if thinkingType.Exists() {

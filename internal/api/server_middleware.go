@@ -5,23 +5,23 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	codexlive "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/live"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/safemode"
-	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
+	codexlive "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/codex/live"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/safemode"
+	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	log "github.com/sirupsen/logrus"
 )
 
 var corsExposedResponseHeaders = []string{
-	logging.CPATraceIDHeader,
-	"X-CPA-VERSION",
-	"X-CPA-COMMIT",
-	"X-CPA-BUILD-DATE",
-	"X-CPA-SUPPORT-PLUGIN",
-	"X-CPA-HOME-VERSION",
-	"X-CPA-HOME-BUILD-DATE",
+	logging.APSTraceIDHeader,
+	"X-APS-VERSION",
+	"X-APS-COMMIT",
+	"X-APS-BUILD-DATE",
+	"X-APS-SUPPORT-PLUGIN",
+	"X-APS-HOME-VERSION",
+	"X-APS-HOME-BUILD-DATE",
 	"X-SERVER-VERSION",
 	"X-SERVER-BUILD-DATE",
 	"Location",
@@ -83,7 +83,7 @@ func (s *Server) exampleAPIKeySafeModeMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Header("X-CPA-SAFE-MODE", "example-api-key")
+		c.Header("X-APS-SAFE-MODE", "example-api-key")
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"error":   "unsafe_example_api_key",
 			"message": "Proxy API endpoints are disabled because api-keys contains template values. Open /management.html?safe-mode=configure, update api-keys in Management, then retry."})

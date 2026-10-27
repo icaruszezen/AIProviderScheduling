@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher/diff"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher/diff"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 func TestNewStableIDGenerator(t *testing.T) {

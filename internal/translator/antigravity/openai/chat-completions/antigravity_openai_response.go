@@ -13,10 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 
-	. "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/gemini/openai/chat-completions"
+	. "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/gemini/openai/chat-completions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -126,11 +126,11 @@ func ConvertAntigravityResponseToOpenAI(_ context.Context, _ string, originalReq
 	}
 
 	// Extract and set usage metadata (token counts). FilterSSEUsageMetadata renames
-	// non-terminal usage to cpaUsageMetadata, so retain the latest copy for [DONE]
+	// non-terminal usage to apsUsageMetadata, so retain the latest copy for [DONE]
 	// instead of treating an intermediate chunk as terminal.
 	usageResult := gjson.GetBytes(rawJSON, "response.usageMetadata")
 	if !usageResult.Exists() {
-		if pendingUsage := gjson.GetBytes(rawJSON, "response.cpaUsageMetadata"); pendingUsage.Exists() {
+		if pendingUsage := gjson.GetBytes(rawJSON, "response.apsUsageMetadata"); pendingUsage.Exists() {
 			params.PendingUsageMetadata = append(params.PendingUsageMetadata[:0], pendingUsage.Raw...)
 		}
 	} else {
@@ -251,11 +251,11 @@ func hasAntigravityResponsePayload(rawJSON []byte) bool {
 			return true
 		}
 	}
-	// FilterSSEUsageMetadata renames non-terminal usage to cpaUsageMetadata before
+	// FilterSSEUsageMetadata renames non-terminal usage to apsUsageMetadata before
 	// the translator sees it, so both spellings must be accepted.
 	for _, path := range []string{
-		"response.usageMetadata", "response.cpaUsageMetadata",
-		"usageMetadata", "cpaUsageMetadata",
+		"response.usageMetadata", "response.apsUsageMetadata",
+		"usageMetadata", "apsUsageMetadata",
 	} {
 		if usage := gjson.GetBytes(rawJSON, path); usage.IsObject() && len(usage.Map()) > 0 {
 			return true

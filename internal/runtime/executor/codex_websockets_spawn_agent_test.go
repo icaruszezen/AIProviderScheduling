@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -61,24 +61,24 @@ func TestCodexWebsocketsExecutorRestoresMultiAgentV2NamespaceAcrossIncrementalTu
 			executor := NewCodexWebsocketsExecutor(&config.Config{Codex: config.CodexConfig{OptimizeMultiAgentV2: true}})
 			const executionSessionID = "multi-agent-v2-incremental"
 			t.Cleanup(func() { executor.CloseExecutionSession(executionSessionID) })
-			auth := &cliproxyauth.Auth{
+			auth := &apsauth.Auth{
 				ID: "codex-test",
 				Attributes: map[string]string{
 					"base_url": server.URL,
 					"api_key":  "test",
 				},
 			}
-			opts := cliproxyexecutor.Options{
+			opts := apsexecutor.Options{
 				SourceFormat:   sdktranslator.FromString("openai-response"),
 				ResponseFormat: sdktranslator.FromString("openai-response"),
 				Headers:        http.Header{"User-Agent": []string{"overridden-client/1.0"}},
 				Metadata: map[string]any{
-					cliproxyexecutor.ExecutionSessionMetadataKey: executionSessionID,
+					apsexecutor.ExecutionSessionMetadataKey: executionSessionID,
 				},
 			}
 			execute := func(payload []byte) []byte {
 				t.Helper()
-				req := cliproxyexecutor.Request{Model: "gpt-5.4", Payload: payload}
+				req := apsexecutor.Request{Model: "gpt-5.4", Payload: payload}
 				if !tt.stream {
 					response, errExecute := executor.Execute(codexSpawnAgentTestContext(), auth, req, opts)
 					if errExecute != nil {
@@ -194,12 +194,12 @@ func TestCodexWebsocketsExecutorOptimizeMultiAgentV2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"base_url": server.URL,
 		"api_key":  "test",
 	}}
-	req := cliproxyexecutor.Request{Model: "gpt-5.4", Payload: codexSpawnAgentTestPayload()}
-	opts := cliproxyexecutor.Options{
+	req := apsexecutor.Request{Model: "gpt-5.4", Payload: codexSpawnAgentTestPayload()}
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Headers:      http.Header{"User-Agent": []string{"overridden-client/1.0"}},
 	}

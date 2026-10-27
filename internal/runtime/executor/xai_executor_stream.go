@@ -8,14 +8,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
 
-func (e *XAIExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (_ *cliproxyexecutor.StreamResult, err error) {
+func (e *XAIExecutor) ExecuteStream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (_ *apsexecutor.StreamResult, err error) {
 	if opts.Alt == "responses/compact" {
 		return nil, statusErr{code: http.StatusBadRequest, msg: "streaming not supported for /responses/compact"}
 	}
@@ -66,7 +66,7 @@ func (e *XAIExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth
 		return nil, xaiStatusErr(httpResp.StatusCode, data)
 	}
 
-	out := make(chan cliproxyexecutor.StreamChunk)
+	out := make(chan apsexecutor.StreamChunk)
 	go func() {
 		defer close(out)
 		defer func() {
@@ -88,7 +88,7 @@ func (e *XAIExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth
 			chunks := helps.TranslateStreamWithClaudeInputTokens(ctx, prepared.to, prepared.responseFormat, req.Model, prepared.originalPayload, prepared.body, translatedLine, &param, claudeInputTokens)
 			for i := range chunks {
 				select {
-				case out <- cliproxyexecutor.StreamChunk{Payload: chunks[i]}:
+				case out <- apsexecutor.StreamChunk{Payload: chunks[i]}:
 				case <-ctx.Done():
 					return false
 				}
@@ -171,10 +171,10 @@ func (e *XAIExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth
 			helps.RecordAPIResponseError(ctx, e.cfg, errScan)
 			reporter.PublishFailure(ctx, errScan)
 			select {
-			case out <- cliproxyexecutor.StreamChunk{Err: errScan}:
+			case out <- apsexecutor.StreamChunk{Err: errScan}:
 			case <-ctx.Done():
 			}
 		}
 	}()
-	return &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
+	return &apsexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
 }

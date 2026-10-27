@@ -14,10 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -69,7 +69,7 @@ func websocketClosePayloadForUpstreamError(err error) (bool, []byte) {
 	}
 
 	errText := err.Error()
-	if cliproxyexecutor.IsUpstreamWebsocketReplayRequired(err) {
+	if apsexecutor.IsUpstreamWebsocketReplayRequired(err) {
 		return true, websocket.FormatCloseMessage(
 			websocket.CloseServiceRestart,
 			truncateWebsocketCloseReason(wsHTTPReplayRequiredCloseReason, wsCloseReasonMaxBytes),
@@ -557,9 +557,9 @@ func (h *OpenAIResponsesAPIHandler) ResponsesWebsocket(c *gin.Context) {
 		selectedAuthObserved := false
 		pinnedAuthAttempted := false
 		cliCtx, cliCancel := h.GetContextWithCancel(h, c, executionParent)
-		cliCtx = cliproxyexecutor.WithDownstreamWebsocket(cliCtx)
+		cliCtx = apsexecutor.WithDownstreamWebsocket(cliCtx)
 		if nativeWebsocketPassthrough && requestRequiresCurrentUpstreamWebsocket {
-			cliCtx = cliproxyexecutor.WithRequiredUpstreamWebsocket(cliCtx)
+			cliCtx = apsexecutor.WithRequiredUpstreamWebsocket(cliCtx)
 		}
 		cliCtx = handlers.WithExecutionSessionID(cliCtx, passthroughSessionID)
 		cliCtx = handlers.WithSelectedAuthIDCallback(cliCtx, func(authID string) {
@@ -658,7 +658,7 @@ func (h *OpenAIResponsesAPIHandler) ResponsesWebsocket(c *gin.Context) {
 }
 
 func responsesWebsocketHTTPReplayRequiredError() error {
-	return cliproxyexecutor.NewUpstreamWebsocketReplayRequiredError()
+	return apsexecutor.NewUpstreamWebsocketReplayRequiredError()
 }
 
 func responsesWebsocketRequestRequiresCurrentUpstream(payload []byte) bool {

@@ -1,14 +1,14 @@
 package helps
 
 import (
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 // IsChatTokenEvent reports whether the given OpenAI-compatible Chat Completions SSE or JSON chunk
 // carries substantive output token content (such as text delta, reasoning content, or tool call arguments).
 // It filters out container metadata, role announcements, and empty delta frames.
 func IsChatTokenEvent(payload []byte) bool {
-	return cliproxyexecutor.IsChatTokenEvent(payload)
+	return apsexecutor.IsChatTokenEvent(payload)
 }
 
 // ObserveChatTokenEvent inspects an OpenAI Chat Completions chunk and records TTFT if the frame

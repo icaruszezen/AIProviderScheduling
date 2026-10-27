@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -25,21 +25,21 @@ func TestOpenAICompatExecutorUsesCompatibleClaudeTranslation(t *testing.T) {
 	defer server.Close()
 
 	executor := NewOpenAICompatExecutor("openai-compatibility", &config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "openai-compatibility",
 		Attributes: map[string]string{
 			"base_url": server.URL,
 			"api_key":  "test-key",
 		},
 	}
-	request := cliproxyexecutor.Request{
+	request := apsexecutor.Request{
 		Model:   "deepseek-v4-flash",
 		Payload: []byte(`{"model":"deepseek-v4-flash","messages":[{"role":"assistant","content":[{"type":"thinking","thinking":"prior reasoning","signature":""},{"type":"tool_use","id":"call_1","name":"Read","input":{}}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"call_1","content":"ok"}]}]}`),
 		Metadata: map[string]any{
-			"cliproxy.resolved_api_key_model_info": &registry.ModelInfo{IsCompat: true},
+			"aps.resolved_api_key_model_info": &registry.ModelInfo{IsCompat: true},
 		},
 	}
-	options := cliproxyexecutor.Options{
+	options := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatClaude,
 		ResponseFormat: sdktranslator.FormatOpenAI,
 	}

@@ -316,17 +316,17 @@ func TestInstallUsesLatestReleaseVersion(t *testing.T) {
 	archiveName := "sample-provider_0.2.0_darwin_arm64.zip"
 	checksum := sha256.Sum256(archiveData)
 	client := Client{HTTPClient: mapHTTPDoer{
-		"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest": []byte(`{
+		"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest": []byte(`{
 			"tag_name": "v0.2.0",
 			"assets": [
 				{
 					"name": "` + archiveName + `",
-					"url": "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/1",
+					"url": "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/1",
 					"browser_download_url": "https://downloads.example/` + archiveName + `"
 				},
 				{
 					"name": "checksums.txt",
-					"url": "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/2",
+					"url": "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/2",
 					"browser_download_url": "https://downloads.example/checksums.txt"
 				}
 			]
@@ -356,7 +356,7 @@ func TestInstallUsesLatestReleaseVersion(t *testing.T) {
 }
 
 func TestDownloadAssetFallsBackToReleaseAssetAPIURLWhenBrowserDownloadURLEmpty(t *testing.T) {
-	apiURL := "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/1"
+	apiURL := "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/1"
 	client := Client{HTTPClient: mapHTTPDoer{
 		apiURL: []byte("artifact-data"),
 	}}
@@ -375,7 +375,7 @@ func TestDownloadAssetFallsBackToReleaseAssetAPIURLWhenBrowserDownloadURLEmpty(t
 
 func TestDownloadAssetUsesAPIURLWhenAuthMatchesArtifact(t *testing.T) {
 	t.Setenv("PLUGIN_STORE_TOKEN", "secret-token")
-	apiURL := "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/1"
+	apiURL := "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/1"
 	client := Client{
 		HTTPClient: authCheckingHTTPDoer{
 			url:           apiURL,
@@ -383,7 +383,7 @@ func TestDownloadAssetUsesAPIURLWhenAuthMatchesArtifact(t *testing.T) {
 			responseBytes: []byte("artifact-data"),
 		},
 		Auth: []AuthConfig{{
-			Match:    "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/",
+			Match:    "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/",
 			ApplyTo:  []string{RequestKindArtifact},
 			Type:     AuthTypeBearer,
 			TokenEnv: "PLUGIN_STORE_TOKEN",
@@ -404,7 +404,7 @@ func TestDownloadAssetUsesAPIURLWhenAuthMatchesArtifact(t *testing.T) {
 }
 
 func TestDownloadAssetUsesAPIURLWhenResolvedAuthMatchesArtifact(t *testing.T) {
-	apiURL := "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/1"
+	apiURL := "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/1"
 	client := Client{
 		HTTPClient: authCheckingHTTPDoer{
 			url:           apiURL,
@@ -412,7 +412,7 @@ func TestDownloadAssetUsesAPIURLWhenResolvedAuthMatchesArtifact(t *testing.T) {
 			responseBytes: []byte("artifact-data"),
 		},
 		ResolvedAuth: []ResolvedAuthConfig{{
-			Match:   "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/",
+			Match:   "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/",
 			ApplyTo: []string{RequestKindArtifact},
 			Type:    AuthTypeGitHubToken,
 			Token:   Secret("temporary-token"),
@@ -449,7 +449,7 @@ func TestDownloadAssetUsesBrowserDownloadURLWithUnrelatedAuth(t *testing.T) {
 
 	data, errDownload := client.DownloadAsset(context.Background(), ReleaseAsset{
 		Name:               "sample-provider_0.2.0_darwin_arm64.zip",
-		APIURL:             "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/assets/1",
+		APIURL:             "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/assets/1",
 		BrowserDownloadURL: browserURL,
 	})
 	if errDownload != nil {
@@ -468,7 +468,7 @@ func TestInstallVersionUsesPinnedReleaseTag(t *testing.T) {
 	archiveName := "sample-provider_0.3.0_linux_amd64.zip"
 	checksum := sha256.Sum256(archiveData)
 	client := Client{HTTPClient: mapHTTPDoer{
-		"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/tags/v0.3.0": []byte(`{
+		"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/tags/v0.3.0": []byte(`{
 			"tag_name": "v0.3.0",
 			"assets": [
 				{"name": "` + archiveName + `", "browser_download_url": "https://downloads.example/` + archiveName + `"},
@@ -679,7 +679,7 @@ func TestInstallRejectsInvalidLatestReleaseTag(t *testing.T) {
 	t.Parallel()
 
 	client := Client{HTTPClient: mapHTTPDoer{
-		"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest": []byte(`{"tag_name": "latest", "assets": []}`),
+		"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest": []byte(`{"tag_name": "latest", "assets": []}`),
 	}}
 	_, errInstall := client.Install(context.Background(), testPlugin(), InstallOptions{
 		PluginsDir: t.TempDir(),
@@ -809,6 +809,6 @@ func testPlugin() Plugin {
 		Description: "Adds sample provider support.",
 		Author:      "author-name",
 		Version:     "0.1.0",
-		Repository:  "https://github.com/author-name/cliproxy-sample-provider-plugin",
+		Repository:  "https://github.com/author-name/aps-sample-provider-plugin",
 	}
 }

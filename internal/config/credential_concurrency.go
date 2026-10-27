@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	defaultCPAHeartbeatTimeout          = 3 * time.Second
-	defaultCPACancelBound               = 5 * time.Second
+	defaultAPSHeartbeatTimeout          = 3 * time.Second
+	defaultAPSCancelBound               = 5 * time.Second
 	defaultReclaimGrace                 = 5 * time.Second
 	defaultCleanupInterval              = 5 * time.Second
 	defaultReleaseFlushInterval         = 250 * time.Millisecond
@@ -23,8 +23,8 @@ const (
 type CredentialConcurrencyConfig struct {
 	LifecycleConfigRevision    int64         `yaml:"lifecycle-config-revision" json:"lifecycle-config-revision"`
 	ObservationBarrierRevision int64         `yaml:"observation-barrier-revision" json:"observation-barrier-revision"`
-	CPAHeartbeatTimeout        time.Duration `yaml:"cpa-heartbeat-timeout" json:"cpa-heartbeat-timeout"`
-	CPACancelBound             time.Duration `yaml:"cpa-cancel-bound" json:"cpa-cancel-bound"`
+	APSHeartbeatTimeout        time.Duration `yaml:"aps-heartbeat-timeout" json:"aps-heartbeat-timeout"`
+	APSCancelBound             time.Duration `yaml:"aps-cancel-bound" json:"aps-cancel-bound"`
 	ReclaimGrace               time.Duration `yaml:"reclaim-grace" json:"reclaim-grace"`
 	CleanupInterval            time.Duration `yaml:"cleanup-interval" json:"cleanup-interval"`
 	ReleaseFlushInterval       time.Duration `yaml:"release-flush-interval" json:"release-flush-interval"`
@@ -35,8 +35,8 @@ type CredentialConcurrencyConfig struct {
 
 	lifecycleConfigRevisionPresent    bool
 	observationBarrierRevisionPresent bool
-	cpaHeartbeatTimeoutPresent        bool
-	cpaCancelBoundPresent             bool
+	apsHeartbeatTimeoutPresent        bool
+	apsCancelBoundPresent             bool
 	reclaimGracePresent               bool
 	cleanupIntervalPresent            bool
 	releaseFlushIntervalPresent       bool
@@ -51,8 +51,8 @@ func (c *CredentialConcurrencyConfig) UnmarshalYAML(value *yaml.Node) error {
 	type rawCredentialConcurrencyConfig struct {
 		LifecycleConfigRevision    int64         `yaml:"lifecycle-config-revision"`
 		ObservationBarrierRevision int64         `yaml:"observation-barrier-revision"`
-		CPAHeartbeatTimeout        time.Duration `yaml:"cpa-heartbeat-timeout"`
-		CPACancelBound             time.Duration `yaml:"cpa-cancel-bound"`
+		APSHeartbeatTimeout        time.Duration `yaml:"aps-heartbeat-timeout"`
+		APSCancelBound             time.Duration `yaml:"aps-cancel-bound"`
 		ReclaimGrace               time.Duration `yaml:"reclaim-grace"`
 		CleanupInterval            time.Duration `yaml:"cleanup-interval"`
 		ReleaseFlushInterval       time.Duration `yaml:"release-flush-interval"`
@@ -70,8 +70,8 @@ func (c *CredentialConcurrencyConfig) UnmarshalYAML(value *yaml.Node) error {
 	*c = CredentialConcurrencyConfig{
 		LifecycleConfigRevision:           raw.LifecycleConfigRevision,
 		ObservationBarrierRevision:        raw.ObservationBarrierRevision,
-		CPAHeartbeatTimeout:               raw.CPAHeartbeatTimeout,
-		CPACancelBound:                    raw.CPACancelBound,
+		APSHeartbeatTimeout:               raw.APSHeartbeatTimeout,
+		APSCancelBound:                    raw.APSCancelBound,
 		ReclaimGrace:                      raw.ReclaimGrace,
 		CleanupInterval:                   raw.CleanupInterval,
 		ReleaseFlushInterval:              raw.ReleaseFlushInterval,
@@ -81,8 +81,8 @@ func (c *CredentialConcurrencyConfig) UnmarshalYAML(value *yaml.Node) error {
 		MaxLimit:                          raw.MaxLimit,
 		lifecycleConfigRevisionPresent:    credentialConcurrencyFieldPresent(value, "lifecycle-config-revision"),
 		observationBarrierRevisionPresent: credentialConcurrencyFieldPresent(value, "observation-barrier-revision"),
-		cpaHeartbeatTimeoutPresent:        credentialConcurrencyFieldPresent(value, "cpa-heartbeat-timeout"),
-		cpaCancelBoundPresent:             credentialConcurrencyFieldPresent(value, "cpa-cancel-bound"),
+		apsHeartbeatTimeoutPresent:        credentialConcurrencyFieldPresent(value, "aps-heartbeat-timeout"),
+		apsCancelBoundPresent:             credentialConcurrencyFieldPresent(value, "aps-cancel-bound"),
 		reclaimGracePresent:               credentialConcurrencyFieldPresent(value, "reclaim-grace"),
 		cleanupIntervalPresent:            credentialConcurrencyFieldPresent(value, "cleanup-interval"),
 		releaseFlushIntervalPresent:       credentialConcurrencyFieldPresent(value, "release-flush-interval"),
@@ -107,11 +107,11 @@ func credentialConcurrencyFieldPresent(value *yaml.Node, field string) bool {
 
 // WithDefaults applies the lifecycle defaults required for compatibility with older Home versions.
 func (c CredentialConcurrencyConfig) WithDefaults() CredentialConcurrencyConfig {
-	if !c.cpaHeartbeatTimeoutPresent && c.CPAHeartbeatTimeout == 0 {
-		c.CPAHeartbeatTimeout = defaultCPAHeartbeatTimeout
+	if !c.apsHeartbeatTimeoutPresent && c.APSHeartbeatTimeout == 0 {
+		c.APSHeartbeatTimeout = defaultAPSHeartbeatTimeout
 	}
-	if !c.cpaCancelBoundPresent && c.CPACancelBound == 0 {
-		c.CPACancelBound = defaultCPACancelBound
+	if !c.apsCancelBoundPresent && c.APSCancelBound == 0 {
+		c.APSCancelBound = defaultAPSCancelBound
 	}
 	if !c.reclaimGracePresent && c.ReclaimGrace == 0 {
 		c.ReclaimGrace = defaultReclaimGrace
@@ -145,7 +145,7 @@ func ValidateCredentialConcurrency(cfg CredentialConcurrencyConfig) error {
 	if cfg.ObservationBarrierRevision < 0 {
 		return fmt.Errorf("observation barrier revision must not be negative")
 	}
-	if cfg.CPAHeartbeatTimeout <= 0 || cfg.CPACancelBound <= 0 || cfg.ReclaimGrace <= 0 || cfg.CleanupInterval <= 0 {
+	if cfg.APSHeartbeatTimeout <= 0 || cfg.APSCancelBound <= 0 || cfg.ReclaimGrace <= 0 || cfg.CleanupInterval <= 0 {
 		return fmt.Errorf("credential concurrency lifecycle durations must be positive")
 	}
 	if cfg.ReleaseFlushInterval <= 0 || cfg.ReleaseMaxBackoff <= 0 || cfg.BusyRetryMin <= 0 || cfg.BusyRetryMax <= 0 {
@@ -175,12 +175,12 @@ func ValidateCredentialConcurrencyLifecycle(nodeHeartbeatTimeout time.Duration, 
 		return errValidate
 	}
 	left, leftOverflow := addCredentialConcurrencyDuration(nodeHeartbeatTimeout, cfg.ReclaimGrace)
-	right, rightOverflow := addCredentialConcurrencyDuration(cfg.CPAHeartbeatTimeout, cfg.CPACancelBound)
+	right, rightOverflow := addCredentialConcurrencyDuration(cfg.APSHeartbeatTimeout, cfg.APSCancelBound)
 	if leftOverflow || rightOverflow {
 		return fmt.Errorf("credential concurrency lifecycle timing safety invariant overflows")
 	}
 	if left <= right {
-		return fmt.Errorf("node heartbeat timeout plus reclaim grace must exceed CPA heartbeat timeout plus cancel bound")
+		return fmt.Errorf("node heartbeat timeout plus reclaim grace must exceed APS heartbeat timeout plus cancel bound")
 	}
 	return nil
 }

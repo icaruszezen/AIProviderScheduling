@@ -13,22 +13,22 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	claudemodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/claude/models"
-	codexlive "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/live"
-	codexmodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/models"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/client/grokbuild"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers/gemini"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers/openai"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	claudemodels "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/claude/models"
+	codexlive "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/codex/live"
+	codexmodels "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/codex/models"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/client/grokbuild"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers/gemini"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers/openai"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -324,7 +324,7 @@ func (s *Server) codexAlphaSearch(c *gin.Context) {
 		releaseAttempt = release
 		defer releaseAttempt()
 	}
-	logging.SetGinCPATraceID(c, selected.EnsureIndex())
+	logging.SetGinAPSTraceID(c, selected.EnsureIndex())
 
 	baseHeaders := make(http.Header)
 	baseHeaders.Set("Content-Type", "application/json")
@@ -349,7 +349,7 @@ func (s *Server) codexAlphaSearch(c *gin.Context) {
 		upstreamURL := "https://chatgpt.com/backend-api/codex/alpha/search"
 		requestBody := upstreamRequestBody
 		// API-key Alpha Search reuses normal credential-aware model resolution so
-		// CPA routing prefixes and model aliases are not forwarded upstream.
+		// APS routing prefixes and model aliases are not forwarded upstream.
 		if current.AuthKind() == auth.AuthKindAPIKey {
 			baseURL := ""
 			if current.Attributes != nil {

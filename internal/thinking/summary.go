@@ -3,7 +3,7 @@ package thinking
 import (
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -249,7 +249,7 @@ func claudeThinkingAcceptsDisplay(body []byte) bool {
 		return true
 	case "enabled":
 		// This runs before ApplyThinking normalizes the request, so a missing
-		// budget_tokens is an unfinished body rather than inactive thinking. CPA
+		// budget_tokens is an unfinished body rather than inactive thinking. APS
 		// also accepts -1 as its compatibility representation for auto thinking.
 		budget := gjson.GetBytes(body, "thinking.budget_tokens")
 		if budget.Type != gjson.Number {
@@ -305,7 +305,7 @@ func isOpenRouterProvider(provider string) bool {
 
 func extractOpenAIExplicitSummaryConfig(body []byte) (SummaryConfig, bool) {
 	// Google's documented Chat Completions extension is the authoritative
-	// explicit visibility control when present, ahead of CPA compatibility
+	// explicit visibility control when present, ahead of APS compatibility
 	// aliases and Chat's reasoning_effort fallback.
 	for _, path := range []string{
 		"extra_body.google.thinking_config.include_thoughts",

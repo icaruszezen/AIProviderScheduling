@@ -9,15 +9,15 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executionregistry"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executionregistry"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 type terminalCodexHomeDispatcher struct {
-	auth  cliproxyauth.Auth
+	auth  apsauth.Auth
 	calls atomic.Int32
 }
 
@@ -55,30 +55,30 @@ func TestHomeCodexTerminalStreamFailureUsesFreshDispatchOnNextRequest(t *testing
 	}))
 	defer server.Close()
 
-	dispatcher := &terminalCodexHomeDispatcher{auth: cliproxyauth.Auth{
+	dispatcher := &terminalCodexHomeDispatcher{auth: apsauth.Auth{
 		ID:       "home-codex",
 		Provider: "codex",
-		Status:   cliproxyauth.StatusActive,
+		Status:   apsauth.StatusActive,
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetConfig(&config.Config{Home: config.HomeConfig{Enabled: true}})
 	manager.PublishHomeDispatch(dispatcher, executionregistry.New(), 1)
 	manager.RegisterExecutor(NewCodexWebsocketsExecutor(&config.Config{}))
 
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
-	opts := cliproxyexecutor.Options{
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
+	opts := apsexecutor.Options{
 		Stream:         true,
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "terminal-home-session",
+			apsexecutor.ExecutionSessionMetadataKey: "terminal-home-session",
 		},
 	}
-	request := cliproxyexecutor.Request{Model: "gpt-5-codex", Payload: []byte(`{"model":"gpt-5-codex","input":[]}`)}
+	request := apsexecutor.Request{Model: "gpt-5-codex", Payload: []byte(`{"model":"gpt-5-codex","input":[]}`)}
 
 	first, errFirst := manager.ExecuteStream(ctx, []string{"codex"}, request, opts)
 	if errFirst != nil {

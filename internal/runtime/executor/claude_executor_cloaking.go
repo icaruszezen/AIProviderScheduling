@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -43,7 +43,7 @@ func detectIncomingClaudeCodeRequest(ctx context.Context, incoming http.Header, 
 // getWorkloadFromContext extracts workload identifier from the gin request headers.
 func getWorkloadFromContext(ctx context.Context) string {
 	if ginCtx, ok := ctx.Value("gin").(*gin.Context); ok && ginCtx != nil && ginCtx.Request != nil {
-		return strings.TrimSpace(ginCtx.GetHeader("X-CPA-Claude-Workload"))
+		return strings.TrimSpace(ginCtx.GetHeader("X-APS-Claude-Workload"))
 	}
 	return ""
 }
@@ -52,7 +52,7 @@ func getWorkloadFromContext(ctx context.Context) string {
 // falling back to its stored metadata (the raw OAuth/token JSON). Returns
 // (cloakMode, strictMode, sensitiveWords, cacheUserID); an empty cloakMode means
 // the credential did not explicitly configure a mode.
-func getCloakConfigFromAuth(auth *cliproxyauth.Auth) (cloakMode string, strictMode bool, sensitiveWords []string, cacheUserID bool) {
+func getCloakConfigFromAuth(auth *apsauth.Auth) (cloakMode string, strictMode bool, sensitiveWords []string, cacheUserID bool) {
 	if auth == nil {
 		return "", false, nil, false
 	}
@@ -343,7 +343,7 @@ func (claudeMidSystemMessageModelError) IsRequestScoped() bool {
 	return true
 }
 
-// The turn is not always the caller's. CPA normally reconciles a cloaked turn
+// The turn is not always the caller's. APS normally reconciles a cloaked turn
 // when a payload rule changes the model to legacy, but it deliberately gives up
 // if the rule also rewrites the tracked messages and their provenance is no
 // longer exact. The wording therefore states the model's requirement instead of
@@ -609,7 +609,7 @@ func claudeMessageContentText(content gjson.Result) string {
 	return strings.Join(parts, "\n\n")
 }
 
-// claudeCodeSystemPlacementState identifies only the role=system turns that CPA
+// claudeCodeSystemPlacementState identifies only the role=system turns that APS
 // itself inserted while cloaking. Caller-owned turns are deliberately excluded:
 // if one is paired with a legacy model, validateClaudeMidSystemMessageModel must
 // still return 400 instead of silently rewriting the caller's wire.
@@ -619,7 +619,7 @@ type claudeCodeSystemPlacementState struct {
 	texts       []string
 }
 
-// captureClaudeCodeSystemPlacement records CPA's modern-model system placement
+// captureClaudeCodeSystemPlacement records APS's modern-model system placement
 // immediately after cloaking. The message-count increase is part of the proof:
 // insertClaudeMidConversationSystemMessages returns without inserting when the
 // same turns already exist, and those pre-existing turns belong to the caller.
@@ -704,11 +704,11 @@ func claudeCodeLocalDate(now time.Time) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, int(month), day)
 }
 
-func claudeCodeCurrentTime(cfg *config.Config, auth *cliproxyauth.Auth) time.Time {
+func claudeCodeCurrentTime(cfg *config.Config, auth *apsauth.Auth) time.Time {
 	return time.Now().In(claudeCodeTimezone(cfg, auth))
 }
 
-func claudeCodeTimezone(cfg *config.Config, auth *cliproxyauth.Auth) *time.Location {
+func claudeCodeTimezone(cfg *config.Config, auth *apsauth.Auth) *time.Location {
 	if timezone := claudeCredentialTimezone(auth); timezone != "" {
 		if location, errLocation := time.LoadLocation(timezone); errLocation == nil {
 			return location
@@ -728,7 +728,7 @@ func claudeCodeTimezone(cfg *config.Config, auth *cliproxyauth.Auth) *time.Locat
 	return location
 }
 
-func claudeCredentialTimezone(auth *cliproxyauth.Auth) string {
+func claudeCredentialTimezone(auth *apsauth.Auth) string {
 	if auth == nil {
 		return ""
 	}
@@ -856,7 +856,7 @@ func claudeThinkingAcceptsClearThinking(payload []byte) bool {
 }
 
 // injectClaudeCodeContextManagement supplies context_management when the caller
-// omitted it. CPA already claims context-management-2025-06-27 in Anthropic-Beta,
+// omitted it. APS already claims context-management-2025-06-27 in Anthropic-Beta,
 // so a missing body field is an observable inconsistency with the real client. A
 // caller that sent its own object keeps it untouched.
 func injectClaudeCodeContextManagement(payload []byte) ([]byte, bool) {
@@ -885,7 +885,7 @@ type claudeCodeContextManagementState struct {
 func reconcileClaudeCodeContextManagement(payload []byte, state claudeCodeContextManagementState) []byte {
 	contextManagement := gjson.GetBytes(payload, "context_management")
 
-	// Any thinking value the strategy does not accept must drop an object CPA
+	// Any thinking value the strategy does not accept must drop an object APS
 	// injected itself. disableThinkingIfToolChoiceForced deletes the whole
 	// thinking field after injection, so this also covers a request that was
 	// still eligible when injectClaudeCodeContextManagement ran.
@@ -938,7 +938,7 @@ type claudeCloakSettings struct {
 	cacheUserID    bool
 }
 
-func resolveClaudeWirePolicy(cfg *config.Config, auth *cliproxyauth.Auth, apiKey string, confirmedClaudeCode bool) (claudeWirePolicy, claudeCloakSettings) {
+func resolveClaudeWirePolicy(cfg *config.Config, auth *apsauth.Auth, apiKey string, confirmedClaudeCode bool) (claudeWirePolicy, claudeCloakSettings) {
 	cloakCfg := resolveClaudeKeyCloakConfig(cfg, auth)
 	attrMode, attrStrict, attrWords, attrCache := getCloakConfigFromAuth(auth)
 
@@ -1000,7 +1000,7 @@ func resolveClaudeWirePolicy(cfg *config.Config, auth *cliproxyauth.Auth, apiKey
 func applyCloaking(
 	ctx context.Context,
 	cfg *config.Config,
-	auth *cliproxyauth.Auth,
+	auth *apsauth.Auth,
 	payload []byte,
 	apiKey string,
 	confirmedClaudeCode bool,
@@ -1120,7 +1120,7 @@ func claudePayloadHasCacheableSystem(payload []byte) bool {
 // It never creates a breakpoint, so placement stays owned by ensureCacheControl.
 // Native gates the 1h selection on OAuth scopes, a non-overage account and an
 // allowlisted internal query source, and pushes extended-cache-ttl-2025-04-11
-// only when that selection produced a 1h body ttl. CPA has no query-source
+// only when that selection produced a 1h body ttl. APS has no query-source
 // equivalent, so the credential check is the reproducible half: OAuth is exactly
 // when claudeCodeCLIBetas emits extended-cache-ttl, which keeps body ttl and the
 // beta strictly paired the way native does. API-key credentials keep the plain

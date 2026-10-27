@@ -10,7 +10,7 @@ func TestCredentialConcurrencyLimiterConfig(t *testing.T) {
 	if got.LifecycleConfigRevision != 0 || got.ObservationBarrierRevision != 0 {
 		t.Fatalf("default revisions = %d, %d, want 0, 0", got.LifecycleConfigRevision, got.ObservationBarrierRevision)
 	}
-	if got.CPAHeartbeatTimeout != 3*time.Second || got.CPACancelBound != 5*time.Second || got.ReclaimGrace != 5*time.Second || got.CleanupInterval != 5*time.Second {
+	if got.APSHeartbeatTimeout != 3*time.Second || got.APSCancelBound != 5*time.Second || got.ReclaimGrace != 5*time.Second || got.CleanupInterval != 5*time.Second {
 		t.Fatalf("default lifecycle config = %#v", got)
 	}
 	if got.ReleaseFlushInterval != 250*time.Millisecond || got.ReleaseMaxBackoff != 2*time.Second || got.BusyRetryMin != 250*time.Millisecond || got.BusyRetryMax != time.Second || got.MaxLimit != 1_000_000 {
@@ -26,7 +26,7 @@ func TestCredentialConcurrencyLimiterConfig(t *testing.T) {
 
 func TestValidateCredentialConcurrencyAcceptsHomeAuthoritativeHeartbeat(t *testing.T) {
 	cfg := (CredentialConcurrencyConfig{}).WithDefaults()
-	cfg.CPAHeartbeatTimeout = 20 * time.Second
+	cfg.APSHeartbeatTimeout = 20 * time.Second
 
 	if errValidate := ValidateCredentialConcurrency(cfg); errValidate != nil {
 		t.Fatalf("ValidateCredentialConcurrency() error = %v", errValidate)
@@ -45,24 +45,24 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 			name: "explicit zero revision",
 			payload: "credential-concurrency:\n" +
 				"  lifecycle-config-revision: 0\n" +
-				"  cpa-heartbeat-timeout: 3s\n" +
-				"  cpa-cancel-bound: 5s\n" +
+				"  aps-heartbeat-timeout: 3s\n" +
+				"  aps-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
 				"  cleanup-interval: 5s\n"},
 		{
 			name: "explicit zero duration",
 			payload: "credential-concurrency:\n" +
 				"  lifecycle-config-revision: 1\n" +
-				"  cpa-heartbeat-timeout: 0s\n" +
-				"  cpa-cancel-bound: 5s\n" +
+				"  aps-heartbeat-timeout: 0s\n" +
+				"  aps-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
 				"  cleanup-interval: 5s\n"},
 		{
 			name: "explicit null duration",
 			payload: "credential-concurrency:\n" +
 				"  lifecycle-config-revision: 1\n" +
-				"  cpa-heartbeat-timeout: null\n" +
-				"  cpa-cancel-bound: 5s\n" +
+				"  aps-heartbeat-timeout: null\n" +
+				"  aps-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
 				"  cleanup-interval: 5s\n"},
 		{
@@ -70,8 +70,8 @@ func TestCredentialConcurrencyConfigDefaultsOnlyMissingFields(t *testing.T) {
 			payload: "credential-concurrency:\n" +
 				"  lifecycle-config-revision: 1\n" +
 				"  observation-barrier-revision: -1\n" +
-				"  cpa-heartbeat-timeout: 3s\n" +
-				"  cpa-cancel-bound: 5s\n" +
+				"  aps-heartbeat-timeout: 3s\n" +
+				"  aps-cancel-bound: 5s\n" +
 				"  reclaim-grace: 5s\n" +
 				"  cleanup-interval: 5s\n"}}
 
@@ -94,8 +94,8 @@ func TestCredentialConcurrencyConfigRejectsInvalidLimiter(t *testing.T) {
 		{ReleaseFlushInterval: time.Millisecond, ReleaseMaxBackoff: time.Millisecond, BusyRetryMin: 1500 * time.Microsecond, BusyRetryMax: 2 * time.Millisecond, MaxLimit: 1},
 		{ReleaseFlushInterval: time.Millisecond, ReleaseMaxBackoff: time.Millisecond, BusyRetryMin: time.Millisecond, BusyRetryMax: time.Millisecond, MaxLimit: 1_000_001}}
 	for _, cfg := range tests {
-		cfg.CPAHeartbeatTimeout = 3 * time.Second
-		cfg.CPACancelBound = 5 * time.Second
+		cfg.APSHeartbeatTimeout = 3 * time.Second
+		cfg.APSCancelBound = 5 * time.Second
 		cfg.ReclaimGrace = 5 * time.Second
 		cfg.CleanupInterval = 5 * time.Second
 		if errValidate := ValidateCredentialConcurrencyLifecycle(20*time.Second, cfg); errValidate == nil {
@@ -107,8 +107,8 @@ func TestCredentialConcurrencyConfigRejectsInvalidLimiter(t *testing.T) {
 func TestValidateCredentialConcurrencyLifecycleRejectsSafetyOverflow(t *testing.T) {
 	cfg := CredentialConcurrencyConfig{
 		LifecycleConfigRevision: 1,
-		CPAHeartbeatTimeout:     time.Duration(1<<63 - 1),
-		CPACancelBound:          time.Nanosecond,
+		APSHeartbeatTimeout:     time.Duration(1<<63 - 1),
+		APSCancelBound:          time.Nanosecond,
 		ReclaimGrace:            time.Second,
 		CleanupInterval:         time.Second}
 	if errValidate := ValidateCredentialConcurrencyLifecycle(time.Second, cfg); errValidate == nil {

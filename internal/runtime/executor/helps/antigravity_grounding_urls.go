@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -24,7 +24,7 @@ func isAntigravityVertexSearchRedirect(rawURL string) bool {
 		strings.HasPrefix(parsed.Path, "/grounding-api-redirect/")
 }
 
-func resolveAntigravityGroundingURL(ctx context.Context, cfg *config.Config, auth *cliproxyauth.Auth, rawURL string) string {
+func resolveAntigravityGroundingURL(ctx context.Context, cfg *config.Config, auth *apsauth.Auth, rawURL string) string {
 	if !isAntigravityVertexSearchRedirect(rawURL) {
 		return rawURL
 	}
@@ -63,7 +63,7 @@ func resolveAntigravityGroundingURL(ctx context.Context, cfg *config.Config, aut
 }
 
 // ResolveAntigravityGroundingURLs replaces Vertex Search redirect URLs in grounding chunks with their target URLs.
-func ResolveAntigravityGroundingURLs(ctx context.Context, cfg *config.Config, auth *cliproxyauth.Auth, payload []byte) []byte {
+func ResolveAntigravityGroundingURLs(ctx context.Context, cfg *config.Config, auth *apsauth.Auth, payload []byte) []byte {
 	if len(payload) == 0 {
 		return payload
 	}

@@ -24,8 +24,8 @@ import (
     "context"
     "net/http"
 
-    coreauth "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/auth"
-    clipexec "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/executor"
+    coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+    clipexec "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 type Executor struct{}
@@ -57,7 +57,7 @@ func (Executor) Refresh(ctx context.Context, a *coreauth.Auth) (*coreauth.Auth, 
 ```go
 core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
 core.RegisterExecutor(myprov.Executor{})
-svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
+svc, _ := aps.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
 ```
 
 当凭据的 `Provider` 为 `"myprov"` 时，管理器会将请求路由到你的执行器。
@@ -77,7 +77,7 @@ package myprov
 
 import (
   "context"
-  sdktr "github.com/router-for-me/CLIProxyAPI/v6/sdk/translator"
+  sdktr "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 const (
@@ -107,10 +107,10 @@ func init() {
 通过全局模型注册表将模型暴露到 `/v1/models`：
 
 ```go
-models := []*cliproxy.ModelInfo{
+models := []*aps.ModelInfo{
   { ID: "myprov-pro-1", Object: "model", Type: "myprov", DisplayName: "MyProv Pro 1" },
 }
-cliproxy.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
+aps.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
 ```
 
 内置 Provider 会自动注册；自定义 Provider 建议在启动时（例如加载到 Auth 后）或在 Auth 注册钩子中调用。

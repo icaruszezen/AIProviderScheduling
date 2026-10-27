@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 func TestHostHTTPClientMarksUpstreamAttempt(t *testing.T) {
@@ -42,11 +42,11 @@ func TestHostHTTPClientMarksUpstreamAttempt(t *testing.T) {
 				return nil
 			}}} {
 		t.Run(test.name, func(t *testing.T) {
-			ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
+			ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
 			if errDo := test.do(ctx); errDo != nil {
 				t.Fatalf("host HTTP request error = %v", errDo)
 			}
-			if !cliproxyexecutor.UpstreamAttempted(ctx) {
+			if !apsexecutor.UpstreamAttempted(ctx) {
 				t.Fatal("host HTTP request did not mark an upstream attempt")
 			}
 		})

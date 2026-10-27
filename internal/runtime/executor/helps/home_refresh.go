@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 type homeStatusErr struct {
@@ -61,8 +61,8 @@ type homeErrorEnvelope struct {
 }
 
 type homeRefreshAuthEnvelope struct {
-	Auth      cliproxyauth.Auth `json:"auth"`
-	AuthIndex string            `json:"auth_index"`
+	Auth      apsauth.Auth `json:"auth"`
+	AuthIndex string       `json:"auth_index"`
 }
 
 type homeErrorDetail struct {
@@ -90,7 +90,7 @@ var currentHomeRefreshClient = func() homeRefreshClient {
 // RefreshAuthViaHome replaces local refresh logic when home control plane integration is enabled.
 // It returns (updatedAuth, true, nil) when home refresh succeeds; (nil, true, err) when home is
 // enabled but refresh fails; and (nil, false, nil) when home is disabled.
-func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, bool, error) {
+func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *apsauth.Auth) (*apsauth.Auth, bool, error) {
 	if cfg == nil || !cfg.Home.Enabled {
 		return nil, false, nil
 	}
@@ -157,7 +157,7 @@ func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxya
 			msg:        "home returned invalid auth payload",
 			diagnostic: "Home refresh response decode failed: " + logging.SafeErrorDiagnostic(errParse)}
 	}
-	if updated.Disabled || updated.Status == cliproxyauth.StatusDisabled {
+	if updated.Disabled || updated.Status == apsauth.StatusDisabled {
 		return nil, true, homeStatusErr{code: http.StatusUnauthorized, msg: "credential unauthorized"}
 	}
 	if returnedIndex != "" {
@@ -168,11 +168,11 @@ func RefreshAuthViaHome(ctx context.Context, cfg *config.Config, auth *cliproxya
 	return updated, true, nil
 }
 
-func authAccessTokenSHA256(auth *cliproxyauth.Auth) string {
-	return cliproxyauth.AccessTokenSHA256(auth)
+func authAccessTokenSHA256(auth *apsauth.Auth) string {
+	return apsauth.AccessTokenSHA256(auth)
 }
 
-func parseHomeRefreshAuth(raw []byte) (*cliproxyauth.Auth, string, error) {
+func parseHomeRefreshAuth(raw []byte) (*apsauth.Auth, string, error) {
 	var rawObject map[string]json.RawMessage
 	if errUnmarshal := json.Unmarshal(raw, &rawObject); errUnmarshal != nil {
 		return nil, "", errUnmarshal
@@ -184,7 +184,7 @@ func parseHomeRefreshAuth(raw []byte) (*cliproxyauth.Auth, string, error) {
 		}
 		return &envelope.Auth, strings.TrimSpace(envelope.AuthIndex), nil
 	}
-	var updated cliproxyauth.Auth
+	var updated apsauth.Auth
 	if errUnmarshal := json.Unmarshal(raw, &updated); errUnmarshal != nil {
 		return nil, "", errUnmarshal
 	}

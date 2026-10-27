@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 func rejectDuplicateChannelNames(c *gin.Context, section string, names []string) bool {

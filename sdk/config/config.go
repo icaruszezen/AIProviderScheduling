@@ -1,10 +1,10 @@
 // Package config provides the public SDK configuration API.
 //
 // It re-exports the server configuration types and helpers so external projects can
-// embed CLIProxyAPI without importing internal packages.
+// embed AIProviderScheduling without importing internal packages.
 package config
 
-import internalconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+import internalconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 
 type SDKConfig = internalconfig.SDKConfig
 

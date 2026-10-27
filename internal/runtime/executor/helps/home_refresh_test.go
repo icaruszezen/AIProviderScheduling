@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 func TestStatusFromHomeErrorCodeMapsAuthenticationErrorToUnauthorized(t *testing.T) {
@@ -54,7 +54,7 @@ func TestRefreshAuthViaHomePreservesContextErrors(t *testing.T) {
 	t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
+	auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
 	_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 	if !handled || !errors.Is(errRefresh, context.DeadlineExceeded) {
 		t.Fatalf("RefreshAuthViaHome() = handled %v err %v, want true/context.DeadlineExceeded", handled, errRefresh)
@@ -83,7 +83,7 @@ func TestRefreshAuthViaHomeMapsTransportFailureToGeneric503(t *testing.T) {
 	t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
+	auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
 	_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 	statusErr, okStatus := errRefresh.(interface{ StatusCode() int })
 	if !handled || !okStatus || statusErr.StatusCode() != http.StatusServiceUnavailable {
@@ -115,7 +115,7 @@ func TestRefreshAuthViaHomeUsesGenericMessageForLegacyErrorEnvelope(t *testing.T
 	t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
+	auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
 	_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 	statusErr, okStatus := errRefresh.(interface{ StatusCode() int })
 	if !handled || !okStatus || statusErr.StatusCode() != http.StatusServiceUnavailable {
@@ -137,7 +137,7 @@ func TestRefreshAuthViaHomeUsesDedicatedDiagnosticOnlyForLogs(t *testing.T) {
 	t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "antigravity"}
+	auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "antigravity"}
 	_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 	if !handled || errRefresh == nil || errRefresh.Error() != "credential refresh temporarily unavailable" {
 		t.Fatalf("RefreshAuthViaHome() = handled %v err %v, want generic client error", handled, errRefresh)
@@ -183,7 +183,7 @@ func TestRefreshAuthViaHomePreservesUpstreamStatusAndBodyExactly(t *testing.T) {
 			t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 			cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-			auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
+			auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "codex"}
 			_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 			statusErr, okStatus := errRefresh.(interface{ StatusCode() int })
 			if !handled || !okStatus || statusErr.StatusCode() != tt.status {
@@ -244,7 +244,7 @@ func TestRefreshAuthViaHomeUsesGenericMessageForLegacyProviderDiagnostics(t *tes
 			t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 			cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-			auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: tt.provider}
+			auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: tt.provider}
 			_, handled, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 			statusErr, okStatus := errRefresh.(interface{ StatusCode() int })
 			if !handled || !okStatus || statusErr.StatusCode() != tt.wantStatus {
@@ -277,7 +277,7 @@ func TestRefreshAuthViaHomeRejectsUnmarkedRefreshMessage(t *testing.T) {
 	t.Cleanup(func() { currentHomeRefreshClient = oldCurrentHomeRefreshClient })
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "antigravity"}
+	auth := &apsauth.Auth{ID: "home-auth", Index: "home-auth", Provider: "antigravity"}
 	_, _, errRefresh := RefreshAuthViaHome(context.Background(), cfg, auth)
 	if got, want := errRefresh.Error(), "credential refresh temporarily unavailable"; got != want {
 		t.Fatalf("refresh error = %q, want %q", got, want)
@@ -285,8 +285,8 @@ func TestRefreshAuthViaHomeRejectsUnmarkedRefreshMessage(t *testing.T) {
 }
 
 func TestAuthAccessTokenSHA256SupportsKnownMetadataShapes(t *testing.T) {
-	want := authAccessTokenSHA256(&cliproxyauth.Auth{Metadata: map[string]any{"access_token": "same-token"}})
-	cases := map[string]*cliproxyauth.Auth{
+	want := authAccessTokenSHA256(&apsauth.Auth{Metadata: map[string]any{"access_token": "same-token"}})
+	cases := map[string]*apsauth.Auth{
 		"camel case":        {Metadata: map[string]any{"accessToken": "same-token"}},
 		"nested any map":    {Metadata: map[string]any{"token": map[string]any{"access_token": "same-token"}}},
 		"nested string map": {Metadata: map[string]any{"Token": map[string]string{"accessToken": "same-token"}}},
@@ -302,10 +302,10 @@ func TestAuthAccessTokenSHA256SupportsKnownMetadataShapes(t *testing.T) {
 
 func TestRefreshAuthViaHomeAcceptsAuthEnvelope(t *testing.T) {
 	raw, errMarshal := json.Marshal(struct {
-		Auth      cliproxyauth.Auth `json:"auth"`
-		AuthIndex string            `json:"auth_index"`
+		Auth      apsauth.Auth `json:"auth"`
+		AuthIndex string       `json:"auth_index"`
 	}{
-		Auth: cliproxyauth.Auth{
+		Auth: apsauth.Auth{
 			ID:       "home-auth-1",
 			Provider: "antigravity",
 			Metadata: map[string]any{
@@ -328,7 +328,7 @@ func TestRefreshAuthViaHomeAcceptsAuthEnvelope(t *testing.T) {
 	})
 
 	cfg := &config.Config{Home: config.HomeConfig{Enabled: true}}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "home-auth-1",
 		Provider: "antigravity",
 		Index:    "home-index-1",

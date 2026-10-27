@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	homekv "github.com/router-for-me/CLIProxyAPI/v7/internal/home"
+	homekv "github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
 )
 
 type CodexCache struct {

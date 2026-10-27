@@ -1,16 +1,16 @@
 # @sdk/access 开发指引
 
-`github.com/router-for-me/CLIProxyAPI/v6/sdk/access` 包负责代理的入站访问认证。它提供一个轻量的管理器，用于按顺序链接多种凭证校验实现，让服务器在 CLI 运行时内外都能复用相同的访问控制逻辑。
+`github.com/icaruszezen/AIProviderScheduling/v7/sdk/access` 包负责代理的入站访问认证。它提供一个轻量的管理器，用于按顺序链接多种凭证校验实现，让服务器在 CLI 运行时内外都能复用相同的访问控制逻辑。
 
 ## 引用方式
 
 ```go
 import (
-    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+    sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 )
 ```
 
-通过 `go get github.com/router-for-me/CLIProxyAPI/v6/sdk/access` 添加依赖。
+通过 `go get github.com/icaruszezen/AIProviderScheduling/v7/sdk/access` 添加依赖。
 
 ## Provider Registry
 
@@ -61,7 +61,7 @@ default:
   - 凭证来源：`Authorization: Bearer`、`X-Goog-Api-Key`、`X-Api-Key`、`?key=`、`?auth_token=`
   - 元数据：`Result.Metadata["source"]` 会写入匹配到的来源标识
 
-在 CLI 服务端与 `sdk/cliproxy` 中，该 provider 会根据加载到的配置自动注册。
+在 CLI 服务端与 `sdk/aps` 中，该 provider 会根据加载到的配置自动注册。
 
 ```yaml
 api-keys:
@@ -76,11 +76,11 @@ api-keys:
 ```go
 import (
     _ "github.com/acme/xplatform/sdk/access/providers/partner" // registers partner-token
-    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+    sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 )
 ```
 
-空白导入可确保 `init` 先执行，从而在你调用 `RegisteredProviders()`（或 `cliproxy.NewBuilder().Build()`）之前完成 `sdkaccess.RegisterProvider`。
+空白导入可确保 `init` 先执行，从而在你调用 `RegisteredProviders()`（或 `aps.NewBuilder().Build()`）之前完成 `sdkaccess.RegisterProvider`。
 
 ### 元数据与审计
 
@@ -124,15 +124,15 @@ func init() {
 
 除可汇总的 `not_handled` / `no_credentials` / `invalid_credential` 外，其它错误会立即冒泡返回。
 
-## 与 cliproxy 集成
+## 与 aps 集成
 
-使用 `sdk/cliproxy` 构建服务时会自动接入 `@sdk/access`。如果希望在宿主进程里复用同一个 `Manager` 实例，可传入自定义管理器：
+使用 `sdk/aps` 构建服务时会自动接入 `@sdk/access`。如果希望在宿主进程里复用同一个 `Manager` 实例，可传入自定义管理器：
 
 ```go
 coreCfg, _ := config.LoadConfig("config.yaml")
 accessManager := sdkaccess.NewManager()
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(coreCfg).
   WithConfigPath("config.yaml").
   WithRequestAccessManager(accessManager).
@@ -146,7 +146,7 @@ svc, _ := cliproxy.NewBuilder().
 当配置发生变化时，刷新依赖配置的 provider，然后重置 manager 的 provider 链：
 
 ```go
-// configaccess is github.com/router-for-me/CLIProxyAPI/v6/internal/access/config_access
+// configaccess is github.com/icaruszezen/AIProviderScheduling/v7/internal/access/config_access
 configaccess.Register(&newCfg.SDKConfig)
 accessManager.SetProviders(sdkaccess.RegisteredProviders())
 ```

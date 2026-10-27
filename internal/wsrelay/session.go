@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 const (
@@ -132,7 +132,7 @@ func (s *session) send(ctx context.Context, msg Message) error {
 	if err := s.conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
 		return fmt.Errorf("set write deadline: %w", err)
 	}
-	cliproxyexecutor.MarkUpstreamAttempt(ctx)
+	apsexecutor.MarkUpstreamAttempt(ctx)
 	if err := s.conn.WriteJSON(msg); err != nil {
 		return fmt.Errorf("write json: %w", err)
 	}

@@ -9,16 +9,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
-func (e *XAIExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
+func (e *XAIExecutor) Execute(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (resp apsexecutor.Response, err error) {
 	if opts.Alt == "responses/compact" {
 		return e.executeCompact(ctx, auth, req, opts)
 	}
@@ -115,14 +115,14 @@ func (e *XAIExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req 
 			if prepared.responseFormat == sdktranslator.FormatOpenAIResponse {
 				out = helps.EnsureResponsesUsageDetails(out)
 			}
-			return cliproxyexecutor.Response{Payload: out, Headers: httpResp.Header.Clone()}, nil
+			return apsexecutor.Response{Payload: out, Headers: httpResp.Header.Clone()}, nil
 		}
 	}
 
 	return resp, statusErr{code: http.StatusRequestTimeout, msg: "xai stream error: stream disconnected before response.completed or response.incomplete"}
 }
 
-func (e *XAIExecutor) executeCompact(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
+func (e *XAIExecutor) executeCompact(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (resp apsexecutor.Response, err error) {
 	prepared, data, headers, errCompact := e.executeCompactRequest(ctx, auth, req, opts)
 	if errCompact != nil {
 		return resp, errCompact
@@ -133,10 +133,10 @@ func (e *XAIExecutor) executeCompact(ctx context.Context, auth *cliproxyauth.Aut
 	if prepared.responseFormat == sdktranslator.FormatOpenAIResponse {
 		out = helps.EnsureResponsesUsageDetails(out)
 	}
-	return cliproxyexecutor.Response{Payload: out, Headers: headers}, nil
+	return apsexecutor.Response{Payload: out, Headers: headers}, nil
 }
 
-func (e *XAIExecutor) executeCompactRequest(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (*xaiPreparedRequest, []byte, http.Header, error) {
+func (e *XAIExecutor) executeCompactRequest(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (*xaiPreparedRequest, []byte, http.Header, error) {
 	token, _ := xaiCreds(auth)
 	// Compact must not use xaiChatBaseURL: CLI chat-proxy returns 404 for
 	// /responses/compact and a 404 cools down the whole xAI auth pool.
@@ -205,7 +205,7 @@ func (e *XAIExecutor) executeCompactRequest(ctx context.Context, auth *cliproxya
 	return prepared, data, httpResp.Header.Clone(), nil
 }
 
-func (e *XAIExecutor) executeCompactionTriggerStream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
+func (e *XAIExecutor) executeCompactionTriggerStream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (*apsexecutor.StreamResult, error) {
 	prepared, data, headers, err := e.executeCompactRequest(ctx, auth, req, opts)
 	if err != nil {
 		return nil, err
@@ -218,12 +218,12 @@ func (e *XAIExecutor) executeCompactionTriggerStream(ctx context.Context, auth *
 	headers.Set("Content-Type", "text/event-stream")
 
 	chunks := xaiBuildCompactionTriggerStreamChunks(prepared, data)
-	out := make(chan cliproxyexecutor.StreamChunk, len(chunks))
+	out := make(chan apsexecutor.StreamChunk, len(chunks))
 	for _, chunk := range chunks {
-		out <- cliproxyexecutor.StreamChunk{Payload: chunk}
+		out <- apsexecutor.StreamChunk{Payload: chunk}
 	}
 	close(out)
-	return &cliproxyexecutor.StreamResult{Headers: headers, Chunks: out}, nil
+	return &apsexecutor.StreamResult{Headers: headers, Chunks: out}, nil
 }
 
 func xaiInputHasItemType(body []byte, itemType string) bool {

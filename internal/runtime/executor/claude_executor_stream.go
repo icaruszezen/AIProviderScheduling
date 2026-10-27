@@ -9,16 +9,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
 
-func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (_ *cliproxyexecutor.StreamResult, err error) {
+func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (_ *apsexecutor.StreamResult, err error) {
 	if opts.Alt == "responses/compact" {
 		return nil, statusErr{code: http.StatusNotImplemented, msg: "/responses/compact not supported"}
 	}
@@ -43,7 +43,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 	reporter := helps.NewExecutorUsageReporter(ctx, e, baseModel, auth)
 	defer reporter.TrackFailure(ctx, &err)
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	to := sdktranslator.FromString("claude")
 	var replayScope claudeThinkingReplayScope
 	if claudeThinkingReplayEnabled(auth, req, opts) {
@@ -124,8 +124,8 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 	// first-user marker cannot suppress system/latest-user breakpoints.
 	// cloaked and confirmedClaudeCode are mutually exclusive: resolveClaudeWirePolicy
 	// forces Cloak off for a confirmed native client.
-	cpaOwnsCacheControl := shouldEnsureCacheControl(body, cloaked, confirmedClaudeCode)
-	if cpaOwnsCacheControl {
+	apsOwnsCacheControl := shouldEnsureCacheControl(body, cloaked, confirmedClaudeCode)
+	if apsOwnsCacheControl {
 		body = ensureCacheControl(body)
 	}
 
@@ -137,13 +137,13 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 	// same credential condition. Upgrading after placement is settled mirrors the
 	// native ttl helper.
 	//
-	// This runs only while CPA owns placement, and it then owns the ttl of every
+	// This runs only while APS owns placement, and it then owns the ttl of every
 	// breakpoint it can reach: a marker carrying no ttl is the wire default, not an
 	// opt-in to 5m, so a cloaked caller's bare {"type":"ephemeral"} is upgraded too.
 	// Only a ttl the caller wrote out explicitly survives, because
 	// upgradeClaudeCacheControlTTL skips any block that already has one.
 	// claude-code-cli fingerprint profiles emit extended-cache-ttl and must use the same 1h pool.
-	if cpaOwnsCacheControl && fp.ProfileClaudeCodeCLI {
+	if apsOwnsCacheControl && fp.ProfileClaudeCodeCLI {
 		body = upgradeClaudeCacheControlTTL(body, claudeCacheControlTTL1h)
 	}
 
@@ -265,7 +265,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 		}
 		return nil, wrapClaudeFastRequestError(fastRequest, httpResp.StatusCode, err)
 	}
-	out := make(chan cliproxyexecutor.StreamChunk, 1)
+	out := make(chan apsexecutor.StreamChunk, 1)
 	go func() {
 		defer close(out)
 		defer func() {
@@ -281,7 +281,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			helps.RecordAPIResponseError(ctx, e.cfg, cancelErr)
 			reporter.PublishFailure(ctx, cancelErr)
 			select {
-			case out <- cliproxyexecutor.StreamChunk{Err: cancelErr}:
+			case out <- apsexecutor.StreamChunk{Err: cancelErr}:
 			default:
 			}
 			return true
@@ -291,7 +291,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			helps.RecordAPIResponseError(ctx, e.cfg, errResponse)
 			reporter.PublishFailure(ctx, errResponse)
 			select {
-			case out <- cliproxyexecutor.StreamChunk{Err: errResponse}:
+			case out <- apsexecutor.StreamChunk{Err: errResponse}:
 			case <-ctx.Done():
 			}
 		}
@@ -311,7 +311,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 				cloned := bytes.Clone(event.Bytes())
 				event.Reset()
 				select {
-				case out <- cliproxyexecutor.StreamChunk{Payload: cloned}:
+				case out <- apsexecutor.StreamChunk{Payload: cloned}:
 					return true
 				case <-ctx.Done():
 					return false
@@ -349,7 +349,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 				helps.RecordAPIResponseError(ctx, e.cfg, errScan)
 				reporter.PublishFailure(ctx, errScan)
 				select {
-				case out <- cliproxyexecutor.StreamChunk{Err: errScan}:
+				case out <- apsexecutor.StreamChunk{Err: errScan}:
 				case <-ctx.Done():
 				}
 				return
@@ -397,7 +397,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			}
 			for i := range chunks {
 				select {
-				case out <- cliproxyexecutor.StreamChunk{Payload: chunks[i]}:
+				case out <- apsexecutor.StreamChunk{Payload: chunks[i]}:
 				case <-ctx.Done():
 					emitCancellation(ctx.Err())
 					return
@@ -412,7 +412,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			helps.RecordAPIResponseError(ctx, e.cfg, errScan)
 			reporter.PublishFailure(ctx, errScan)
 			select {
-			case out <- cliproxyexecutor.StreamChunk{Err: errScan}:
+			case out <- apsexecutor.StreamChunk{Err: errScan}:
 			case <-ctx.Done():
 			}
 			return
@@ -421,7 +421,7 @@ func (e *ClaudeExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.A
 			commitClaudeDiagnostics(diagnosticsState, upstreamMessageID)
 		}
 	}()
-	result := &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}
+	result := &apsexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}
 	if replayScope.valid() {
 		result = wrapClaudeThinkingReplayStream(ctx, result, replayScope)
 	}

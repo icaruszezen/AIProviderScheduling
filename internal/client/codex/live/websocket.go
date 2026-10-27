@@ -9,11 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -80,7 +80,7 @@ func (h *Handler) HandleDirectWebsocket(c *gin.Context) {
 		selection.Retain()
 		defer selection.End("session_closed")
 	}
-	logging.SetGinCPATraceID(c, selected.EnsureIndex())
+	logging.SetGinAPSTraceID(c, selected.EnsureIndex())
 
 	upstreamURL := h.directRealtimeURL(requestedModel)
 	dialUpstream := func(current *auth.Auth) (*websocket.Conn, *http.Response, error) {

@@ -16,6 +16,6 @@ func TestGeminiClaudeToolUseIDStableAndBound(t *testing.T) {
 		t.Fatal("ID-less provider calls must keep the existing fallback path")
 	}
 	if IsGeminiClaudeToolUseID("toolu_client_value") {
-		t.Fatal("ordinary client tool IDs must not be treated as CPA provenance IDs")
+		t.Fatal("ordinary client tool IDs must not be treated as APS provenance IDs")
 	}
 }

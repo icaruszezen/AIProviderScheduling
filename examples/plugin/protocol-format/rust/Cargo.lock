@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "cliproxy-protocol-format-rust"
+name = "aps-protocol-format-rust"
 version = "0.1.0"

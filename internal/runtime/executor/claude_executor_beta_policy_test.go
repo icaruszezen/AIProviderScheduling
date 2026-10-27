@@ -11,17 +11,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
 const claudeRaceProbeOAuthKey = "sk-ant-api-beta-policy"
 
-func claudeOAuthAuthForBetaPolicy() *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func claudeOAuthAuthForBetaPolicy() *apsauth.Auth {
+	return &apsauth.Auth{
 		ID: "claude-beta-policy",
 		Attributes: map[string]string{
 			"api_key":             claudeRaceProbeOAuthKey,
@@ -30,8 +30,8 @@ func claudeOAuthAuthForBetaPolicy() *cliproxyauth.Auth {
 	}
 }
 
-// A confirmed native client authenticates to CPA with the user's configured key
-// and cannot know CPA will pick an OAuth credential upstream, so its header never
+// A confirmed native client authenticates to APS with the user's configured key
+// and cannot know APS will pick an OAuth credential upstream, so its header never
 // carries the credential-scoped OAuth and extended-cache betas.
 func TestApplyClaudeHeaders_ConfirmedClientKeepsOAuthCredentialBetas(t *testing.T) {
 	incoming := http.Header{}
@@ -69,7 +69,7 @@ func TestApplyClaudeHeaders_ConfirmedAPIKeyClientKeepsPurePassthrough(t *testing
 	incoming := http.Header{}
 	incoming.Set("Anthropic-Beta", claudeCodeBeta+","+claudeEffortBeta)
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-passthrough"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-passthrough"}}
 	req := newClaudeHeaderTestRequest(t, nil)
 	if err := applyClaudeHeaders(req, auth, "key-passthrough", false, nil,
 		[]byte(`{"model":"claude-opus-5"}`), nil, incoming, true); err != nil {
@@ -82,7 +82,7 @@ func TestApplyClaudeHeaders_ConfirmedAPIKeyClientKeepsPurePassthrough(t *testing
 
 // Default API-key mode preserves body-lifted betas just like header betas.
 func TestApplyClaudeHeaders_UnknownBodyBetaPreservedOnAnthropic(t *testing.T) {
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-body-beta"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-body-beta"}}
 	req := newClaudeHeaderTestRequest(t, nil)
 	if err := applyClaudeHeaders(req, auth, "key-body-beta", false, []string{"unknown-body-probe-2099-01-01"},
 		[]byte(`{"model":"claude-opus-5"}`), nil, nil, false); err != nil {
@@ -94,7 +94,7 @@ func TestApplyClaudeHeaders_UnknownBodyBetaPreservedOnAnthropic(t *testing.T) {
 }
 
 func TestApplyClaudeHeaders_KnownBodyBetaStillPlacedOnAnthropic(t *testing.T) {
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-known-body-beta"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-known-body-beta"}}
 	req := newClaudeHeaderTestRequest(t, nil)
 	if err := applyClaudeHeaders(req, auth, "key-known-body-beta", false, []string{claudeContext1MBeta},
 		[]byte(`{"model":"claude-opus-5"}`), nil, nil, false); err != nil {
@@ -108,7 +108,7 @@ func TestApplyClaudeHeaders_KnownBodyBetaStillPlacedOnAnthropic(t *testing.T) {
 // Custom credential headers run after the whole header set is assembled, so they
 // could rewrite the reconstructed identity on Anthropic itself.
 func TestApplyClaudeHeaders_CustomHeadersCannotOverrideAnthropicIdentity(t *testing.T) {
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":                "key-custom-headers",
 		"header:Anthropic-Beta":  "attacker-controlled-2099-01-01",
 		"header:Accept-Encoding": "identity",
@@ -144,7 +144,7 @@ func TestClaudeExecutor_ContextManagementNeverLeaksToOtherUpstreams(t *testing.T
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "claude-non-anthropic-upstream",
 		Attributes: map[string]string{
 			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-non-anthropic", "base_url": server.URL},
@@ -152,10 +152,10 @@ func TestClaudeExecutor_ContextManagementNeverLeaksToOtherUpstreams(t *testing.T
 	}
 	payload := []byte(`{"model":"claude-opus-5","system":"p","messages":[{"role":"user","content":"hi"}]}`)
 
-	if _, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	if _, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-opus-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude}); err != nil {
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 	if got := gjson.GetBytes(upstreamBody, "context_management"); got.Exists() {
@@ -186,7 +186,7 @@ func TestIsAnthropicUpstreamBase(t *testing.T) {
 // Streaming previously never reached the fast-mode derivation, so speed:"fast"
 // produced a 400 on every streamed request.
 func TestApplyClaudeHeaders_FastModeBetaMatchesAcrossStreamModes(t *testing.T) {
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-fast-parity"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-fast-parity"}}
 	body := []byte(`{"model":"claude-opus-5","speed":"fast"}`)
 
 	var seen []string
@@ -258,11 +258,11 @@ func TestClassifyClaudeUpstreamError_FastModeCreditsIsRequestScoped(t *testing.T
 	for _, body := range bodies {
 		err := classifyClaudeUpstreamError(http.StatusTooManyRequests, nil, body)
 
-		scoped, ok := err.(cliproxyexecutor.RequestScopedError)
+		scoped, ok := err.(apsexecutor.RequestScopedError)
 		if !ok || !scoped.IsRequestScoped() {
 			t.Fatalf("fast-mode credit refusal = %T, want a request-scoped error: %s", err, body)
 		}
-		var status cliproxyexecutor.StatusError
+		var status apsexecutor.StatusError
 		if !errors.As(err, &status) || status.StatusCode() != http.StatusTooManyRequests {
 			t.Fatalf("status was not preserved for the caller: %v", err)
 		}
@@ -282,7 +282,7 @@ func TestClassifyClaudeUpstreamError_RealRateLimitStaysCredentialScoped(t *testi
 	}
 	for _, body := range cases {
 		err := classifyClaudeUpstreamError(http.StatusTooManyRequests, nil, body)
-		if scoped, ok := err.(cliproxyexecutor.RequestScopedError); ok && scoped.IsRequestScoped() {
+		if scoped, ok := err.(apsexecutor.RequestScopedError); ok && scoped.IsRequestScoped() {
 			t.Fatalf("genuine rate limit was misclassified as request-scoped: %s", body)
 		}
 	}
@@ -293,7 +293,7 @@ func TestClassifyClaudeUpstreamError_OtherStatusesUnaffected(t *testing.T) {
 	// Only 429 carries the entitlement refusal; a 500 mentioning it is still a
 	// credential-scoped failure worth rotating away from.
 	err := classifyClaudeUpstreamError(http.StatusInternalServerError, nil, body)
-	if scoped, ok := err.(cliproxyexecutor.RequestScopedError); ok && scoped.IsRequestScoped() {
+	if scoped, ok := err.(apsexecutor.RequestScopedError); ok && scoped.IsRequestScoped() {
 		t.Fatal("non-429 status was misclassified as request-scoped")
 	}
 }
@@ -394,7 +394,7 @@ func TestApplyClaudeHeaders_AdvisorToolBetaInjectedWhenBodyHasTool_APIKeyPassthr
 
 	body := []byte(`{"model":"claude-opus-5","tools":[{"type":"advisor_20260301","name":"advisor"}]}`)
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-passthrough"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-passthrough"}}
 	for _, stream := range []bool{false, true} {
 		req := newClaudeHeaderTestRequest(t, nil)
 		if err := applyClaudeHeaders(req, auth, "key-passthrough", stream, nil,

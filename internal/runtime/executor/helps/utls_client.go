@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/httpwire"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/proxyutil"
 	tls "github.com/refraction-networking/utls"
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/httpwire"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/proxyutil"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/proxy"
@@ -431,7 +431,7 @@ func isolateUpstreamHTTP1(base *http.Transport) *http.Transport {
 // fingerprints for protected hosts. It uses Claude Code's Node/OpenSSL profile
 // for Anthropic and a Chrome profile for ChatGPT, with a standard-transport
 // fallback for other hosts.
-func NewUtlsHTTPClient(ctx context.Context, cfg *config.Config, auth *cliproxyauth.Auth, timeout time.Duration) *http.Client {
+func NewUtlsHTTPClient(ctx context.Context, cfg *config.Config, auth *apsauth.Auth, timeout time.Duration) *http.Client {
 	var proxyURL string
 	if auth != nil {
 		proxyURL = strings.TrimSpace(auth.ProxyURL)
@@ -442,7 +442,7 @@ func NewUtlsHTTPClient(ctx context.Context, cfg *config.Config, auth *cliproxyau
 
 	var ctxRoundTripper http.RoundTripper
 	if ctx != nil {
-		ctxRoundTripper, _ = ctx.Value("cliproxy.roundtripper").(http.RoundTripper)
+		ctxRoundTripper, _ = ctx.Value("aps.roundtripper").(http.RoundTripper)
 	}
 
 	var chromeRT http.RoundTripper = newUtlsRoundTripper(proxyURL)

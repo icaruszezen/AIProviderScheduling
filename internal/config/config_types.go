@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	sdkpluginstore "github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	sdkpluginstore "github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 	"gopkg.in/yaml.v3"
 )
 
@@ -210,8 +210,7 @@ type RemoteManagement struct {
 	// When false (the default), the background updater remains enabled; when true, the panel is only downloaded on first access if missing.
 	DisableAutoUpdatePanel bool `yaml:"disable-auto-update-panel"`
 	// PanelGitHubRepository overrides the GitHub repository used to fetch the management panel asset.
-	// The official router-for-me/Cli-Proxy-API-Management-Center release is rejected: it still ships
-	// Auth Files / OAuth pages that this server no longer implements.
+	// Only icaruszezen/AI-Provider-Scheduling-Management-Center is accepted.
 	// Accepts either a repository URL (https://github.com/org/repo) or an API releases endpoint.
 	PanelGitHubRepository string `yaml:"panel-github-repository"`
 }

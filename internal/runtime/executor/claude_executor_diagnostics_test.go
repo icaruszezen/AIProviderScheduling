@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -22,7 +22,7 @@ func TestInjectClaudeDiagnosticsMatchesNativeFieldOrderAndContinuity(t *testing.
 
 	body := []byte(`{"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]},"max_tokens":1,"messages":[]}`)
 	testID := uuid.NewString()
-	auth := &cliproxyauth.Auth{ID: "credential-diagnostics-order-" + testID}
+	auth := &apsauth.Auth{ID: "credential-diagnostics-order-" + testID}
 	first, state := injectClaudeDiagnostics(body, auth, "session-diagnostics-order-"+testID)
 	wantOrder := `"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]},"diagnostics":{"previous_message_id":null},"max_tokens"`
 	if !bytes.Contains(first, []byte(wantOrder)) {
@@ -58,10 +58,10 @@ func TestClaudeExecutorDiagnosticsAdvancesAfterSuccessfulResponse(t *testing.T) 
 		response := `{"id":"msg_diagnostics_` + string(rune('0'+call)) + `","type":"message","model":"claude-opus-5","role":"assistant","content":[{"type":"text","text":"ok"}],"usage":{"input_tokens":1,"output_tokens":1}}`
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": []string{"application/json"}}, Body: io.NopCloser(strings.NewReader(response)), Request: req}, nil
 	})
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(transport))
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(transport))
 	deviceIDs := []string{"0000000000000000000000000000000000000000000000000000000000000000"}
 	testID := uuid.NewString()
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "diagnostics-live-path-" + testID,
 		Attributes: map[string]string{
 			"fingerprint_profile": "claude-code-cli", "api_key": "sk-ant-api-diagnostics-live-path"},
@@ -71,10 +71,10 @@ func TestClaudeExecutorDiagnosticsAdvancesAfterSuccessfulResponse(t *testing.T) 
 		},
 	}
 	executor := NewClaudeExecutor(&config.Config{})
-	request := cliproxyexecutor.Request{Model: "claude-opus-5", Payload: []byte(`{"model":"claude-opus-5","messages":[{"role":"user","content":"x"}],"max_tokens":16}`)}
-	options := cliproxyexecutor.Options{
+	request := apsexecutor.Request{Model: "claude-opus-5", Payload: []byte(`{"model":"claude-opus-5","messages":[{"role":"user","content":"x"}],"max_tokens":16}`)}
+	options := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatClaude,
-		Metadata:     map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: "diagnostics-conversation-" + testID},
+		Metadata:     map[string]any{apsexecutor.ExecutionSessionMetadataKey: "diagnostics-conversation-" + testID},
 	}
 	for turn := range 2 {
 		if _, errExecute := executor.Execute(ctx, auth, request, options); errExecute != nil {

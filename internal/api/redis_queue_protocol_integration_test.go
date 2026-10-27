@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/redisqueue"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
 )
 
 func startRedisMuxListener(t *testing.T, server *Server) (addr string, stop func()) {

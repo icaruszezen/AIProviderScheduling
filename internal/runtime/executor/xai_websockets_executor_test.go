@@ -13,16 +13,16 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
 func TestXAIWebsocketsEnabledForConfigAPIKey(t *testing.T) {
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-key",
@@ -36,20 +36,20 @@ func TestXAIWebsocketsEnabledForConfigAPIKey(t *testing.T) {
 
 func TestXAIAutoExecutorRequiredUpstreamWebsocketRejectsHTTPFallback(t *testing.T) {
 	exec := NewXAIAutoExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-http-only",
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key": "xai-key",
 		},
 	}
-	ctx := cliproxyexecutor.WithRequiredUpstreamWebsocket(
-		cliproxyexecutor.WithDownstreamWebsocket(context.Background()),
+	ctx := apsexecutor.WithRequiredUpstreamWebsocket(
+		apsexecutor.WithDownstreamWebsocket(context.Background()),
 	)
-	_, errExecute := exec.ExecuteStream(ctx, auth, cliproxyexecutor.Request{
+	_, errExecute := exec.ExecuteStream(ctx, auth, apsexecutor.Request{
 		Model:   "grok-4",
 		Payload: []byte(`{"model":"grok-4","previous_response_id":"resp-1","input":[{"type":"message","id":"msg-2"}]}`),
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response")})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response")})
 	if errExecute == nil {
 		t.Fatal("ExecuteStream() error = nil, want replay-required error")
 	}
@@ -60,7 +60,7 @@ func TestXAIAutoExecutorRequiredUpstreamWebsocketRejectsHTTPFallback(t *testing.
 	if got := gjson.Get(errExecute.Error(), "error.code").String(); got != "upstream_http_replay_required" {
 		t.Fatalf("ExecuteStream() error code = %q, want upstream_http_replay_required", got)
 	}
-	requestScoped, ok := errExecute.(cliproxyexecutor.RequestScopedError)
+	requestScoped, ok := errExecute.(apsexecutor.RequestScopedError)
 	if !ok || !requestScoped.IsRequestScoped() {
 		t.Fatalf("ExecuteStream() error = %T, want request-scoped replay signal", errExecute)
 	}
@@ -68,12 +68,12 @@ func TestXAIAutoExecutorRequiredUpstreamWebsocketRejectsHTTPFallback(t *testing.
 
 func TestXAIWebsocketsRequiredUpstreamRejectsCompactionHTTPFallback(t *testing.T) {
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	ctx := cliproxyexecutor.WithRequiredUpstreamWebsocket(context.Background())
-	_, errExecute := exec.ExecuteStream(ctx, &cliproxyauth.Auth{}, cliproxyexecutor.Request{
+	ctx := apsexecutor.WithRequiredUpstreamWebsocket(context.Background())
+	_, errExecute := exec.ExecuteStream(ctx, &apsauth.Auth{}, apsexecutor.Request{
 		Model:   "grok-4",
 		Payload: []byte(`{"model":"grok-4","input":[{"type":"compaction_trigger"}]}`),
-	}, cliproxyexecutor.Options{})
-	if !cliproxyexecutor.IsUpstreamWebsocketReplayRequired(errExecute) {
+	}, apsexecutor.Options{})
+	if !apsexecutor.IsUpstreamWebsocketReplayRequired(errExecute) {
 		t.Fatalf("ExecuteStream() error = %T %v, want replay-required", errExecute, errExecute)
 	}
 }
@@ -81,29 +81,29 @@ func TestXAIWebsocketsRequiredUpstreamRejectsCompactionHTTPFallback(t *testing.T
 func TestXAIWebsocketMissingRequiredSessionDoesNotMarkUpstreamAttempt(t *testing.T) {
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
 	exec.store = &codexWebsocketSessionStore{sessions: make(map[string]*codexWebsocketSession)}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-required-session",
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key": "xai-key",
 		},
 	}
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(
-		cliproxyexecutor.WithRequiredUpstreamWebsocket(context.Background()),
+	ctx := apsexecutor.WithUpstreamAttemptTracker(
+		apsexecutor.WithRequiredUpstreamWebsocket(context.Background()),
 	)
-	_, errExecute := exec.ExecuteStream(ctx, auth, cliproxyexecutor.Request{
+	_, errExecute := exec.ExecuteStream(ctx, auth, apsexecutor.Request{
 		Model:   "grok-4",
 		Payload: []byte(`{"model":"grok-4","previous_response_id":"resp-1","input":[{"type":"message","role":"user","content":"hello"}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "missing-xai-session",
+			apsexecutor.ExecutionSessionMetadataKey: "missing-xai-session",
 		},
 	})
-	if !cliproxyexecutor.IsUpstreamWebsocketReplayRequired(errExecute) {
+	if !apsexecutor.IsUpstreamWebsocketReplayRequired(errExecute) {
 		t.Fatalf("ExecuteStream() error = %T %v, want replay-required", errExecute, errExecute)
 	}
-	if cliproxyexecutor.UpstreamAttempted(ctx) {
+	if apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("missing retained websocket connection was marked as an upstream attempt")
 	}
 }
@@ -122,8 +122,8 @@ func TestXAIWebsocketSuccessfulHandshakeDoesNotMarkRequestAttempt(t *testing.T) 
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
-	conn, closer, resp, errDial := exec.dialXAIWebsocket(ctx, &cliproxyauth.Auth{}, strings.Replace(server.URL, "http", "ws", 1), http.Header{})
+	ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
+	conn, closer, resp, errDial := exec.dialXAIWebsocket(ctx, &apsauth.Auth{}, strings.Replace(server.URL, "http", "ws", 1), http.Header{})
 	if errDial != nil || conn == nil {
 		t.Fatalf("dialXAIWebsocket() = (%p, %v), want successful connection", conn, errDial)
 	}
@@ -131,7 +131,7 @@ func TestXAIWebsocketSuccessfulHandshakeDoesNotMarkRequestAttempt(t *testing.T) 
 		defer func() { _ = resp.Body.Close() }()
 	}
 	defer func() { _ = closer.Close() }()
-	if cliproxyexecutor.UpstreamAttempted(ctx) {
+	if apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("successful handshake was marked before an upstream request was sent")
 	}
 }
@@ -219,7 +219,7 @@ func TestXAIWebsocketsExecuteStreamMapsMessageTooBigClose(t *testing.T) {
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-token",
@@ -228,11 +228,11 @@ func TestXAIWebsocketsExecuteStreamMapsMessageTooBigClose(t *testing.T) {
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-4.5",
 		Payload: []byte(`{"model":"grok-4.5","input":[{"type":"message","role":"user","content":"hello"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	}
@@ -300,7 +300,7 @@ func TestXAIWebsocketsExecuteStreamSendsResponseCreateWithPreviousResponseID(t *
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -310,26 +310,26 @@ func TestXAIWebsocketsExecuteStreamSendsResponseCreateWithPreviousResponseID(t *
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","stream":true,"previous_response_id":"resp-prev","instructions":"system prompt","input":[{"type":"message","role":"user","content":"hello"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "execution-session-1",
+			apsexecutor.ExecutionSessionMetadataKey: "execution-session-1",
 		},
 	}
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(
-		cliproxyexecutor.WithDownstreamWebsocket(context.Background()),
+	ctx := apsexecutor.WithUpstreamAttemptTracker(
+		apsexecutor.WithDownstreamWebsocket(context.Background()),
 	)
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {
 		t.Fatalf("ExecuteStream() error = %v", err)
 	}
-	if !cliproxyexecutor.UpstreamAttempted(ctx) {
+	if !apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("websocket write did not mark an upstream attempt")
 	}
 
@@ -405,7 +405,7 @@ func TestXAIWebsocketsExecuteStreamRestoresNamespaceToolCalls(t *testing.T) {
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-token",
@@ -414,7 +414,7 @@ func TestXAIWebsocketsExecuteStreamRestoresNamespaceToolCalls(t *testing.T) {
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "grok-4.3",
 		Payload: []byte(`{
 			"model":"grok-4.3",
@@ -428,12 +428,12 @@ func TestXAIWebsocketsExecuteStreamRestoresNamespaceToolCalls(t *testing.T) {
 			]
 		}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {
@@ -520,7 +520,7 @@ func TestXAIWebsocketsExecuteStreamPreservesClientSameNameToolsWithXSearch(t *te
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-token",
@@ -529,7 +529,7 @@ func TestXAIWebsocketsExecuteStreamPreservesClientSameNameToolsWithXSearch(t *te
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "grok-4.5",
 		Payload: []byte(`{
 			"model":"grok-4.5",
@@ -543,12 +543,12 @@ func TestXAIWebsocketsExecuteStreamPreservesClientSameNameToolsWithXSearch(t *te
 			]
 		}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {
@@ -653,7 +653,7 @@ func TestXAIWebsocketsExecuteStreamPreservesNormalizedCustomSameNameToolWithXSea
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-token",
@@ -662,7 +662,7 @@ func TestXAIWebsocketsExecuteStreamPreservesNormalizedCustomSameNameToolWithXSea
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "grok-4.5",
 		Payload: []byte(`{
 			"model":"grok-4.5",
@@ -673,12 +673,12 @@ func TestXAIWebsocketsExecuteStreamPreservesNormalizedCustomSameNameToolWithXSea
 			]
 		}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {
@@ -796,7 +796,7 @@ func TestXAIWebsocketsExecuteStreamNormalizesReasoningTextEvents(t *testing.T) {
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"api_key":    "xai-token",
@@ -806,10 +806,10 @@ func TestXAIWebsocketsExecuteStreamNormalizesReasoningTextEvents(t *testing.T) {
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
 
-	result, err := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	result, err := exec.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","input":"hello"}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatCodex,
 		Stream:         true,
@@ -883,7 +883,7 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDForDownstream(t *te
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
 	exec.store = &codexWebsocketSessionStore{sessions: make(map[string]*codexWebsocketSession)}
 	exec.idStore = &xaiWebsocketIDStateStore{sessions: make(map[string]*xaiWebsocketIDState)}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-id-map",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -893,21 +893,21 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDForDownstream(t *te
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "xai-id-map-session",
+			apsexecutor.ExecutionSessionMetadataKey: "xai-id-map-session",
 		},
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	runRequest := func(previousID string) (string, string, string) {
 		body := []byte(`{"model":"grok-4.3","input":[{"type":"message","role":"user","content":"hello"}]}`)
 		if previousID != "" {
 			body = []byte(fmt.Sprintf(`{"model":"grok-4.3","previous_response_id":%q,"input":[{"type":"function_call_output","call_id":"call-1","output":"ok"}]}`, previousID))
 		}
-		result, err := exec.ExecuteStream(ctx, auth, cliproxyexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
+		result, err := exec.ExecuteStream(ctx, auth, apsexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
 		if err != nil {
 			t.Fatalf("ExecuteStream() error = %v", err)
 		}
@@ -1008,7 +1008,7 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDWithoutPreviousResp
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
 	exec.store = &codexWebsocketSessionStore{sessions: make(map[string]*codexWebsocketSession)}
 	exec.idStore = &xaiWebsocketIDStateStore{sessions: make(map[string]*xaiWebsocketIDState)}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-id-map-no-prev",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -1018,18 +1018,18 @@ func TestXAIWebsocketsExecuteStreamRewritesRepeatedResponseIDWithoutPreviousResp
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "xai-id-map-no-prev-session",
+			apsexecutor.ExecutionSessionMetadataKey: "xai-id-map-no-prev-session",
 		},
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	runRequest := func(content string) (string, string) {
 		body := []byte(fmt.Sprintf(`{"model":"grok-4.3","input":[{"type":"message","role":"user","content":%q}]}`, content))
-		result, err := exec.ExecuteStream(ctx, auth, cliproxyexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
+		result, err := exec.ExecuteStream(ctx, auth, apsexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
 		if err != nil {
 			t.Fatalf("ExecuteStream() error = %v", err)
 		}
@@ -1121,8 +1121,8 @@ func TestXAIWebsocketsExecuteStreamReplaysTranscriptWhenAuthChanges(t *testing.T
 	exec.idStore = &xaiWebsocketIDStateStore{sessions: make(map[string]*xaiWebsocketIDState)}
 	defer exec.CloseExecutionSession("xai-auth-switch-session")
 
-	newAuth := func(id string, token string, baseURL string) *cliproxyauth.Auth {
-		return &cliproxyauth.Auth{
+	newAuth := func(id string, token string, baseURL string) *apsauth.Auth {
+		return &apsauth.Auth{
 			ID:       id,
 			Provider: "xai",
 			Attributes: map[string]string{
@@ -1132,17 +1132,17 @@ func TestXAIWebsocketsExecuteStreamReplaysTranscriptWhenAuthChanges(t *testing.T
 			},
 		}
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "xai-auth-switch-session",
+			apsexecutor.ExecutionSessionMetadataKey: "xai-auth-switch-session",
 		},
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
-	runRequest := func(auth *cliproxyauth.Auth, body []byte) []byte {
-		result, errExecute := exec.ExecuteStream(ctx, auth, cliproxyexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
+	runRequest := func(auth *apsauth.Auth, body []byte) []byte {
+		result, errExecute := exec.ExecuteStream(ctx, auth, apsexecutor.Request{Model: "grok-4.3", Payload: body}, opts)
 		if errExecute != nil {
 			t.Fatalf("ExecuteStream() error = %v", errExecute)
 		}
@@ -1172,7 +1172,7 @@ func TestXAIWebsocketsExecuteStreamReplaysTranscriptWhenAuthChanges(t *testing.T
 	}
 
 	secondBody := []byte(fmt.Sprintf(`{"model":"grok-4.3","previous_response_id":%q,"input":[{"type":"message","id":"user-2","role":"user","content":"second"}]}`, firstResponseID))
-	if _, errExecute := exec.ExecuteStream(ctx, newAuth("auth-b", "token-b", rejectedServer.URL), cliproxyexecutor.Request{Model: "grok-4.3", Payload: secondBody}, opts); errExecute == nil {
+	if _, errExecute := exec.ExecuteStream(ctx, newAuth("auth-b", "token-b", rejectedServer.URL), apsexecutor.Request{Model: "grok-4.3", Payload: secondBody}, opts); errExecute == nil {
 		t.Fatal("expected auth B websocket handshake to fail")
 	}
 	runRequest(newAuth("auth-c", "token-c", server.URL), secondBody)
@@ -1244,7 +1244,7 @@ func TestXAIWebsocketsExecuteStreamCompactionTriggerUsesHTTPCompactWithRecordedC
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
 	exec.store = &codexWebsocketSessionStore{sessions: make(map[string]*codexWebsocketSession)}
 	exec.idStore = &xaiWebsocketIDStateStore{sessions: make(map[string]*xaiWebsocketIDState)}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-compaction",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -1254,16 +1254,16 @@ func TestXAIWebsocketsExecuteStreamCompactionTriggerUsesHTTPCompactWithRecordedC
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
 		Metadata: map[string]any{
-			cliproxyexecutor.ExecutionSessionMetadataKey: "xai-compaction-session",
+			apsexecutor.ExecutionSessionMetadataKey: "xai-compaction-session",
 		},
 	}
 
-	result, err := exec.ExecuteStream(cliproxyexecutor.WithDownstreamWebsocket(context.Background()), auth, cliproxyexecutor.Request{
+	result, err := exec.ExecuteStream(apsexecutor.WithDownstreamWebsocket(context.Background()), auth, apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","stream":true,"input":[{"type":"message","id":"msg-1","role":"user","content":"first"}]}`),
 	}, opts)
@@ -1292,7 +1292,7 @@ func TestXAIWebsocketsExecuteStreamCompactionTriggerUsesHTTPCompactWithRecordedC
 		t.Fatal("timed out waiting for upstream websocket payload")
 	}
 
-	compactResult, err := exec.ExecuteStream(cliproxyexecutor.WithDownstreamWebsocket(context.Background()), auth, cliproxyexecutor.Request{
+	compactResult, err := exec.ExecuteStream(apsexecutor.WithDownstreamWebsocket(context.Background()), auth, apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","stream":true,"previous_response_id":"resp-real-xai-1","input":[{"type":"compaction_trigger"}]}`),
 	}, opts)
@@ -1327,7 +1327,7 @@ func TestXAIWebsocketsExecuteStreamCompactionTriggerUsesHTTPCompactWithRecordedC
 		t.Fatal("timed out waiting for compact HTTP payload")
 	}
 
-	nextResult, err := exec.ExecuteStream(cliproxyexecutor.WithDownstreamWebsocket(context.Background()), auth, cliproxyexecutor.Request{
+	nextResult, err := exec.ExecuteStream(apsexecutor.WithDownstreamWebsocket(context.Background()), auth, apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","stream":true,"previous_response_id":"resp_compact","input":[{"type":"message","id":"msg-2","role":"user","content":"second"}]}`),
 	}, opts)
@@ -1540,7 +1540,7 @@ func TestXAIWebsocketsExecuteStreamCompletesGenerateFalseWarmup(t *testing.T) {
 	defer close(releaseServer)
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-warmup",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -1550,15 +1550,15 @@ func TestXAIWebsocketsExecuteStreamCompletesGenerateFalseWarmup(t *testing.T) {
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","generate":false,"input":[{"type":"message","role":"user","content":"warm up"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {
@@ -1612,7 +1612,7 @@ func TestXAIWebsocketsExecuteStreamHandshakeFreeUsageExhaustedSetsRetryAfter(t *
 	defer server.Close()
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-free-usage",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -1622,21 +1622,21 @@ func TestXAIWebsocketsExecuteStreamHandshakeFreeUsageExhaustedSetsRetryAfter(t *
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","input":"hello"}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	}
 
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
+	ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
 	_, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err == nil {
 		t.Fatal("ExecuteStream() error = nil, want handshake rejection")
 	}
-	if !cliproxyexecutor.UpstreamAttempted(ctx) {
+	if !apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("429 websocket handshake was not marked as an upstream attempt")
 	}
 	status, ok := err.(interface{ StatusCode() int })
@@ -1764,7 +1764,7 @@ func TestXAIWebsocketsExecuteStreamStopsOnBareErrorPayload(t *testing.T) {
 	defer close(releaseServer)
 
 	exec := NewXAIWebsocketsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "xai-auth-error",
 		Provider: "xai",
 		Attributes: map[string]string{
@@ -1774,15 +1774,15 @@ func TestXAIWebsocketsExecuteStreamStopsOnBareErrorPayload(t *testing.T) {
 		},
 		Metadata: map[string]any{"access_token": "xai-token"},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-4.3",
 		Payload: []byte(`{"model":"grok-4.3","input":"hello"}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	}
-	ctx := cliproxyexecutor.WithDownstreamWebsocket(context.Background())
+	ctx := apsexecutor.WithDownstreamWebsocket(context.Background())
 
 	result, err := exec.ExecuteStream(ctx, auth, req, opts)
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	internalconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executionregistry"
+	internalconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executionregistry"
 )
 
 // ConcurrencyReleaseFrame is the cumulative release accepted by Home for one credential and model.

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	sdkpluginstore "github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
+	sdkpluginstore "github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 )
 
 // NormalizePluginsConfig applies default plugin configuration values.

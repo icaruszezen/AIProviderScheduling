@@ -11,8 +11,8 @@ import (
 type credentialConcurrencyFixtureWireConfig struct {
 	LifecycleConfigRevision    int64
 	ObservationBarrierRevision int64
-	CPAHeartbeatTimeout        time.Duration
-	CPACancelBound             time.Duration
+	APSHeartbeatTimeout        time.Duration
+	APSCancelBound             time.Duration
 	ReclaimGrace               time.Duration
 	CleanupInterval            time.Duration
 	ReleaseFlushInterval       string `yaml:"release-flush-interval"`
@@ -41,8 +41,8 @@ func (c credentialConcurrencyFixtureWireConfig) config() (CredentialConcurrencyC
 	return CredentialConcurrencyConfig{
 		LifecycleConfigRevision:    c.LifecycleConfigRevision,
 		ObservationBarrierRevision: c.ObservationBarrierRevision,
-		CPAHeartbeatTimeout:        c.CPAHeartbeatTimeout,
-		CPACancelBound:             c.CPACancelBound,
+		APSHeartbeatTimeout:        c.APSHeartbeatTimeout,
+		APSCancelBound:             c.APSCancelBound,
 		ReclaimGrace:               c.ReclaimGrace,
 		CleanupInterval:            c.CleanupInterval,
 		ReleaseFlushInterval:       hot.ReleaseFlushInterval,
@@ -54,8 +54,8 @@ func (c credentialConcurrencyFixtureWireConfig) config() (CredentialConcurrencyC
 
 func credentialConcurrencyWireFixture(cpaHeartbeatTimeout time.Duration) credentialConcurrencyFixtureWireConfig {
 	return credentialConcurrencyFixtureWireConfig{
-		CPAHeartbeatTimeout:  cpaHeartbeatTimeout,
-		CPACancelBound:       5 * time.Second,
+		APSHeartbeatTimeout:  cpaHeartbeatTimeout,
+		APSCancelBound:       5 * time.Second,
 		ReclaimGrace:         5 * time.Second,
 		CleanupInterval:      5 * time.Second,
 		ReleaseFlushInterval: "250ms",
@@ -67,8 +67,8 @@ func credentialConcurrencyWireFixture(cpaHeartbeatTimeout time.Duration) credent
 
 func credentialConcurrencyConfigFixture(cpaHeartbeatTimeout time.Duration) CredentialConcurrencyConfig {
 	return CredentialConcurrencyConfig{
-		CPAHeartbeatTimeout:  cpaHeartbeatTimeout,
-		CPACancelBound:       5 * time.Second,
+		APSHeartbeatTimeout:  cpaHeartbeatTimeout,
+		APSCancelBound:       5 * time.Second,
 		ReclaimGrace:         5 * time.Second,
 		CleanupInterval:      5 * time.Second,
 		ReleaseFlushInterval: 250 * time.Millisecond,

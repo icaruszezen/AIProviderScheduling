@@ -15,17 +15,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
-func antigravityAuthWithProxy(proxyURL string) *cliproxyauth.Auth {
+func antigravityAuthWithProxy(proxyURL string) *apsauth.Auth {
 	return antigravityAuthWithIDAndProxy("antigravity-test", proxyURL)
 }
 
-func antigravityAuthWithIDAndProxy(id, proxyURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func antigravityAuthWithIDAndProxy(id, proxyURL string) *apsauth.Auth {
+	return &apsauth.Auth{
 		Attributes: map[string]string{"api_key": "test-access-token"},
 		ID:         id,
 		ProxyURL:   proxyURL,
@@ -44,7 +44,7 @@ func TestNewAntigravityHTTPClientSharesTransport(t *testing.T) {
 	cases := []struct {
 		name string
 		cfg  *config.Config
-		auth *cliproxyauth.Auth
+		auth *apsauth.Auth
 	}{
 		{"direct", &config.Config{}, antigravityAuthWithProxy("")},
 		{"auth http proxy", &config.Config{}, antigravityAuthWithProxy("http://127.0.0.1:18080")},
@@ -145,7 +145,7 @@ func TestAntigravityPoolLimitsOnlyWiden(t *testing.T) {
 // http.DefaultTransport, which advertises h2 over ALPN.
 func TestNewAntigravityHTTPClientRejectsTypedNilContextTransport(t *testing.T) {
 	var typedNil *http.Transport
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(typedNil))
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(typedNil))
 	client := newAntigravityHTTPClient(ctx, &config.Config{}, antigravityAuthWithIDAndProxy("typed-nil", ""), 0)
 
 	transport, ok := client.Transport.(*http.Transport)
@@ -166,7 +166,7 @@ func TestNewAntigravityHTTPClientKeepsForeignRoundTripper(t *testing.T) {
 	foreign := roundTripperFunc(func(*http.Request) (*http.Response, error) {
 		return nil, errors.New("unused")
 	})
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(foreign))
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(foreign))
 	client := newAntigravityHTTPClient(ctx, &config.Config{}, antigravityAuthWithIDAndProxy("foreign-rt", ""), 0)
 	if _, isTransport := client.Transport.(*http.Transport); isTransport {
 		t.Fatal("a non-*http.Transport RoundTripper must be preserved as-is")
@@ -269,7 +269,7 @@ func TestNewAntigravityHTTPClientScopesPoolsByAuthIdentity(t *testing.T) {
 func TestAntigravityHTTP11TransportReusesPoolWithoutAuthID(t *testing.T) {
 	base := http.DefaultTransport.(*http.Transport)
 
-	anonymous := &cliproxyauth.Auth{}
+	anonymous := &apsauth.Auth{}
 	first := antigravityHTTP11Transport(anonymous, base)
 	second := antigravityHTTP11Transport(anonymous, base)
 	if first == nil || second == nil {
@@ -284,9 +284,9 @@ func TestAntigravityHTTP11TransportReusesPoolWithoutAuthID(t *testing.T) {
 
 	// An auth without an ID but with credential material stays isolated from both the
 	// anonymous pool and from a different credential.
-	tokenA := antigravityHTTP11Transport(&cliproxyauth.Auth{
+	tokenA := antigravityHTTP11Transport(&apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token-a"}, Metadata: map[string]any{"access_token": "token-a"}}, base)
-	tokenB := antigravityHTTP11Transport(&cliproxyauth.Auth{
+	tokenB := antigravityHTTP11Transport(&apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token-b"}, Metadata: map[string]any{"access_token": "token-b"}}, base)
 	if tokenA == first || tokenB == first {
 		t.Fatal("a credential with an API key must not fall back to the anonymous pool")
@@ -294,13 +294,13 @@ func TestAntigravityHTTP11TransportReusesPoolWithoutAuthID(t *testing.T) {
 	if tokenA == tokenB {
 		t.Fatal("different access tokens must not share a connection pool")
 	}
-	if again := antigravityHTTP11Transport(&cliproxyauth.Auth{
+	if again := antigravityHTTP11Transport(&apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token-a"}, Metadata: map[string]any{"access_token": "token-a"}}, base); again != tokenA {
 		t.Fatal("the same access token must resolve to the same pool across requests")
 	}
 
 	// Identified auths keep sharing their pool.
-	identified := &cliproxyauth.Auth{ID: "stable-identity"}
+	identified := &apsauth.Auth{ID: "stable-identity"}
 	if antigravityHTTP11Transport(identified, base) != antigravityHTTP11Transport(identified, base) {
 		t.Fatal("an auth with a stable ID must reuse its cached pool")
 	}
@@ -313,45 +313,45 @@ func TestAntigravityTransportScopeFallsBackToStableMarkers(t *testing.T) {
 	}
 	cases := []struct {
 		name string
-		auth *cliproxyauth.Auth
+		auth *apsauth.Auth
 		want string
 	}{
 		{"nil auth", nil, antigravityAnonymousTransportScope},
-		{"empty auth", &cliproxyauth.Auth{}, antigravityAnonymousTransportScope},
-		{"blank id", &cliproxyauth.Auth{ID: " \t "}, antigravityAnonymousTransportScope},
-		{"stable id", &cliproxyauth.Auth{ID: " auth-1 "}, "id:auth-1"},
+		{"empty auth", &apsauth.Auth{}, antigravityAnonymousTransportScope},
+		{"blank id", &apsauth.Auth{ID: " \t "}, antigravityAnonymousTransportScope},
+		{"stable id", &apsauth.Auth{ID: " auth-1 "}, "id:auth-1"},
 		{
 			"id wins over path",
-			&cliproxyauth.Auth{ID: "auth-1", Attributes: map[string]string{cliproxyauth.AttributePath: "/a.json"}},
+			&apsauth.Auth{ID: "auth-1", Attributes: map[string]string{apsauth.AttributePath: "/a.json"}},
 			"id:auth-1",
 		},
 		{
 			"path fallback",
-			&cliproxyauth.Auth{Attributes: map[string]string{cliproxyauth.AttributePath: " /auths/a.json "}},
+			&apsauth.Auth{Attributes: map[string]string{apsauth.AttributePath: " /auths/a.json "}},
 			"path:/auths/a.json",
 		},
 		{
 			"source fallback",
-			&cliproxyauth.Auth{Attributes: map[string]string{cliproxyauth.AttributeSource: "/auths/b.json"}},
+			&apsauth.Auth{Attributes: map[string]string{apsauth.AttributeSource: "/auths/b.json"}},
 			"source:/auths/b.json",
 		},
 		{
 			// Auth.Label is a logging label with no uniqueness guarantee, so it must never
 			// become a pool scope on its own.
 			"label alone is not an identity",
-			&cliproxyauth.Auth{Label: "account-c"},
+			&apsauth.Auth{Label: "account-c"},
 			antigravityAnonymousTransportScope,
 		},
 		{
 			"api key scopes the pool",
-			&cliproxyauth.Auth{
+			&apsauth.Auth{
 				Attributes: map[string]string{"api_key": "a-1"},
 			},
 			digest("key:", "a-1"),
 		},
 		{
 			"api key is preferred over leftover oauth metadata",
-			&cliproxyauth.Auth{
+			&apsauth.Auth{
 				Attributes: map[string]string{"api_key": "secret-token"},
 				Metadata:   map[string]any{"access_token": "secret-token"},
 			},
@@ -371,8 +371,8 @@ func TestAntigravityTransportScopeFallsBackToStableMarkers(t *testing.T) {
 // Auth.Label as an identity: two different credentials that happen to share a label
 // must not end up on the same TCP/TLS pool.
 func TestAntigravityTransportScopeIgnoresNonUniqueLabel(t *testing.T) {
-	first := &cliproxyauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-a"}}
-	second := &cliproxyauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-b"}}
+	first := &apsauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-a"}}
+	second := &apsauth.Auth{Label: "shared-label", Attributes: map[string]string{"api_key": "key-b"}}
 	if antigravityTransportScope(first) == antigravityTransportScope(second) {
 		t.Fatal("credentials sharing only a label must not share a pool scope")
 	}
@@ -384,9 +384,9 @@ func TestAntigravityTransportScopeIgnoresNonUniqueLabel(t *testing.T) {
 }
 
 func TestAntigravityTransportScopeUsesStableAPIKey(t *testing.T) {
-	first := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
-	again := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
-	other := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "other-key"}}
+	first := &apsauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
+	again := &apsauth.Auth{Attributes: map[string]string{"api_key": "stable-key"}}
+	other := &apsauth.Auth{Attributes: map[string]string{"api_key": "other-key"}}
 
 	if antigravityTransportScope(first) != antigravityTransportScope(again) {
 		t.Fatal("the same API key must keep the same pool scope")
@@ -402,11 +402,11 @@ func TestAntigravityTransportScopeNeverLeaksToken(t *testing.T) {
 	const accessToken = "ya29.super-secret-access-token"
 	for _, tc := range []struct {
 		name   string
-		auth   *cliproxyauth.Auth
+		auth   *apsauth.Auth
 		secret string
 		prefix string
 	}{
-		{"api key", &cliproxyauth.Auth{Attributes: map[string]string{"api_key": accessToken}}, accessToken, "key:"},
+		{"api key", &apsauth.Auth{Attributes: map[string]string{"api_key": accessToken}}, accessToken, "key:"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scope := antigravityTransportScope(tc.auth)
@@ -446,7 +446,7 @@ func TestAntigravityTransportCacheEvictsStalePools(t *testing.T) {
 	auth := antigravityAuthWithIDAndProxy("ctx-auth", "")
 	for i := 0; i < 40; i++ {
 		fresh := http.DefaultTransport.(*http.Transport).Clone()
-		ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(fresh))
+		ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(fresh))
 		if client := newAntigravityHTTPClient(ctx, cfg, auth, 0); client.Transport == nil {
 			t.Fatalf("ctx request %d: expected a transport", i)
 		}

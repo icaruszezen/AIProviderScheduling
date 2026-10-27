@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	homekv "github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	homekv "github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/tidwall/sjson"
 )
 
@@ -40,9 +40,9 @@ func ClaudeAgentSessionUUIDForRequest(headers http.Header, originalPayload, tran
 
 func claudeAgentSessionUUID(headers http.Header, originalPayload, translatedPayload []byte, metadataSets ...map[string]any) string {
 	metadata := mergeClaudeSessionMetadata(metadataSets...)
-	identity := cliproxyauth.ExtractSessionID(headers, originalPayload, metadata)
+	identity := apsauth.ExtractSessionID(headers, originalPayload, metadata)
 	if identity == "" && len(translatedPayload) > 0 {
-		identity = cliproxyauth.ExtractSessionID(headers, translatedPayload, metadata)
+		identity = apsauth.ExtractSessionID(headers, translatedPayload, metadata)
 	}
 	if identity == "" {
 		return uuid.NewString()
@@ -55,7 +55,7 @@ func claudeAgentSessionUUID(headers http.Header, originalPayload, translatedPayl
 	if parsed, errParse := uuid.Parse(identity); errParse == nil {
 		return parsed.String()
 	}
-	stableInput := "cli-proxy-api\x00claude\x00agent-conversation\x00" + identity
+	stableInput := "ai-provider-scheduling\x00claude\x00agent-conversation\x00" + identity
 	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(stableInput)).String()
 }
 
@@ -100,7 +100,7 @@ var currentClaudeCredentialDevicePoolKVClient = func() (claudeCredentialDevicePo
 
 // EnsureClaudeCredentialDevicePoolRequired initializes a credential pool locally,
 // or coordinates it through Home KV when the selected auth is a remote dispatch clone.
-func EnsureClaudeCredentialDevicePoolRequired(ctx context.Context, auth *cliproxyauth.Auth) ([]string, error) {
+func EnsureClaudeCredentialDevicePoolRequired(ctx context.Context, auth *apsauth.Auth) ([]string, error) {
 	if auth == nil {
 		return nil, fmt.Errorf("ensure Claude credential device pool: auth is nil")
 	}
@@ -186,7 +186,7 @@ func EnsureClaudeCredentialDevicePoolRequired(ctx context.Context, auth *cliprox
 }
 
 // ClaudeCredentialAccountUUID returns the selected upstream credential's account UUID.
-func ClaudeCredentialAccountUUID(auth *cliproxyauth.Auth) string {
+func ClaudeCredentialAccountUUID(auth *apsauth.Auth) string {
 	if auth == nil {
 		return ""
 	}
@@ -236,7 +236,7 @@ func newClaudeCredentialMetadataRequestError(err error) error {
 }
 
 // ApplyClaudeCredentialMetadata rewrites the identity exception shared by native and cloaked OAuth requests.
-func ApplyClaudeCredentialMetadata(payload []byte, auth *cliproxyauth.Auth, sessionID string) ([]byte, string, error) {
+func ApplyClaudeCredentialMetadata(payload []byte, auth *apsauth.Auth, sessionID string) ([]byte, string, error) {
 	if auth == nil {
 		return nil, "", fmt.Errorf("apply Claude credential metadata: auth is nil")
 	}

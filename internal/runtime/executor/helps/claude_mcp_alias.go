@@ -134,7 +134,7 @@ func claudeMCPToolSemanticSuffix(original string, maxLength int) string {
 
 func claudeMCPAliasDigest(secret, purpose, original string) [sha256.Size]byte {
 	mac := hmac.New(sha256.New, []byte(secret))
-	_, _ = mac.Write([]byte("cpa-claude-mcp-alias-v2\x00"))
+	_, _ = mac.Write([]byte("aps-claude-mcp-alias-v2\x00"))
 	_, _ = mac.Write([]byte(purpose))
 	_, _ = mac.Write([]byte{0})
 	_, _ = mac.Write([]byte(original))

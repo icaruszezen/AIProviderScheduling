@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -24,8 +24,8 @@ func validCodexReasoningEncryptedContentForTest() string {
 	return base64.RawURLEncoding.EncodeToString(payload)
 }
 
-func newCodexSignatureTestAuth(serverURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{Attributes: map[string]string{
+func newCodexSignatureTestAuth(serverURL string) *apsauth.Auth {
+	return &apsauth.Auth{Attributes: map[string]string{
 		"base_url": serverURL,
 		"api_key":  "test",
 	}}
@@ -46,7 +46,7 @@ func TestCodexExecutorDropsInvalidReasoningEncryptedContentFromFinalRequest(t *t
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{})
-	_, err := executor.Execute(context.Background(), newCodexSignatureTestAuth(server.URL), cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), newCodexSignatureTestAuth(server.URL), apsexecutor.Request{
 		Model: "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","input":[` +
 			`{"id":"rs_bad","type":"reasoning","encrypted_content":"gAAAAABqFTIa\u2026abc","summary":[]},` +
@@ -54,7 +54,7 @@ func TestCodexExecutorDropsInvalidReasoningEncryptedContentFromFinalRequest(t *t
 			`{"id":"rs_good","type":"reasoning","encrypted_content":"` + validEncryptedContent + `","summary":[]},` +
 			`{"role":"user","content":"hello","encrypted_content":"leave-message-alone"}` +
 			`]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Stream:       false,
 	})
@@ -96,10 +96,10 @@ func TestCodexExecutorExecuteStreamDropsInvalidReasoningEncryptedContentFromFina
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{})
-	result, err := executor.ExecuteStream(context.Background(), newCodexSignatureTestAuth(server.URL), cliproxyexecutor.Request{
+	result, err := executor.ExecuteStream(context.Background(), newCodexSignatureTestAuth(server.URL), apsexecutor.Request{
 		Model:   "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","stream":true,"input":[{"id":"rs_bad","type":"reasoning","encrypted_content":"bad","summary":[]}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Stream:       true,
 	})
@@ -127,10 +127,10 @@ func TestCodexExecutorCompactDropsInvalidReasoningEncryptedContentFromFinalReque
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{})
-	_, err := executor.Execute(context.Background(), newCodexSignatureTestAuth(server.URL), cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), newCodexSignatureTestAuth(server.URL), apsexecutor.Request{
 		Model:   "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","input":[{"id":"rs_bad","type":"reasoning","encrypted_content":"bad","summary":[]}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Alt:          "responses/compact",
 		Stream:       false,

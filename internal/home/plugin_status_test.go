@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/homeplugins"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/homeplugins"
 )
 
 type recordingPluginStatusClient struct {

@@ -15,10 +15,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	sigcompat "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	sigcompat "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/tidwall/gjson"
@@ -223,11 +223,11 @@ func ConvertAntigravityResponseToClaude(ctx context.Context, _ string, originalR
 		// This follows the Claude Code API specification for streaming message initialization
 		messageStartTemplate := []byte(`{"type": "message_start", "message": {"id": "msg_1nZdL29xx5MUA1yADyHTEsnR8uuvGzszyY", "type": "message", "role": "assistant", "content": [], "model": "claude-3-5-sonnet-20241022", "stop_reason": null, "stop_sequence": null, "usage": {"input_tokens": 0, "output_tokens": 0}}}`)
 
-		// Use cpaUsageMetadata within the message_start event for Claude.
-		if promptTokenCount := gjson.GetBytes(rawJSON, "response.cpaUsageMetadata.promptTokenCount"); promptTokenCount.Exists() {
+		// Use apsUsageMetadata within the message_start event for Claude.
+		if promptTokenCount := gjson.GetBytes(rawJSON, "response.apsUsageMetadata.promptTokenCount"); promptTokenCount.Exists() {
 			messageStartTemplate, _ = sjson.SetBytes(messageStartTemplate, "message.usage.input_tokens", promptTokenCount.Int())
 		}
-		if candidatesTokenCount := gjson.GetBytes(rawJSON, "response.cpaUsageMetadata.candidatesTokenCount"); candidatesTokenCount.Exists() && !webSearchStreamMode {
+		if candidatesTokenCount := gjson.GetBytes(rawJSON, "response.apsUsageMetadata.candidatesTokenCount"); candidatesTokenCount.Exists() && !webSearchStreamMode {
 			messageStartTemplate, _ = sjson.SetBytes(messageStartTemplate, "message.usage.output_tokens", candidatesTokenCount.Int())
 		}
 

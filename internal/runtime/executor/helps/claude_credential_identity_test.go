@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	homekv "github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	homekv "github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/tidwall/gjson"
 )
 
@@ -46,7 +46,7 @@ func TestClaudeAgentSessionUUIDPreservesNativeSession(t *testing.T) {
 
 func TestClaudeAgentSessionUUIDIgnoresUnconfirmedClaudeSignals(t *testing.T) {
 	const nativeSessionID = "11111111-2222-4333-8444-555555555555"
-	metadata := map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: "non-native-conversation"}
+	metadata := map[string]any{apsexecutor.ExecutionSessionMetadataKey: "non-native-conversation"}
 	got := ClaudeAgentSessionUUIDForRequest(
 		http.Header{"X-Claude-Code-Session-Id": {nativeSessionID}},
 		[]byte(`{"metadata":{"user_id":"{\"device_id\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"session_id\":\"11111111-2222-4333-8444-555555555555\"}"}}`),
@@ -69,11 +69,11 @@ func TestClaudeAgentSessionUUIDUsesExecutionAndDerivedIdentity(t *testing.T) {
 	}{
 		{
 			name:     "execution session",
-			metadata: map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: "agent-run-1"},
+			metadata: map[string]any{apsexecutor.ExecutionSessionMetadataKey: "agent-run-1"},
 		},
 		{
 			name:     "derived session",
-			metadata: map[string]any{cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:conversation-root"},
+			metadata: map[string]any{apsexecutor.DerivedSessionIDMetadataKey: "ctx:v1:conversation-root"},
 		},
 	}
 	for _, test := range tests {
@@ -88,7 +88,7 @@ func TestClaudeAgentSessionUUIDUsesExecutionAndDerivedIdentity(t *testing.T) {
 }
 
 func TestEnsureClaudeCredentialDevicePoolRequiredMigratesHomeKVToOne(t *testing.T) {
-	auth := &cliproxyauth.Auth{ID: "legacy-five-device-credential", Metadata: map[string]any{}}
+	auth := &apsauth.Auth{ID: "legacy-five-device-credential", Metadata: map[string]any{}}
 	key := "cpa:claude:credential-device-pool:" + homekv.HashKeyPart(auth.EnsureIndex())
 	legacy := []string{
 		"0000000000000000000000000000000000000000000000000000000000000000",
@@ -135,7 +135,7 @@ func TestApplyClaudeCredentialMetadataUsesCredentialDeviceAndPreservesExtras(t *
 	deviceIDs := []string{
 		"0000000000000000000000000000000000000000000000000000000000000000",
 	}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
+	auth := &apsauth.Auth{Metadata: map[string]any{
 		"account_uuid":                        "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 		claudeauth.ClaudeDeviceIDsMetadataKey: deviceIDs,
 	}}
@@ -169,7 +169,7 @@ func TestApplyClaudeCredentialMetadataUsesCredentialDeviceAndPreservesExtras(t *
 }
 
 func TestApplyClaudeCredentialMetadataRejectsDuplicateIdentityContainers(t *testing.T) {
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
+	auth := &apsauth.Auth{Metadata: map[string]any{
 		"account_uuid": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 		claudeauth.ClaudeDeviceIDsMetadataKey: []string{
 			"0000000000000000000000000000000000000000000000000000000000000000",
@@ -203,7 +203,7 @@ func TestApplyClaudeCredentialMetadataRejectsDuplicateIdentityContainers(t *test
 			if errApply == nil {
 				t.Fatal("ApplyClaudeCredentialMetadata() error = nil, want duplicate-key rejection")
 			}
-			var requestErr cliproxyexecutor.RequestScopedError
+			var requestErr apsexecutor.RequestScopedError
 			if !errors.As(errApply, &requestErr) || requestErr == nil || !requestErr.IsRequestScoped() {
 				t.Fatalf("ApplyClaudeCredentialMetadata() error = %T %v, want request-scoped", errApply, errApply)
 			}
@@ -216,7 +216,7 @@ func TestApplyClaudeCredentialMetadataRejectsDuplicateIdentityContainers(t *test
 }
 
 func TestApplyClaudeCredentialMetadataRequiresAccountUUID(t *testing.T) {
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
+	auth := &apsauth.Auth{Metadata: map[string]any{
 		claudeauth.ClaudeDeviceIDsMetadataKey: []string{
 			"0000000000000000000000000000000000000000000000000000000000000000",
 		},
@@ -229,7 +229,7 @@ func TestApplyClaudeCredentialMetadataRequiresAccountUUID(t *testing.T) {
 	if errApply == nil {
 		t.Fatal("ApplyClaudeCredentialMetadata() error = nil, want missing account UUID rejection")
 	}
-	var requestErr cliproxyexecutor.RequestScopedError
+	var requestErr apsexecutor.RequestScopedError
 	if errors.As(errApply, &requestErr) && requestErr != nil && requestErr.IsRequestScoped() {
 		t.Fatalf("missing credential identity error = %T %v, want credential-scoped", errApply, errApply)
 	}

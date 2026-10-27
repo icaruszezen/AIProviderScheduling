@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginabi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 func TestHostModelExecuteStreamDetachesFromCallbackParentCancel(t *testing.T) {

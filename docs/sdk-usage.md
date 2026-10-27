@@ -1,11 +1,11 @@
-# CLI Proxy SDK Guide
+# AI Provider Scheduling SDK Guide
 
-The `sdk/cliproxy` module exposes the proxy as a reusable Go library so external programs can embed the routing, authentication, hot‑reload, and translation layers without depending on the CLI binary.
+The `sdk/aps` module exposes the proxy as a reusable Go library so external programs can embed the routing, authentication, hot‑reload, and translation layers without depending on the CLI binary.
 
 ## Install & Import
 
 ```bash
-go get github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy
+go get github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps
 ```
 
 ```go
@@ -14,8 +14,8 @@ import (
     "errors"
     "time"
 
-    "github.com/router-for-me/CLIProxyAPI/v6/internal/config"
-    "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy"
+    "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+    "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps"
 )
 ```
 
@@ -27,7 +27,7 @@ Note the `/v6` module path.
 cfg, err := config.LoadConfig("config.yaml")
 if err != nil { panic(err) }
 
-svc, err := cliproxy.NewBuilder().
+svc, err := aps.NewBuilder().
     WithConfig(cfg).
     WithConfigPath("config.yaml"). // absolute or working-dir relative
     Build()
@@ -48,20 +48,20 @@ The service manages config/auth watching, background token refresh, and graceful
 The server accepts options via `WithServerOptions`:
 
 ```go
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(cfg).
   WithConfigPath("config.yaml").
   WithServerOptions(
     // Add global middleware
-    cliproxy.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
+    aps.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
     // Tweak gin engine early (CORS, trusted proxies, etc.)
-    cliproxy.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
+    aps.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
     // Add your own routes after defaults
-    cliproxy.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
+    aps.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
       e.GET("/healthz", func(c *gin.Context) { c.String(200, "ok") })
     }),
     // Override request log writer/dir
-    cliproxy.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
+    aps.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
       return logging.NewFileRequestLogger(true, "logs", filepath.Dir(cfgPath))
     }),
   ).
@@ -84,7 +84,7 @@ The service uses a core `auth.Manager` for selection, execution, and auto‑refr
 core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
 core.SetRoundTripperProvider(myRTProvider) // per‑auth *http.Transport
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
     WithConfig(cfg).
     WithConfigPath("config.yaml").
     WithCoreAuthManager(core).
@@ -121,16 +121,16 @@ Replace the default loaders if your creds live outside the local filesystem:
 
 ```go
 type memoryTokenProvider struct{}
-func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*cliproxy.TokenClientResult, error) {
+func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*aps.TokenClientResult, error) {
     // Populate from memory/remote store and return counts
-    return &cliproxy.TokenClientResult{}, nil
+    return &aps.TokenClientResult{}, nil
 }
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(cfg).
   WithConfigPath("config.yaml").
   WithTokenClientProvider(&memoryTokenProvider{}).
-  WithAPIKeyClientProvider(cliproxy.NewAPIKeyClientProvider()).
+  WithAPIKeyClientProvider(aps.NewAPIKeyClientProvider()).
   Build()
 ```
 
@@ -139,11 +139,11 @@ svc, _ := cliproxy.NewBuilder().
 Observe lifecycle without patching internals:
 
 ```go
-hooks := cliproxy.Hooks{
+hooks := aps.Hooks{
   OnBeforeStart: func(cfg *config.Config) { log.Infof("starting on :%d", cfg.Port) },
-  OnAfterStart:  func(s *cliproxy.Service) { log.Info("ready") },
+  OnAfterStart:  func(s *aps.Service) { log.Info("ready") },
 }
-svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
+svc, _ := aps.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
 ```
 
 ## Shutdown

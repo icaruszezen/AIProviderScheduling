@@ -7,10 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 func TestCustomMagicHeaders_OpenAICompat(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCustomMagicHeaders_OpenAICompat(t *testing.T) {
 			Name: "compat",
 		}},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "openai-compatibility",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -39,11 +39,11 @@ func TestCustomMagicHeaders_OpenAICompat(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gpt-4o",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatOpenAI,
 		Headers: http.Header{
 			"Abc":              []string{"session-abc-value"},
@@ -80,7 +80,7 @@ func TestCustomMagicHeaders_Gemini(t *testing.T) {
 	defer server.Close()
 
 	executor := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -91,11 +91,11 @@ func TestCustomMagicHeaders_Gemini(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-2.5-flash",
 		Payload: []byte(`{"contents":[{"parts":[{"text":"hi"}]}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatGemini,
 		Headers: http.Header{
 			"Abc": []string{"gemini-session-abc"},
@@ -128,7 +128,7 @@ func TestCustomMagicHeaders_GeminiInteractions(t *testing.T) {
 	defer server.Close()
 
 	executor := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -139,11 +139,11 @@ func TestCustomMagicHeaders_GeminiInteractions(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-flash-lite",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatOpenAI,
 		Headers: http.Header{
 			"Abc": []string{"interactions-session-123"},
@@ -176,7 +176,7 @@ func TestCustomMagicHeaders_GeminiVertex(t *testing.T) {
 	defer server.Close()
 
 	executor := NewGeminiVertexExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "vertex",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -186,11 +186,11 @@ func TestCustomMagicHeaders_GeminiVertex(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-2.5-flash",
 		Payload: []byte(`{"contents":[{"parts":[{"text":"hi"}]}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatGemini,
 		Headers: http.Header{
 			"Abc": []string{"vertex-session-123"},
@@ -220,7 +220,7 @@ func TestCustomMagicHeaders_XAI(t *testing.T) {
 	defer server.Close()
 
 	executor := NewXAIExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "xai",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -230,11 +230,11 @@ func TestCustomMagicHeaders_XAI(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "grok-2",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatOpenAI,
 		Headers: http.Header{
 			"ABC": []string{"xai-session-value"},
@@ -264,7 +264,7 @@ func TestCustomMagicHeaders_Claude(t *testing.T) {
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "claude",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -274,11 +274,11 @@ func TestCustomMagicHeaders_Claude(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "claude-3-7-sonnet-20250219",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatClaude,
 		Headers: http.Header{
 			"Abc": []string{"claude-session-value"},
@@ -312,7 +312,7 @@ func TestCustomMagicHeaders_OpenAICompat_Stream(t *testing.T) {
 			Name: "compat",
 		}},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "openai-compatibility",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -324,11 +324,11 @@ func TestCustomMagicHeaders_OpenAICompat_Stream(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gpt-4o",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatOpenAI,
 		Stream:       true,
 		Headers: http.Header{
@@ -373,7 +373,7 @@ func TestCustomMagicHeaders_Codex(t *testing.T) {
 			DisableCodexCloaking: true,
 		},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "codex",
 		Attributes: map[string]string{
 			"base_url":                        server.URL,
@@ -383,11 +383,11 @@ func TestCustomMagicHeaders_Codex(t *testing.T) {
 		},
 	}
 
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gpt-5-codex",
 		Payload: []byte(`{"messages":[{"role":"user","content":"hi"}]}`),
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatCodex,
 		Headers: http.Header{
 			"Abc": []string{"codex-session-value"},

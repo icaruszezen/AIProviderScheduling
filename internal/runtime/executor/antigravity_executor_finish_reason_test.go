@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -39,7 +39,7 @@ func collectAntigravityStream(t *testing.T, baseURL string, sourceFormat, respon
 		Antigravity:  config.AntigravityConfig{},
 		RequestRetry: 1,
 	})
-	result, errExecute := executor.ExecuteStream(context.Background(), &cliproxyauth.Auth{
+	result, errExecute := executor.ExecuteStream(context.Background(), &apsauth.Auth{
 		Metadata: map[string]any{
 			"access_token": "token-123",
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
@@ -47,10 +47,10 @@ func collectAntigravityStream(t *testing.T, baseURL string, sourceFormat, respon
 		},
 		Attributes: map[string]string{
 			"api_key": "token-123", "base_url": baseURL},
-	}, cliproxyexecutor.Request{
+	}, apsexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(payload),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sourceFormat,
 		ResponseFormat: responseFormat,
 		Stream:         true,
@@ -100,7 +100,7 @@ func TestAntigravityStreamDoesNotEmitClaudeMessageStopOnReadError(t *testing.T) 
 		Antigravity:  config.AntigravityConfig{},
 		RequestRetry: 1,
 	})
-	result, errExecute := executor.ExecuteStream(context.Background(), &cliproxyauth.Auth{
+	result, errExecute := executor.ExecuteStream(context.Background(), &apsauth.Auth{
 		Metadata: map[string]any{
 			"access_token": "token-123",
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
@@ -108,10 +108,10 @@ func TestAntigravityStreamDoesNotEmitClaudeMessageStopOnReadError(t *testing.T) 
 		},
 		Attributes: map[string]string{
 			"api_key": "token-123", "base_url": server.URL},
-	}, cliproxyexecutor.Request{
+	}, apsexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(`{"model":"gemini-3.7-flash","max_tokens":256,"stream":true,"messages":[{"role":"user","content":"hello"}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatClaude,
 		ResponseFormat: sdktranslator.FormatClaude,
 		Stream:         true,
@@ -161,7 +161,7 @@ func TestAntigravityStreamDoesNotFinalizeEmptyUpstreamStream(t *testing.T) {
 				Antigravity:  config.AntigravityConfig{},
 				RequestRetry: 1,
 			})
-			result, errExecute := executor.ExecuteStream(context.Background(), &cliproxyauth.Auth{
+			result, errExecute := executor.ExecuteStream(context.Background(), &apsauth.Auth{
 				Metadata: map[string]any{
 					"access_token": "token-123",
 					"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
@@ -169,10 +169,10 @@ func TestAntigravityStreamDoesNotFinalizeEmptyUpstreamStream(t *testing.T) {
 				},
 				Attributes: map[string]string{
 					"api_key": "token-123", "base_url": server.URL},
-			}, cliproxyexecutor.Request{
+			}, apsexecutor.Request{
 				Model:   "gemini-3.7-flash",
 				Payload: []byte(tc.payload),
-			}, cliproxyexecutor.Options{
+			}, apsexecutor.Options{
 				SourceFormat:   tc.sourceFormat,
 				ResponseFormat: tc.responseFormat,
 				Stream:         true,

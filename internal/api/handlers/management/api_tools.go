@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/proxyutil"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/proxyutil"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -84,7 +84,7 @@ type apiCallResponse struct {
 //	curl -sS -X POST "http://127.0.0.1:8317/v0/management/api-call" \
 //	  -H "Authorization: Bearer 831227" \
 //	  -H "Content-Type: application/json" \
-//	  -d '{"auth_index":"<AUTH_INDEX>","method":"POST","url":"https://api.example.com/v1/fetchAvailableModels","header":{"Authorization":"Bearer $TOKEN$","Content-Type":"application/json","User-Agent":"cliproxyapi"},"data":"{}"}'
+//	  -d '{"auth_index":"<AUTH_INDEX>","method":"POST","url":"https://api.example.com/v1/fetchAvailableModels","header":{"Authorization":"Bearer $TOKEN$","Content-Type":"application/json","User-Agent":"AIProviderScheduling"},"data":"{}"}'
 func (h *Handler) APICall(c *gin.Context) {
 	var body apiCallRequest
 	if errBindJSON := c.ShouldBindJSON(&body); errBindJSON != nil {

@@ -38,7 +38,7 @@ go build -o test-output ./cmd/server && rm test-output # Verify compile (REQUIRE
 - `internal/wsrelay/` — WebSocket relay sessions
 - `internal/usage/` — Usage and token accounting
 - `internal/tui/` — Bubbletea terminal UI (`--tui`, `--standalone`)
-- `sdk/cliproxy/` — Embeddable SDK entry (service/builder/watchers/pipeline)
+- `sdk/aps/` — Embeddable SDK entry (service/builder/watchers/pipeline)
 - `test/` — Cross-module integration tests
 
 ## Code Conventions

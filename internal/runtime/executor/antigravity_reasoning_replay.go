@@ -14,12 +14,12 @@ import (
 	"reflect"
 	"strings"
 
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	homekv "github.com/router-for-me/CLIProxyAPI/v7/internal/home"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	internalsignature "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	homekv "github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	internalsignature "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -95,7 +95,7 @@ func antigravityReasoningReplayScopeFromPayload(modelName string, payload []byte
 		sessionKey: "session:" + sessionID}
 }
 
-func antigravityReasoningReplayScopeFromRequest(ctx context.Context, modelName string, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, payload []byte) antigravityReasoningReplayScope {
+func antigravityReasoningReplayScopeFromRequest(ctx context.Context, modelName string, req apsexecutor.Request, opts apsexecutor.Options, payload []byte) antigravityReasoningReplayScope {
 	// Prefer an explicit downstream session over a provider sessionId synthesized
 	// from request text. This keeps identical prompts in separate client sessions
 	// from sharing an opaque Gemini reasoning chain.
@@ -112,7 +112,7 @@ func antigravityReasoningReplayScopeFromRequest(ctx context.Context, modelName s
 	return antigravityReasoningReplayScope{}
 }
 
-func antigravityReasoningReplayClientSessionKey(ctx context.Context, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) string {
+func antigravityReasoningReplayClientSessionKey(ctx context.Context, req apsexecutor.Request, opts apsexecutor.Options) string {
 	for _, raw := range [][]byte{opts.OriginalRequest, req.Payload} {
 		if scope, ok := helps.ClaudeCodeExecutionScope(ctx, raw, opts.Headers); ok {
 			if lane := antigravityClaudeReplaySystemLane(raw); lane != "" {
@@ -134,10 +134,10 @@ func antigravityReasoningReplayClientSessionKey(ctx context.Context, req cliprox
 			}
 		}
 	}
-	if value := metadataString(opts.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+	if value := metadataString(opts.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return "execution:" + value
 	}
-	if value := metadataString(req.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+	if value := metadataString(req.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return "execution:" + value
 	}
 	for _, raw := range [][]byte{opts.OriginalRequest, req.Payload} {
@@ -232,7 +232,7 @@ func logAntigravityReasoningReplayDegraded(scope antigravityReasoningReplayScope
 		stage, antigravityReplayLogKey(scope.sessionKey), err)
 }
 
-func prepareAntigravityGeminiReasoningReplayPayload(ctx context.Context, modelName string, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, payload []byte) ([]byte, antigravityReasoningReplayScope, error) {
+func prepareAntigravityGeminiReasoningReplayPayload(ctx context.Context, modelName string, req apsexecutor.Request, opts apsexecutor.Options, payload []byte) ([]byte, antigravityReasoningReplayScope, error) {
 	if !antigravityUsesReasoningReplayCache(modelName) {
 		return payload, antigravityReasoningReplayScope{}, nil
 	}
@@ -288,7 +288,7 @@ func clearAntigravityReasoningReplayOnInvalidSignature(ctx context.Context, scop
 	return errDelete
 }
 
-func applyAntigravityReasoningReplayCache(ctx context.Context, modelName string, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, payload []byte) ([]byte, antigravityReasoningReplayScope, bool, error) {
+func applyAntigravityReasoningReplayCache(ctx context.Context, modelName string, req apsexecutor.Request, opts apsexecutor.Options, payload []byte) ([]byte, antigravityReasoningReplayScope, bool, error) {
 	scope := antigravityReasoningReplayScopeFromRequest(ctx, modelName, req, opts, payload)
 	if !scope.valid() {
 		return payload, scope, false, nil

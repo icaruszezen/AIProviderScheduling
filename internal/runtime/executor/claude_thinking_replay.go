@@ -6,12 +6,12 @@ import (
 	"encoding/hex"
 	"strings"
 
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
@@ -19,11 +19,11 @@ import (
 // claudeThinkingReplayScope reuses the bounded replay state shape shared with Kimi.
 type claudeThinkingReplayScope = kimiThinkingReplayScope
 
-func claudeThinkingReplayEnabled(auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) bool {
+func claudeThinkingReplayEnabled(auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) bool {
 	if auth == nil || !sourceFormatEqual(opts.SourceFormat, sdktranslator.FormatClaude) {
 		return false
 	}
-	if !strings.EqualFold(strings.TrimSpace(auth.Provider), "claude") || auth.AuthKind() != cliproxyauth.AuthKindAPIKey {
+	if !strings.EqualFold(strings.TrimSpace(auth.Provider), "claude") || auth.AuthKind() != apsauth.AuthKindAPIKey {
 		return false
 	}
 	if !helps.APIKeyModelIsCompat(req) {
@@ -34,7 +34,7 @@ func claudeThinkingReplayEnabled(auth *cliproxyauth.Auth, req cliproxyexecutor.R
 }
 
 // A missing session identity intentionally disables replay instead of sharing hidden reasoning across callers.
-func claudeThinkingReplayScopeFromRequest(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) claudeThinkingReplayScope {
+func claudeThinkingReplayScopeFromRequest(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) claudeThinkingReplayScope {
 	sessionKey := codexReasoningReplaySessionKey(ctx, sdktranslator.FormatClaude, req, opts, req.Payload)
 	sessionKey = xaiReasoningReplayIsolateSessionKey(ctx, sessionKey)
 	return claudeThinkingReplayScope{
@@ -42,7 +42,7 @@ func claudeThinkingReplayScopeFromRequest(ctx context.Context, auth *cliproxyaut
 		sessionKey:  sessionKey}
 }
 
-func claudeThinkingReplayModelFamily(auth *cliproxyauth.Auth, model string) string {
+func claudeThinkingReplayModelFamily(auth *apsauth.Auth, model string) string {
 	baseModel := thinking.ParseSuffix(strings.TrimSpace(model)).ModelName
 	if baseModel == "" {
 		return ""
@@ -65,7 +65,7 @@ func claudeThinkingReplayModelFamily(auth *cliproxyauth.Auth, model string) stri
 	return "claude:" + hex.EncodeToString(sum[:8]) + ":" + baseModel
 }
 
-func prepareClaudeThinkingReplayRequest(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Request, claudeThinkingReplayScope) {
+func prepareClaudeThinkingReplayRequest(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Request, claudeThinkingReplayScope) {
 	scope := claudeThinkingReplayScopeFromRequest(ctx, auth, req, opts)
 	if !scope.valid() {
 		return req, scope
@@ -134,6 +134,6 @@ func clearClaudeThinkingReplayContent(ctx context.Context, scope claudeThinkingR
 	}
 }
 
-func wrapClaudeThinkingReplayStream(ctx context.Context, result *cliproxyexecutor.StreamResult, scope claudeThinkingReplayScope) *cliproxyexecutor.StreamResult {
+func wrapClaudeThinkingReplayStream(ctx context.Context, result *apsexecutor.StreamResult, scope claudeThinkingReplayScope) *apsexecutor.StreamResult {
 	return wrapThinkingReplayStream(ctx, result, scope, cacheClaudeThinkingReplayContent, clearClaudeThinkingReplayContent)
 }

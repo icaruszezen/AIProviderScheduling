@@ -5,19 +5,19 @@ use std::ptr;
 const ABI_VERSION: u32 = 1;
 
 #[repr(C)]
-pub struct CliproxyBuffer {
+pub struct ApsBuffer {
     ptr: *mut u8,
     len: usize,
 }
 
-type HostCall = unsafe extern "C" fn(*mut std::ffi::c_void, *const c_char, *const u8, usize, *mut CliproxyBuffer) -> i32;
+type HostCall = unsafe extern "C" fn(*mut std::ffi::c_void, *const c_char, *const u8, usize, *mut ApsBuffer) -> i32;
 type HostFree = unsafe extern "C" fn(*mut std::ffi::c_void, usize);
-type PluginCall = unsafe extern "C" fn(*const c_char, *const u8, usize, *mut CliproxyBuffer) -> i32;
+type PluginCall = unsafe extern "C" fn(*const c_char, *const u8, usize, *mut ApsBuffer) -> i32;
 type PluginFree = unsafe extern "C" fn(*mut std::ffi::c_void, usize);
 type PluginShutdown = unsafe extern "C" fn();
 
 #[repr(C)]
-pub struct CliproxyHostApi {
+pub struct ApsHostApi {
     abi_version: u32,
     host_ctx: *mut std::ffi::c_void,
     call: Option<HostCall>,
@@ -25,17 +25,17 @@ pub struct CliproxyHostApi {
 }
 
 #[repr(C)]
-pub struct CliproxyPluginApi {
+pub struct ApsPluginApi {
     abi_version: u32,
     call: Option<PluginCall>,
     free_buffer: Option<PluginFree>,
     shutdown: Option<PluginShutdown>,
 }
 
-static mut STORED_HOST: *const CliproxyHostApi = ptr::null();
+static mut STORED_HOST: *const ApsHostApi = ptr::null();
 
 #[no_mangle]
-pub extern "C" fn cliproxy_plugin_init(host: *const CliproxyHostApi, plugin: *mut CliproxyPluginApi) -> i32 {
+pub extern "C" fn aps_plugin_init(host: *const ApsHostApi, plugin: *mut ApsPluginApi) -> i32 {
     if plugin.is_null() {
         return 1;
     }
@@ -49,7 +49,7 @@ pub extern "C" fn cliproxy_plugin_init(host: *const CliproxyHostApi, plugin: *mu
     0
 }
 
-unsafe extern "C" fn plugin_call(method: *const c_char, request: *const u8, request_len: usize, response: *mut CliproxyBuffer) -> i32 {
+unsafe extern "C" fn plugin_call(method: *const c_char, request: *const u8, request_len: usize, response: *mut ApsBuffer) -> i32 {
     if !response.is_null() {
         (*response).ptr = ptr::null_mut();
         (*response).len = 0;
@@ -68,7 +68,7 @@ unsafe extern "C" fn plugin_call(method: *const c_char, request: *const u8, requ
     let _ = request;
     let _ = request_len;
     match method {
-        "plugin.register" => {            write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-request-normalizer-rust\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-request-normalizer-rust.png\",\"ConfigFields\":[]},\"capabilities\":{\"request_normalizer\":true}}}"); 0 },"plugin.reconfigure" => {            write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-request-normalizer-rust\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\",\"Logo\":\"https://example.invalid/example-request-normalizer-rust.png\",\"ConfigFields\":[]},\"capabilities\":{\"request_normalizer\":true}}}"); 0 },"request.normalize" => {            write_response(response, "{\"ok\":true,\"result\":{\"Body\":\"eyJub3JtYWxpemVkX2J5IjoiZXhhbXBsZS1yZXF1ZXN0LW5vcm1hbGl6ZXItcnVzdCJ9\"}}"); 0 },
+        "plugin.register" => {            write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-request-normalizer-rust\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/icaruszezen/AIProviderScheduling\",\"Logo\":\"https://example.invalid/example-request-normalizer-rust.png\",\"ConfigFields\":[]},\"capabilities\":{\"request_normalizer\":true}}}"); 0 },"plugin.reconfigure" => {            write_response(response, "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-request-normalizer-rust\",\"Version\":\"0.1.0\",\"Author\":\"router-for-me\",\"GitHubRepository\":\"https://github.com/icaruszezen/AIProviderScheduling\",\"Logo\":\"https://example.invalid/example-request-normalizer-rust.png\",\"ConfigFields\":[]},\"capabilities\":{\"request_normalizer\":true}}}"); 0 },"request.normalize" => {            write_response(response, "{\"ok\":true,\"result\":{\"Body\":\"eyJub3JtYWxpemVkX2J5IjoiZXhhbXBsZS1yZXF1ZXN0LW5vcm1hbGl6ZXItcnVzdCJ9\"}}"); 0 },
         _ => {
             write_response(response, r#"{"ok":false,"error":{"code":"unknown_method","message":"unknown method"}}"#);
             0
@@ -84,7 +84,7 @@ unsafe extern "C" fn plugin_free(ptr: *mut std::ffi::c_void, len: usize) {
 
 unsafe extern "C" fn plugin_shutdown() {}
 
-fn write_response(response: *mut CliproxyBuffer, text: &str) {
+fn write_response(response: *mut ApsBuffer, text: &str) {
     if response.is_null() {
         return;
     }
@@ -110,7 +110,7 @@ fn call_host(method: &str, payload: &str) {
         };
         let mut method_bytes = method.as_bytes().to_vec();
         method_bytes.push(0);
-        let mut response = CliproxyBuffer { ptr: ptr::null_mut(), len: 0 };
+        let mut response = ApsBuffer { ptr: ptr::null_mut(), len: 0 };
         let rc = call(
             host.host_ctx,
             method_bytes.as_ptr() as *const c_char,

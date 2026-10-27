@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	"github.com/tidwall/gjson"
 )
 
@@ -61,7 +61,7 @@ var claudeCodeSubclientByEntrypoint = map[string]string{
 
 // Only product surfaces with verified 2.1.220 wire behavior are eligible for
 // pass-through. Other first-party-looking entrypoints are cloaked until their
-// CPA-reachable request shape has been captured and reviewed.
+// APS-reachable request shape has been captured and reviewed.
 var nativeClaudeEntrypoints = map[string]bool{
 	"cli":           true,
 	"sdk-cli":       true,
@@ -117,7 +117,7 @@ type ClaudeCodeRequestDetection struct {
 }
 
 // DetectClaudeCodeRequest first mirrors CCH's strong-signal contract, then
-// applies CPA's native-client policy. Standard Messages requests require all
+// applies APS's native-client policy. Standard Messages requests require all
 // four strong signals; count_tokens omits metadata.user_id. A separate narrow
 // profile recognizes measured native Haiku helper requests that intentionally
 // omit claude-code-20250219. Generic sdk-ts/sdk-py Agent SDK entrypoints remain

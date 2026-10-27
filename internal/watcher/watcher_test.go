@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/redisqueue"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher/diff"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/watcher/synthesizer"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher/diff"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher/synthesizer"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"gopkg.in/yaml.v3"
 )
 

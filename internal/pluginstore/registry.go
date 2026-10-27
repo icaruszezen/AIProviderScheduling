@@ -12,11 +12,8 @@ import (
 )
 
 const (
-	DefaultRegistryURL = "https://raw.githubusercontent.com/router-for-me/CLIProxyAPI-Plugins-Store/main/registry.json"
-	DefaultSourceID    = "official"
-	DefaultSourceName  = "Official"
-	SchemaVersion      = 1
-	SchemaVersionV2    = 2
+	SchemaVersion   = 1
+	SchemaVersionV2 = 2
 
 	InstallTypeGitHubRelease = "github-release"
 	InstallTypeDirect        = "direct"
@@ -75,18 +72,10 @@ type Platform struct {
 	GOARCH string `json:"goarch"`
 }
 
-func DefaultSource() Source {
-	return Source{
-		ID:   DefaultSourceID,
-		Name: DefaultSourceName,
-		URL:  DefaultRegistryURL,
-	}
-}
-
 func NormalizeSources(registryURLs []string) ([]Source, error) {
-	out := []Source{DefaultSource()}
-	seenIDs := map[string]string{DefaultSourceID: DefaultRegistryURL}
-	seenURLs := map[string]struct{}{DefaultRegistryURL: {}}
+	out := make([]Source, 0, len(registryURLs))
+	seenIDs := map[string]string{}
+	seenURLs := map[string]struct{}{}
 	for _, registryURL := range registryURLs {
 		registryURL = strings.TrimSpace(registryURL)
 		if registryURL == "" {

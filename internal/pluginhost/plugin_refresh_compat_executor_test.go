@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 type stubCompatExecutor struct {
@@ -20,13 +20,13 @@ type stubCompatExecutor struct {
 
 func (e *stubCompatExecutor) Identifier() string { return e.id }
 
-func (e *stubCompatExecutor) Execute(context.Context, *coreauth.Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *stubCompatExecutor) Execute(context.Context, *coreauth.Auth, apsexecutor.Request, apsexecutor.Options) (apsexecutor.Response, error) {
 	e.executeCalls++
-	return cliproxyexecutor.Response{Payload: []byte(`{"ok":true}`)}, nil
+	return apsexecutor.Response{Payload: []byte(`{"ok":true}`)}, nil
 }
 
-func (e *stubCompatExecutor) ExecuteStream(context.Context, *coreauth.Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
-	return &cliproxyexecutor.StreamResult{}, nil
+func (e *stubCompatExecutor) ExecuteStream(context.Context, *coreauth.Auth, apsexecutor.Request, apsexecutor.Options) (*apsexecutor.StreamResult, error) {
+	return &apsexecutor.StreamResult{}, nil
 }
 
 func (e *stubCompatExecutor) Refresh(_ context.Context, auth *coreauth.Auth) (*coreauth.Auth, error) {
@@ -34,8 +34,8 @@ func (e *stubCompatExecutor) Refresh(_ context.Context, auth *coreauth.Auth) (*c
 	return auth, nil
 }
 
-func (e *stubCompatExecutor) CountTokens(context.Context, *coreauth.Auth, cliproxyexecutor.Request, cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
-	return cliproxyexecutor.Response{}, nil
+func (e *stubCompatExecutor) CountTokens(context.Context, *coreauth.Auth, apsexecutor.Request, apsexecutor.Options) (apsexecutor.Response, error) {
+	return apsexecutor.Response{}, nil
 }
 
 func (e *stubCompatExecutor) HttpRequest(context.Context, *coreauth.Auth, *http.Request) (*http.Response, error) {
@@ -93,7 +93,7 @@ func TestPluginRefreshCompatExecutorDelegatesExecuteAndRefresh(t *testing.T) {
 		Attributes: map[string]string{
 			"base_url": "https://compat.example.com/v1"}}
 
-	if _, errExecute := wrapped.Execute(context.Background(), auth, cliproxyexecutor.Request{}, cliproxyexecutor.Options{}); errExecute != nil {
+	if _, errExecute := wrapped.Execute(context.Background(), auth, apsexecutor.Request{}, apsexecutor.Options{}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
 	if inner.executeCalls != 1 {

@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cluster"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cluster"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 type stubCluster struct {

@@ -1,16 +1,16 @@
 # @sdk/access SDK Reference
 
-The `github.com/router-for-me/CLIProxyAPI/v6/sdk/access` package centralizes inbound request authentication for the proxy. It offers a lightweight manager that chains credential providers, so servers can reuse the same access control logic inside or outside the CLI runtime.
+The `github.com/icaruszezen/AIProviderScheduling/v7/sdk/access` package centralizes inbound request authentication for the proxy. It offers a lightweight manager that chains credential providers, so servers can reuse the same access control logic inside or outside the CLI runtime.
 
 ## Importing
 
 ```go
 import (
-    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+    sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 )
 ```
 
-Add the module with `go get github.com/router-for-me/CLIProxyAPI/v6/sdk/access`.
+Add the module with `go get github.com/icaruszezen/AIProviderScheduling/v7/sdk/access`.
 
 ## Provider Registry
 
@@ -61,7 +61,7 @@ The proxy includes one built-in access provider:
   - Credential sources: `Authorization: Bearer`, `X-Goog-Api-Key`, `X-Api-Key`, `?key=`, `?auth_token=`
   - Metadata: `Result.Metadata["source"]` is set to the matched source label.
 
-In the CLI server and `sdk/cliproxy`, this provider is registered automatically based on the loaded configuration.
+In the CLI server and `sdk/aps`, this provider is registered automatically based on the loaded configuration.
 
 ```yaml
 api-keys:
@@ -76,11 +76,11 @@ To consume a provider shipped in another Go module, import it for its registrati
 ```go
 import (
     _ "github.com/acme/xplatform/sdk/access/providers/partner" // registers partner-token
-    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+    sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 )
 ```
 
-The blank identifier import ensures `init` runs so `sdkaccess.RegisterProvider` executes before you call `RegisteredProviders()` (or before `cliproxy.NewBuilder().Build()`).
+The blank identifier import ensures `init` runs so `sdkaccess.RegisterProvider` executes before you call `RegisteredProviders()` (or before `aps.NewBuilder().Build()`).
 
 ### Metadata and auditing
 
@@ -124,15 +124,15 @@ A provider must implement `Identifier()` and `Authenticate()`. To make it availa
 
 Errors propagate immediately to the caller unless they are classified as `not_handled` / `no_credentials` / `invalid_credential` and can be aggregated by the manager.
 
-## Integration with cliproxy Service
+## Integration with aps Service
 
-`sdk/cliproxy` wires `@sdk/access` automatically when you build a CLI service via `cliproxy.NewBuilder`. Supplying a manager lets you reuse the same instance in your host process:
+`sdk/aps` wires `@sdk/access` automatically when you build a CLI service via `aps.NewBuilder`. Supplying a manager lets you reuse the same instance in your host process:
 
 ```go
 coreCfg, _ := config.LoadConfig("config.yaml")
 accessManager := sdkaccess.NewManager()
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(coreCfg).
   WithConfigPath("config.yaml").
   WithRequestAccessManager(accessManager).
@@ -146,7 +146,7 @@ Register any custom providers (typically via blank imports) before calling `Buil
 When configuration changes, refresh any config-backed providers and then reset the manager's provider chain:
 
 ```go
-// configaccess is github.com/router-for-me/CLIProxyAPI/v6/internal/access/config_access
+// configaccess is github.com/icaruszezen/AIProviderScheduling/v7/internal/access/config_access
 configaccess.Register(&newCfg.SDKConfig)
 accessManager.SetProviders(sdkaccess.RegisteredProviders())
 ```

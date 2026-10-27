@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	internallogging "github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	coreusage "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
+	internallogging "github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	coreusage "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 )
 
 func init() {

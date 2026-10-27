@@ -15,7 +15,7 @@ func TestFilterUpstreamHeaders_RemovesConnectionScopedHeaders(t *testing.T) {
 	src.Set("X-Hop-C", "c")
 	src.Set("X-Request-Id", "req-1")
 	src.Set("Set-Cookie", "session=secret")
-	src.Set("x-cpa-trace-id", "upstream-trace")
+	src.Set("x-aps-trace-id", "upstream-trace")
 	src.Set("Access-Control-Expose-Headers", "upstream-header")
 
 	filtered := FilterUpstreamHeaders(src)
@@ -35,7 +35,7 @@ func TestFilterUpstreamHeaders_RemovesConnectionScopedHeaders(t *testing.T) {
 		"X-Hop-B",
 		"X-Hop-C",
 		"Set-Cookie",
-		"x-cpa-trace-id",
+		"x-aps-trace-id",
 		"Access-Control-Expose-Headers"}
 	for _, key := range blockedHeaderKeys {
 		value := filtered.Get(key)

@@ -1,5 +1,5 @@
 // Package pluginstore exposes plugin registry and artifact installation helpers
-// for embedders such as CLIProxyAPIHome.
+// for embedders of this module.
 package pluginstore
 
 import (
@@ -8,15 +8,12 @@ import (
 	"strings"
 	"time"
 
-	internalpluginstore "github.com/router-for-me/CLIProxyAPI/v7/internal/pluginstore"
+	internalpluginstore "github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginstore"
 )
 
 const (
-	DefaultRegistryURL = internalpluginstore.DefaultRegistryURL
-	DefaultSourceID    = internalpluginstore.DefaultSourceID
-	DefaultSourceName  = internalpluginstore.DefaultSourceName
-	SchemaVersion      = internalpluginstore.SchemaVersion
-	SchemaVersionV2    = internalpluginstore.SchemaVersionV2
+	SchemaVersion   = internalpluginstore.SchemaVersion
+	SchemaVersionV2 = internalpluginstore.SchemaVersionV2
 
 	InstallTypeGitHubRelease = internalpluginstore.InstallTypeGitHubRelease
 	InstallTypeDirect        = internalpluginstore.InstallTypeDirect
@@ -95,10 +92,6 @@ func (c *Client) ClearAuth() {
 	internalpluginstore.ClearResolvedAuthConfigs(c.inner.ResolvedAuth)
 	c.inner.ResolvedAuth = nil
 	c.inner.ResolvedAuthExpiresAt = time.Time{}
-}
-
-func DefaultSource() Source {
-	return internalpluginstore.DefaultSource()
 }
 
 func NormalizeSources(registryURLs []string) ([]Source, error) {

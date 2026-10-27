@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cluster"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cluster"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 // ClusterController is the runtime used by management cluster endpoints.

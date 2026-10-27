@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 // TestApplyClaudeCredentialMetadataConcurrentSharedAuth pins the invariant that a
@@ -14,7 +14,7 @@ import (
 // outside claudeDevicePoolMu, which aborts the process with "concurrent map
 // writes" rather than failing a request. Run with -race.
 func TestApplyClaudeCredentialMetadataConcurrentSharedAuth(t *testing.T) {
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "shared-credential",
 		Metadata: map[string]any{"account_uuid": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"},
 	}
@@ -55,7 +55,7 @@ func TestApplyClaudeCredentialMetadataConcurrentSharedAuth(t *testing.T) {
 // TestEnsureClaudeCredentialDevicePoolConcurrentSharedAuth covers the local
 // (non Home KV) branch of the pool bootstrap on a shared credential.
 func TestEnsureClaudeCredentialDevicePoolConcurrentSharedAuth(t *testing.T) {
-	auth := &cliproxyauth.Auth{ID: "shared-credential"}
+	auth := &apsauth.Auth{ID: "shared-credential"}
 
 	const goroutines = 32
 	var wg sync.WaitGroup

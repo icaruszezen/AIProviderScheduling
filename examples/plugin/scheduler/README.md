@@ -1,6 +1,6 @@
 # Scheduler Plugin
 
-This plugin demonstrates the CLIProxyAPI C ABI scheduler capability from Go.
+This plugin demonstrates the AIProviderScheduling C ABI scheduler capability from Go.
 
 It implements:
 
@@ -45,6 +45,6 @@ From this directory:
 
 ```bash
 cd go
-go build -buildmode=c-shared -o /tmp/cliproxy-scheduler-plugin.so .
-rm -f /tmp/cliproxy-scheduler-plugin.so /tmp/cliproxy-scheduler-plugin.h
+go build -buildmode=c-shared -o /tmp/aps-scheduler-plugin.so .
+rm -f /tmp/aps-scheduler-plugin.so /tmp/aps-scheduler-plugin.h
 ```

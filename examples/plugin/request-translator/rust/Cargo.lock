@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "cliproxy-request-translator-rust"
+name = "aps-request-translator-rust"
 version = "0.1.0"

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 )
 
 func expectContains(t *testing.T, details []string, want string) {

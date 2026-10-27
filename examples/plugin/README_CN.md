@@ -1,6 +1,6 @@
 # 标准动态库插件示例
 
-本目录包含 CLIProxyAPI C ABI 的标准动态库插件示例。
+本目录包含 AIProviderScheduling C ABI 的标准动态库插件示例。
 
 ## 目录布局
 
@@ -60,7 +60,7 @@ plugins:
 
 `host-model-callback` 声明 Management API 能力，并暴露名为 `Host Model Callback` 的浏览器资源。该资源在非流式请求中调用 `host.model.execute`，在流式请求中调用 `host.model.execute_stream` 和 `host.model.stream_read`。它演示了通过 `host.model.stream_close` 显式关闭流，也提供 `implicit_close=true` 用于演示 RPC 作用域结束时的宿主隐式清理。
 
-当该资源转发自身收到的 `host_callback_id` 时，CPA 会识别发起宿主模型回调的插件，并在嵌套模型执行中跳过同一个插件的拦截器。因此宿主模型回调不会递归调用发起插件自身，但其他已启用插件仍可拦截这次嵌套请求。
+当该资源转发自身收到的 `host_callback_id` 时，APS 会识别发起宿主模型回调的插件，并在嵌套模型执行中跳过同一个插件的拦截器。因此宿主模型回调不会递归调用发起插件自身，但其他已启用插件仍可拦截这次嵌套请求。
 
 ```yaml
 plugins:
@@ -70,7 +70,7 @@ plugins:
       priority: 1
 ```
 
-默认示例模型是 `gpt-5.5`，但请求能否成功取决于当前 CPA 模型和认证配置是否可以路由该模型。
+默认示例模型是 `gpt-5.5`，但请求能否成功取决于当前 APS 模型和认证配置是否可以路由该模型。
 
 ## Scheduler
 
@@ -104,4 +104,4 @@ make -C examples/plugin build
 
 `host-callback` 使用最小插件资源承载，因为宿主回调只能从插件方法内部发起，不是独立能力。
 
-`management.register` 通过 `resources` 字段返回的菜单资源会由 CPA 暴露在 `/v0/resource/plugins/<pluginID>/...` 下。需要认证的插件自有 Management API 路由仍保留在 `/v0/management/...` 下。
+`management.register` 通过 `resources` 字段返回的菜单资源会由 APS 暴露在 `/v0/resource/plugins/<pluginID>/...` 下。需要认证的插件自有 Management API 路由仍保留在 `/v0/management/...` 下。

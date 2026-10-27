@@ -6,8 +6,8 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 func TestRegisterCommandLineFlagsSkipsNativeAndUsesPriority(t *testing.T) {
@@ -76,7 +76,7 @@ func TestExecuteCommandLinePassesAllArgsAndTriggeredFlags(t *testing.T) {
 		t.Fatal("HasTriggeredCommandLineFlags() = false, want true")
 	}
 
-	exitCode, handled := host.ExecuteCommandLine(context.Background(), "cliproxy", []string{"-plugin-command", "tail"}, "/tmp/config.yaml", flagSet)
+	exitCode, handled := host.ExecuteCommandLine(context.Background(), "aps", []string{"-plugin-command", "tail"}, "/tmp/config.yaml", flagSet)
 	if !handled {
 		t.Fatal("ExecuteCommandLine() handled = false, want true")
 	}
@@ -87,7 +87,7 @@ func TestExecuteCommandLinePassesAllArgsAndTriggeredFlags(t *testing.T) {
 		t.Fatalf("execute calls = %d, want 1", len(plugin.execRequests))
 	}
 	req := plugin.execRequests[0]
-	if req.Program != "cliproxy" || req.ConfigPath != "/tmp/config.yaml" {
+	if req.Program != "aps" || req.ConfigPath != "/tmp/config.yaml" {
 		t.Fatalf("execution request = %#v, want program and config path", req)
 	}
 	if len(req.Args) != 2 || req.Args[0] != "-plugin-command" || req.Args[1] != "tail" {

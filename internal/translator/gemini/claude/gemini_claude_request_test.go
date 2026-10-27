@@ -3,7 +3,7 @@ package claude
 import (
 	"testing"
 
-	internalsignature "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
+	internalsignature "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
 	"github.com/tidwall/gjson"
 )
 

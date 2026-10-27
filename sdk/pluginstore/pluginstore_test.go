@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func testPluginSource() Source {
+	return Source{ID: "source-test", Name: "Test", URL: "https://registry.example/plugins/registry.json"}
+}
+
 func TestManifestValidateRequiresPinnedReleaseTag(t *testing.T) {
 	manifest := validTestManifest()
 	manifest.ReleaseTag = ""
@@ -33,7 +37,7 @@ func TestManifestValidateRejectsReleaseTagVersionMismatch(t *testing.T) {
 
 func TestManifestFromReleaseBuildsPinnedManifest(t *testing.T) {
 	manifest, errManifest := ManifestFromRelease(
-		DefaultSource(),
+		testPluginSource(),
 		Plugin{
 			ID:          "sample-provider",
 			Name:        "Sample Provider",
@@ -55,7 +59,7 @@ func TestManifestFromReleaseBuildsPinnedManifest(t *testing.T) {
 
 func TestManifestFromPluginBuildsDirectManifest(t *testing.T) {
 	manifest, errManifest := ManifestFromPlugin(
-		DefaultSource(),
+		testPluginSource(),
 		Plugin{
 			ID:          "sample-provider",
 			Name:        "Sample Provider",
@@ -79,7 +83,7 @@ func TestManifestFromPluginBuildsDirectManifest(t *testing.T) {
 	if manifest.SchemaVersion != SchemaVersionV2 || manifest.InstallType() != InstallTypeDirect || manifest.ReleaseTag != "" {
 		t.Fatalf("manifest = %#v, want v2 direct without release tag", manifest)
 	}
-	if manifest.SourceURL != DefaultRegistryURL || len(manifest.Install.Artifacts) != 1 {
+	if manifest.SourceURL != testPluginSource().URL || len(manifest.Install.Artifacts) != 1 {
 		t.Fatalf("manifest source/artifacts = %q/%d, want source URL and one pinned artifact", manifest.SourceURL, len(manifest.Install.Artifacts))
 	}
 	artifact := manifest.Install.Artifacts[0]
@@ -89,7 +93,7 @@ func TestManifestFromPluginBuildsDirectManifest(t *testing.T) {
 }
 
 func TestManifestFromPluginRejectsArtifactQuery(t *testing.T) {
-	_, errManifest := ManifestFromPlugin(DefaultSource(), Plugin{
+	_, errManifest := ManifestFromPlugin(testPluginSource(), Plugin{
 		ID: "sample-provider", Name: "Sample Provider", Description: "Sample", Author: "tester", Version: "1.0.0",
 		Install: InstallPlan{Type: InstallTypeDirect, Artifacts: []Artifact{{
 			GOOS: "linux", GOARCH: "amd64", URL: "https://downloads.example/sample.zip?X-Amz-Signature=secret",

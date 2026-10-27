@@ -1,4 +1,4 @@
-// Package misc provides miscellaneous utility functions for the CLI Proxy API server.
+// Package misc provides miscellaneous utility functions for the AI Provider Scheduling server.
 package misc
 
 import (

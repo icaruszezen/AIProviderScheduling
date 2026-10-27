@@ -15,15 +15,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	internalsignature "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	antigravityclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/antigravity/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/proxyutil"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	internalsignature "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	antigravityclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/antigravity/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/proxyutil"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -182,7 +182,7 @@ func applyAntigravityPoolLimits(transport *http.Transport) {
 // antigravityHTTP11Transport returns the HTTP/1.1 pool shared by every request that
 // uses the same credential and the same base transport. The base is either the
 // process default or a transport provided through the request context.
-func antigravityHTTP11Transport(auth *cliproxyauth.Auth, base *http.Transport) *http.Transport {
+func antigravityHTTP11Transport(auth *apsauth.Auth, base *http.Transport) *http.Transport {
 	if base == nil {
 		return nil
 	}
@@ -206,7 +206,7 @@ func antigravityHTTP11Transport(auth *cliproxyauth.Auth, base *http.Transport) *
 // one proxy setting, or nil when the proxy setting cannot be turned into a
 // transport. Keying on the normalized proxy string rather than on a prebuilt
 // transport keeps one pool per credential and proxy instead of one per request.
-func antigravityProxiedHTTP11Transport(auth *cliproxyauth.Auth, proxyURL string) *http.Transport {
+func antigravityProxiedHTTP11Transport(auth *apsauth.Auth, proxyURL string) *http.Transport {
 	proxyURL = strings.TrimSpace(proxyURL)
 	if proxyURL == "" {
 		return nil
@@ -237,7 +237,7 @@ func antigravityProxiedHTTP11Transport(auth *cliproxyauth.Auth, proxyURL string)
 // tests, plugins or SDK embedders, fall back to another stable credential marker so
 // they neither share a pool with an unrelated OAuth identity nor allocate a fresh
 // pool, and with it a fresh set of pool goroutines, on every single request.
-func antigravityTransportScope(auth *cliproxyauth.Auth) string {
+func antigravityTransportScope(auth *apsauth.Auth) string {
 	if auth == nil {
 		return antigravityAnonymousTransportScope
 	}
@@ -245,10 +245,10 @@ func antigravityTransportScope(auth *cliproxyauth.Auth) string {
 		return "id:" + id
 	}
 	if auth.Attributes != nil {
-		if path := strings.TrimSpace(auth.Attributes[cliproxyauth.AttributePath]); path != "" {
+		if path := strings.TrimSpace(auth.Attributes[apsauth.AttributePath]); path != "" {
 			return "path:" + path
 		}
-		if source := strings.TrimSpace(auth.Attributes[cliproxyauth.AttributeSource]); source != "" {
+		if source := strings.TrimSpace(auth.Attributes[apsauth.AttributeSource]); source != "" {
 			return "source:" + source
 		}
 	}
@@ -277,7 +277,7 @@ func antigravityCredentialScope(prefix, secret string) string {
 // negotiates TLS 1.3 without advertising an ALPN protocol and therefore never uses h2.
 // The underlying Transport is always shared so keep-alive connections survive across
 // requests instead of forcing a fresh TCP + TLS handshake every time.
-func newAntigravityHTTPClient(ctx context.Context, cfg *config.Config, auth *cliproxyauth.Auth, timeout time.Duration) *http.Client {
+func newAntigravityHTTPClient(ctx context.Context, cfg *config.Config, auth *apsauth.Auth, timeout time.Duration) *http.Client {
 	// Native Antigravity reuses one transport across requests. Opt into a
 	// credential-scoped proxy transport only here so other providers keep their
 	// existing lifecycle and different OAuth identities remain isolated.
@@ -314,7 +314,7 @@ func newAntigravityHTTPClient(ctx context.Context, cfg *config.Config, auth *cli
 	return client
 }
 
-func antigravityProxyURL(cfg *config.Config, auth *cliproxyauth.Auth) string {
+func antigravityProxyURL(cfg *config.Config, auth *apsauth.Auth) string {
 	if auth != nil {
 		if proxyURL := strings.TrimSpace(auth.ProxyURL); proxyURL != "" {
 			return proxyURL
@@ -630,7 +630,7 @@ func shouldResolveAntigravityWebSearchGroundingURLs(from sdktranslator.Format, o
 		hasAntigravityGoogleSearchTool(requestRawJSON)
 }
 
-func (e *AntigravityExecutor) resolveWebSearchGroundingURLs(ctx context.Context, auth *cliproxyauth.Auth, from sdktranslator.Format, originalRequestRawJSON, requestRawJSON, responseRawJSON []byte) []byte {
+func (e *AntigravityExecutor) resolveWebSearchGroundingURLs(ctx context.Context, auth *apsauth.Auth, from sdktranslator.Format, originalRequestRawJSON, requestRawJSON, responseRawJSON []byte) []byte {
 	if !shouldResolveAntigravityWebSearchGroundingURLs(from, originalRequestRawJSON, requestRawJSON) {
 		return responseRawJSON
 	}
@@ -679,7 +679,7 @@ func logAntigravitySignatureStrip(before, after int, stage, reason string) {
 func (e *AntigravityExecutor) Identifier() string { return antigravityAuthType }
 
 // PrepareRequest injects Antigravity credentials into the outgoing HTTP request.
-func (e *AntigravityExecutor) PrepareRequest(req *http.Request, auth *cliproxyauth.Auth) error {
+func (e *AntigravityExecutor) PrepareRequest(req *http.Request, auth *apsauth.Auth) error {
 	if req == nil {
 		return nil
 	}
@@ -697,7 +697,7 @@ func (e *AntigravityExecutor) PrepareRequest(req *http.Request, auth *cliproxyau
 // HttpRequest injects Antigravity credentials into the request and executes it.
 // It uses a whitelist approach: all incoming headers are stripped and only
 // the minimum set required by the Antigravity protocol is explicitly set.
-func (e *AntigravityExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.Auth, req *http.Request) (*http.Response, error) {
+func (e *AntigravityExecutor) HttpRequest(ctx context.Context, auth *apsauth.Auth, req *http.Request) (*http.Response, error) {
 	if req == nil {
 		return nil, fmt.Errorf("antigravity executor: request is nil")
 	}

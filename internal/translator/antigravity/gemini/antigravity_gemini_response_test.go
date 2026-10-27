@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 )
 
@@ -16,12 +16,12 @@ func TestRestoreUsageMetadata(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "cpaUsageMetadata renamed to usageMetadata",
-			input:    []byte(`{"modelVersion":"gemini-3-pro","cpaUsageMetadata":{"promptTokenCount":100,"candidatesTokenCount":200}}`),
+			name:     "apsUsageMetadata renamed to usageMetadata",
+			input:    []byte(`{"modelVersion":"gemini-3-pro","apsUsageMetadata":{"promptTokenCount":100,"candidatesTokenCount":200}}`),
 			expected: `{"modelVersion":"gemini-3-pro","usageMetadata":{"promptTokenCount":100,"candidatesTokenCount":200}}`,
 		},
 		{
-			name:     "no cpaUsageMetadata unchanged",
+			name:     "no apsUsageMetadata unchanged",
 			input:    []byte(`{"modelVersion":"gemini-3-pro","usageMetadata":{"promptTokenCount":100}}`),
 			expected: `{"modelVersion":"gemini-3-pro","usageMetadata":{"promptTokenCount":100}}`,
 		},
@@ -49,8 +49,8 @@ func TestConvertAntigravityResponseToGeminiNonStream(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "cpaUsageMetadata restored in response",
-			input:    []byte(`{"response":{"modelVersion":"gemini-3-pro","cpaUsageMetadata":{"promptTokenCount":100}}}`),
+			name:     "apsUsageMetadata restored in response",
+			input:    []byte(`{"response":{"modelVersion":"gemini-3-pro","apsUsageMetadata":{"promptTokenCount":100}}}`),
 			expected: `{"modelVersion":"gemini-3-pro","usageMetadata":{"promptTokenCount":100}}`,
 		},
 		{
@@ -161,10 +161,10 @@ func TestConvertAntigravityResponseToGeminiStream_CarriesFilteredUsageIntoSynthe
 	var param any
 
 	// Real streams reach the translator after FilterSSEUsageMetadata, which renames
-	// non-terminal usage to cpaUsageMetadata because finishReason is missing. The
+	// non-terminal usage to apsUsageMetadata because finishReason is missing. The
 	// filtered payload is inlined here so this package keeps no dependency on the
 	// executor helpers; the executor tests cover the real filter end to end.
-	filtered := []byte(`{"response":{"candidates":[{"content":{"parts":[{"text":"Hello"}],"role":"model"}}],"modelVersion":"gemini-3.7-flash","responseId":"resp-filtered","cpaUsageMetadata":{"promptTokenCount":42,"candidatesTokenCount":7,"totalTokenCount":49}}}`)
+	filtered := []byte(`{"response":{"candidates":[{"content":{"parts":[{"text":"Hello"}],"role":"model"}}],"modelVersion":"gemini-3.7-flash","responseId":"resp-filtered","apsUsageMetadata":{"promptTokenCount":42,"candidatesTokenCount":7,"totalTokenCount":49}}}`)
 	results := ConvertAntigravityResponseToGemini(ctx, "gemini-3.7-flash", nil, nil, filtered, &param)
 	if len(results) != 1 {
 		t.Fatalf("expected 1 chunk, got %d", len(results))

@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -910,12 +910,12 @@ func payloadRawValue(value any) ([]byte, bool) {
 	}
 }
 
-func PayloadRequestedModel(opts cliproxyexecutor.Options, fallback string) string {
+func PayloadRequestedModel(opts apsexecutor.Options, fallback string) string {
 	fallback = strings.TrimSpace(fallback)
 	if len(opts.Metadata) == 0 {
 		return fallback
 	}
-	raw, ok := opts.Metadata[cliproxyexecutor.RequestedModelMetadataKey]
+	raw, ok := opts.Metadata[apsexecutor.RequestedModelMetadataKey]
 	if !ok || raw == nil {
 		return fallback
 	}
@@ -939,11 +939,11 @@ func PayloadRequestedModel(opts cliproxyexecutor.Options, fallback string) strin
 	}
 }
 
-func PayloadRequestPath(opts cliproxyexecutor.Options) string {
+func PayloadRequestPath(opts apsexecutor.Options) string {
 	if len(opts.Metadata) == 0 {
 		return ""
 	}
-	raw, ok := opts.Metadata[cliproxyexecutor.RequestPathMetadataKey]
+	raw, ok := opts.Metadata[apsexecutor.RequestPathMetadataKey]
 	if !ok || raw == nil {
 		return ""
 	}

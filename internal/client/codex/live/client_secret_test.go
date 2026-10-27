@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 func TestCreateClientSecretMapsStandardRealtimeModel(t *testing.T) {

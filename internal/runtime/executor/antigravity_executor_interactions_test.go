@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -36,7 +36,7 @@ func TestAntigravityExecutorExecuteStreamTranslatesInteractionsRequest(t *testin
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "interactions-antigravity-stream-auth",
 		Provider: "antigravity",
 		Attributes: map[string]string{
@@ -50,10 +50,10 @@ func TestAntigravityExecutorExecuteStreamTranslatesInteractionsRequest(t *testin
 		},
 	}
 	payload := []byte(`{"model":"gemini-3.1-pro-low","input":[{"type":"user_input","content":[{"type":"text","text":"hi"}]}],"tools":[{"name":"get_weather","description":"weather","type":"function","parameters":{"type":"object","properties":{"location":{"type":"string"}},"required":["location"]}}],"generation_config":{"tool_choice":"auto","thinking_level":"high","thinking_summaries":"auto"},"stream":true,"store":false}`)
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "gemini-3.1-pro-low",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatInteractions,
 		ResponseFormat:  sdktranslator.FormatInteractions,
 		Stream:          true,

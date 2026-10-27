@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	sigcompat "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	sigcompat "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -205,12 +205,12 @@ func setClaudeResponseModel(payload []byte, model string) ([]byte, bool) {
 }
 
 // PrepareRequest injects Claude credentials into the outgoing HTTP request.
-func (e *ClaudeExecutor) PrepareRequest(req *http.Request, auth *cliproxyauth.Auth) error {
+func (e *ClaudeExecutor) PrepareRequest(req *http.Request, auth *apsauth.Auth) error {
 	if req == nil {
 		return nil
 	}
 	apiKey, _ := claudeCreds(auth)
-	useAPIKey := auth != nil && (auth.AuthKind() == cliproxyauth.AuthKindAPIKey || (auth.Attributes != nil && strings.TrimSpace(auth.Attributes["api_key"]) != ""))
+	useAPIKey := auth != nil && (auth.AuthKind() == apsauth.AuthKindAPIKey || (auth.Attributes != nil && strings.TrimSpace(auth.Attributes["api_key"]) != ""))
 	isAnthropicBase := isAnthropicUpstreamURL(req.URL)
 	if strings.TrimSpace(apiKey) != "" {
 		if isAnthropicBase && useAPIKey {
@@ -233,7 +233,7 @@ func (e *ClaudeExecutor) PrepareRequest(req *http.Request, auth *cliproxyauth.Au
 }
 
 // HttpRequest injects Claude credentials into the request and executes it.
-func (e *ClaudeExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.Auth, req *http.Request) (*http.Response, error) {
+func (e *ClaudeExecutor) HttpRequest(ctx context.Context, auth *apsauth.Auth, req *http.Request) (*http.Response, error) {
 	if req == nil {
 		return nil, fmt.Errorf("claude executor: request is nil")
 	}
@@ -250,7 +250,7 @@ func (e *ClaudeExecutor) HttpRequest(ctx context.Context, auth *cliproxyauth.Aut
 
 // Refresh replaces credentials via Home when enabled. Account OAuth token
 // refresh is not supported; API keys are returned unchanged.
-func (e *ClaudeExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+func (e *ClaudeExecutor) Refresh(ctx context.Context, auth *apsauth.Auth) (*apsauth.Auth, error) {
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
 		return refreshed, err
 	}

@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"strings"
 
-	sigcompat "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
+	sigcompat "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
 const (
-	geminiResponsesCarrierPrefix     = "cpa-gemini-responses-carrier-v1:"
+	geminiResponsesCarrierPrefix     = "aps-gemini-responses-carrier-v1:"
 	geminiResponsesCarrierNext       = "next"
 	geminiResponsesCarrierPrevious   = "previous"
 	geminiResponsesCarrierStandalone = "standalone"
@@ -19,10 +19,10 @@ const (
 	geminiResponsesCarrierFunction   = "function"
 	geminiResponsesCarrierAny        = "any"
 
-	geminiResponsesCarrierDirectionField = "_cpa_reasoning_direction"
-	geminiResponsesCarrierTargetField    = "_cpa_reasoning_target"
-	geminiResponsesCarrierSignatureField = "_cpa_reasoning_signature"
-	geminiResponsesCarrierSummaryField   = "_cpa_reasoning_summary"
+	geminiResponsesCarrierDirectionField = "_aps_reasoning_direction"
+	geminiResponsesCarrierTargetField    = "_aps_reasoning_target"
+	geminiResponsesCarrierSignatureField = "_aps_reasoning_signature"
+	geminiResponsesCarrierSummaryField   = "_aps_reasoning_summary"
 )
 
 func encodeGeminiResponsesCarrier(rawSignature, direction, targetKind string) string {

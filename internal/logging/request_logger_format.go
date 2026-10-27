@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/buildinfo"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/klauspost/compress/zstd"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 )
 

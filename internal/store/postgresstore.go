@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/misc"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/misc"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -196,12 +196,12 @@ func (s *PostgresStore) WorkDir() string {
 func (s *PostgresStore) SetBaseDir(string) {}
 
 // Save persists authentication metadata to disk and PostgreSQL.
-func (s *PostgresStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (string, error) {
+func (s *PostgresStore) Save(ctx context.Context, auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("postgres store: auth is nil")
 	}
-	cliproxyauth.NormalizeCredentialMetadata(auth.Metadata)
-	if errWeight := cliproxyauth.ValidateAuthWeight(auth); errWeight != nil {
+	apsauth.NormalizeCredentialMetadata(auth.Metadata)
+	if errWeight := apsauth.ValidateAuthWeight(auth); errWeight != nil {
 		return "", fmt.Errorf("postgres store: %w", errWeight)
 	}
 
@@ -265,8 +265,8 @@ func (s *PostgresStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (stri
 	if auth.Attributes == nil {
 		auth.Attributes = make(map[string]string)
 	}
-	auth.Attributes[cliproxyauth.AttributePath] = path
-	auth.Attributes[cliproxyauth.AttributeSourceBackend] = cliproxyauth.AuthSourcePostgres
+	auth.Attributes[apsauth.AttributePath] = path
+	auth.Attributes[apsauth.AttributeSourceBackend] = apsauth.AuthSourcePostgres
 
 	if strings.TrimSpace(auth.FileName) == "" {
 		auth.FileName = auth.ID
@@ -283,7 +283,7 @@ func (s *PostgresStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (stri
 }
 
 // List enumerates all auth records stored in PostgreSQL.
-func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) {
+func (s *PostgresStore) List(ctx context.Context) ([]*apsauth.Auth, error) {
 	query := fmt.Sprintf("SELECT id, content, created_at, updated_at FROM %s ORDER BY id", s.fullTableName(s.cfg.AuthTable))
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
@@ -291,7 +291,7 @@ func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) 
 	}
 	defer rows.Close()
 
-	auths := make([]*cliproxyauth.Auth, 0, 32)
+	auths := make([]*apsauth.Auth, 0, 32)
 	for rows.Next() {
 		var (
 			id        string
@@ -312,8 +312,8 @@ func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) 
 			log.WithError(err).Warnf("postgres store: skipping auth %s with invalid json", id)
 			continue
 		}
-		cliproxyauth.NormalizeCredentialMetadata(metadata)
-		if errWeight := cliproxyauth.ValidateAuthWeight(&cliproxyauth.Auth{Metadata: metadata}); errWeight != nil {
+		apsauth.NormalizeCredentialMetadata(metadata)
+		if errWeight := apsauth.ValidateAuthWeight(&apsauth.Auth{Metadata: metadata}); errWeight != nil {
 			log.WithError(errWeight).Warnf("postgres store: skipping auth %s with invalid weight", id)
 			continue
 		}
@@ -322,31 +322,31 @@ func (s *PostgresStore) List(ctx context.Context) ([]*cliproxyauth.Auth, error) 
 			provider = "unknown"
 		}
 		attr := map[string]string{
-			cliproxyauth.AttributePath:          path,
-			cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourcePostgres}
+			apsauth.AttributePath:          path,
+			apsauth.AttributeSourceBackend: apsauth.AuthSourcePostgres}
 		if email := strings.TrimSpace(valueAsString(metadata["email"])); email != "" {
 			attr["email"] = email
 		}
-		auth := &cliproxyauth.Auth{
+		auth := &apsauth.Auth{
 			ID:               normalizeAuthID(id),
 			Provider:         provider,
 			FileName:         normalizeAuthID(id),
 			Label:            labelFor(metadata),
-			Status:           cliproxyauth.StatusActive,
+			Status:           apsauth.StatusActive,
 			Attributes:       attr,
 			Metadata:         metadata,
 			CreatedAt:        createdAt,
 			UpdatedAt:        updatedAt,
 			LastRefreshedAt:  time.Time{},
 			NextRefreshAfter: time.Time{}}
-		cliproxyauth.ApplyCustomHeadersFromMetadata(auth)
-		if cliproxyauth.IsUnsupportedOAuthAuth(auth) {
+		apsauth.ApplyCustomHeadersFromMetadata(auth)
+		if apsauth.IsUnsupportedOAuthAuth(auth) {
 			log.Warnf("postgres store: skipping leftover OAuth auth %s", id)
 			continue
 		}
 		if disabled, ok := metadata["disabled"].(bool); ok && disabled {
 			auth.Disabled = true
-			auth.Status = cliproxyauth.StatusDisabled
+			auth.Status = apsauth.StatusDisabled
 		}
 		auths = append(auths, auth)
 	}
@@ -582,7 +582,7 @@ func (s *PostgresStore) deleteConfigRecord(ctx context.Context) error {
 	return nil
 }
 
-func (s *PostgresStore) resolveAuthPath(auth *cliproxyauth.Auth) (string, error) {
+func (s *PostgresStore) resolveAuthPath(auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("postgres store: auth is nil")
 	}

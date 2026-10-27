@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )

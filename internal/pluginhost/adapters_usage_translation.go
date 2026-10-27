@@ -7,11 +7,11 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	coreusage "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	coreusage "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 )
 

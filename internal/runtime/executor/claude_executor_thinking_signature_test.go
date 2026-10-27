@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	"github.com/tidwall/gjson"
 )
 
@@ -97,7 +97,7 @@ func TestClaudeThinkingSignaturesSurviveUpstreamPreparation(t *testing.T) {
 	}
 
 	cfg := &config.Config{}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{"cloak_mode": "always"}}
+	auth := &apsauth.Auth{Metadata: map[string]any{"cloak_mode": "always"}}
 
 	cloaked, didCloak, errCloaking := applyCloaking(
 		context.Background(),
@@ -149,7 +149,7 @@ func TestClaudeThinkingSignaturesSurviveSensitiveWordObfuscation(t *testing.T) {
 			Cloak:  &config.CloakConfig{SensitiveWords: []string{sensitive}},
 		}},
 	}
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-123"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-123"}}
 
 	out, didCloak, errCloaking := applyCloaking(context.Background(), cfg, auth, payload, "key-123", false, true)
 	if errCloaking != nil {

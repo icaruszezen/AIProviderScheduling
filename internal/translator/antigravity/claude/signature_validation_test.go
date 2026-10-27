@@ -66,7 +66,7 @@ func TestStripInvalidGeminiSignatureThinkingBlocksDropsLegacyRawCarrierFromUserM
 func TestStripInvalidGeminiSignatureThinkingBlocks(t *testing.T) {
 	validSignature := testGeminiEPrefixSignature(t)
 	validCarrier := encodeGeminiClaudeCarrierSignature(validSignature, geminiClaudeCarrierPrevious, geminiClaudeCarrierText)
-	input := []byte(`{"messages":[{"role":"assistant","content":[{"type":"text","text":"first"},{"type":"thinking","thinking":"","signature":"` + validSignature + `"},{"type":"thinking","thinking":"","signature":"` + validCarrier + `"},{"type":"thinking","thinking":"","signature":"cpa-gemini-carrier-v1:previous:text:invalid"},{"type":"thinking","thinking":"","signature":"invalid"},{"type":"text","text":"last"}]}]}`)
+	input := []byte(`{"messages":[{"role":"assistant","content":[{"type":"text","text":"first"},{"type":"thinking","thinking":"","signature":"` + validSignature + `"},{"type":"thinking","thinking":"","signature":"` + validCarrier + `"},{"type":"thinking","thinking":"","signature":"aps-gemini-carrier-v1:previous:text:invalid"},{"type":"thinking","thinking":"","signature":"invalid"},{"type":"text","text":"last"}]}]}`)
 	out := StripInvalidGeminiSignatureThinkingBlocks(input)
 	content := gjson.GetBytes(out, "messages.0.content").Array()
 	if len(content) != 4 {

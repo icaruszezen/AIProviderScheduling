@@ -3,13 +3,13 @@ package helps
 import (
 	"context"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/tidwall/gjson"
 )
 
 // EmitWebSocketResponseEvent delivers an upstream WebSocket response frame to any configured observer.
-func EmitWebSocketResponseEvent(ctx context.Context, opts cliproxyexecutor.Options, auth *cliproxyauth.Auth, provider, model string, payload []byte) {
+func EmitWebSocketResponseEvent(ctx context.Context, opts apsexecutor.Options, auth *apsauth.Auth, provider, model string, payload []byte) {
 	if opts.WebSocketResponseObserver == nil || len(payload) == 0 {
 		return
 	}
@@ -31,7 +31,7 @@ func EmitWebSocketResponseEvent(ctx context.Context, opts cliproxyexecutor.Optio
 		}
 	}
 	requestedModel := PayloadRequestedModel(opts, model)
-	opts.WebSocketResponseObserver(ctx, cliproxyexecutor.WebSocketResponseEvent{
+	opts.WebSocketResponseObserver(ctx, apsexecutor.WebSocketResponseEvent{
 		RequestID:      requestID,
 		TraceID:        traceID,
 		SourceFormat:   opts.SourceFormat.String(),

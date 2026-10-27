@@ -18,12 +18,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	claudemodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/claude/models"
-	. "github.com/router-for-me/CLIProxyAPI/v7/internal/constant"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api/handlers"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	claudemodels "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/claude/models"
+	. "github.com/icaruszezen/AIProviderScheduling/v7/internal/constant"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -372,7 +372,7 @@ func (h *ClaudeCodeAPIHandler) WriteErrorResponse(c *gin.Context, msg *interface
 	}
 	if msg != nil && msg.DirectResponse {
 		for key, values := range handlers.FilterUpstreamHeaders(msg.Headers) {
-			if len(values) == 0 || handlers.IsCPAReservedResponseHeader(key) {
+			if len(values) == 0 || handlers.IsAPSReservedResponseHeader(key) {
 				continue
 			}
 			c.Writer.Header().Del(key)
@@ -396,7 +396,7 @@ func (h *ClaudeCodeAPIHandler) WriteErrorResponse(c *gin.Context, msg *interface
 	}
 	if msg != nil && msg.Addon != nil && handlers.PassthroughHeadersEnabled(h.Cfg) {
 		for key, values := range msg.Addon {
-			if len(values) == 0 || handlers.IsCPAReservedResponseHeader(key) {
+			if len(values) == 0 || handlers.IsAPSReservedResponseHeader(key) {
 				continue
 			}
 			c.Writer.Header().Del(key)

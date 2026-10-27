@@ -7,16 +7,16 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
 
-func (e *ClaudeExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
+func (e *ClaudeExecutor) Execute(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (resp apsexecutor.Response, err error) {
 	if opts.Alt == "responses/compact" {
 		return resp, statusErr{code: http.StatusNotImplemented, msg: "/responses/compact not supported"}
 	}
@@ -37,7 +37,7 @@ func (e *ClaudeExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, r
 	reporter := helps.NewExecutorUsageReporter(ctx, e, baseModel, auth)
 	defer reporter.TrackFailure(ctx, &err)
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	to := sdktranslator.FromString("claude")
 	var replayScope claudeThinkingReplayScope
 	if claudeThinkingReplayEnabled(auth, req, opts) {
@@ -121,8 +121,8 @@ func (e *ClaudeExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, r
 	// first-user marker cannot suppress system/latest-user breakpoints.
 	// cloaked and confirmedClaudeCode are mutually exclusive: resolveClaudeWirePolicy
 	// forces Cloak off for a confirmed native client.
-	cpaOwnsCacheControl := shouldEnsureCacheControl(body, cloaked, confirmedClaudeCode)
-	if cpaOwnsCacheControl {
+	apsOwnsCacheControl := shouldEnsureCacheControl(body, cloaked, confirmedClaudeCode)
+	if apsOwnsCacheControl {
 		body = ensureCacheControl(body)
 	}
 
@@ -136,13 +136,13 @@ func (e *ClaudeExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, r
 	// same credential condition. Upgrading after placement is settled mirrors the
 	// native ttl helper.
 	//
-	// This runs only while CPA owns placement, and it then owns the ttl of every
+	// This runs only while APS owns placement, and it then owns the ttl of every
 	// breakpoint it can reach: a marker carrying no ttl is the wire default, not an
 	// opt-in to 5m, so a cloaked caller's bare {"type":"ephemeral"} is upgraded too.
 	// Only a ttl the caller wrote out explicitly survives, because
 	// upgradeClaudeCacheControlTTL skips any block that already has one.
 	// claude-code-cli fingerprint profiles emit extended-cache-ttl and must use the same 1h pool.
-	if cpaOwnsCacheControl && fp.ProfileClaudeCodeCLI {
+	if apsOwnsCacheControl && fp.ProfileClaudeCodeCLI {
 		body = upgradeClaudeCacheControlTTL(body, claudeCacheControlTTL1h)
 	}
 
@@ -331,6 +331,6 @@ func (e *ClaudeExecutor) Execute(ctx context.Context, auth *cliproxyauth.Auth, r
 	if responseFormat == sdktranslator.FormatOpenAIResponse {
 		out = helps.EnsureResponsesUsageDetails(out)
 	}
-	resp = cliproxyexecutor.Response{Payload: out, Headers: httpResp.Header.Clone()}
+	resp = apsexecutor.Response{Payload: out, Headers: httpResp.Header.Clone()}
 	return resp, nil
 }

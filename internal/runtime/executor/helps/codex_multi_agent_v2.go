@@ -4,17 +4,17 @@ import (
 	"context"
 	"net/http"
 
-	multiagentv2 "github.com/router-for-me/CLIProxyAPI/v7/internal/client/codex/optimize-multi-agent-v2"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	openaichatclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/claude/openai/chat-completions"
-	responsesclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/claude/openai/responses"
-	codexclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/codex/claude"
-	geminiclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/gemini/claude"
-	interactionsclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/interactions/claude"
-	openaiclaude "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/openai/claude"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	multiagentv2 "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/codex/optimize-multi-agent-v2"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	openaichatclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/claude/openai/chat-completions"
+	responsesclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/claude/openai/responses"
+	codexclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/codex/claude"
+	geminiclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/gemini/claude"
+	interactionsclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/interactions/claude"
+	openaiclaude "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/openai/claude"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 // RewriteCodexSpawnAgentDescription optimizes spawn_agent definitions for
@@ -112,9 +112,9 @@ func OptimizeCodexMultiAgentV2Request(ctx context.Context, headers http.Header, 
 // OptimizeCodexMultiAgentV2RequestForAuth applies the standard Codex MultiAgentV2
 // request optimization and, when the selected codex-api-key model has is-compat
 // enabled, also converts agent_message items into portable message/user input.
-func OptimizeCodexMultiAgentV2RequestForAuth(ctx context.Context, headers http.Header, payload []byte, cfg *config.Config, auth *cliproxyauth.Auth, model string) ([]byte, bool) {
+func OptimizeCodexMultiAgentV2RequestForAuth(ctx context.Context, headers http.Header, payload []byte, cfg *config.Config, auth *apsauth.Auth, model string) ([]byte, bool) {
 	updated, optimized := multiagentv2.OptimizeCodexMultiAgentV2Request(ctx, headers, payload, cfg)
-	if cliproxyauth.CodexAPIKeyModelIsCompat(cfg, auth, model) {
+	if apsauth.CodexAPIKeyModelIsCompat(cfg, auth, model) {
 		updated = multiagentv2.RewriteCodexMultiAgentV2Input(ctx, headers, updated, cfg)
 	}
 	return updated, optimized

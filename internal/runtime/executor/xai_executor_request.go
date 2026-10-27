@@ -10,13 +10,13 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	xaiauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/xai"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	xaiauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/xai"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -55,14 +55,14 @@ type xaiClientToolKey struct {
 	toolType  string
 }
 
-func (e *XAIExecutor) prepareResponsesRequest(ctx context.Context, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, stream bool) (*xaiPreparedRequest, error) {
+func (e *XAIExecutor) prepareResponsesRequest(ctx context.Context, req apsexecutor.Request, opts apsexecutor.Options, stream bool) (*xaiPreparedRequest, error) {
 	return e.prepareResponsesRequestTo(ctx, req, opts, stream, sdktranslator.FormatCodex)
 }
 
-func (e *XAIExecutor) prepareResponsesRequestTo(ctx context.Context, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, stream bool, to sdktranslator.Format) (*xaiPreparedRequest, error) {
+func (e *XAIExecutor) prepareResponsesRequestTo(ctx context.Context, req apsexecutor.Request, opts apsexecutor.Options, stream bool, to sdktranslator.Format) (*xaiPreparedRequest, error) {
 	baseModel := thinking.ParseSuffix(req.Model).ModelName
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	originalPayloadSource := req.Payload
 	if len(opts.OriginalRequest) > 0 {
 		originalPayloadSource = opts.OriginalRequest
@@ -148,7 +148,7 @@ func (e *XAIExecutor) prepareResponsesRequestTo(ctx context.Context, req cliprox
 		filterInternalXSearch: xaiRequestHasNativeXSearch(body)}, nil
 }
 
-func (e *XAIExecutor) recordXAIRequest(ctx context.Context, auth *cliproxyauth.Auth, url string, headers http.Header, body []byte) {
+func (e *XAIExecutor) recordXAIRequest(ctx context.Context, auth *apsauth.Auth, url string, headers http.Header, body []byte) {
 	var authID, authLabel, authType, authValue string
 	if auth != nil {
 		authID = auth.ID
@@ -167,7 +167,7 @@ func (e *XAIExecutor) recordXAIRequest(ctx context.Context, auth *cliproxyauth.A
 		AuthValue: authValue})
 }
 
-func xaiCreds(auth *cliproxyauth.Auth) (token, baseURL string) {
+func xaiCreds(auth *apsauth.Auth) (token, baseURL string) {
 	if auth == nil {
 		return "", ""
 	}
@@ -183,7 +183,7 @@ func xaiCreds(auth *cliproxyauth.Auth) (token, baseURL string) {
 
 // xaiUsingAPI reports whether this xAI auth should use the official API path
 // for HTTP chat and media. OAuth defaults to false to use Grok Build.
-func xaiUsingAPI(auth *cliproxyauth.Auth) bool {
+func xaiUsingAPI(auth *apsauth.Auth) bool {
 	if auth == nil {
 		return true
 	}
@@ -224,7 +224,7 @@ func xaiUsingAPI(auth *cliproxyauth.Auth) bool {
 // Websocket and compact transports intentionally do not use this helper:
 // cli-chat-proxy does not implement /responses/compact (404) or websocket
 // upgrades (405).
-func xaiChatBaseURL(auth *cliproxyauth.Auth) string {
+func xaiChatBaseURL(auth *apsauth.Auth) string {
 	_, baseURL := xaiCreds(auth)
 	if xaiUsingAPI(auth) {
 		if baseURL == "" {
@@ -242,7 +242,7 @@ func xaiChatBaseURL(auth *cliproxyauth.Auth) string {
 // Compact must stay on the official API (or an explicit non-CLI-proxy base_url).
 // Reusing xaiChatBaseURL would pin OAuth traffic to cli-chat-proxy, which returns
 // 404 for /responses/compact and then cools down the auth pool as not_found.
-func xaiCompactBaseURL(auth *cliproxyauth.Auth) string {
+func xaiCompactBaseURL(auth *apsauth.Auth) string {
 	_, baseURL := xaiCreds(auth)
 	if baseURL == "" || xaiIsCLIChatProxyBaseURL(baseURL) {
 		return xaiauth.DefaultAPIBaseURL
@@ -279,7 +279,7 @@ func logXAIResolvedBaseURL(ctx context.Context, baseURL string) {
 	helps.LogWithRequestID(ctx).Infof("xai: using base_url=%s source=%s", baseURL, xaiBaseURLSource(baseURL))
 }
 
-func applyXAIHeaders(r *http.Request, auth *cliproxyauth.Auth, token string, stream bool, sessionID string, clientHeaders ...http.Header) {
+func applyXAIHeaders(r *http.Request, auth *apsauth.Auth, token string, stream bool, sessionID string, clientHeaders ...http.Header) {
 	applyXAIDefaultHeaders(r, token, stream, sessionID)
 	applyXAICustomHeaders(r, auth, clientHeaders...)
 }
@@ -302,7 +302,7 @@ func applyXAIDefaultHeaders(r *http.Request, token string, stream bool, sessionI
 	}
 }
 
-func applyXAICustomHeaders(r *http.Request, auth *cliproxyauth.Auth, clientHeaders ...http.Header) {
+func applyXAICustomHeaders(r *http.Request, auth *apsauth.Auth, clientHeaders ...http.Header) {
 	var attrs map[string]string
 	if auth != nil {
 		attrs = auth.Attributes
@@ -315,7 +315,7 @@ func applyXAICustomHeaders(r *http.Request, auth *cliproxyauth.Auth, clientHeade
 // applyXAIHeaders behavior. CLI chat-proxy identity headers are only attached
 // when using_api is false and the resolved chat base URL is the official CLI
 // chat-proxy endpoint.
-func applyXAIChatHeaders(r *http.Request, auth *cliproxyauth.Auth, token string, stream bool, sessionID string, clientHeaders ...http.Header) {
+func applyXAIChatHeaders(r *http.Request, auth *apsauth.Auth, token string, stream bool, sessionID string, clientHeaders ...http.Header) {
 	if xaiUsingAPI(auth) {
 		applyXAIHeaders(r, auth, token, stream, sessionID, clientHeaders...)
 		return
@@ -331,7 +331,7 @@ func applyXAIChatHeaders(r *http.Request, auth *cliproxyauth.Auth, token string,
 	applyXAICustomHeaders(r, auth, clientHeaders...)
 }
 
-func xaiResolveComposerSessionID(ctx context.Context, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, baseModel string) (string, error) {
+func xaiResolveComposerSessionID(ctx context.Context, req apsexecutor.Request, opts apsexecutor.Options, baseModel string) (string, error) {
 	if sessionID := xaiExecutionSessionID(req, opts); sessionID != "" {
 		return sessionID, nil
 	}
@@ -348,11 +348,11 @@ func xaiResolveComposerSessionID(ctx context.Context, req cliproxyexecutor.Reque
 	return uuid.NewString(), nil
 }
 
-func xaiExecutionSessionID(req cliproxyexecutor.Request, opts cliproxyexecutor.Options) string {
-	if value := xaiMetadataString(opts.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+func xaiExecutionSessionID(req apsexecutor.Request, opts apsexecutor.Options) string {
+	if value := xaiMetadataString(opts.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return value
 	}
-	if value := xaiMetadataString(req.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+	if value := xaiMetadataString(req.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return value
 	}
 	if promptCacheKey := gjson.GetBytes(req.Payload, "prompt_cache_key"); promptCacheKey.Exists() {
@@ -367,12 +367,12 @@ func xaiRequiresIsolatedConversation(model string) bool {
 	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(model)), xaiComposerModelPrefix)
 }
 
-func xaiImageEndpointPath(opts cliproxyexecutor.Options) string {
+func xaiImageEndpointPath(opts apsexecutor.Options) string {
 	if opts.SourceFormat.String() != xaiImageHandlerType {
 		return ""
 	}
 
-	path := xaiMetadataString(opts.Metadata, cliproxyexecutor.RequestPathMetadataKey)
+	path := xaiMetadataString(opts.Metadata, apsexecutor.RequestPathMetadataKey)
 	if strings.HasSuffix(path, "/images/edits") {
 		return xaiImagesEditsPath
 	}
@@ -468,15 +468,15 @@ func normalizeXAIImageRef(value any) bool {
 	return true
 }
 
-func xaiIsVideoRequest(opts cliproxyexecutor.Options) bool {
+func xaiIsVideoRequest(opts apsexecutor.Options) bool {
 	return opts.SourceFormat.String() == xaiVideoHandlerType
 }
 
-func xaiVideoEndpointPath(opts cliproxyexecutor.Options) string {
+func xaiVideoEndpointPath(opts apsexecutor.Options) string {
 	if !xaiIsVideoRequest(opts) {
 		return ""
 	}
-	path := xaiMetadataString(opts.Metadata, cliproxyexecutor.RequestPathMetadataKey)
+	path := xaiMetadataString(opts.Metadata, apsexecutor.RequestPathMetadataKey)
 	if strings.HasSuffix(path, "/videos/edits") {
 		return xaiVideosEditsPath
 	}

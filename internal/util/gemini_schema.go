@@ -1,4 +1,4 @@
-// Package util provides utility functions for the CLI Proxy API server.
+// Package util provides utility functions for the AI Provider Scheduling server.
 package util
 
 import (

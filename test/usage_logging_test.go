@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/redisqueue"
-	runtimeexecutor "github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
+	runtimeexecutor "github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 func TestGeminiExecutorRecordsSuccessfulZeroUsageInQueue(t *testing.T) {
@@ -32,7 +32,7 @@ func TestGeminiExecutorRecordsSuccessfulZeroUsageInQueue(t *testing.T) {
 	defer server.Close()
 
 	executor := runtimeexecutor.NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key":  "test-upstream-key",
@@ -51,9 +51,9 @@ func TestGeminiExecutorRecordsSuccessfulZeroUsageInQueue(t *testing.T) {
 		redisqueue.SetUsageStatisticsEnabled(prevUsageEnabled)
 	})
 
-	_, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   model,
-		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)}, cliproxyexecutor.Options{
+		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatGemini,
 		OriginalRequest: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)})
 	if err != nil {

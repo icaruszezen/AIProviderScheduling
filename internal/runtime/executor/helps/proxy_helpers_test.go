@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 )
 
 func TestNewProxyAwareHTTPClientDirectBypassesGlobalProxy(t *testing.T) {
@@ -16,7 +16,7 @@ func TestNewProxyAwareHTTPClientDirectBypassesGlobalProxy(t *testing.T) {
 	client := NewProxyAwareHTTPClient(
 		context.Background(),
 		&config.Config{SDKConfig: sdkconfig.SDKConfig{ProxyURL: "http://global-proxy.example.com:8080"}},
-		&cliproxyauth.Auth{ProxyURL: "direct"},
+		&apsauth.Auth{ProxyURL: "direct"},
 		0,
 	)
 

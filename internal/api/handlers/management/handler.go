@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/channelmonitor"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginstore"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/buildinfo"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/channelmonitor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginstore"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -326,10 +326,10 @@ func (h *Handler) SetPostAuthPersistHook(hook coreauth.PostAuthHook) {
 // Additionally, remote access requires allow-remote-management=true.
 func (h *Handler) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("X-CPA-VERSION", buildinfo.Version)
-		c.Header("X-CPA-COMMIT", buildinfo.Commit)
-		c.Header("X-CPA-BUILD-DATE", buildinfo.BuildDate)
-		c.Header("X-CPA-SUPPORT-PLUGIN", pluginhost.SupportPluginHeaderValue())
+		c.Header("X-APS-VERSION", buildinfo.Version)
+		c.Header("X-APS-COMMIT", buildinfo.Commit)
+		c.Header("X-APS-BUILD-DATE", buildinfo.BuildDate)
+		c.Header("X-APS-SUPPORT-PLUGIN", pluginhost.SupportPluginHeaderValue())
 
 		clientIP := c.ClientIP()
 		localClient := clientIP == "127.0.0.1" || clientIP == "::1"

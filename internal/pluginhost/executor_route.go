@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 // executorPluginReady reports whether the named plugin can actually execute a

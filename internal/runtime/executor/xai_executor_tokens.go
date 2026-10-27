@@ -5,30 +5,30 @@ import (
 	"fmt"
 	"strings"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 	"github.com/tiktoken-go/tokenizer"
 )
 
 // CountTokens estimates token count for xAI Responses requests.
-func (e *XAIExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *XAIExecutor) CountTokens(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	prepared, err := e.prepareResponsesRequest(ctx, req, opts, false)
 	if err != nil {
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	enc, err := tokenizer.Get(tokenizer.O200kBase)
 	if err != nil {
-		return cliproxyexecutor.Response{}, fmt.Errorf("xai executor: tokenizer init failed: %w", err)
+		return apsexecutor.Response{}, fmt.Errorf("xai executor: tokenizer init failed: %w", err)
 	}
 	count, err := countXAIInputTokens(enc, prepared.body)
 	if err != nil {
-		return cliproxyexecutor.Response{}, fmt.Errorf("xai executor: token counting failed: %w", err)
+		return apsexecutor.Response{}, fmt.Errorf("xai executor: token counting failed: %w", err)
 	}
 	usageJSON := fmt.Sprintf(`{"response":{"usage":{"input_tokens":%d,"output_tokens":0,"total_tokens":%d}}}`, count, count)
 	translated := sdktranslator.TranslateTokenCount(ctx, prepared.to, prepared.responseFormat, count, []byte(usageJSON))
-	return cliproxyexecutor.Response{Payload: translated}, nil
+	return apsexecutor.Response{Payload: translated}, nil
 }
 
 func countXAIInputTokens(enc tokenizer.Codec, body []byte) (int64, error) {

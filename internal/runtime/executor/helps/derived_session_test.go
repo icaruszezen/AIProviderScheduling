@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 func TestDerivedSessionProviderMappings(t *testing.T) {
 	t.Parallel()
 
-	metadata := map[string]any{cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:test-root"}
+	metadata := map[string]any{apsexecutor.DerivedSessionIDMetadataKey: "ctx:v1:test-root"}
 	codexID := DerivedSessionUUID("codex", metadata)
 	xaiID := DerivedSessionUUID("xai", metadata)
 	if _, errParse := uuid.Parse(codexID); errParse != nil {
@@ -40,12 +40,12 @@ func TestProviderSessionUUIDPrefersExecutionSession(t *testing.T) {
 	t.Parallel()
 
 	first := map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "connection-1",
-		cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:first-root",
+		apsexecutor.ExecutionSessionMetadataKey: "connection-1",
+		apsexecutor.DerivedSessionIDMetadataKey: "ctx:v1:first-root",
 	}
 	second := map[string]any{
-		cliproxyexecutor.ExecutionSessionMetadataKey: "connection-1",
-		cliproxyexecutor.DerivedSessionIDMetadataKey: "ctx:v1:second-root",
+		apsexecutor.ExecutionSessionMetadataKey: "connection-1",
+		apsexecutor.DerivedSessionIDMetadataKey: "ctx:v1:second-root",
 	}
 	firstID := ProviderSessionUUID("codex", first)
 	secondID := ProviderSessionUUID("codex", second)

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/tidwall/gjson"
 )
 
@@ -349,7 +349,7 @@ func TestReverseRemapOAuthToolNamesRejectsUnsafeMangledAliases(t *testing.T) {
 			if errReverse == nil || !strings.Contains(errReverse.Error(), test.wantError) {
 				t.Fatalf("reverseRemapOAuthToolNames() error = %v, want %q", errReverse, test.wantError)
 			}
-			var requestErr cliproxyexecutor.RequestScopedError
+			var requestErr apsexecutor.RequestScopedError
 			if !errors.As(errReverse, &requestErr) || !requestErr.IsRequestScoped() {
 				t.Fatalf("reverseRemapOAuthToolNames() error = %T %v, want request-scoped", errReverse, errReverse)
 			}
@@ -568,7 +568,7 @@ func TestReverseRemapOAuthToolNamesMarksTrailingMarkupFailureRequestScoped(t *te
 	if !bytes.Equal(restored, response) {
 		t.Fatalf("reverseRemapOAuthToolNames() returned modified response: %s", restored)
 	}
-	var requestErr cliproxyexecutor.RequestScopedError
+	var requestErr apsexecutor.RequestScopedError
 	if !errors.As(errReverse, &requestErr) || !requestErr.IsRequestScoped() {
 		t.Fatalf("reverseRemapOAuthToolNames() error = %T %v, want request-scoped", errReverse, errReverse)
 	}

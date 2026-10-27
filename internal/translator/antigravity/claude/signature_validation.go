@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -17,7 +17,7 @@ const (
 
 	// Gemini carrier envelopes exist only on the Claude-facing wire. The request
 	// translator validates and unwraps them before writing native Gemini parts.
-	geminiClaudeCarrierPrefix     = "cpa-gemini-carrier-v1:"
+	geminiClaudeCarrierPrefix     = "aps-gemini-carrier-v1:"
 	geminiClaudeCarrierNext       = "next"
 	geminiClaudeCarrierPrevious   = "previous"
 	geminiClaudeCarrierStandalone = "standalone"

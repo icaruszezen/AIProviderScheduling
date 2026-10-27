@@ -3,8 +3,8 @@ package helps
 import (
 	"bytes"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/tidwall/gjson"
 )
 
@@ -12,7 +12,7 @@ import (
 const MetadataStreamFakeFirstTokens = "stream_fake_first_tokens"
 
 // StreamFakeFirstTokensFromAuth returns sanitized Codex fake first-token probes.
-func StreamFakeFirstTokensFromAuth(auth *cliproxyauth.Auth) []string {
+func StreamFakeFirstTokensFromAuth(auth *apsauth.Auth) []string {
 	if auth == nil || len(auth.Metadata) == 0 {
 		return nil
 	}

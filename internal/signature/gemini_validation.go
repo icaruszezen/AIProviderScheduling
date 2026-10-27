@@ -72,7 +72,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 	"google.golang.org/protobuf/encoding/protowire"
 )

@@ -8,12 +8,12 @@ import (
 
 	"github.com/tidwall/sjson"
 
-	. "github.com/router-for-me/CLIProxyAPI/v7/internal/constant"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	. "github.com/icaruszezen/AIProviderScheduling/v7/internal/constant"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 	"golang.org/x/net/context"
 )
 

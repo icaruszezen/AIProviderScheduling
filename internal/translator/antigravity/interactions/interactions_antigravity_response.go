@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -166,9 +166,9 @@ func restoreInteractionsFunctionNames(root gjson.Result, nameMap map[string]stri
 
 func restoreAntigravityUsageMetadata(root gjson.Result) gjson.Result {
 	if !root.Get("usageMetadata").Exists() {
-		if cpaUsage := root.Get("cpaUsageMetadata"); cpaUsage.Exists() {
-			raw, _ := sjson.SetRawBytes([]byte(root.Raw), "usageMetadata", []byte(cpaUsage.Raw))
-			raw, _ = sjson.DeleteBytes(raw, "cpaUsageMetadata")
+		if apsUsage := root.Get("apsUsageMetadata"); apsUsage.Exists() {
+			raw, _ := sjson.SetRawBytes([]byte(root.Raw), "usageMetadata", []byte(apsUsage.Raw))
+			raw, _ = sjson.DeleteBytes(raw, "apsUsageMetadata")
 			return gjson.ParseBytes(raw)
 		}
 	}
@@ -450,7 +450,7 @@ func antigravityUsageNode(root gjson.Result) gjson.Result {
 	if usage := root.Get("usage_metadata"); usage.Exists() {
 		return usage
 	}
-	if usage := root.Get("cpaUsageMetadata"); usage.Exists() {
+	if usage := root.Get("apsUsageMetadata"); usage.Exists() {
 		return usage
 	}
 	return gjson.Result{}

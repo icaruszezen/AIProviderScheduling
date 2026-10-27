@@ -12,12 +12,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -160,7 +160,7 @@ func TestResolveClaudeFingerprintPolicy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			auth := &cliproxyauth.Auth{
+			auth := &apsauth.Auth{
 				Provider:   tt.provider,
 				Attributes: tt.attrs,
 				Metadata:   tt.metadata,
@@ -192,7 +192,7 @@ func TestResolveClaudeFingerprintPolicy(t *testing.T) {
 }
 
 func TestClaudeFingerprintProfileFromAuthConcurrentMetadata(t *testing.T) {
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
+	auth := &apsauth.Auth{Metadata: map[string]any{
 		claudeFingerprintProfileAttr: "claude-code-cli",
 	}}
 
@@ -223,7 +223,7 @@ func TestClaudeFingerprintProfileFromAuthConcurrentMetadata(t *testing.T) {
 func TestApplyClaudeHeaders_ClaudeCodeCLIProfileUsesOAuthBetasWithoutPretendingToken(t *testing.T) {
 	t.Parallel()
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":             "key-third-party",
 		"base_url":            "https://gateway.example",
 		"fingerprint_profile": "claude-code-cli",
@@ -256,7 +256,7 @@ func TestApplyClaudeHeaders_ClaudeCodeCLIProfileUsesOAuthBetasWithoutPretendingT
 func TestApplyClaudeHeaders_OfficialAPIKeyDefaultRespectsClient(t *testing.T) {
 	t.Parallel()
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key": "key-official",
 	}}
 	req, errReq := http.NewRequest(http.MethodPost, "https://api.anthropic.com/v1/messages?beta=true", nil)
@@ -289,7 +289,7 @@ func TestApplyClaudeHeaders_OfficialAPIKeyDefaultRespectsClient(t *testing.T) {
 func TestApplyClaudeHeaders_OfficialAPIKeyClaudeCodeCLIProfileUsesOAuthBetas(t *testing.T) {
 	t.Parallel()
 
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":             "key-official-fp",
 		"fingerprint_profile": "claude-code-cli",
 	}}
@@ -340,7 +340,7 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintOnThirdPartyGateway(t *testing.T
 		}},
 	}
 	executor := NewClaudeExecutor(cfg)
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "claude-code-cli-api-key",
 		Attributes: map[string]string{
 			"api_key":             "key-claude-code-cli-fp",
@@ -350,10 +350,10 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintOnThirdPartyGateway(t *testing.T
 	}
 	payload := []byte(`{"model":"claude-sonnet-5","messages":[{"role":"user","content":[{"type":"text","text":"What can you do?"}]}],"tools":[{"name":"read_file","description":"Read a file","input_schema":{"type":"object"}}]}`)
 
-	response, errExecute := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	response, errExecute := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-sonnet-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
@@ -427,13 +427,13 @@ func TestClaudeExecutor_OfficialAPIKeyDefaultRespectsClient(t *testing.T) {
 	})
 	ctx := context.WithValue(
 		context.Background(),
-		"cliproxy.roundtripper",
+		"aps.roundtripper",
 		http.RoundTripper(transport),
 	)
 	cfg := &config.Config{ClaudeKey: []config.ClaudeKey{{
 		APIKey: "key-official-default",
 	}}}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "official-api-key-default",
 		Attributes: map[string]string{
 			"api_key": "key-official-default",
@@ -441,10 +441,10 @@ func TestClaudeExecutor_OfficialAPIKeyDefaultRespectsClient(t *testing.T) {
 	}
 	payload := []byte(`{"model":"claude-sonnet-5","max_tokens":64,"messages":[{"role":"user","content":"hello"}],"tools":[{"name":"read_file","input_schema":{"type":"object"}}]}`)
 
-	_, errExecute := NewClaudeExecutor(cfg).Execute(ctx, auth, cliproxyexecutor.Request{
+	_, errExecute := NewClaudeExecutor(cfg).Execute(ctx, auth, apsexecutor.Request{
 		Model:   "claude-sonnet-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatClaude,
 		Headers: http.Header{
 			"Anthropic-Beta": []string{"caller-private-beta-2099-01-01"},
@@ -492,12 +492,12 @@ func TestClaudeExecutor_OfficialAPIKeyDefaultPreservesCallerCCH(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(`{"id":"msg_1","type":"message","model":"claude-sonnet-5","role":"assistant","content":[{"type":"text","text":"ok"}],"usage":{"input_tokens":1,"output_tokens":1}}`)),
 		}, nil
 	})
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(transport))
-	auth := &cliproxyauth.Auth{ID: "official-caller-cch", Attributes: map[string]string{"api_key": "key-official-caller-cch"}}
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(transport))
+	auth := &apsauth.Auth{ID: "official-caller-cch", Attributes: map[string]string{"api_key": "key-official-caller-cch"}}
 	payload := []byte(`{"model":"claude-sonnet-5","max_tokens":64,"system":[{"type":"text","text":"x-anthropic-billing-header: cc_version=caller; cch=abcde;"},{"type":"text","text":"Keep this rule."}],"messages":[{"role":"user","content":"hello"}]}`)
-	if _, errExecute := NewClaudeExecutor(&config.Config{}).Execute(ctx, auth, cliproxyexecutor.Request{
+	if _, errExecute := NewClaudeExecutor(&config.Config{}).Execute(ctx, auth, apsexecutor.Request{
 		Model: "claude-sonnet-5", Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errExecute != nil {
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
 	if got := gjson.GetBytes(seenBody, "system.0.text").String(); got != "x-anthropic-billing-header: cc_version=caller; cch=abcde;" {
@@ -524,14 +524,14 @@ func TestClaudeExecutor_OfficialAPIKeyClaudeCodeCLIFingerprintIncludesDiagnostic
 	})
 	ctx := context.WithValue(
 		context.Background(),
-		"cliproxy.roundtripper",
+		"aps.roundtripper",
 		http.RoundTripper(transport),
 	)
 	cfg := &config.Config{ClaudeKey: []config.ClaudeKey{{
 		APIKey:             "key-official-fp",
 		FingerprintProfile: "claude-code-cli",
 	}}}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "official-api-key-fp",
 		Attributes: map[string]string{
 			"api_key":             "key-official-fp",
@@ -540,10 +540,10 @@ func TestClaudeExecutor_OfficialAPIKeyClaudeCodeCLIFingerprintIncludesDiagnostic
 	}
 	payload := []byte(`{"model":"claude-sonnet-5","max_tokens":64,"thinking":{"type":"adaptive"},"messages":[{"role":"user","content":"hello"}]}`)
 
-	_, errExecute := NewClaudeExecutor(cfg).Execute(ctx, auth, cliproxyexecutor.Request{
+	_, errExecute := NewClaudeExecutor(cfg).Execute(ctx, auth, apsexecutor.Request{
 		Model:   "claude-sonnet-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
@@ -597,7 +597,7 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintStreamMatchesWirePolicy(t *testi
 		FingerprintProfile: "claude-code-cli",
 		Cloak:              &config.CloakConfig{Mode: "always"},
 	}}}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "claude-code-cli-stream",
 		Attributes: map[string]string{
 			"api_key":             "key-claude-code-cli-stream",
@@ -607,10 +607,10 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintStreamMatchesWirePolicy(t *testi
 	}
 	payload := []byte(`{"model":"claude-sonnet-5","max_tokens":64,"thinking":{"type":"adaptive"},"messages":[{"role":"user","content":"hello"}],"tools":[{"name":"read_file","input_schema":{"type":"object"}}]}`)
 
-	result, errStream := NewClaudeExecutor(cfg).ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	result, errStream := NewClaudeExecutor(cfg).ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-sonnet-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errStream != nil {
 		t.Fatalf("ExecuteStream() error = %v", errStream)
 	}
@@ -645,14 +645,14 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintCountTokensKeepsNativeShape(t *t
 	})
 	ctx := context.WithValue(
 		context.Background(),
-		"cliproxy.roundtripper",
+		"aps.roundtripper",
 		http.RoundTripper(transport),
 	)
 	cfg := &config.Config{ClaudeKey: []config.ClaudeKey{{
 		APIKey:             "key-claude-code-cli-count",
 		FingerprintProfile: "claude-code-cli",
 	}}}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "claude-code-cli-count",
 		Attributes: map[string]string{
 			"api_key":             "key-claude-code-cli-count",
@@ -661,10 +661,10 @@ func TestClaudeExecutor_ClaudeCodeCLIFingerprintCountTokensKeepsNativeShape(t *t
 	}
 	payload := []byte(`{"model":"claude-sonnet-5","messages":[{"role":"user","content":"hello"}],"tools":[{"name":"read_file","input_schema":{"type":"object"}}],"metadata":{"user_id":"remove"},"diagnostics":{"previous_message_id":"remove"}}`)
 
-	_, errCount := NewClaudeExecutor(cfg).countTokensUpstream(ctx, auth, cliproxyexecutor.Request{
+	_, errCount := NewClaudeExecutor(cfg).countTokensUpstream(ctx, auth, apsexecutor.Request{
 		Model:   "claude-sonnet-5",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errCount != nil {
 		t.Fatalf("countTokensUpstream() error = %v", errCount)
 	}
@@ -688,7 +688,7 @@ func TestKimiExecutor_ClaudeMessagesWithAndWithoutClaudeCodeCLIFingerprint(t *te
 	var seenBodies [][]byte
 	var seenHeaders []http.Header
 	var mu sync.Mutex
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		body, _ := io.ReadAll(req.Body)
 		mu.Lock()
 		seenBodies = append(seenBodies, body)
@@ -707,16 +707,16 @@ func TestKimiExecutor_ClaudeMessagesWithAndWithoutClaudeCodeCLIFingerprint(t *te
 	payload := []byte(`{"model":"kimi-k2.5(max)","max_tokens":32,"messages":[{"role":"user","content":"hello"}]}`)
 
 	// 1. Default Kimi OAuth: no fingerprint injection.
-	defaultAuth := &cliproxyauth.Auth{
+	defaultAuth := &apsauth.Auth{
 		ID:         "kimi-auth-default",
 		Provider:   "kimi",
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
-	_, errDefault := executor.Execute(ctx, defaultAuth, cliproxyexecutor.Request{
+	_, errDefault := executor.Execute(ctx, defaultAuth, apsexecutor.Request{
 		Model:   "kimi-k2.5(max)",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 		Headers: http.Header{
@@ -729,7 +729,7 @@ func TestKimiExecutor_ClaudeMessagesWithAndWithoutClaudeCodeCLIFingerprint(t *te
 	}
 
 	// 2. Kimi OAuth with fingerprint_profile: "claude-code-cli": opts into Claude Code CLI fingerprint.
-	fpAuth := &cliproxyauth.Auth{
+	fpAuth := &apsauth.Auth{
 		ID:         "kimi-auth-profile",
 		Provider:   "kimi",
 		Attributes: map[string]string{},
@@ -738,10 +738,10 @@ func TestKimiExecutor_ClaudeMessagesWithAndWithoutClaudeCodeCLIFingerprint(t *te
 			"fingerprint_profile": "claude-code-cli",
 		},
 	}
-	_, errFP := executor.Execute(ctx, fpAuth, cliproxyexecutor.Request{
+	_, errFP := executor.Execute(ctx, fpAuth, apsexecutor.Request{
 		Model:   "kimi-k2.5(max)",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 	})
@@ -795,10 +795,10 @@ func TestKimiExecutor_ClaudeMessagesWithAndWithoutClaudeCodeCLIFingerprint(t *te
 func TestKimiExecutor_ClaudeCodeCLIProfileKeepsUnsignedBillingAndNativeCountTokens(t *testing.T) {
 	for _, test := range []struct {
 		name string
-		run  func(context.Context, *KimiExecutor, *cliproxyauth.Auth, []byte) error
+		run  func(context.Context, *KimiExecutor, *apsauth.Auth, []byte) error
 	}{
-		{name: "stream", run: func(ctx context.Context, executor *KimiExecutor, auth *cliproxyauth.Auth, payload []byte) error {
-			result, errStream := executor.ExecuteStream(ctx, auth, cliproxyexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload})
+		{name: "stream", run: func(ctx context.Context, executor *KimiExecutor, auth *apsauth.Auth, payload []byte) error {
+			result, errStream := executor.ExecuteStream(ctx, auth, apsexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload})
 			if errStream != nil {
 				return errStream
 			}
@@ -809,15 +809,15 @@ func TestKimiExecutor_ClaudeCodeCLIProfileKeepsUnsignedBillingAndNativeCountToke
 			}
 			return nil
 		}},
-		{name: "count tokens", run: func(ctx context.Context, executor *KimiExecutor, auth *cliproxyauth.Auth, payload []byte) error {
-			_, errCount := executor.CountTokens(ctx, auth, cliproxyexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload})
+		{name: "count tokens", run: func(ctx context.Context, executor *KimiExecutor, auth *apsauth.Auth, payload []byte) error {
+			_, errCount := executor.CountTokens(ctx, auth, apsexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload})
 			return errCount
 		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var seenBody []byte
 			var seenHeaders http.Header
-			ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 				seenBody, _ = io.ReadAll(req.Body)
 				seenHeaders = req.Header.Clone()
 				if strings.Contains(req.URL.Path, "count_tokens") {
@@ -826,7 +826,7 @@ func TestKimiExecutor_ClaudeCodeCLIProfileKeepsUnsignedBillingAndNativeCountToke
 				stream := "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_test\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"k2.5\",\"content\":[],\"stop_reason\":null,\"usage\":{\"input_tokens\":1,\"output_tokens\":0}}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
 				return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": []string{"text/event-stream"}}, Body: io.NopCloser(strings.NewReader(stream))}, nil
 			}))
-			auth := &cliproxyauth.Auth{
+			auth := &apsauth.Auth{
 				ID:         "kimi-profile-" + test.name,
 				Provider:   "kimi",
 				Attributes: map[string]string{},
@@ -872,8 +872,8 @@ func TestKimiExecutor_ClaudeCodeCLIProfileKeepsUnsignedBillingAndNativeCountToke
 // it has on the CLI path: a non-streaming third-party gateway keeps operator
 // overrides, while api.anthropic.com and streaming requests claw them back.
 func TestApplyClaudeHeaders_CallerOwnedScopesOperatorHeaderOverrides(t *testing.T) {
-	newAuth := func() *cliproxyauth.Auth {
-		return &cliproxyauth.Auth{
+	newAuth := func() *apsauth.Auth {
+		return &apsauth.Auth{
 			ID: "caller-owned-operator-headers",
 			Attributes: map[string]string{
 				"api_key":                "key-operator-headers",
@@ -920,10 +920,10 @@ func TestApplyClaudeHeaders_CallerOwnedScopesOperatorHeaderOverrides(t *testing.
 	}
 }
 
-// Restoring transport negotiation must restore the caller's own choice, not CPA's
+// Restoring transport negotiation must restore the caller's own choice, not APS's
 // default: this mode is caller-owned.
 func TestApplyClaudeHeaders_CallerOwnedRestoreKeepsCallerAccept(t *testing.T) {
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "caller-owned-restore",
 		Attributes: map[string]string{
 			"api_key":       "key-restore",
@@ -937,7 +937,7 @@ func TestApplyClaudeHeaders_CallerOwnedRestoreKeepsCallerAccept(t *testing.T) {
 		t.Fatalf("applyClaudeHeaders() error = %v", err)
 	}
 	if got := req.Header.Get("Accept"); got != "application/vnd.caller+json" {
-		t.Fatalf("Accept = %q, want the caller value restored rather than a CPA default", got)
+		t.Fatalf("Accept = %q, want the caller value restored rather than a APS default", got)
 	}
 }
 
@@ -953,21 +953,21 @@ func TestClaudeExecutor_CallerOwnedNeverSendsGoTransportUserAgent(t *testing.T) 
 	}))
 	defer server.Close()
 
-	auth := &cliproxyauth.Auth{ID: "caller-owned-ua", Attributes: map[string]string{
+	auth := &apsauth.Auth{ID: "caller-owned-ua", Attributes: map[string]string{
 		"api_key":  "key-caller-owned-ua",
 		"base_url": server.URL,
 	}}
 	if _, err := NewClaudeExecutor(&config.Config{}).Execute(context.Background(), auth,
-		cliproxyexecutor.Request{Model: "claude-opus-4-6", Payload: []byte(`{"model":"claude-opus-4-6","messages":[{"role":"user","content":"hi"}]}`)},
-		cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude}); err != nil {
+		apsexecutor.Request{Model: "claude-opus-4-6", Payload: []byte(`{"model":"claude-opus-4-6","messages":[{"role":"user","content":"hi"}]}`)},
+		apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 	got := seen.Get("User-Agent")
 	if strings.HasPrefix(got, "Go-http-client") {
-		t.Fatalf("User-Agent = %q, want CPA's own identity rather than Go's transport default", got)
+		t.Fatalf("User-Agent = %q, want APS's own identity rather than Go's transport default", got)
 	}
-	if !strings.HasPrefix(got, "CLIProxyAPI/") {
-		t.Fatalf("User-Agent = %q, want a CLIProxyAPI/<version> fallback", got)
+	if !strings.HasPrefix(got, "AIProviderScheduling/") {
+		t.Fatalf("User-Agent = %q, want a AIProviderScheduling/<version> fallback", got)
 	}
 }
 
@@ -981,13 +981,13 @@ func TestClaudeExecutor_CallerOwnedForwardsCallerUserAgent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	auth := &cliproxyauth.Auth{ID: "caller-owned-ua-keep", Attributes: map[string]string{
+	auth := &apsauth.Auth{ID: "caller-owned-ua-keep", Attributes: map[string]string{
 		"api_key":  "key-caller-owned-ua-keep",
 		"base_url": server.URL,
 	}}
 	if _, err := NewClaudeExecutor(&config.Config{}).Execute(context.Background(), auth,
-		cliproxyexecutor.Request{Model: "claude-opus-4-6", Payload: []byte(`{"model":"claude-opus-4-6","messages":[{"role":"user","content":"hi"}]}`)},
-		cliproxyexecutor.Options{
+		apsexecutor.Request{Model: "claude-opus-4-6", Payload: []byte(`{"model":"claude-opus-4-6","messages":[{"role":"user","content":"hi"}]}`)},
+		apsexecutor.Options{
 			SourceFormat: sdktranslator.FormatClaude,
 			Headers:      http.Header{"User-Agent": {"my-sdk/1.2.3"}},
 		}); err != nil {
@@ -1000,10 +1000,10 @@ func TestClaudeExecutor_CallerOwnedForwardsCallerUserAgent(t *testing.T) {
 
 // Without a profile opt-in the caller owns its count_tokens body. A caller that
 // deliberately sends context_management expects the returned count to reflect it,
-// so CPA must not quietly reshape the request into the CLI contract.
+// so APS must not quietly reshape the request into the CLI contract.
 func TestKimiExecutor_DefaultCountTokensRespectsCallerBody(t *testing.T) {
 	var seenBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		seenBody, _ = io.ReadAll(req.Body)
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -1011,7 +1011,7 @@ func TestKimiExecutor_DefaultCountTokensRespectsCallerBody(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(`{"input_tokens":7}`)),
 		}, nil
 	}))
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:         "kimi-default-count-tokens",
 		Provider:   "kimi",
 		Attributes: map[string]string{},
@@ -1019,8 +1019,8 @@ func TestKimiExecutor_DefaultCountTokensRespectsCallerBody(t *testing.T) {
 	}
 	payload := []byte(`{"model":"kimi-k2.5(max)","system":"caller system","messages":[{"role":"user","content":"hello"}],"metadata":{"user_id":"caller-user"},"context_management":{"edits":[]}}`)
 	if _, errCount := NewKimiExecutor(&config.Config{}).CountTokens(ctx, auth,
-		cliproxyexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload},
-		cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errCount != nil {
+		apsexecutor.Request{Model: "kimi-k2.5(max)", Payload: payload},
+		apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errCount != nil {
 		t.Fatalf("CountTokens() error = %v", errCount)
 	}
 	if len(seenBody) == 0 {
@@ -1062,12 +1062,12 @@ func TestClaudeExecutor_DefaultCountTokensStillStripsAnthropicRejectedFields(t *
 			Request:    req,
 		}, nil
 	})
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", http.RoundTripper(transport))
-	auth := &cliproxyauth.Auth{ID: "anthropic-default-count", Attributes: map[string]string{"api_key": "key-default-count"}}
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", http.RoundTripper(transport))
+	auth := &apsauth.Auth{ID: "anthropic-default-count", Attributes: map[string]string{"api_key": "key-default-count"}}
 	payload := []byte(`{"model":"claude-opus-4-6","messages":[{"role":"user","content":"hello"}],"metadata":{"user_id":"caller-user"},"context_management":{"edits":[]},"diagnostics":{"previous_message_id":null}}`)
 	if _, errCount := NewClaudeExecutor(&config.Config{}).CountTokens(ctx, auth,
-		cliproxyexecutor.Request{Model: "claude-opus-4-6", Payload: payload},
-		cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errCount != nil {
+		apsexecutor.Request{Model: "claude-opus-4-6", Payload: payload},
+		apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errCount != nil {
 		t.Fatalf("CountTokens() error = %v", errCount)
 	}
 	if len(seenBody) == 0 {
@@ -1085,7 +1085,7 @@ func TestClaudeExecutor_DefaultCountTokensStillStripsAnthropicRejectedFields(t *
 
 func TestKimiExecutor_ClaudeCodeCLIIdentitySurvivesAccessTokenRotation(t *testing.T) {
 	var seenBodies [][]byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		body, _ := io.ReadAll(req.Body)
 		seenBodies = append(seenBodies, body)
 		return &http.Response{
@@ -1096,7 +1096,7 @@ func TestKimiExecutor_ClaudeCodeCLIIdentitySurvivesAccessTokenRotation(t *testin
 	}))
 	payload := []byte(`{"model":"kimi-k2.5(max)","max_tokens":32,"messages":[{"role":"user","content":"hello"}]}`)
 	for _, token := range []string{"token-before-refresh", "token-after-refresh"} {
-		auth := &cliproxyauth.Auth{
+		auth := &apsauth.Auth{
 			ID:         "stable-kimi-auth",
 			Provider:   "kimi",
 			Attributes: map[string]string{},
@@ -1105,10 +1105,10 @@ func TestKimiExecutor_ClaudeCodeCLIIdentitySurvivesAccessTokenRotation(t *testin
 				"fingerprint_profile": "claude-code-cli",
 			},
 		}
-		if _, errExecute := NewKimiExecutor(&config.Config{}).Execute(ctx, auth, cliproxyexecutor.Request{
+		if _, errExecute := NewKimiExecutor(&config.Config{}).Execute(ctx, auth, apsexecutor.Request{
 			Model:   "kimi-k2.5(max)",
 			Payload: payload,
-		}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errExecute != nil {
+		}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude, OriginalRequest: payload}); errExecute != nil {
 			t.Fatalf("Execute(%q) error = %v", token, errExecute)
 		}
 	}
@@ -1128,7 +1128,7 @@ func TestStripDefaultKimiClaudeCodeAttributionRespectsProfile(t *testing.T) {
 	t.Parallel()
 
 	body := []byte(`{"system":[{"type":"text","text":"x-anthropic-billing-header: cc_version=2.1.220; cch=abcde;"},{"type":"text","text":"Keep this rule."}],"messages":[]}`)
-	kimiAuth := &cliproxyauth.Auth{Provider: "kimi"}
+	kimiAuth := &apsauth.Auth{Provider: "kimi"}
 	if got := stripDefaultKimiClaudeCodeAttribution(kimiAuth, "https://api.kimi.com/coding/v1/messages", false, body); strings.Contains(string(got), "cch=") || !strings.Contains(string(got), "Keep this rule.") {
 		t.Fatalf("default Kimi stripping produced %s", got)
 	}
@@ -1139,7 +1139,7 @@ func TestStripDefaultKimiClaudeCodeAttributionRespectsProfile(t *testing.T) {
 
 func TestKimiExecutor_StripsCallerClaudeCodeCCH(t *testing.T) {
 	var seenBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		seenBody, _ = io.ReadAll(req.Body)
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -1150,14 +1150,14 @@ func TestKimiExecutor_StripsCallerClaudeCodeCCH(t *testing.T) {
 		}, nil
 	}))
 	payload := []byte(`{"model":"kimi-k2.5(max)","max_tokens":32,"system":[{"type":"text","text":"x-anthropic-billing-header: cc_version=2.1.220; cch=abcde;"},{"type":"text","text":"Keep this rule."}],"messages":[{"role":"user","content":"hello"}]}`)
-	_, errExecute := NewKimiExecutor(&config.Config{}).Execute(ctx, &cliproxyauth.Auth{
+	_, errExecute := NewKimiExecutor(&config.Config{}).Execute(ctx, &apsauth.Auth{
 		Provider:   "kimi",
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
-	}, cliproxyexecutor.Request{
+	}, apsexecutor.Request{
 		Model:   "kimi-k2.5(max)",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 	})
@@ -1219,7 +1219,7 @@ func TestResolveClaudeFingerprintPolicyIsOriginIndependent(t *testing.T) {
 		APIKey:             "key-origin-independent",
 		FingerprintProfile: "claude-code-cli",
 	}}}
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "key-origin-independent"}}
+	auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "key-origin-independent"}}
 
 	policy := resolveClaudeFingerprintPolicy(cfg, auth, "key-origin-independent")
 	if !policy.ProfileClaudeCodeCLI || policy.AuthIsOAuthToken {

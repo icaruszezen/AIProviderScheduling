@@ -64,7 +64,7 @@ func TestInspectGeminiThoughtSignature_AcceptsOpaqueBase64(t *testing.T) {
 }
 
 func TestInspectGeminiThoughtSignature_AcceptsGemini31ProField2Envelope(t *testing.T) {
-	// Shape observed in CPA-API/signatures/gemini/gemini-3.1-pro.txt.
+	// Shape observed in APS-API/signatures/gemini/gemini-3.1-pro.txt.
 	sig := testGemini3ThoughtSignature([]byte{0x01, 0x0c, 0x39, 0xd6, 0xc7, 0x34})
 
 	info, err := InspectGeminiThoughtSignature(sig, GeminiThoughtSignatureValidationOptions{RequireKnownEnvelope: true})
@@ -86,7 +86,7 @@ func TestInspectGeminiThoughtSignature_AcceptsGemini31ProField2Envelope(t *testi
 }
 
 func TestInspectGeminiThoughtSignature_AcceptsCapturedGemini31FlashLiteEnvelope(t *testing.T) {
-	// Captured in CPA-API/signatures/gemini/gemini-3.1-flash-lite.txt.
+	// Captured in APS-API/signatures/gemini/gemini-3.1-flash-lite.txt.
 	const sig = "EjQKMgEMOdbHO0Gd+c9Mxk4ELwPGbpCEcp2mFfYYLix2UVtBH3fL8GECc4+JITVnHF4qZDsA"
 
 	info, err := InspectGeminiThoughtSignature(sig, GeminiThoughtSignatureValidationOptions{RequireKnownEnvelope: true})
@@ -518,7 +518,7 @@ func TestIsValidGeminiThoughtSignature_AgyNativeSamples(t *testing.T) {
 	if len(samples) < 10 {
 		t.Fatalf("expected >=10 agy gemini thoughtSignature samples, got %d", len(samples))
 	}
-	opts := GeminiThoughtSignatureValidationOptions{RequireKnownEnvelope: false} // agy native mix includes envelopes CPA may still transport-reject separately
+	opts := GeminiThoughtSignatureValidationOptions{RequireKnownEnvelope: false} // agy native mix includes envelopes APS may still transport-reject separately
 	for i, sig := range samples {
 		if !IsValidGeminiThoughtSignature(sig, opts) {
 			t.Fatalf("sample %d invalid (len=%d prefix=%q)", i, len(sig), sig[:12])

@@ -11,13 +11,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -32,12 +32,12 @@ func (s codexReasoningReplayScope) valid() bool {
 	return strings.TrimSpace(s.modelName) != "" && strings.TrimSpace(s.sessionKey) != ""
 }
 
-func applyCodexReasoningReplayCache(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) ([]byte, codexReasoningReplayScope) {
+func applyCodexReasoningReplayCache(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) ([]byte, codexReasoningReplayScope) {
 	updated, scope, _ := applyCodexReasoningReplayCacheRequired(ctx, from, req, opts, body)
 	return updated, scope
 }
 
-func applyCodexReasoningReplayCacheRequired(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) ([]byte, codexReasoningReplayScope, error) {
+func applyCodexReasoningReplayCacheRequired(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) ([]byte, codexReasoningReplayScope, error) {
 	scope := codexReasoningReplayScopeFromRequest(ctx, from, req, opts, body)
 	if !scope.valid() {
 		return body, scope, nil
@@ -53,7 +53,7 @@ func applyCodexReasoningReplayCacheRequired(ctx context.Context, from sdktransla
 	return updated, scope, nil
 }
 
-func codexReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) codexReasoningReplayScope {
+func codexReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) codexReasoningReplayScope {
 	if !codexReasoningReplayEnabledForSource(from) {
 		return codexReasoningReplayScope{}
 	}
@@ -81,7 +81,7 @@ func codexClaudeCodeReplaySessionKey(ctx context.Context, payload []byte, header
 	return sessionKey
 }
 
-func codexReasoningReplaySessionKey(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) string {
+func codexReasoningReplaySessionKey(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) string {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -90,10 +90,10 @@ func codexReasoningReplaySessionKey(ctx context.Context, from sdktranslator.Form
 			return sessionKey
 		}
 	}
-	if value := metadataString(opts.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+	if value := metadataString(opts.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return "execution:" + value
 	}
-	if value := metadataString(req.Metadata, cliproxyexecutor.ExecutionSessionMetadataKey); value != "" {
+	if value := metadataString(req.Metadata, apsexecutor.ExecutionSessionMetadataKey); value != "" {
 		return "execution:" + value
 	}
 	if value := codexReasoningReplaySessionKeyFromPayload(body); value != "" {
@@ -112,7 +112,7 @@ func codexReasoningReplaySessionKey(ctx context.Context, from sdktranslator.Form
 	}
 	if sourceFormatEqual(from, sdktranslator.FormatOpenAI) {
 		if apiKey := strings.TrimSpace(helps.APIKeyFromContext(ctx)); apiKey != "" {
-			return "prompt-cache:" + uuid.NewSHA1(uuid.NameSpaceOID, []byte("cli-proxy-api:codex:prompt-cache:"+apiKey)).String()
+			return "prompt-cache:" + uuid.NewSHA1(uuid.NameSpaceOID, []byte("ai-provider-scheduling:codex:prompt-cache:"+apiKey)).String()
 		}
 	}
 	return ""

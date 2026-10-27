@@ -240,7 +240,7 @@ func TestApplySummaryConfigForModel_ClaudeEnabledSummaryUsesValidThinkingMode(t 
 	}
 }
 
-// Disabling summaries must not make CPA add a Claude thinking block. Absence
+// Disabling summaries must not make APS add a Claude thinking block. Absence
 // preserves the per-model default: newer models may still think by default,
 // while older models remain off.
 func TestApplySummaryConfigForModel_ClaudeDisabledSummaryDoesNotEnableThinking(t *testing.T) {

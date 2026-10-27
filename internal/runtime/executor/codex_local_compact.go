@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -45,15 +45,15 @@ const (
 	// so the shared request pipeline skips tool injection for it.
 	codexLocalCompactMetadataKey = "codex_local_compact"
 
-	// codexLocalCompactBlobPrefix tags the opaque encrypted_content CPA synthesizes when the
-	// upstream returns no encrypted reasoning. It lets the replay path tell CPA-owned blobs
+	// codexLocalCompactBlobPrefix tags the opaque encrypted_content APS synthesizes when the
+	// upstream returns no encrypted reasoning. It lets the replay path tell APS-owned blobs
 	// apart from real upstream ones.
-	codexLocalCompactBlobPrefix = "cpa-local-compaction."
+	codexLocalCompactBlobPrefix = "aps-local-compaction."
 )
 
 // localCompactEnabled reports whether /v1/responses/compact should be answered locally.
 // A credential-scoped override wins over the global switch.
-func localCompactEnabled(cfg *config.Config, auth *cliproxyauth.Auth) bool {
+func localCompactEnabled(cfg *config.Config, auth *apsauth.Auth) bool {
 	if value, ok := auth.LocalCompactOverride(); ok {
 		return value
 	}
@@ -75,7 +75,7 @@ func stripOpenAICompactModelSuffix(model string) string {
 
 // codexLocalCompactActive reports whether the current execution is the summarization turn
 // issued on behalf of a compact request.
-func codexLocalCompactActive(opts cliproxyexecutor.Options) bool {
+func codexLocalCompactActive(opts apsexecutor.Options) bool {
 	if opts.Metadata == nil {
 		return false
 	}
@@ -86,11 +86,11 @@ func codexLocalCompactActive(opts cliproxyexecutor.Options) bool {
 // executeLocalCompact answers a compact request without touching the upstream
 // /responses/compact endpoint: it runs a normal Responses turn asking the model to
 // summarize, then reshapes the reply into a compaction response.
-func (e *CodexExecutor) executeLocalCompact(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *CodexExecutor) executeLocalCompact(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	clientModel := req.Model
 	summaryReq, summaryOpts, err := prepareCodexLocalCompactExecution(req, opts)
 	if err != nil {
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	resp, err := e.Execute(ctx, auth, summaryReq, summaryOpts)
 	if err != nil {
@@ -106,7 +106,7 @@ func (e *CodexExecutor) executeLocalCompact(ctx context.Context, auth *cliproxya
 
 // prepareCodexLocalCompactExecution turns a compact request into the plain Responses
 // request that carries the summarization prompt.
-func prepareCodexLocalCompactExecution(req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Request, cliproxyexecutor.Options, error) {
+func prepareCodexLocalCompactExecution(req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Request, apsexecutor.Options, error) {
 	payload, err := buildCodexLocalCompactPayload(req.Payload)
 	if err != nil {
 		return req, opts, err
@@ -128,8 +128,8 @@ func prepareCodexLocalCompactExecution(req cliproxyexecutor.Request, opts clipro
 	for key, value := range opts.Metadata {
 		metadata[key] = value
 	}
-	if requested, ok := metadata[cliproxyexecutor.RequestedModelMetadataKey].(string); ok {
-		metadata[cliproxyexecutor.RequestedModelMetadataKey] = stripOpenAICompactModelSuffix(requested)
+	if requested, ok := metadata[apsexecutor.RequestedModelMetadataKey].(string); ok {
+		metadata[apsexecutor.RequestedModelMetadataKey] = stripOpenAICompactModelSuffix(requested)
 	}
 	metadata[codexLocalCompactMetadataKey] = true
 	opts.Metadata = metadata
@@ -234,7 +234,7 @@ func convertCodexResponseToCompaction(payload []byte, clientModel string) ([]byt
 	}
 	if encrypted == "" {
 		// Third-party Codex endpoints routinely omit encrypted reasoning, yet a compaction
-		// item without encrypted_content is rejected downstream. Stand in a CPA-owned blob
+		// item without encrypted_content is rejected downstream. Stand in a APS-owned blob
 		// that the replay path can expand back into plain conversation context.
 		encrypted = encodeCodexLocalCompactBlob(summary)
 	}
@@ -272,7 +272,7 @@ func convertCodexResponseToCompaction(payload []byte, clientModel string) ([]byt
 
 // restoreCodexCompactionInputItems rewrites compaction items replayed by the client into
 // items a plain Responses upstream understands. Upstream-issued blobs go back as reasoning;
-// CPA-synthesized ones become a plain conversation summary message.
+// APS-synthesized ones become a plain conversation summary message.
 func restoreCodexCompactionInputItems(body []byte) []byte {
 	input := gjson.GetBytes(body, "input")
 	if !input.Exists() || !input.IsArray() {
@@ -349,7 +349,7 @@ func encodeCodexLocalCompactBlob(summary string) string {
 	return codexLocalCompactBlobPrefix + base64.RawURLEncoding.EncodeToString(doc)
 }
 
-// decodeCodexLocalCompactBlob reports whether the blob was synthesized by CPA and, when so,
+// decodeCodexLocalCompactBlob reports whether the blob was synthesized by APS and, when so,
 // returns the summary it carries.
 func decodeCodexLocalCompactBlob(blob string) (string, bool) {
 	encoded, ours := strings.CutPrefix(strings.TrimSpace(blob), codexLocalCompactBlobPrefix)

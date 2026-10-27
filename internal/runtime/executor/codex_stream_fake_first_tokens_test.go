@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 const (
@@ -24,8 +24,8 @@ const (
 	codexBareErrorJSON  = `{"error":{"message":"upstream failed","type":"server_error"}}`
 )
 
-func codexFakeFirstTokenAuth(baseURL string, tokens ...string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func codexFakeFirstTokenAuth(baseURL string, tokens ...string) *apsauth.Auth {
+	return &apsauth.Auth{
 		Provider:   "codex",
 		Attributes: map[string]string{"base_url": baseURL, "api_key": "test"},
 		Metadata:   map[string]any{"stream_fake_first_tokens": tokens}}
@@ -164,7 +164,7 @@ func codexSSEServerPauseBefore(pause <-chan struct{}, before []string, after ...
 }
 
 // readUntilContains reads stream chunks until combined contains needle, or the deadline fires.
-func readUntilContains(t *testing.T, chunks <-chan cliproxyexecutor.StreamChunk, needle string) string {
+func readUntilContains(t *testing.T, chunks <-chan apsexecutor.StreamChunk, needle string) string {
 	t.Helper()
 	var combined strings.Builder
 	deadline := time.After(2 * time.Second)

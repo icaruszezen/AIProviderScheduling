@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	cliproxysession "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/session"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	apssession "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/session"
 )
 
 // DerivedSessionID returns the first context-derived session identity in metadata order.
 func DerivedSessionID(metadataSets ...map[string]any) string {
 	for _, metadata := range metadataSets {
-		if derivedID := cliproxysession.DerivedID(metadata); derivedID != "" {
+		if derivedID := apssession.DerivedID(metadata); derivedID != "" {
 			return derivedID
 		}
 	}
@@ -29,7 +29,7 @@ func DerivedSessionUUID(provider string, metadataSets ...map[string]any) string 
 // ProviderSessionUUID prefers a long-lived execution session and falls back to the derived identity.
 func ProviderSessionUUID(provider string, metadataSets ...map[string]any) string {
 	for _, metadata := range metadataSets {
-		if executionID := metadataString(metadata, cliproxyexecutor.ExecutionSessionMetadataKey); executionID != "" {
+		if executionID := metadataString(metadata, apsexecutor.ExecutionSessionMetadataKey); executionID != "" {
 			return stableProviderSessionUUID(provider, "execution-session", executionID)
 		}
 	}
@@ -42,7 +42,7 @@ func stableProviderSessionUUID(provider string, kind string, identityValue strin
 	if provider == "" || identityValue == "" {
 		return ""
 	}
-	identity := strings.Join([]string{"cli-proxy-api", provider, kind, identityValue}, "\x00")
+	identity := strings.Join([]string{"ai-provider-scheduling", provider, kind, identityValue}, "\x00")
 	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(identity)).String()
 }
 
@@ -52,7 +52,7 @@ func DerivedAntigravitySessionID(metadataSets ...map[string]any) string {
 	if derivedID == "" {
 		return ""
 	}
-	sum := sha256.Sum256([]byte("cli-proxy-api:antigravity:derived-session\x00" + derivedID))
+	sum := sha256.Sum256([]byte("ai-provider-scheduling:antigravity:derived-session\x00" + derivedID))
 	value := int64(binary.BigEndian.Uint64(sum[:8])) & 0x7FFFFFFFFFFFFFFF
 	return "-" + strconv.FormatInt(value, 10)
 }

@@ -15,10 +15,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/misc"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/misc"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -144,12 +144,12 @@ func (s *ObjectTokenStore) Bootstrap(ctx context.Context, exampleConfigPath stri
 }
 
 // Save persists authentication metadata to disk and uploads it to the object storage backend.
-func (s *ObjectTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (string, error) {
+func (s *ObjectTokenStore) Save(ctx context.Context, auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("object store: auth is nil")
 	}
-	cliproxyauth.NormalizeCredentialMetadata(auth.Metadata)
-	if errWeight := cliproxyauth.ValidateAuthWeight(auth); errWeight != nil {
+	apsauth.NormalizeCredentialMetadata(auth.Metadata)
+	if errWeight := apsauth.ValidateAuthWeight(auth); errWeight != nil {
 		return "", fmt.Errorf("object store: %w", errWeight)
 	}
 
@@ -213,8 +213,8 @@ func (s *ObjectTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (s
 	if auth.Attributes == nil {
 		auth.Attributes = make(map[string]string)
 	}
-	auth.Attributes[cliproxyauth.AttributePath] = path
-	auth.Attributes[cliproxyauth.AttributeSourceBackend] = cliproxyauth.AuthSourceObjectStore
+	auth.Attributes[apsauth.AttributePath] = path
+	auth.Attributes[apsauth.AttributeSourceBackend] = apsauth.AuthSourceObjectStore
 
 	if strings.TrimSpace(auth.FileName) == "" {
 		auth.FileName = auth.ID
@@ -227,7 +227,7 @@ func (s *ObjectTokenStore) Save(ctx context.Context, auth *cliproxyauth.Auth) (s
 }
 
 // List enumerates auth JSON files from the mirrored workspace.
-func (s *ObjectTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error) {
+func (s *ObjectTokenStore) List(_ context.Context) ([]*apsauth.Auth, error) {
 	dir := strings.TrimSpace(s.authDir)
 	if dir == "" {
 		return nil, nil
@@ -237,7 +237,7 @@ func (s *ObjectTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error)
 	} else if statErr != nil {
 		return nil, fmt.Errorf("object store: stat auth directory: %w", statErr)
 	}
-	entries := make([]*cliproxyauth.Auth, 0, 32)
+	entries := make([]*apsauth.Auth, 0, 32)
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -253,7 +253,7 @@ func (s *ObjectTokenStore) List(_ context.Context) ([]*cliproxyauth.Auth, error)
 			log.WithError(err).Warnf("object store: skip auth %s", path)
 			return nil
 		}
-		if auth != nil && !cliproxyauth.IsUnsupportedOAuthAuth(auth) {
+		if auth != nil && !apsauth.IsUnsupportedOAuthAuth(auth) {
 			entries = append(entries, auth)
 		}
 		return nil
@@ -510,7 +510,7 @@ func (s *ObjectTokenStore) prefixedKey(key string) string {
 	return strings.TrimLeft(s.cfg.Prefix+"/"+key, "/")
 }
 
-func (s *ObjectTokenStore) resolveAuthPath(auth *cliproxyauth.Auth) (string, error) {
+func (s *ObjectTokenStore) resolveAuthPath(auth *apsauth.Auth) (string, error) {
 	if auth == nil {
 		return "", fmt.Errorf("object store: auth is nil")
 	}
@@ -557,7 +557,7 @@ func (s *ObjectTokenStore) resolveDeletePath(id string) (string, error) {
 	return filepath.Join(s.authDir, clean), nil
 }
 
-func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Auth, error) {
+func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*apsauth.Auth, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
@@ -569,8 +569,8 @@ func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Aut
 	if err = json.Unmarshal(data, &metadata); err != nil {
 		return nil, fmt.Errorf("unmarshal auth json: %w", err)
 	}
-	cliproxyauth.NormalizeCredentialMetadata(metadata)
-	if errWeight := cliproxyauth.ValidateAuthWeight(&cliproxyauth.Auth{Metadata: metadata}); errWeight != nil {
+	apsauth.NormalizeCredentialMetadata(metadata)
+	if errWeight := apsauth.ValidateAuthWeight(&apsauth.Auth{Metadata: metadata}); errWeight != nil {
 		return nil, errWeight
 	}
 	provider := strings.TrimSpace(valueAsString(metadata["type"]))
@@ -587,27 +587,27 @@ func (s *ObjectTokenStore) readAuthFile(path, baseDir string) (*cliproxyauth.Aut
 	}
 	rel = normalizeAuthID(rel)
 	attr := map[string]string{
-		cliproxyauth.AttributePath:          path,
-		cliproxyauth.AttributeSourceBackend: cliproxyauth.AuthSourceObjectStore}
+		apsauth.AttributePath:          path,
+		apsauth.AttributeSourceBackend: apsauth.AuthSourceObjectStore}
 	if email := strings.TrimSpace(valueAsString(metadata["email"])); email != "" {
 		attr["email"] = email
 	}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:               rel,
 		Provider:         provider,
 		FileName:         rel,
 		Label:            labelFor(metadata),
-		Status:           cliproxyauth.StatusActive,
+		Status:           apsauth.StatusActive,
 		Attributes:       attr,
 		Metadata:         metadata,
 		CreatedAt:        info.ModTime(),
 		UpdatedAt:        info.ModTime(),
 		LastRefreshedAt:  time.Time{},
 		NextRefreshAfter: time.Time{}}
-	cliproxyauth.ApplyCustomHeadersFromMetadata(auth)
+	apsauth.ApplyCustomHeadersFromMetadata(auth)
 	if disabled, ok := metadata["disabled"].(bool); ok && disabled {
 		auth.Disabled = true
-		auth.Status = cliproxyauth.StatusDisabled
+		auth.Status = apsauth.StatusDisabled
 	}
 	return auth, nil
 }

@@ -1,13 +1,13 @@
-// Package api exposes helpers for embedding CLIProxyAPI.
+// Package api exposes helpers for embedding AIProviderScheduling.
 //
 // It wraps internal management handler types and helpers so external projects
 // can integrate management endpoints without importing internal packages.
 package api
 
 import (
-	internalmanagement "github.com/router-for-me/CLIProxyAPI/v7/internal/api/handlers/management"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	internalmanagement "github.com/icaruszezen/AIProviderScheduling/v7/internal/api/handlers/management"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 )
 
 // Handler re-exports the management handler used by the internal HTTP API.

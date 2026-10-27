@@ -24,8 +24,8 @@ import (
   "context"
   "net/http"
 
-  coreauth "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/auth"
-  clipexec "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/executor"
+  coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+  clipexec "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 type Executor struct{}
@@ -62,7 +62,7 @@ Register the executor with the core manager before starting the service:
 ```go
 core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
 core.RegisterExecutor(myprov.Executor{})
-svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
+svc, _ := aps.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
 ```
 
 If your auth entries use provider `"myprov"`, the manager routes requests to your executor.
@@ -82,7 +82,7 @@ package myprov
 
 import (
   "context"
-  sdktr "github.com/router-for-me/CLIProxyAPI/v6/sdk/translator"
+  sdktr "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 const (
@@ -114,10 +114,10 @@ When the OpenAI handler receives a request that should route to `myprov`, the pi
 Expose models under `/v1/models` by registering them in the global model registry using the auth ID (client ID) and provider name.
 
 ```go
-models := []*cliproxy.ModelInfo{
+models := []*aps.ModelInfo{
   { ID: "myprov-pro-1", Object: "model", Type: "myprov", DisplayName: "MyProv Pro 1" },
 }
-cliproxy.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
+aps.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
 ```
 
 The embedded server calls this automatically for built‑in providers; for custom providers, register during startup (e.g., after loading auths) or upon auth registration hooks.

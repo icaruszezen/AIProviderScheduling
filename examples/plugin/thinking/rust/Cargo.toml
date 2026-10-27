@@ -1,5 +1,5 @@
 [package]
-name = "cliproxy-thinking-rust"
+name = "aps-thinking-rust"
 version = "0.1.0"
 edition = "2021"
 

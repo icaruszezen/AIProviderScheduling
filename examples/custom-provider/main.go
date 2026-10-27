@@ -1,5 +1,5 @@
 // Package main demonstrates how to create a custom AI provider executor
-// and integrate it with the CLI Proxy API server. This example shows how to:
+// and integrate it with the AI Provider Scheduling server. This example shows how to:
 // - Create a custom executor that implements the Executor interface
 // - Register custom translators for request/response transformation
 // - Integrate the custom provider with the SDK server
@@ -24,13 +24,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/api"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	clipexec "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/logging"
-	sdktr "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	clipexec "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/logging"
+	sdktr "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 const (
@@ -181,19 +181,19 @@ func main() {
 	core := coreauth.NewManager(tokenStore, nil, nil)
 	core.RegisterExecutor(MyExecutor{})
 
-	hooks := cliproxy.Hooks{
-		OnAfterStart: func(s *cliproxy.Service) {
+	hooks := aps.Hooks{
+		OnAfterStart: func(s *aps.Service) {
 			// Register demo models for the custom provider so they appear in /v1/models.
-			models := []*cliproxy.ModelInfo{{ID: "myprov-pro-1", Object: "model", Type: providerKey, DisplayName: "MyProv Pro 1"}}
+			models := []*aps.ModelInfo{{ID: "myprov-pro-1", Object: "model", Type: providerKey, DisplayName: "MyProv Pro 1"}}
 			for _, a := range core.List() {
 				if strings.EqualFold(a.Provider, providerKey) {
-					cliproxy.GlobalModelRegistry().RegisterClient(a.ID, providerKey, models)
+					aps.GlobalModelRegistry().RegisterClient(a.ID, providerKey, models)
 				}
 			}
 		},
 	}
 
-	svc, err := cliproxy.NewBuilder().
+	svc, err := aps.NewBuilder().
 		WithConfig(cfg).
 		WithConfigPath("config.yaml").
 		WithCoreAuthManager(core).

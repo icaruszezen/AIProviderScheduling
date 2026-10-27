@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 	"github.com/redis/go-redis/v9"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
 )
 
 func TestAuthDispatchRequestIncludesCount(t *testing.T) {
@@ -1552,13 +1552,13 @@ func TestQueryToLowerMap(t *testing.T) {
 func TestClientSetLifecycleConfigAcceptsHomeAuthoritativeHeartbeat(t *testing.T) {
 	client := New(config.HomeConfig{Enabled: true, Host: "127.0.0.1", Port: 6379})
 	cfg := (config.CredentialConcurrencyConfig{}).WithDefaults()
-	cfg.CPAHeartbeatTimeout = 20 * time.Second
+	cfg.APSHeartbeatTimeout = 20 * time.Second
 
 	if errSet := client.SetLifecycleConfig(cfg); errSet != nil {
 		t.Fatalf("SetLifecycleConfig() error = %v", errSet)
 	}
-	if got := client.LimiterConfig().CPAHeartbeatTimeout; got != cfg.CPAHeartbeatTimeout {
-		t.Fatalf("LimiterConfig().CPAHeartbeatTimeout = %s, want %s", got, cfg.CPAHeartbeatTimeout)
+	if got := client.LimiterConfig().APSHeartbeatTimeout; got != cfg.APSHeartbeatTimeout {
+		t.Fatalf("LimiterConfig().APSHeartbeatTimeout = %s, want %s", got, cfg.APSHeartbeatTimeout)
 	}
 }
 
@@ -1569,8 +1569,8 @@ func TestConfigSubscriberUsesAppliedLifecycleRevisionAndRebuildsCommands(t *test
 	client.mu.Unlock()
 	if errSet := client.SetLifecycleConfig(config.CredentialConcurrencyConfig{
 		LifecycleConfigRevision: 9,
-		CPAHeartbeatTimeout:     4 * time.Second,
-		CPACancelBound:          5 * time.Second}); errSet != nil {
+		APSHeartbeatTimeout:     4 * time.Second,
+		APSCancelBound:          5 * time.Second}); errSet != nil {
 		t.Fatalf("SetLifecycleConfig() error = %v", errSet)
 	}
 	args, timeout := client.subscriptionParameters()
@@ -1601,7 +1601,7 @@ func TestConfigSubscriberUsesAppliedLifecycleRevisionAndRebuildsCommands(t *test
 }
 
 func TestRunConfigSubscriberLifetimeReturnsAfterHeartbeatLoss(t *testing.T) {
-	configPayload := "credential-concurrency:\n  lifecycle-config-revision: 1\n  cpa-heartbeat-timeout: 20ms\n"
+	configPayload := "credential-concurrency:\n  lifecycle-config-revision: 1\n  aps-heartbeat-timeout: 20ms\n"
 	listener, errListen := net.Listen("tcp", "127.0.0.1:0")
 	if errListen != nil {
 		t.Fatalf("listen: %v", errListen)
@@ -1795,8 +1795,8 @@ func TestReceiveSubscriptionACKsForMultipleChannels(t *testing.T) {
 func TestRunConfigSubscriberLifetimeRejectsNonPositiveLifecycleDuration(t *testing.T) {
 	configPayload := "credential-concurrency:\n" +
 		"  lifecycle-config-revision: 1\n" +
-		"  cpa-heartbeat-timeout: 0s\n" +
-		"  cpa-cancel-bound: 5s\n" +
+		"  aps-heartbeat-timeout: 0s\n" +
+		"  aps-cancel-bound: 5s\n" +
 		"  reclaim-grace: 5s\n" +
 		"  cleanup-interval: 5s\n"
 	client, commands := newRedisCommandTestClient(t, func(args []string) string {
@@ -1830,8 +1830,8 @@ func TestRunConfigSubscriberLifetimeRejectsNonPositiveLifecycleDuration(t *testi
 func TestRunConfigSubscriberLifetimeRejectsExplicitInvalidLifecycleConfig(t *testing.T) {
 	configPayload := "credential-concurrency:\n" +
 		"  lifecycle-config-revision: 0\n" +
-		"  cpa-heartbeat-timeout: 20ms\n" +
-		"  cpa-cancel-bound: 5s\n" +
+		"  aps-heartbeat-timeout: 20ms\n" +
+		"  aps-cancel-bound: 5s\n" +
 		"  reclaim-grace: 5s\n" +
 		"  cleanup-interval: 5s\n"
 	client, commands := newRedisCommandTestClient(t, func(args []string) string {

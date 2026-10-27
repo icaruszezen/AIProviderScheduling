@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 )
 
@@ -172,9 +172,9 @@ func TestConvertAntigravityResponseToOpenAI_PreservesFilteredUsageUntilDone(t *t
 	var param any
 
 	// Mirrors a payload already processed by FilterSSEUsageMetadata, which renames
-	// non-terminal usage to cpaUsageMetadata. It is inlined so this package keeps no
+	// non-terminal usage to apsUsageMetadata. It is inlined so this package keeps no
 	// dependency on the executor helpers; the executor tests cover the real filter.
-	filtered := []byte(`{"response":{"candidates":[{"content":{"parts":[{"thought":true,"text":"Thinking..."}]}}],"modelVersion":"gemini-3.7-flash","responseId":"resp-filtered","cpaUsageMetadata":{"promptTokenCount":100,"totalTokenCount":150,"thoughtsTokenCount":50}}}`)
+	filtered := []byte(`{"response":{"candidates":[{"content":{"parts":[{"thought":true,"text":"Thinking..."}]}}],"modelVersion":"gemini-3.7-flash","responseId":"resp-filtered","apsUsageMetadata":{"promptTokenCount":100,"totalTokenCount":150,"thoughtsTokenCount":50}}}`)
 	result := ConvertAntigravityResponseToOpenAI(ctx, "gemini-3.7-flash", nil, nil, filtered, &param)
 	if len(result) != 1 {
 		t.Fatalf("expected 1 intermediate result, got %d", len(result))

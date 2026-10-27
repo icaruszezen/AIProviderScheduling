@@ -12,11 +12,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
 	"github.com/klauspost/compress/zstd"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
 )
 
 func TestShouldSkipMethodForRequestLogging(t *testing.T) {

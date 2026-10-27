@@ -8,18 +8,18 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
-func (e *ClaudeExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *ClaudeExecutor) CountTokens(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	apiKey, baseURL := claudeCreds(auth)
 	if baseURL == "" {
 		baseURL = "https://api.anthropic.com"
@@ -33,7 +33,7 @@ func (e *ClaudeExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Aut
 
 	baseModel := thinking.ParseSuffix(req.Model).ModelName
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	to := sdktranslator.FromString("claude")
 
 	// Use streaming translation to preserve function calling, except for claude.
@@ -42,26 +42,26 @@ func (e *ClaudeExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Aut
 	var errThinking error
 	body, errThinking = helps.ApplyRequestThinking(body, req, opts, from.String(), to.String(), e.Identifier())
 	if errThinking != nil {
-		return cliproxyexecutor.Response{}, errThinking
+		return apsexecutor.Response{}, errThinking
 	}
 	if rebuildMidSystemMessageEnabled(e.cfg, auth) {
 		body = rebuildMidSystemMessagesToTopLevel(body)
 	}
 	body = sanitizeClaudeMessagesForClaudeUpstreamWithDebug(ctx, body, baseModel, helps.APIKeyModelIsCompat(req))
 	if errValidate := validateClaudeTokenCountRequest(body); errValidate != nil {
-		return cliproxyexecutor.Response{}, errValidate
+		return apsexecutor.Response{}, errValidate
 	}
 
 	// Custom API-key gateways without a native count_tokens contract continue to
 	// use the local estimator without injecting generation-only CLI instructions.
 	count, err := helps.CountClaudeInputTokens(body)
 	if err != nil {
-		return cliproxyexecutor.Response{}, fmt.Errorf("claude executor: token counting failed: %w", err)
+		return apsexecutor.Response{}, fmt.Errorf("claude executor: token counting failed: %w", err)
 	}
 
 	usageJSON := []byte(fmt.Sprintf(`{"input_tokens":%d}`, count))
 	out := sdktranslator.TranslateTokenCount(ctx, to, responseFormat, count, usageJSON)
-	return cliproxyexecutor.Response{Payload: out}, nil
+	return apsexecutor.Response{Payload: out}, nil
 }
 
 type claudeTokenCountValidationError struct {
@@ -117,7 +117,7 @@ func shouldUseClaudeUpstreamTokenCount(apiKey, baseURL string) bool {
 }
 
 // countTokensUpstream preserves Anthropic's native token-counting contract.
-func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	baseModel := thinking.ParseSuffix(req.Model).ModelName
 	upstreamModel := e.upstreamModel(baseModel)
 
@@ -129,7 +129,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	fp := resolveClaudeFingerprintPolicy(e.cfg, auth, apiKey)
 
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	to := sdktranslator.FromString("claude")
 	originalPayload := req.Payload
 	if len(opts.OriginalRequest) > 0 {
@@ -148,7 +148,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	var errThinking error
 	body, errThinking = helps.ApplyRequestThinking(body, req, opts, from.String(), to.String(), e.Identifier())
 	if errThinking != nil {
-		return cliproxyexecutor.Response{}, errThinking
+		return apsexecutor.Response{}, errThinking
 	}
 	if rebuildMidSystemMessageEnabled(e.cfg, auth) {
 		body = rebuildMidSystemMessagesToTopLevel(body)
@@ -165,7 +165,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	if cloaked {
 		if !settings.strictMode {
 			if errSystem := validateClaudeCallerSystemBlocks(gjson.GetBytes(body, "system")); errSystem != nil {
-				return cliproxyexecutor.Response{}, errSystem
+				return apsexecutor.Response{}, errSystem
 			}
 		}
 		body = relocateClaudeSystemPromptForCountTokens(body, settings.strictMode)
@@ -198,7 +198,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	//
 	// Elsewhere (Kimi, delegated Anthropic Messages providers) the caller owns its
 	// body by default: a caller that deliberately sends context_management expects
-	// the token count to reflect it, so CPA must not silently rewrite the request.
+	// the token count to reflect it, so APS must not silently rewrite the request.
 	// Only an explicit claude-code-cli profile aligns the shape, and then it aligns
 	// to the measured one: Claude Code 2.1.220 count_tokens carries exactly model,
 	// messages and tools, never a system block.
@@ -215,14 +215,14 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	// long after translation, so an earlier check would not describe the request
 	// that is about to be sent.
 	if errMidSystem := validateClaudeMidSystemMessageModel(body, confirmedClaudeCode, directAnthropic); errMidSystem != nil {
-		return cliproxyexecutor.Response{}, errMidSystem
+		return apsexecutor.Response{}, errMidSystem
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	if errHeaders := applyClaudeHeaders(httpReq, auth, apiKey, false, extraBetas, body, e.cfg, incomingHeaders, confirmedClaudeCode && !cloaked, claudeSessionID); errHeaders != nil {
-		return cliproxyexecutor.Response{}, errHeaders
+		return apsexecutor.Response{}, errHeaders
 	}
 	var authID, authLabel, authType, authValue string
 	if auth != nil {
@@ -245,7 +245,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	resp, err := doClaudeUpstreamRequest(httpClient, httpReq)
 	if err != nil {
 		helps.RecordAPIResponseError(ctx, e.cfg, err)
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	helps.RecordAPIResponseMetadata(ctx, e.cfg, resp.StatusCode, resp.Header.Clone())
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -257,7 +257,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 			helps.RecordAPIResponseError(ctx, e.cfg, decErr)
 			msg := fmt.Sprintf("failed to decode error response body: %v", decErr)
 			helps.LogWithRequestID(ctx).Warn(msg)
-			return cliproxyexecutor.Response{}, classifyClaudeUpstreamError(resp.StatusCode, resp.Header, []byte(msg))
+			return apsexecutor.Response{}, classifyClaudeUpstreamError(resp.StatusCode, resp.Header, []byte(msg))
 		}
 		b, readErr := io.ReadAll(errBody)
 		if readErr != nil {
@@ -270,7 +270,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 		if errClose := errBody.Close(); errClose != nil {
 			log.Errorf("response body close error: %v", errClose)
 		}
-		return cliproxyexecutor.Response{}, classifyClaudeUpstreamError(resp.StatusCode, resp.Header, b)
+		return apsexecutor.Response{}, classifyClaudeUpstreamError(resp.StatusCode, resp.Header, b)
 	}
 	decodedBody, err := decodeResponseBody(resp.Body, claudeResponseContentEncoding(resp.Header))
 	if err != nil {
@@ -278,7 +278,7 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 		if errClose := resp.Body.Close(); errClose != nil {
 			log.Errorf("response body close error: %v", errClose)
 		}
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	defer func() {
 		if errClose := decodedBody.Close(); errClose != nil {
@@ -288,10 +288,10 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 	data, err := io.ReadAll(decodedBody)
 	if err != nil {
 		helps.RecordAPIResponseError(ctx, e.cfg, err)
-		return cliproxyexecutor.Response{}, err
+		return apsexecutor.Response{}, err
 	}
 	helps.AppendAPIResponseChunk(ctx, e.cfg, data)
 	count := gjson.GetBytes(data, "input_tokens").Int()
 	out := sdktranslator.TranslateTokenCount(ctx, to, responseFormat, count, data)
-	return cliproxyexecutor.Response{Payload: out, Headers: resp.Header.Clone()}, nil
+	return apsexecutor.Response{Payload: out, Headers: resp.Header.Clone()}, nil
 }

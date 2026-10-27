@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginabi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 type testWebSocketObserverFunc func(context.Context, pluginapi.WebSocketResponseEvent) error

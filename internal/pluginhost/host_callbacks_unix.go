@@ -9,7 +9,7 @@ package pluginhost
 typedef struct {
 	void* ptr;
 	size_t len;
-} cliproxy_buffer;
+} aps_buffer;
 */
 import "C"
 
@@ -18,8 +18,8 @@ import (
 	"unsafe"
 )
 
-//export cliproxyHostCall
-func cliproxyHostCall(hostCtx unsafe.Pointer, method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.cliproxy_buffer) C.int {
+//export apsHostCall
+func apsHostCall(hostCtx unsafe.Pointer, method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.aps_buffer) C.int {
 	if response != nil {
 		response.ptr = nil
 		response.len = 0
@@ -57,8 +57,8 @@ func cliproxyHostCall(hostCtx unsafe.Pointer, method *C.char, request *C.uint8_t
 	return 0
 }
 
-//export cliproxyHostFree
-func cliproxyHostFree(ptr unsafe.Pointer, len C.size_t) {
+//export apsHostFree
+func apsHostFree(ptr unsafe.Pointer, len C.size_t) {
 	if ptr != nil {
 		C.free(ptr)
 	}

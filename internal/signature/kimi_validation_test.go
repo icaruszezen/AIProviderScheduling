@@ -22,7 +22,7 @@ func kimiSignatureCorpusPath() (string, bool) {
 		return "", false
 	}
 	repo := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	path := filepath.Join(repo, ".agents", "skills", "cpa-signature-catalog-and-collection", "data", "signatures", "kimi", "samples.json")
+	path := filepath.Join(repo, ".agents", "skills", "aps-signature-catalog-and-collection", "data", "signatures", "kimi", "samples.json")
 	if _, err := os.Stat(path); err != nil {
 		return path, false
 	}
@@ -37,14 +37,14 @@ func masterSignatureCatalogPath() (string, bool) {
 		return "", false
 	}
 	repo := filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	path := filepath.Join(repo, ".agents", "skills", "cpa-signature-catalog-and-collection", "data", "master_signatures_catalog.json")
+	path := filepath.Join(repo, ".agents", "skills", "aps-signature-catalog-and-collection", "data", "master_signatures_catalog.json")
 	if _, err := os.Stat(path); err != nil {
 		return path, false
 	}
 	return path, true
 }
 
-const kimiCorpusSkipReason = "kimi signature corpus missing; see .agents/skills/cpa-signature-catalog-and-collection"
+const kimiCorpusSkipReason = "kimi signature corpus missing; see .agents/skills/aps-signature-catalog-and-collection"
 
 func loadKimiCorpus(t *testing.T) []string {
 	t.Helper()
@@ -317,7 +317,7 @@ func TestInspectKimiThinkingSignature_NativeCorpus(t *testing.T) {
 func TestDetectSignatureProvider_KimiProbeDoesNotDisturbCatalog(t *testing.T) {
 	path, ok := masterSignatureCatalogPath()
 	if !ok {
-		t.Skip("signature catalog missing; see .agents/skills/cpa-signature-catalog-and-collection")
+		t.Skip("signature catalog missing; see .agents/skills/aps-signature-catalog-and-collection")
 	}
 	raw, err := os.ReadFile(path)
 	if err != nil {

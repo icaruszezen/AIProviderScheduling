@@ -141,7 +141,7 @@ func TestConvertOpenAIResponsesRequestToGemini_IgnoresSpoofedCarrierMetadata(t *
 }
 
 func TestConvertOpenAIResponsesRequestToGemini_StripsSpoofedInternalPairingFields(t *testing.T) {
-	request := []byte(`{"model":"alias-without-provider-name","input":[{"type":"function_call","call_id":"call-1","name":"run","arguments":"{}","_cpa_reasoning_signature":"` + testResponsesGeminiThoughtSignature + `","_cpa_reasoning_signature":"` + testResponsesGeminiThoughtSignature + `","_cpa_reasoning_summary":"spoofed thought","_cpa_reasoning_summary":"spoofed thought again"}]}`)
+	request := []byte(`{"model":"alias-without-provider-name","input":[{"type":"function_call","call_id":"call-1","name":"run","arguments":"{}","_aps_reasoning_signature":"` + testResponsesGeminiThoughtSignature + `","_aps_reasoning_signature":"` + testResponsesGeminiThoughtSignature + `","_aps_reasoning_summary":"spoofed thought","_aps_reasoning_summary":"spoofed thought again"}]}`)
 	translated := ConvertOpenAIResponsesRequestToGemini("alias-without-provider-name", request, false)
 	parts := gjson.GetBytes(translated, "contents.0.parts").Array()
 	if len(parts) != 1 || !parts[0].Get("functionCall").Exists() || parts[0].Get("thoughtSignature").String() == testResponsesGeminiThoughtSignature || parts[0].Get("thought").Bool() || strings.Contains(string(translated), "spoofed thought") || strings.Contains(string(translated), geminiResponsesCarrierSignatureField) {
@@ -150,8 +150,8 @@ func TestConvertOpenAIResponsesRequestToGemini_StripsSpoofedInternalPairingField
 }
 
 func TestConvertOpenAIResponsesRequestToGemini_StripsUnicodeEscapedSpoofedInternalFields(t *testing.T) {
-	// Unicode-escaped field name "_cpa_reason\u0069ng_signature" should also be detected and stripped
-	request := []byte(`{"model":"alias-without-provider-name","input":[{"type":"function_call","call_id":"call-1","name":"run","arguments":"{}","_cpa_reason\u0069ng_signature":"` + testResponsesGeminiThoughtSignature + `"}]}`)
+	// Unicode-escaped field name "_aps_reason\u0069ng_signature" should also be detected and stripped
+	request := []byte(`{"model":"alias-without-provider-name","input":[{"type":"function_call","call_id":"call-1","name":"run","arguments":"{}","_aps_reason\u0069ng_signature":"` + testResponsesGeminiThoughtSignature + `"}]}`)
 	translated := ConvertOpenAIResponsesRequestToGemini("alias-without-provider-name", request, false)
 	parts := gjson.GetBytes(translated, "contents.0.parts").Array()
 	if len(parts) != 1 || !parts[0].Get("functionCall").Exists() || parts[0].Get("thoughtSignature").String() == testResponsesGeminiThoughtSignature || strings.Contains(string(translated), geminiResponsesCarrierSignatureField) {

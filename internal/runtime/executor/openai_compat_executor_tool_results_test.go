@@ -7,10 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -52,7 +52,7 @@ func TestOpenAICompatExecutorToolResultContentByInputModalities(t *testing.T) {
 					}},
 				}},
 			})
-			auth := &cliproxyauth.Auth{
+			auth := &apsauth.Auth{
 				Provider: "openai-compatibility",
 				Attributes: map[string]string{
 					"base_url":     server.URL + "/v1",
@@ -62,8 +62,8 @@ func TestOpenAICompatExecutorToolResultContentByInputModalities(t *testing.T) {
 				},
 			}
 			payload := []byte(`{"model":"claude-client","max_tokens":64,"messages":[{"role":"assistant","content":[{"type":"tool_use","id":"call_1","name":"inspect_image","input":{}}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"call_1","content":[{"type":"text","text":"image inspected"},{"type":"image","source":{"type":"base64","media_type":"image/png","data":"AA=="}}]}]}]}`)
-			req := cliproxyexecutor.Request{Model: "mapped-model", Payload: payload}
-			opts := cliproxyexecutor.Options{
+			req := apsexecutor.Request{Model: "mapped-model", Payload: payload}
+			opts := apsexecutor.Options{
 				SourceFormat:   sdktranslator.FormatClaude,
 				ResponseFormat: sdktranslator.FormatOpenAI,
 				Stream:         tt.stream,

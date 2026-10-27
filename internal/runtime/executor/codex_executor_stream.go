@@ -8,19 +8,19 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/client/grokbuild"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/client/grokbuild"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
-func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (_ *cliproxyexecutor.StreamResult, err error) {
+func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (_ *apsexecutor.StreamResult, err error) {
 	if opts.Alt == "responses/compact" {
 		return nil, statusErr{code: http.StatusBadRequest, msg: "streaming not supported for /responses/compact"}
 	}
@@ -38,7 +38,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 	defer reporter.TrackFailure(ctx, &err)
 
 	from := opts.SourceFormat
-	responseFormat := cliproxyexecutor.ResponseFormatOrSource(opts)
+	responseFormat := apsexecutor.ResponseFormatOrSource(opts)
 	isGrokClient := grokbuild.IsGrokClientContext(ctx, opts.Headers)
 	to := sdktranslator.FromString("codex")
 	originalPayloadSource := req.Payload
@@ -168,7 +168,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		}
 	}
 
-	failFakeFirstTokenHold := func(err error) (*cliproxyexecutor.StreamResult, error) {
+	failFakeFirstTokenHold := func(err error) (*apsexecutor.StreamResult, error) {
 		closeBootstrapBody()
 		if err == nil {
 			err = newCodexFakeFirstTokenHoldErr("")
@@ -329,24 +329,24 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 	if bootstrapTerminalErr != nil {
 		chanCapacity++
 	}
-	out := make(chan cliproxyexecutor.StreamChunk, codexStreamChunkCapacity(chanCapacity))
+	out := make(chan apsexecutor.StreamChunk, codexStreamChunkCapacity(chanCapacity))
 	for _, chunk := range bufferedChunks {
-		out <- cliproxyexecutor.StreamChunk{Payload: chunk}
+		out <- apsexecutor.StreamChunk{Payload: chunk}
 	}
 	for _, chunk := range initialChunks {
-		out <- cliproxyexecutor.StreamChunk{Payload: chunk}
+		out <- apsexecutor.StreamChunk{Payload: chunk}
 	}
 	if bootstrapTerminalErr != nil {
 		// Buffered handshake payloads are flushed first so the conductor observes a committed
 		// stream and delivers this failure in-stream, exactly as the unbuffered path would.
-		out <- cliproxyexecutor.StreamChunk{Err: bootstrapTerminalErr}
+		out <- apsexecutor.StreamChunk{Err: bootstrapTerminalErr}
 		close(out)
-		return &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
+		return &apsexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
 	}
 	if immediateTerminal {
 		closeBootstrapBody()
 		close(out)
-		return &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
+		return &apsexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
 	}
 
 	scannerOwnedByBackground = true
@@ -377,7 +377,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 						helps.RecordAPIResponseError(ctx, e.cfg, errClearReplay)
 						reporter.PublishFailure(ctx, errClearReplay)
 						select {
-						case out <- cliproxyexecutor.StreamChunk{Err: errClearReplay}:
+						case out <- apsexecutor.StreamChunk{Err: errClearReplay}:
 						case <-ctx.Done():
 						}
 						return
@@ -385,7 +385,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 					helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
 					reporter.PublishFailure(ctx, streamErr)
 					select {
-					case out <- cliproxyexecutor.StreamChunk{Err: streamErr}:
+					case out <- apsexecutor.StreamChunk{Err: streamErr}:
 					case <-ctx.Done():
 					}
 					return
@@ -414,7 +414,7 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 			chunks := helps.TranslateStreamWithClaudeInputTokens(ctx, to, responseFormat, req.Model, originalPayload, body, translatedLine, &param, claudeInputTokens)
 			for i := range chunks {
 				select {
-				case out <- cliproxyexecutor.StreamChunk{Payload: chunks[i]}:
+				case out <- apsexecutor.StreamChunk{Payload: chunks[i]}:
 				case <-ctx.Done():
 					return
 				}
@@ -433,9 +433,9 @@ func (e *CodexExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Au
 		helps.RecordAPIResponseError(ctx, e.cfg, streamErr)
 		reporter.PublishFailure(ctx, streamErr)
 		select {
-		case out <- cliproxyexecutor.StreamChunk{Err: streamErr}:
+		case out <- apsexecutor.StreamChunk{Err: streamErr}:
 		case <-ctx.Done():
 		}
 	}()
-	return &cliproxyexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
+	return &apsexecutor.StreamResult{Headers: httpResp.Header.Clone(), Chunks: out}, nil
 }

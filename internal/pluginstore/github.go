@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/httpfetch"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/httpfetch"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,7 +44,7 @@ type ReleaseAsset struct {
 func (c Client) FetchRegistry(ctx context.Context) (Registry, error) {
 	registryURL := strings.TrimSpace(c.RegistryURL)
 	if registryURL == "" {
-		registryURL = DefaultRegistryURL
+		return Registry{}, fmt.Errorf("plugin store registry URL is required")
 	}
 	data, errDownload := c.get(ctx, registryURL, "application/json", RequestKindRegistry, 0)
 	if errDownload != nil {

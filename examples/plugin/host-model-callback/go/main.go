@@ -7,40 +7,40 @@ package main
 typedef struct {
 	void* ptr;
 	size_t len;
-} cliproxy_buffer;
+} aps_buffer;
 
-typedef int (*cliproxy_host_call_fn)(void*, const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_host_free_fn)(void*, size_t);
+typedef int (*aps_host_call_fn)(void*, const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_host_free_fn)(void*, size_t);
 
 typedef struct {
 	uint32_t abi_version;
 	void* host_ctx;
-	cliproxy_host_call_fn call;
-	cliproxy_host_free_fn free_buffer;
-} cliproxy_host_api;
+	aps_host_call_fn call;
+	aps_host_free_fn free_buffer;
+} aps_host_api;
 
-typedef int (*cliproxy_plugin_call_fn)(char*, uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_plugin_free_fn)(void*, size_t);
-typedef void (*cliproxy_plugin_shutdown_fn)(void);
+typedef int (*aps_plugin_call_fn)(char*, uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_plugin_free_fn)(void*, size_t);
+typedef void (*aps_plugin_shutdown_fn)(void);
 
 typedef struct {
 	uint32_t abi_version;
-	cliproxy_plugin_call_fn call;
-	cliproxy_plugin_free_fn free_buffer;
-	cliproxy_plugin_shutdown_fn shutdown;
-} cliproxy_plugin_api;
+	aps_plugin_call_fn call;
+	aps_plugin_free_fn free_buffer;
+	aps_plugin_shutdown_fn shutdown;
+} aps_plugin_api;
 
-extern int cliproxyPluginCall(char*, uint8_t*, size_t, cliproxy_buffer*);
-extern void cliproxyPluginFree(void*, size_t);
-extern void cliproxyPluginShutdown(void);
+extern int apsPluginCall(char*, uint8_t*, size_t, aps_buffer*);
+extern void apsPluginFree(void*, size_t);
+extern void apsPluginShutdown(void);
 
-static const cliproxy_host_api* stored_host;
+static const aps_host_api* stored_host;
 
-static void store_host_api(const cliproxy_host_api* host) {
+static void store_host_api(const aps_host_api* host) {
 	stored_host = host;
 }
 
-static int call_host_api(const char* method, const uint8_t* request, size_t request_len, cliproxy_buffer* response) {
+static int call_host_api(const char* method, const uint8_t* request, size_t request_len, aps_buffer* response) {
 	if (stored_host == NULL || stored_host->call == NULL) {
 		return 1;
 	}
@@ -66,8 +66,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginabi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 const (
@@ -181,21 +181,21 @@ type streamPageData struct {
 
 func main() {}
 
-//export cliproxy_plugin_init
-func cliproxy_plugin_init(host *C.cliproxy_host_api, plugin *C.cliproxy_plugin_api) C.int {
+//export aps_plugin_init
+func aps_plugin_init(host *C.aps_host_api, plugin *C.aps_plugin_api) C.int {
 	if plugin == nil {
 		return 1
 	}
 	C.store_host_api(host)
 	plugin.abi_version = C.uint32_t(pluginabi.ABIVersion)
-	plugin.call = C.cliproxy_plugin_call_fn(C.cliproxyPluginCall)
-	plugin.free_buffer = C.cliproxy_plugin_free_fn(C.cliproxyPluginFree)
-	plugin.shutdown = C.cliproxy_plugin_shutdown_fn(C.cliproxyPluginShutdown)
+	plugin.call = C.aps_plugin_call_fn(C.apsPluginCall)
+	plugin.free_buffer = C.aps_plugin_free_fn(C.apsPluginFree)
+	plugin.shutdown = C.aps_plugin_shutdown_fn(C.apsPluginShutdown)
 	return 0
 }
 
-//export cliproxyPluginCall
-func cliproxyPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.cliproxy_buffer) C.int {
+//export apsPluginCall
+func apsPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.aps_buffer) C.int {
 	if response != nil {
 		response.ptr = nil
 		response.len = 0
@@ -217,16 +217,16 @@ func cliproxyPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t,
 	return 0
 }
 
-//export cliproxyPluginFree
-func cliproxyPluginFree(ptr unsafe.Pointer, len C.size_t) {
+//export apsPluginFree
+func apsPluginFree(ptr unsafe.Pointer, len C.size_t) {
 	if ptr != nil {
 		C.free(ptr)
 	}
 	_ = len
 }
 
-//export cliproxyPluginShutdown
-func cliproxyPluginShutdown() {}
+//export apsPluginShutdown
+func apsPluginShutdown() {}
 
 func handleMethod(method string, request []byte) ([]byte, error) {
 	switch method {
@@ -254,8 +254,8 @@ func pluginRegistration() registration {
 			Name:             pluginName,
 			Version:          "0.1.0",
 			Author:           "router-for-me",
-			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI",
-			Logo:             "https://raw.githubusercontent.com/router-for-me/CLIProxyAPI/main/docs/logo.png",
+			GitHubRepository: "https://github.com/icaruszezen/AIProviderScheduling",
+			Logo:             "https://raw.githubusercontent.com/icaruszezen/AIProviderScheduling/main/docs/logo.png",
 			ConfigFields:     []pluginapi.ConfigField{},
 		},
 		Capabilities: registrationCapabilities{
@@ -564,7 +564,7 @@ func callHost(method string, payload any) (json.RawMessage, error) {
 	cMethod := C.CString(method)
 	defer C.free(unsafe.Pointer(cMethod))
 
-	var response C.cliproxy_buffer
+	var response C.aps_buffer
 	var requestPtr *C.uint8_t
 	if len(rawPayload) > 0 {
 		cPayload := C.CBytes(rawPayload)
@@ -696,7 +696,7 @@ func errorEnvelope(code, message string) []byte {
 	return raw
 }
 
-func writeResponse(response *C.cliproxy_buffer, raw []byte) {
+func writeResponse(response *C.aps_buffer, raw []byte) {
 	if response == nil || len(raw) == 0 {
 		return
 	}

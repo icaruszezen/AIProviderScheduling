@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 func TestAntigravityReasoningReplayClearsOnInvalidSignature400(t *testing.T) {
@@ -35,7 +35,7 @@ func TestAntigravityReasoningReplayClearsOnInvalidSignature400(t *testing.T) {
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "auth-pr3900-invalid-sig",
 		Attributes: map[string]string{
 			"api_key":  "token",
@@ -49,10 +49,10 @@ func TestAntigravityReasoningReplayClearsOnInvalidSignature400(t *testing.T) {
 	}
 
 	payload := []byte(`{"sessionId":"pr3900-invalid-sig","request":{"contents":[{"role":"user","parts":[{"text":"hi"}]},{"role":"model","parts":[{"functionCall":{"id":"id1","name":"Bash","args":{}}}]},{"role":"model","parts":[{"functionResponse":{"id":"id1","name":"Bash","response":{"result":"ok"}}}]}]}}`)
-	_, err := exec.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := exec.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   model,
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FormatAntigravity,
 		Stream:       false,
 	})

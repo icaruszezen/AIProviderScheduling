@@ -7,23 +7,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/misc"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/misc"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
-func applyCodexPromptCacheHeaders(from sdktranslator.Format, req cliproxyexecutor.Request, rawJSON []byte) ([]byte, http.Header) {
+func applyCodexPromptCacheHeaders(from sdktranslator.Format, req apsexecutor.Request, rawJSON []byte) ([]byte, http.Header) {
 	body, headers, _ := applyCodexPromptCacheHeadersWithContext(context.Background(), from, req, rawJSON)
 	return body, headers
 }
 
-func applyCodexPromptCacheHeadersWithContext(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, rawJSON []byte, headerSets ...http.Header) ([]byte, http.Header, error) {
+func applyCodexPromptCacheHeadersWithContext(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, rawJSON []byte, headerSets ...http.Header) ([]byte, http.Header, error) {
 	headers := http.Header{}
 	if len(rawJSON) == 0 {
 		return rawJSON, headers, nil
@@ -64,7 +64,7 @@ func applyCodexPromptCacheHeadersWithContext(ctx context.Context, from sdktransl
 	return rawJSON, headers, nil
 }
 
-func applyCodexWebsocketHeaders(ctx context.Context, headers http.Header, auth *cliproxyauth.Auth, token string, cfg *config.Config, clientHeaders ...http.Header) http.Header {
+func applyCodexWebsocketHeaders(ctx context.Context, headers http.Header, auth *apsauth.Auth, token string, cfg *config.Config, clientHeaders ...http.Header) http.Header {
 	if headers == nil {
 		headers = http.Header{}
 	}
@@ -159,11 +159,11 @@ func codexSessionHeaderValue(headers http.Header) string {
 	return ""
 }
 
-func codexAuthUsesAPIKey(auth *cliproxyauth.Auth) bool {
+func codexAuthUsesAPIKey(auth *apsauth.Auth) bool {
 	if auth == nil {
 		return false
 	}
-	if auth.AuthKind() == cliproxyauth.AuthKindAPIKey {
+	if auth.AuthKind() == apsauth.AuthKindAPIKey {
 		return true
 	}
 	if auth.Attributes != nil {
@@ -277,7 +277,7 @@ func deleteHeaderCaseInsensitive(headers http.Header, key string) {
 	}
 }
 
-func codexHeaderDefaults(cfg *config.Config, auth *cliproxyauth.Auth) (string, string) {
+func codexHeaderDefaults(cfg *config.Config, auth *apsauth.Auth) (string, string) {
 	if cfg == nil || auth == nil || codexAuthUsesAPIKey(auth) {
 		return "", ""
 	}

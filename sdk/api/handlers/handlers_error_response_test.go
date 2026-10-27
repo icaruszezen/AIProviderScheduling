@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 )
 
 type directResponseTestError struct {
@@ -71,7 +71,7 @@ func TestWriteErrorResponseDirectResponse(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
 	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
-	c.Writer.Header().Set("X-Cpa-Trace-Id", "local-trace")
+	c.Writer.Header().Set("X-Aps-Trace-Id", "local-trace")
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "https://trusted.example")
 
 	handler := NewBaseAPIHandlers(nil, nil)
@@ -82,7 +82,7 @@ func TestWriteErrorResponseDirectResponse(t *testing.T) {
 		Headers: http.Header{
 			"Content-Type":                {"application/problem+json"},
 			"X-Plugin-Policy":             {"blocked"},
-			"X-Cpa-Trace-Id":              {"plugin-trace"},
+			"X-Aps-Trace-Id":              {"plugin-trace"},
 			"Access-Control-Allow-Origin": {"https://untrusted.example"}}})
 
 	if recorder.Code != http.StatusForbidden {
@@ -97,8 +97,8 @@ func TestWriteErrorResponseDirectResponse(t *testing.T) {
 	if got := recorder.Header().Get("X-Plugin-Policy"); got != "blocked" {
 		t.Fatalf("X-Plugin-Policy = %q", got)
 	}
-	if got := recorder.Header().Get("X-Cpa-Trace-Id"); got != "local-trace" {
-		t.Fatalf("X-Cpa-Trace-Id = %q, want local value", got)
+	if got := recorder.Header().Get("X-Aps-Trace-Id"); got != "local-trace" {
+		t.Fatalf("X-Aps-Trace-Id = %q, want local value", got)
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "https://trusted.example" {
 		t.Fatalf("Access-Control-Allow-Origin = %q, want trusted origin", got)
@@ -205,8 +205,8 @@ func TestWriteErrorResponse_AddonHeadersEnabled(t *testing.T) {
 	c, _ := gin.CreateTestContext(recorder)
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 	c.Writer.Header().Set("X-Request-Id", "old-value")
-	c.Writer.Header().Set("x-cpa-trace-id", "local-trace")
-	c.Writer.Header().Set("Access-Control-Expose-Headers", "x-cpa-trace-id")
+	c.Writer.Header().Set("x-aps-trace-id", "local-trace")
+	c.Writer.Header().Set("Access-Control-Expose-Headers", "x-aps-trace-id")
 
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{PassthroughHeaders: true}, nil)
 	handler.WriteErrorResponse(c, &interfaces.ErrorMessage{
@@ -215,7 +215,7 @@ func TestWriteErrorResponse_AddonHeadersEnabled(t *testing.T) {
 		Addon: http.Header{
 			"Retry-After":                   {"30"},
 			"X-Request-Id":                  {"new-1", "new-2"},
-			"x-cpa-trace-id":                {"upstream-trace"},
+			"x-aps-trace-id":                {"upstream-trace"},
 			"Access-Control-Expose-Headers": {"upstream-header"}}})
 
 	if recorder.Code != http.StatusTooManyRequests {
@@ -227,11 +227,11 @@ func TestWriteErrorResponse_AddonHeadersEnabled(t *testing.T) {
 	if got := recorder.Header().Values("X-Request-Id"); !reflect.DeepEqual(got, []string{"new-1", "new-2"}) {
 		t.Fatalf("X-Request-Id = %#v, want %#v", got, []string{"new-1", "new-2"})
 	}
-	if got := recorder.Header().Get("x-cpa-trace-id"); got != "local-trace" {
-		t.Fatalf("x-cpa-trace-id = %q, want local trace", got)
+	if got := recorder.Header().Get("x-aps-trace-id"); got != "local-trace" {
+		t.Fatalf("x-aps-trace-id = %q, want local trace", got)
 	}
-	if got := recorder.Header().Get("Access-Control-Expose-Headers"); got != "x-cpa-trace-id" {
-		t.Fatalf("Access-Control-Expose-Headers = %q, want CPA value", got)
+	if got := recorder.Header().Get("Access-Control-Expose-Headers"); got != "x-aps-trace-id" {
+		t.Fatalf("Access-Control-Expose-Headers = %q, want APS value", got)
 	}
 }
 
@@ -500,7 +500,7 @@ func TestExtractUpstreamErrorSummary_SanitizationAndTruncation(t *testing.T) {
 			forbiddenRaw: "alice"},
 		{
 			name:         "opt unix path redacted",
-			input:        `open /opt/cli-proxy/auth/alice.json: failed`,
+			input:        `open /opt/aps/auth/alice.json: failed`,
 			wantMask:     "[REDACTED_PATH]",
 			forbiddenRaw: "alice"},
 		{

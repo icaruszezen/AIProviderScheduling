@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -23,7 +23,7 @@ func codexLocalCompactSSE(t *testing.T, output string) string {
 		",\"usage\":{\"input_tokens\":11,\"output_tokens\":22,\"total_tokens\":33}}}\n\n"
 }
 
-// newCodexLocalCompactUpstream serves the summarization turn and records what CPA sent.
+// newCodexLocalCompactUpstream serves the summarization turn and records what APS sent.
 func newCodexLocalCompactUpstream(t *testing.T, output string, gotPath *string, gotBody *[]byte) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,17 +45,17 @@ func TestCodexExecutorLocalCompactRunsPlainResponsesTurn(t *testing.T) {
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{SDKConfig: config.SDKConfig{LocalCompact: true}})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"base_url": server.URL,
 		"api_key":  "test",
 	}}
 
 	payload := `{"model":"gpt-5.4-openai-compact","input":[{"type":"message","role":"user","content":"history"},{"type":"compaction_trigger"}],` +
 		`"tools":[{"type":"function","name":"shell"}],"tool_choice":"auto"}`
-	resp, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	resp, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "gpt-5.4-openai-compact",
 		Payload: []byte(payload),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Alt:          "responses/compact",
 		Stream:       false,
@@ -139,15 +139,15 @@ func TestCodexExecutorLocalCompactSynthesizesBlobWithoutUpstreamReasoning(t *tes
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{SDKConfig: config.SDKConfig{LocalCompact: true}})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"base_url": server.URL,
 		"api_key":  "test",
 	}}
 
-	resp, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	resp, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","input":[{"type":"message","role":"user","content":"history"}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Alt:          "responses/compact",
 	})
@@ -161,7 +161,7 @@ func TestCodexExecutorLocalCompactSynthesizesBlobWithoutUpstreamReasoning(t *tes
 	}
 	summary, ours := decodeCodexLocalCompactBlob(encrypted)
 	if !ours {
-		t.Fatalf("encrypted_content = %q, want a CPA-synthesized blob", encrypted)
+		t.Fatalf("encrypted_content = %q, want a APS-synthesized blob", encrypted)
 	}
 	if summary != "recap only" {
 		t.Fatalf("blob summary = %q, want %q", summary, "recap only")
@@ -178,15 +178,15 @@ func TestCodexExecutorCompactStaysPassthroughWhenCredentialOptsOut(t *testing.T)
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{SDKConfig: config.SDKConfig{LocalCompact: true}})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{"base_url": server.URL, "api_key": "test"},
 		Metadata:   map[string]any{"local_compact": false},
 	}
 
-	if _, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	if _, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","input":[{"type":"message","role":"user","content":"history"}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Alt:          "responses/compact",
 	}); err != nil {
@@ -208,7 +208,7 @@ func TestCodexExecutorReplaysCompactionItemAsConversationSummary(t *testing.T) {
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{SDKConfig: config.SDKConfig{LocalCompact: true}})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"base_url": server.URL,
 		"api_key":  "test",
 	}}
@@ -221,10 +221,10 @@ func TestCodexExecutorReplaysCompactionItemAsConversationSummary(t *testing.T) {
 		`{"type":"compaction","id":"cmp_1","encrypted_content":` + string(blob) + `,"summary":[{"type":"summary_text","text":"earlier recap"}]},` +
 		`{"type":"message","role":"user","content":"next question"}]}`
 
-	if _, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	if _, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "gpt-5.4",
 		Payload: []byte(payload),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 	}); err != nil {
 		t.Fatalf("Execute error: %v", err)
@@ -305,14 +305,14 @@ func TestLocalCompactEnabled(t *testing.T) {
 	cases := []struct {
 		name   string
 		global bool
-		auth   *cliproxyauth.Auth
+		auth   *apsauth.Auth
 		want   bool
 	}{
-		{name: "off by default", auth: &cliproxyauth.Auth{}},
-		{name: "global on", global: true, auth: &cliproxyauth.Auth{}, want: true},
-		{name: "credential opts in", auth: &cliproxyauth.Auth{Metadata: map[string]any{"local_compact": true}}, want: true},
-		{name: "credential opts out", global: true, auth: &cliproxyauth.Auth{Metadata: map[string]any{"local_compact": false}}},
-		{name: "legacy key", auth: &cliproxyauth.Auth{Metadata: map[string]any{"local-compact": "true"}}, want: true},
+		{name: "off by default", auth: &apsauth.Auth{}},
+		{name: "global on", global: true, auth: &apsauth.Auth{}, want: true},
+		{name: "credential opts in", auth: &apsauth.Auth{Metadata: map[string]any{"local_compact": true}}, want: true},
+		{name: "credential opts out", global: true, auth: &apsauth.Auth{Metadata: map[string]any{"local_compact": false}}},
+		{name: "legacy key", auth: &apsauth.Auth{Metadata: map[string]any{"local-compact": "true"}}, want: true},
 		{name: "nil auth follows global", global: true, want: true},
 	}
 	for _, tc := range cases {

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 // claudeCode2_1_220WireHeaderOrder is the header name sequence captured from a
@@ -42,7 +42,7 @@ var claudeCode2_1_220WireHeaderOrder = []string{
 
 func newClaudeWireProbeRequest(t *testing.T, rawURL string) *http.Request {
 	t.Helper()
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "wire",
 		Attributes: map[string]string{
 			"api_key":             "sk-ant-api01-wire",
@@ -65,7 +65,7 @@ func newClaudeWireProbeRequest(t *testing.T, rawURL string) *http.Request {
 // applyClaudeHeaders would make these headers invisible to Header.Get for the
 // rest of the pipeline, which is how the first attempt broke ten other tests.
 func TestApplyClaudeHeaders_LeavesHeadersCanonicalForThePipeline(t *testing.T) {
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID: "wire",
 		Attributes: map[string]string{
 			"api_key":             "sk-ant-api01-wire",
@@ -110,7 +110,7 @@ func serializedHeaderNames(t *testing.T, req *http.Request) []string {
 	return names
 }
 
-// The wire casing is a fingerprint in its own right: CPA negotiates ALPN
+// The wire casing is a fingerprint in its own right: APS negotiates ALPN
 // http/1.1, so names are not lowercased by HPACK and reach Anthropic verbatim.
 func TestApplyClaudeHeaders_WireCasingMatchesRealClient(t *testing.T) {
 	req := newClaudeWireProbeRequest(t, "https://api.anthropic.com/v1/messages?beta=true")

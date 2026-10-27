@@ -17,14 +17,14 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/google/uuid"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/buildinfo"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/misc"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	"github.com/klauspost/compress/zstd"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/misc"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -237,12 +237,12 @@ func withClaudeCountTokensOAuthBeta(betas string) string {
 // withClaudeOAuthCredentialBetas restores the credential-scoped betas that
 // describe the selected upstream OAuth account rather than caller capability.
 //
-// A confirmed native client authenticates to CPA with whatever key the user
-// configured and cannot know that CPA will select an OAuth credential upstream,
+// A confirmed native client authenticates to APS with whatever key the user
+// configured and cannot know that APS will select an OAuth credential upstream,
 // so its header never carries the OAuth betas. Passing it through verbatim ships
 // a Bearer request that declares neither oauth-2025-04-20 nor
 // extended-cache-ttl-2025-04-11, which no real OAuth client ever does. Passthrough
-// governs what the caller expressed; the credential is CPA's own choice and has to
+// governs what the caller expressed; the credential is APS's own choice and has to
 // be described accurately.
 //
 // Betas already present are left exactly where the caller put them.
@@ -658,7 +658,7 @@ func isZlibHeader(header []byte) bool {
 // claudeCredentialUsesOAuth classifies the selected upstream credential. It is the
 // single authority for every decision that has to agree with the OAuth beta
 // profile, including the extended-cache-ttl beta and the matching body cache ttl.
-func claudeCredentialUsesOAuth(_ *cliproxyauth.Auth, _ string) bool {
+func claudeCredentialUsesOAuth(_ *apsauth.Auth, _ string) bool {
 	// Account OAuth tokens are not accepted as credentials.
 	return false
 }
@@ -686,7 +686,7 @@ func copyClaudeCallerFingerprintHeaders(dst, src http.Header) {
 	}
 }
 
-func applyClaudeHeaders(r *http.Request, auth *cliproxyauth.Auth, apiKey string, stream bool, extraBetas []string, body []byte, cfg *config.Config, incomingHeaders http.Header, confirmedClaudeCode bool, sessionIDs ...string) error {
+func applyClaudeHeaders(r *http.Request, auth *apsauth.Auth, apiKey string, stream bool, extraBetas []string, body []byte, cfg *config.Config, incomingHeaders http.Header, confirmedClaudeCode bool, sessionIDs ...string) error {
 	return applyClaudeHeadersWithNativeProfile(
 		r,
 		auth,
@@ -704,7 +704,7 @@ func applyClaudeHeaders(r *http.Request, auth *cliproxyauth.Auth, apiKey string,
 
 func applyClaudeHeadersWithNativeProfile(
 	r *http.Request,
-	auth *cliproxyauth.Auth,
+	auth *apsauth.Auth,
 	apiKey string,
 	stream bool,
 	extraBetas []string,
@@ -868,8 +868,8 @@ func applyClaudeHeadersWithNativeProfile(
 		// Caller-owned mode forwards the caller's own User-Agent, but a caller that
 		// sent none must not fall through to Go's transport default
 		// ("Go-http-client/1.1"), which upstreams read as a bot signature. Identify
-		// as CPA instead: honest about the hop, and not a fabricated client.
-		misc.EnsureHeader(r.Header, incomingHeaders, "User-Agent", "CLIProxyAPI/"+buildinfo.Version)
+		// as APS instead: honest about the hop, and not a fabricated client.
+		misc.EnsureHeader(r.Header, incomingHeaders, "User-Agent", "AIProviderScheduling/"+buildinfo.Version)
 		applyBetaHeader()
 		var attrs map[string]string
 		if auth != nil {
@@ -881,7 +881,7 @@ func applyClaudeHeadersWithNativeProfile(
 		// a first-party API that rejects unknown values) and on any streaming request
 		// (an Accept override silently disables event negotiation), while letting a
 		// non-streaming third-party gateway keep them. Restoring here means restoring
-		// the caller's own choice, not CPA's default: this mode is caller-owned.
+		// the caller's own choice, not APS's default: this mode is caller-owned.
 		restoreCallerTransport := func() {
 			resetHeader := func(name, fallback string) {
 				if value := strings.TrimSpace(incomingHeaders.Get(name)); value != "" {
@@ -1033,7 +1033,7 @@ func applyClaudeHeadersWithNativeProfile(
 // exactly how the streaming and non-streaming beta sets diverged before.
 func doClaudeUpstreamRequest(client *http.Client, req *http.Request) (*http.Response, error) {
 	applyClaudeWireHeaderCasing(req)
-	cliproxyexecutor.MarkUpstreamAttempt(req.Context())
+	apsexecutor.MarkUpstreamAttempt(req.Context())
 	return client.Do(req)
 }
 
@@ -1051,7 +1051,7 @@ var claudeWireHeaderCasing = map[string]string{
 
 // applyClaudeWireHeaderCasing restores the header name casing of the real client.
 //
-// CPA negotiates ALPN http/1.1 with Anthropic, so header names reach the server
+// APS negotiates ALPN http/1.1 with Anthropic, so header names reach the server
 // verbatim rather than lowercased by HPACK, which makes casing observable. Go
 // canonicalises every name passed through Header.Set, turning the client's
 // anthropic-beta and x-app into Anthropic-Beta and X-App. Writing the map keys
@@ -1081,7 +1081,7 @@ func applyClaudeWireHeaderCasing(r *http.Request) {
 	}
 }
 
-func claudeCreds(a *cliproxyauth.Auth) (apiKey, baseURL string) {
+func claudeCreds(a *apsauth.Auth) (apiKey, baseURL string) {
 	if a == nil {
 		return "", ""
 	}
@@ -1209,7 +1209,7 @@ func resolveClaudeMCPAliasOptions(ctx context.Context) claudeMCPAliasOptions {
 	// failover while giving one caller a shared virtual MCP server component.
 	secret := strings.TrimSpace(helps.APIKeyFromContext(ctx))
 	if secret == "" {
-		secret = "cpa-claude-mcp-default-caller"
+		secret = "aps-claude-mcp-default-caller"
 	}
 	return claudeMCPAliasOptions{secret: secret}
 }
@@ -1240,7 +1240,7 @@ func restoreClaudeOAuthToolNamesFromStreamLine(line []byte, reverseMap map[strin
 // functions so only aliases allocated for this request are restored on the
 // response. A global reverse map would mix symbols from unrelated callers.
 func remapOAuthToolNames(body []byte) ([]byte, map[string]string) {
-	return remapOAuthToolNamesWithOptions(body, claudeMCPAliasOptions{secret: "cpa-claude-mcp-default-caller"})
+	return remapOAuthToolNamesWithOptions(body, claudeMCPAliasOptions{secret: "aps-claude-mcp-default-caller"})
 }
 
 type claudeRawJSONEdit struct {

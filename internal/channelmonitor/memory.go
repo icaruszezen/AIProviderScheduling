@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 )
 
 type minuteKey struct {

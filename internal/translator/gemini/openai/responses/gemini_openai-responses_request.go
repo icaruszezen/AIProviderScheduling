@@ -3,10 +3,10 @@ package responses
 import (
 	"strings"
 
-	sigcompat "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/translator/gemini/common"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	sigcompat "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/gemini/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -232,12 +232,12 @@ func ConvertOpenAIResponsesRequestToGemini(modelName string, inputRawJSON []byte
 
 			case "function_call", "custom_tool_call":
 				signature := geminiResponsesThoughtSignature
-				if rawSignature := strings.TrimSpace(item.Get("_cpa_reasoning_signature").String()); rawSignature != "" {
+				if rawSignature := strings.TrimSpace(item.Get("_aps_reasoning_signature").String()); rawSignature != "" {
 					signature = openAIResponsesGeminiThoughtSignature(rawSignature)
 				}
-				if thoughtText := item.Get("_cpa_reasoning_summary").String(); thoughtText != "" {
+				if thoughtText := item.Get("_aps_reasoning_summary").String(); thoughtText != "" {
 					contentItems = append(contentItems, buildOpenAIResponsesReasoningFunctionCallModelContent(thoughtText, item, signature, forwardMap))
-				} else if !useGeminiNativeReasoningLayout && strings.TrimSpace(item.Get("_cpa_reasoning_signature").String()) != "" {
+				} else if !useGeminiNativeReasoningLayout && strings.TrimSpace(item.Get("_aps_reasoning_signature").String()) != "" {
 					contentItems = append(contentItems, buildOpenAIResponsesEmptyReasoningFunctionCallModelContent(item, signature, forwardMap))
 				} else {
 					contentItems = append(contentItems, buildOpenAIResponsesFunctionCallModelContent(item, signature, forwardMap))
@@ -282,7 +282,7 @@ func ConvertOpenAIResponsesRequestToGemini(modelName string, inputRawJSON []byte
 					if visible, ok := openAIResponsesAssistantVisibleText(next); ok && canBindText {
 						visibleText = visible
 						i++
-					} else if (next.Get("type").String() == "function_call" || next.Get("type").String() == "custom_tool_call") && canBindFunction && strings.TrimSpace(next.Get("_cpa_reasoning_signature").String()) == "" && signature != geminiResponsesThoughtSignature {
+					} else if (next.Get("type").String() == "function_call" || next.Get("type").String() == "custom_tool_call") && canBindFunction && strings.TrimSpace(next.Get("_aps_reasoning_signature").String()) == "" && signature != geminiResponsesThoughtSignature {
 						contentItems = append(contentItems, buildOpenAIResponsesReasoningFunctionCallModelContent(thoughtText, next, signature, forwardMap))
 						if callID := strings.TrimSpace(next.Get("call_id").String()); callID != "" {
 							pendingFunctionCallIDs = append(pendingFunctionCallIDs, callID)
@@ -562,7 +562,7 @@ func pairOpenAIResponsesReasoningWithFunctionCalls(items []gjson.Result) []gjson
 		if isOpenAIResponsesToolCall(items[groupStart]) {
 			for callIndex := groupStart; callIndex < groupEnd; callIndex++ {
 				item := items[callIndex]
-				if !isOpenAIResponsesToolCall(item) || strings.TrimSpace(item.Get("_cpa_reasoning_signature").String()) != "" || callIndex+1 >= groupEnd || !isDetachedCarrier(items[callIndex+1]) {
+				if !isOpenAIResponsesToolCall(item) || strings.TrimSpace(item.Get("_aps_reasoning_signature").String()) != "" || callIndex+1 >= groupEnd || !isDetachedCarrier(items[callIndex+1]) {
 					continue
 				}
 				carrierDirection := geminiResponsesCarrierDirection(items[callIndex+1])
@@ -596,7 +596,7 @@ func pairOpenAIResponsesReasoningWithFunctionCalls(items []gjson.Result) []gjson
 		item := items[index]
 		if signature := postCallSignature[index]; signature != "" {
 			functionCall := []byte(item.Raw)
-			functionCall, _ = sjson.SetBytes(functionCall, "_cpa_reasoning_signature", signature)
+			functionCall, _ = sjson.SetBytes(functionCall, "_aps_reasoning_signature", signature)
 			paired = append(paired, gjson.ParseBytes(functionCall))
 			continue
 		}
@@ -610,9 +610,9 @@ func pairOpenAIResponsesReasoningWithFunctionCalls(items []gjson.Result) []gjson
 			rawSignature := strings.TrimSpace(item.Get("encrypted_content").String())
 			if rawSignature != "" {
 				functionCall := []byte(items[index+1].Raw)
-				functionCall, _ = sjson.SetBytes(functionCall, "_cpa_reasoning_signature", rawSignature)
+				functionCall, _ = sjson.SetBytes(functionCall, "_aps_reasoning_signature", rawSignature)
 				if summary := item.Get("summary.0.text").String(); summary != "" {
-					functionCall, _ = sjson.SetBytes(functionCall, "_cpa_reasoning_summary", summary)
+					functionCall, _ = sjson.SetBytes(functionCall, "_aps_reasoning_summary", summary)
 				}
 				paired = append(paired, gjson.ParseBytes(functionCall))
 				index++
@@ -654,7 +654,7 @@ func reorderOpenAIResponsesDetachedReasoning(items []gjson.Result) []gjson.Resul
 					alreadyPairedFunction = priorBindsFollowing && (priorTarget == geminiResponsesCarrierFunction || priorTarget == geminiResponsesCarrierAny)
 				}
 				bindPreviousMessage := direction == geminiResponsesCarrierPrevious && (targetKind == geminiResponsesCarrierText || targetKind == geminiResponsesCarrierAny) && isAssistantMessage && !alreadyPairedText
-				bindPreviousFunction := direction == geminiResponsesCarrierPrevious && (targetKind == geminiResponsesCarrierFunction || targetKind == geminiResponsesCarrierAny) && (previousType == "function_call" || previousType == "custom_tool_call") && strings.TrimSpace(previous.Get("_cpa_reasoning_signature").String()) == "" && !alreadyPairedFunction
+				bindPreviousFunction := direction == geminiResponsesCarrierPrevious && (targetKind == geminiResponsesCarrierFunction || targetKind == geminiResponsesCarrierAny) && (previousType == "function_call" || previousType == "custom_tool_call") && strings.TrimSpace(previous.Get("_aps_reasoning_signature").String()) == "" && !alreadyPairedFunction
 				if bindPreviousMessage || bindPreviousFunction {
 					movedItemJSON, _ := sjson.SetBytes([]byte(item.Raw), geminiResponsesCarrierDirectionField, geminiResponsesCarrierNext)
 					reordered[len(reordered)-1] = gjson.ParseBytes(movedItemJSON)
@@ -674,7 +674,7 @@ func reorderOpenAIResponsesDetachedReasoning(items []gjson.Result) []gjson.Resul
 				prior := reordered[len(reordered)-2]
 				alreadyPaired = isOpenAIResponsesDetachedCarrier(prior) && strings.Contains(prior.Get("id").String(), "_detached_after_")
 			}
-			if !alreadyPaired && (isAssistantMessage || (markedDetached && (previousType == "function_call" || previousType == "custom_tool_call") && strings.TrimSpace(previous.Get("_cpa_reasoning_signature").String()) == "")) {
+			if !alreadyPaired && (isAssistantMessage || (markedDetached && (previousType == "function_call" || previousType == "custom_tool_call") && strings.TrimSpace(previous.Get("_aps_reasoning_signature").String()) == "")) {
 				reordered[len(reordered)-1] = item
 				reordered = append(reordered, previous)
 				continue

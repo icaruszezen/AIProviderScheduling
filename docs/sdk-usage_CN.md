@@ -1,11 +1,11 @@
-# CLI Proxy SDK 使用指南
+# AI Provider Scheduling SDK 使用指南
 
-`sdk/cliproxy` 模块将代理能力以 Go 库的形式对外暴露，方便在其它服务中内嵌路由、鉴权、热更新与翻译层，而无需依赖可执行的 CLI 程序。
+`sdk/aps` 模块将代理能力以 Go 库的形式对外暴露，方便在其它服务中内嵌路由、鉴权、热更新与翻译层，而无需依赖可执行的 CLI 程序。
 
 ## 安装与导入
 
 ```bash
-go get github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy
+go get github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps
 ```
 
 ```go
@@ -14,8 +14,8 @@ import (
     "errors"
     "time"
 
-    "github.com/router-for-me/CLIProxyAPI/v6/internal/config"
-    "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy"
+    "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+    "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps"
 )
 ```
 
@@ -27,7 +27,7 @@ import (
 cfg, err := config.LoadConfig("config.yaml")
 if err != nil { panic(err) }
 
-svc, err := cliproxy.NewBuilder().
+svc, err := aps.NewBuilder().
     WithConfig(cfg).
     WithConfigPath("config.yaml"). // 绝对路径或工作目录相对路径
     Build()
@@ -48,20 +48,20 @@ if err := svc.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 通过 `WithServerOptions` 自定义：
 
 ```go
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(cfg).
   WithConfigPath("config.yaml").
   WithServerOptions(
     // 追加全局中间件
-    cliproxy.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
+    aps.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
     // 提前调整 gin 引擎（如 CORS、trusted proxies）
-    cliproxy.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
+    aps.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
     // 在默认路由之后追加自定义路由
-    cliproxy.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
+    aps.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
       e.GET("/healthz", func(c *gin.Context) { c.String(200, "ok") })
     }),
     // 覆盖请求日志的创建（启用/目录）
-    cliproxy.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
+    aps.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
       return logging.NewFileRequestLogger(true, "logs", filepath.Dir(cfgPath))
     }),
   ).
@@ -84,7 +84,7 @@ svc, _ := cliproxy.NewBuilder().
 core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
 core.SetRoundTripperProvider(myRTProvider) // 按账户返回 *http.Transport
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
     WithConfig(cfg).
     WithConfigPath("config.yaml").
     WithCoreAuthManager(core).
@@ -121,16 +121,16 @@ for ch := range chunks { /* ... */ }
 
 ```go
 type memoryTokenProvider struct{}
-func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*cliproxy.TokenClientResult, error) {
+func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*aps.TokenClientResult, error) {
     // 从内存/远端加载并返回数量统计
-    return &cliproxy.TokenClientResult{}, nil
+    return &aps.TokenClientResult{}, nil
 }
 
-svc, _ := cliproxy.NewBuilder().
+svc, _ := aps.NewBuilder().
   WithConfig(cfg).
   WithConfigPath("config.yaml").
   WithTokenClientProvider(&memoryTokenProvider{}).
-  WithAPIKeyClientProvider(cliproxy.NewAPIKeyClientProvider()).
+  WithAPIKeyClientProvider(aps.NewAPIKeyClientProvider()).
   Build()
 ```
 
@@ -139,11 +139,11 @@ svc, _ := cliproxy.NewBuilder().
 无需修改内部代码即可观察生命周期：
 
 ```go
-hooks := cliproxy.Hooks{
+hooks := aps.Hooks{
   OnBeforeStart: func(cfg *config.Config) { log.Infof("starting on :%d", cfg.Port) },
-  OnAfterStart:  func(s *cliproxy.Service) { log.Info("ready") },
+  OnAfterStart:  func(s *aps.Service) { log.Info("ready") },
 }
-svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
+svc, _ := aps.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
 ```
 
 ## 关闭

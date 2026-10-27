@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 )
 
 func TestParseOpenAIUsageChatCompletions(t *testing.T) {
@@ -558,7 +558,7 @@ func TestUsageReporterBuildRecordIncludesLatency(t *testing.T) {
 
 func TestUsageReporterTrackHTTPClientStartsTTFTBeforeRoundTrip(t *testing.T) {
 	delay := 40 * time.Millisecond
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
+	ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
 	reporter := NewUsageReporter(ctx, "openai", "gpt-5.4", nil)
 	client := reporter.TrackHTTPClient(&http.Client{
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -590,7 +590,7 @@ func TestUsageReporterTrackHTTPClientStartsTTFTBeforeRoundTrip(t *testing.T) {
 	if got := reporter.ttftDuration(); got < delay {
 		t.Fatalf("ttft = %v, want >= %v", got, delay)
 	}
-	if !cliproxyexecutor.UpstreamAttempted(ctx) {
+	if !apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("HTTP RoundTrip did not mark an upstream attempt")
 	}
 }

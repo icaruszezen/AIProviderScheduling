@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/proxyutil"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/proxyutil"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/sjson"
 	"golang.org/x/net/proxy"
@@ -28,7 +28,7 @@ const (
 	codexResponsesWebsocketHandshakeTO     = 30 * time.Second
 )
 
-func (e *CodexWebsocketsExecutor) dialCodexWebsocket(ctx context.Context, auth *cliproxyauth.Auth, wsURL string, headers http.Header) (*websocket.Conn, *websocketConnectionCloser, *http.Response, error) {
+func (e *CodexWebsocketsExecutor) dialCodexWebsocket(ctx context.Context, auth *apsauth.Auth, wsURL string, headers http.Header) (*websocket.Conn, *websocketConnectionCloser, *http.Response, error) {
 	dialer := newProxyAwareWebsocketDialer(e.cfg, auth)
 	dialer.HandshakeTimeout = codexResponsesWebsocketHandshakeTO
 	dialer.EnableCompression = true
@@ -37,7 +37,7 @@ func (e *CodexWebsocketsExecutor) dialCodexWebsocket(ctx context.Context, auth *
 	}
 	conn, resp, err := dialer.DialContext(ctx, wsURL, headers)
 	if err != nil {
-		cliproxyexecutor.MarkUpstreamAttempt(ctx)
+		apsexecutor.MarkUpstreamAttempt(ctx)
 	}
 	closer := newWebsocketConnectionCloser(conn)
 	if conn != nil {
@@ -74,7 +74,7 @@ func shouldRetryCodexWebsocketSend(err error) bool {
 	if err == nil {
 		return false
 	}
-	var requestErr cliproxyexecutor.RequestScopedError
+	var requestErr apsexecutor.RequestScopedError
 	return !errors.As(err, &requestErr) || !requestErr.IsRequestScoped()
 }
 
@@ -195,7 +195,7 @@ func readWebsocketMessageUntilCancel(ctx context.Context, conn *websocket.Conn, 
 	return msgType, payload, errRead
 }
 
-func newProxyAwareWebsocketDialer(cfg *config.Config, auth *cliproxyauth.Auth) *websocket.Dialer {
+func newProxyAwareWebsocketDialer(cfg *config.Config, auth *apsauth.Auth) *websocket.Dialer {
 	dialer := &websocket.Dialer{
 		Proxy:             http.ProxyFromEnvironment,
 		HandshakeTimeout:  codexResponsesWebsocketHandshakeTO,

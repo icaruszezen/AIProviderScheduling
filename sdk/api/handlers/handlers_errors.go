@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"golang.org/x/net/context"
 )
 
@@ -134,7 +134,7 @@ func (h *BaseAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.Erro
 	}
 	if msg != nil && msg.Addon != nil && PassthroughHeadersEnabled(h.Cfg) {
 		for key, values := range msg.Addon {
-			if len(values) == 0 || IsCPAReservedResponseHeader(key) {
+			if len(values) == 0 || IsAPSReservedResponseHeader(key) {
 				continue
 			}
 			c.Writer.Header().Del(key)
@@ -178,7 +178,7 @@ func (h *BaseAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.Erro
 
 func writeDirectErrorResponse(c *gin.Context, status int, msg *interfaces.ErrorMessage) {
 	for key, values := range FilterUpstreamHeaders(msg.Headers) {
-		if len(values) == 0 || IsCPAReservedResponseHeader(key) {
+		if len(values) == 0 || IsAPSReservedResponseHeader(key) {
 			continue
 		}
 		c.Writer.Header().Del(key)

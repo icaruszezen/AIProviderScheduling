@@ -38,13 +38,13 @@ func TestParseConfigBytes_PluginsDirExpandsLeadingTilde(t *testing.T) {
 
 	cfg, errParse := ParseConfigBytes([]byte(`
 plugins:
-  dir: "~/.cli-proxy-api/plugins"
+  dir: "~/.ai-provider-scheduling/plugins"
 `))
 	if errParse != nil {
 		t.Fatalf("ParseConfigBytes() error = %v", errParse)
 	}
 
-	want := filepath.Join(homeDir, ".cli-proxy-api", "plugins")
+	want := filepath.Join(homeDir, ".ai-provider-scheduling", "plugins")
 	if cfg.Plugins.Dir != want {
 		t.Fatalf("Plugins.Dir = %q, want %q", cfg.Plugins.Dir, want)
 	}
@@ -55,7 +55,7 @@ func TestLoadConfig_PluginsDirExpandsLeadingTilde(t *testing.T) {
 	t.Setenv("HOME", homeDir)
 	t.Setenv("USERPROFILE", homeDir)
 	configPath := filepath.Join(t.TempDir(), "config.yaml")
-	if errWrite := os.WriteFile(configPath, []byte("plugins:\n  dir: \"~/.cli-proxy-api/plugins\"\n"), 0o600); errWrite != nil {
+	if errWrite := os.WriteFile(configPath, []byte("plugins:\n  dir: \"~/.ai-provider-scheduling/plugins\"\n"), 0o600); errWrite != nil {
 		t.Fatalf("os.WriteFile() error = %v", errWrite)
 	}
 
@@ -64,7 +64,7 @@ func TestLoadConfig_PluginsDirExpandsLeadingTilde(t *testing.T) {
 		t.Fatalf("LoadConfig() error = %v", errLoad)
 	}
 
-	want := filepath.Join(homeDir, ".cli-proxy-api", "plugins")
+	want := filepath.Join(homeDir, ".ai-provider-scheduling", "plugins")
 	if cfg.Plugins.Dir != want {
 		t.Fatalf("Plugins.Dir = %q, want %q", cfg.Plugins.Dir, want)
 	}
@@ -97,7 +97,7 @@ plugins:
     - match: " https://plugins.example.com/ "
       apply-to: ["registry", "artifact", "registry"]
       type: bearer
-      token-env: " CLIPROXY_PLUGIN_STORE_TOKEN "
+      token-env: " APS_PLUGIN_STORE_TOKEN "
     - match: ""
       type: bearer
 `))
@@ -109,7 +109,7 @@ plugins:
 		t.Fatalf("Plugins.StoreAuth len = %d, want 1", len(cfg.Plugins.StoreAuth))
 	}
 	auth := cfg.Plugins.StoreAuth[0]
-	if auth.Match != "https://plugins.example.com/" || auth.Type != "bearer" || auth.TokenEnv != "CLIPROXY_PLUGIN_STORE_TOKEN" {
+	if auth.Match != "https://plugins.example.com/" || auth.Type != "bearer" || auth.TokenEnv != "APS_PLUGIN_STORE_TOKEN" {
 		t.Fatalf("Plugins.StoreAuth[0] = %#v", auth)
 	}
 	if len(auth.ApplyTo) != 2 || auth.ApplyTo[0] != "registry" || auth.ApplyTo[1] != "artifact" {

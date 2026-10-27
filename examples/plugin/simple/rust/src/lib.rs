@@ -9,7 +9,7 @@ const BASE64_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 
 static USAGE_COUNT: AtomicI64 = AtomicI64::new(0);
 
-const REGISTRATION_RESPONSE: &str = r#"{"ok":true,"result":{"schema_version":1,"metadata":{"Name":"example-simple-rust","Version":"0.1.0","Author":"router-for-me","GitHubRepository":"https://github.com/router-for-me/CLIProxyAPI","Logo":"https://raw.githubusercontent.com/router-for-me/CLIProxyAPI/main/docs/logo.png","ConfigFields":[{"Name":"config1","Type":"boolean","Description":"Enables the example boolean option."},{"Name":"config2","Type":"string","Description":"Stores the example string option."},{"Name":"config3","Type":"integer","Description":"Stores the example integer option."},{"Name":"mode","Type":"enum","EnumValues":["safe","fast"],"Description":"Selects the example execution mode."}]},"capabilities":{"model_registrar":true,"model_provider":true,"auth_provider":true,"frontend_auth_provider":true,"executor":true,"executor_model_scope":"both","executor_input_formats":["chat-completions"],"executor_output_formats":["chat-completions"],"request_translator":true,"request_normalizer":true,"response_translator":true,"response_before_translator":true,"response_after_translator":true,"thinking_applier":true,"usage_plugin":true,"command_line_plugin":true,"management_api":true}}}"#;
+const REGISTRATION_RESPONSE: &str = r#"{"ok":true,"result":{"schema_version":1,"metadata":{"Name":"example-simple-rust","Version":"0.1.0","Author":"router-for-me","GitHubRepository":"https://github.com/icaruszezen/AIProviderScheduling","Logo":"https://raw.githubusercontent.com/icaruszezen/AIProviderScheduling/main/docs/logo.png","ConfigFields":[{"Name":"config1","Type":"boolean","Description":"Enables the example boolean option."},{"Name":"config2","Type":"string","Description":"Stores the example string option."},{"Name":"config3","Type":"integer","Description":"Stores the example integer option."},{"Name":"mode","Type":"enum","EnumValues":["safe","fast"],"Description":"Selects the example execution mode."}]},"capabilities":{"model_registrar":true,"model_provider":true,"auth_provider":true,"frontend_auth_provider":true,"executor":true,"executor_model_scope":"both","executor_input_formats":["chat-completions"],"executor_output_formats":["chat-completions"],"request_translator":true,"request_normalizer":true,"response_translator":true,"response_before_translator":true,"response_after_translator":true,"thinking_applier":true,"usage_plugin":true,"command_line_plugin":true,"management_api":true}}}"#;
 const MODEL_RESPONSE: &str = r#"{"ok":true,"result":{"Provider":"plugin-example-rust","Models":[{"ID":"plugin-example-rust-model","Object":"model","OwnedBy":"plugin-example-rust","DisplayName":"Plugin Example Rust Model","SupportedGenerationMethods":["chat"],"ContextLength":8192,"MaxCompletionTokens":1024,"UserDefined":true}]}}"#;
 const IDENTIFIER_RESPONSE: &str = r#"{"ok":true,"result":{"identifier":"plugin-example-rust"}}"#;
 const LOGIN_START_RESPONSE: &str = r#"{"ok":true,"result":{"Provider":"plugin-example-rust","URL":"https://example.invalid/plugin-login","State":"example-state","ExpiresAt":"2030-01-01T00:00:00Z"}}"#;
@@ -23,19 +23,19 @@ const UNKNOWN_METHOD_RESPONSE: &str = r#"{"ok":false,"error":{"code":"unknown_me
 const INVALID_METHOD_RESPONSE: &str = r#"{"ok":false,"error":{"code":"invalid_method","message":"method is required"}}"#;
 
 #[repr(C)]
-pub struct CliproxyBuffer {
+pub struct ApsBuffer {
     ptr: *mut u8,
     len: usize,
 }
 
-type HostCall = unsafe extern "C" fn(*mut std::ffi::c_void, *const c_char, *const u8, usize, *mut CliproxyBuffer) -> i32;
+type HostCall = unsafe extern "C" fn(*mut std::ffi::c_void, *const c_char, *const u8, usize, *mut ApsBuffer) -> i32;
 type HostFree = unsafe extern "C" fn(*mut std::ffi::c_void, usize);
-type PluginCall = unsafe extern "C" fn(*const c_char, *const u8, usize, *mut CliproxyBuffer) -> i32;
+type PluginCall = unsafe extern "C" fn(*const c_char, *const u8, usize, *mut ApsBuffer) -> i32;
 type PluginFree = unsafe extern "C" fn(*mut std::ffi::c_void, usize);
 type PluginShutdown = unsafe extern "C" fn();
 
 #[repr(C)]
-pub struct CliproxyHostApi {
+pub struct ApsHostApi {
     abi_version: u32,
     host_ctx: *mut std::ffi::c_void,
     call: Option<HostCall>,
@@ -43,7 +43,7 @@ pub struct CliproxyHostApi {
 }
 
 #[repr(C)]
-pub struct CliproxyPluginApi {
+pub struct ApsPluginApi {
     abi_version: u32,
     call: Option<PluginCall>,
     free_buffer: Option<PluginFree>,
@@ -51,7 +51,7 @@ pub struct CliproxyPluginApi {
 }
 
 #[no_mangle]
-pub extern "C" fn cliproxy_plugin_init(host: *const CliproxyHostApi, plugin: *mut CliproxyPluginApi) -> i32 {
+pub extern "C" fn aps_plugin_init(host: *const ApsHostApi, plugin: *mut ApsPluginApi) -> i32 {
     if plugin.is_null() {
         return 1;
     }
@@ -65,7 +65,7 @@ pub extern "C" fn cliproxy_plugin_init(host: *const CliproxyHostApi, plugin: *mu
     0
 }
 
-unsafe extern "C" fn plugin_call(method: *const c_char, request: *const u8, request_len: usize, response: *mut CliproxyBuffer) -> i32 {
+unsafe extern "C" fn plugin_call(method: *const c_char, request: *const u8, request_len: usize, response: *mut ApsBuffer) -> i32 {
     if !response.is_null() {
         (*response).ptr = ptr::null_mut();
         (*response).len = 0;
@@ -389,7 +389,7 @@ unsafe extern "C" fn plugin_free(ptr: *mut std::ffi::c_void, len: usize) {
 
 unsafe extern "C" fn plugin_shutdown() {}
 
-fn write_response(response: *mut CliproxyBuffer, text: &str) {
+fn write_response(response: *mut ApsBuffer, text: &str) {
     if response.is_null() {
         return;
     }

@@ -1,4 +1,4 @@
-// Package misc provides miscellaneous utility functions and embedded data for the CLI Proxy API.
+// Package misc provides miscellaneous utility functions and embedded data for the AI Provider Scheduling.
 // This package contains general-purpose helpers and embedded resources that do not fit into
 // more specific domain packages. It includes embedded instructional text for Claude Code-related operations.
 package misc

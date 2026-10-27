@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 type countingWebsocketLifecycle struct {
@@ -24,7 +24,7 @@ func TestCodexWebsocketSessionBindsSameLifecycleAndConnectionOnce(t *testing.T) 
 	closer := newWebsocketConnectionCloser(conn)
 	sess := &codexWebsocketSession{conn: conn, connCloser: closer}
 	lifecycle := &countingWebsocketLifecycle{}
-	opts := cliproxyexecutor.Options{ExecutionLifecycle: lifecycle}
+	opts := apsexecutor.Options{ExecutionLifecycle: lifecycle}
 
 	if errBind := sess.bindExecutionLifecycle(opts, conn, closer, "gpt-5-codex"); errBind != nil {
 		t.Fatalf("first bindExecutionLifecycle() error = %v", errBind)

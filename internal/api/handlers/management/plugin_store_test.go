@@ -18,9 +18,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginstore"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginstore"
 )
+
+const pluginStoreTestRegistryURL = "https://registry.example/plugins/registry.json"
 
 func TestListPluginStoreMergesInstalledStatus(t *testing.T) {
 	t.Parallel()
@@ -96,7 +98,7 @@ func TestPluginStoreDirectManifestPinsRequestedVersionArtifacts(t *testing.T) {
 		}},
 	}
 
-	manifest, errManifest := pluginStoreDirectManifest(pluginstore.DefaultSource(), plugin, "0.9.0")
+	manifest, errManifest := pluginStoreDirectManifest(pluginstore.Source{ID: "source-test", Name: "Test", URL: pluginStoreTestRegistryURL}, plugin, "0.9.0")
 	if errManifest != nil {
 		t.Fatalf("pluginStoreDirectManifest() error = %v", errManifest)
 	}
@@ -236,7 +238,7 @@ func TestListPluginStoreEscapesRegistryStrings(t *testing.T) {
 					"description": "<img src=x onerror=alert(1)>",
 					"author": "\"attacker\"",
 					"version": "0.1.0",
-					"repository": "https://github.com/author-name/cliproxy-sample-provider-plugin",
+					"repository": "https://github.com/author-name/aps-sample-provider-plugin",
 					"logo": "<svg onload=alert(1)>",
 					"homepage": "https://example.com/?q=<x>",
 					"license": "<b>MIT</b>",
@@ -267,7 +269,7 @@ func TestListPluginStoreEscapesRegistryStrings(t *testing.T) {
 		entry.Description != html.EscapeString("<img src=x onerror=alert(1)>") ||
 		entry.Author != html.EscapeString(`"attacker"`) ||
 		entry.Version != "0.1.0" ||
-		entry.Repository != "https://github.com/author-name/cliproxy-sample-provider-plugin" ||
+		entry.Repository != "https://github.com/author-name/aps-sample-provider-plugin" ||
 		entry.Logo != html.EscapeString("<svg onload=alert(1)>") ||
 		entry.Homepage != html.EscapeString("https://example.com/?q=<x>") ||
 		entry.License != html.EscapeString("<b>MIT</b>") {
@@ -285,7 +287,7 @@ func TestListPluginStoreShowsLatestReleaseVersionAndCaches(t *testing.T) {
 
 	httpClient := &countingPluginStoreHTTPClient{responses: fakePluginStoreHTTPClient{
 		"https://registry.example/registry.json": registryJSON(t),
-		"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest": []byte(`{
+		"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest": []byte(`{
 			"tag_name": "v0.2.0",
 			"assets": []
 		}`),
@@ -326,7 +328,7 @@ func TestListPluginStoreShowsLatestReleaseVersionAndCaches(t *testing.T) {
 			t.Fatalf("version = %q, want 0.2.0 from latest release tag", body.Plugins[0].Version)
 		}
 	}
-	releaseCalls := httpClient.count("https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest")
+	releaseCalls := httpClient.count("https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest")
 	if releaseCalls != 1 {
 		t.Fatalf("latest release fetched %d times, want 1 (cached)", releaseCalls)
 	}
@@ -378,12 +380,12 @@ func TestListPluginStoreIncludesThirdPartySources(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Enabled:      true,
 				Dir:          t.TempDir(),
-				StoreSources: []string{"https://community.example/registry.json"},
+				StoreSources: []string{pluginStoreTestRegistryURL, "https://community.example/registry.json"},
 			},
 		},
 		configFilePath: writeTestConfigFile(t),
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
-			pluginstore.DefaultRegistryURL: registryJSON(t),
+			pluginStoreTestRegistryURL: registryJSON(t),
 			"https://community.example/registry.json": []byte(`{
 				"schema_version": 1,
 				"plugins": [{
@@ -392,7 +394,7 @@ func TestListPluginStoreIncludesThirdPartySources(t *testing.T) {
 					"description": "Adds third-party provider support.",
 					"author": "community",
 					"version": "0.3.0",
-					"repository": "https://github.com/community/cliproxy-third-provider-plugin"
+					"repository": "https://github.com/community/aps-third-provider-plugin"
 				}]
 			}`),
 		},
@@ -421,8 +423,8 @@ func TestListPluginStoreIncludesThirdPartySources(t *testing.T) {
 	for _, entry := range body.Plugins {
 		byID[entry.ID] = entry
 	}
-	if byID["sample-provider"].SourceID != pluginstore.DefaultSourceID {
-		t.Fatalf("official source id = %q, want %q", byID["sample-provider"].SourceID, pluginstore.DefaultSourceID)
+	if byID["sample-provider"].SourceID != pluginstore.SourceID(pluginStoreTestRegistryURL) {
+		t.Fatalf("official source id = %q, want %q", byID["sample-provider"].SourceID, pluginstore.SourceID(pluginStoreTestRegistryURL))
 	}
 	third := byID["third-provider"]
 	communitySourceID := pluginstore.SourceID("https://community.example/registry.json")
@@ -450,16 +452,16 @@ func TestListPluginStoreMatchesInstalledStatusToManifestSource(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Enabled:      true,
 				Dir:          pluginsDir,
-				StoreSources: []string{communityURL},
+				StoreSources: []string{pluginStoreTestRegistryURL, communityURL},
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample-provider": pluginConfigWithStoreSource(t, pluginstore.DefaultSourceID, pluginstore.DefaultRegistryURL),
+					"sample-provider": pluginConfigWithStoreSource(t, pluginstore.SourceID(pluginStoreTestRegistryURL), pluginStoreTestRegistryURL),
 				},
 			},
 		},
 		configFilePath: writeTestConfigFile(t),
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
-			pluginstore.DefaultRegistryURL: registryJSON(t),
-			communityURL:                   thirdPartySampleRegistryJSON(t),
+			pluginStoreTestRegistryURL: registryJSON(t),
+			communityURL:               thirdPartySampleRegistryJSON(t),
 		},
 	}
 
@@ -497,13 +499,13 @@ func TestListPluginStoreMatchesInstalledStatusToManifestSource(t *testing.T) {
 			UpdateAvailable     bool
 		}{entry.InstalledSourceID, entry.InstallSourceStatus, entry.UpdateAvailable}
 	}
-	official := entries[pluginstore.DefaultSourceID]
-	if official.InstalledSourceID != pluginstore.DefaultSourceID || official.InstallSourceStatus != "matched" || !official.UpdateAvailable {
+	official := entries[pluginstore.SourceID(pluginStoreTestRegistryURL)]
+	if official.InstalledSourceID != pluginstore.SourceID(pluginStoreTestRegistryURL) || official.InstallSourceStatus != "matched" || !official.UpdateAvailable {
 		t.Fatalf("official entry = %#v, want matched update", official)
 	}
 	communitySourceID := pluginstore.SourceID(communityURL)
 	community := entries[communitySourceID]
-	if community.InstalledSourceID != pluginstore.DefaultSourceID || community.InstallSourceStatus != "different" || community.UpdateAvailable {
+	if community.InstalledSourceID != pluginstore.SourceID(pluginStoreTestRegistryURL) || community.InstallSourceStatus != "different" || community.UpdateAvailable {
 		t.Fatalf("community entry = %#v, want different source without update", community)
 	}
 }
@@ -517,16 +519,16 @@ func TestInstallPluginFromStoreRejectsImplicitSourceSwitch(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Enabled:      true,
 				Dir:          writeManagementPluginFile(t, "sample-provider"),
-				StoreSources: []string{communityURL},
+				StoreSources: []string{pluginStoreTestRegistryURL, communityURL},
 				Configs: map[string]config.PluginInstanceConfig{
-					"sample-provider": pluginConfigWithStoreSource(t, pluginstore.DefaultSourceID, pluginstore.DefaultRegistryURL),
+					"sample-provider": pluginConfigWithStoreSource(t, pluginstore.SourceID(pluginStoreTestRegistryURL), pluginStoreTestRegistryURL),
 				},
 			},
 		},
 		configFilePath: writeTestConfigFile(t),
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
-			pluginstore.DefaultRegistryURL: registryJSON(t),
-			communityURL:                   thirdPartySampleRegistryJSON(t),
+			pluginStoreTestRegistryURL: registryJSON(t),
+			communityURL:               thirdPartySampleRegistryJSON(t),
 		},
 	}
 
@@ -540,7 +542,7 @@ func TestInstallPluginFromStoreRejectsImplicitSourceSwitch(t *testing.T) {
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("status = %d, want %d; body=%s", rec.Code, http.StatusConflict, rec.Body.String())
 	}
-	if !strings.Contains(rec.Body.String(), "plugin_store_source_conflict") || !strings.Contains(rec.Body.String(), pluginstore.DefaultSourceID) {
+	if !strings.Contains(rec.Body.String(), "plugin_store_source_conflict") || !strings.Contains(rec.Body.String(), pluginstore.SourceID(pluginStoreTestRegistryURL)) {
 		t.Fatalf("body = %s, want source conflict with installed source", rec.Body.String())
 	}
 }
@@ -684,7 +686,7 @@ func TestListPluginStoreReportsGitHubMetadataAuth(t *testing.T) {
 				Enabled: true,
 				Dir:     t.TempDir(),
 				StoreAuth: []pluginstore.AuthConfig{{
-					Match:    "https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/",
+					Match:    "https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/",
 					ApplyTo:  []string{pluginstore.RequestKindMetadata},
 					Type:     pluginstore.AuthTypeBearer,
 					TokenEnv: "PLUGIN_STORE_TOKEN",
@@ -728,7 +730,7 @@ func TestInstallPluginFromStoreRejectsUnresolvedPluginsDir(t *testing.T) {
 	h := &Handler{
 		cfg: &config.Config{
 			Plugins: config.PluginsConfig{
-				Dir:     "~/.cli-proxy-api/plugins",
+				Dir:     "~/.ai-provider-scheduling/plugins",
 				Configs: map[string]config.PluginInstanceConfig{},
 			},
 		},
@@ -770,13 +772,13 @@ func TestInstallPluginFromStoreWritesFileAndEnablesConfig(t *testing.T) {
 	cfg, errParse := config.ParseConfigBytes([]byte(`
 plugins:
   enabled: false
-  dir: "~/.cli-proxy-api/plugins"
+  dir: "~/.ai-provider-scheduling/plugins"
 `))
 	if errParse != nil {
 		t.Fatalf("ParseConfigBytes() error = %v", errParse)
 	}
 	cfg.Plugins.Configs["sample-provider"] = pluginConfigFromYAML(t, "enabled: false\nmode: fast\n")
-	pluginsDir := filepath.Join(homeDir, ".cli-proxy-api", "plugins")
+	pluginsDir := filepath.Join(homeDir, ".ai-provider-scheduling", "plugins")
 	archiveData := makeManagementPluginStoreZip(t, "sample-provider"+managementPluginExtension(runtime.GOOS), "library-data")
 	archiveName := "sample-provider_0.1.0_" + runtime.GOOS + "_" + runtime.GOARCH + ".zip"
 	checksum := sha256.Sum256(archiveData)
@@ -786,7 +788,7 @@ plugins:
 		pluginStoreRegistryURL: "https://registry.example/registry.json",
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
 			"https://registry.example/registry.json": registryJSON(t),
-			"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest": []byte(`{
+			"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest": []byte(`{
 				"tag_name": "v0.1.0",
 				"assets": [
 					{"name": "` + archiveName + `", "browser_download_url": "https://downloads.example/` + archiveName + `"},
@@ -1001,9 +1003,9 @@ func TestInstallPluginFromStoreUsesRequestedThirdPartySource(t *testing.T) {
 		},
 		configFilePath: writeTestConfigFile(t),
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
-			pluginstore.DefaultRegistryURL:            registryJSON(t),
+			pluginStoreTestRegistryURL:                registryJSON(t),
 			"https://community.example/registry.json": thirdPartySampleRegistryJSON(t),
-			"https://api.github.com/repos/community/cliproxy-sample-provider-plugin/releases/latest": []byte(`{
+			"https://api.github.com/repos/community/aps-sample-provider-plugin/releases/latest": []byte(`{
 				"tag_name": "v0.3.0",
 				"assets": [
 					{"name": "` + archiveName + `", "browser_download_url": "https://downloads.example/` + archiveName + `"},
@@ -1061,12 +1063,12 @@ func TestInstallPluginFromStoreRequiresSourceForDuplicateIDs(t *testing.T) {
 			Plugins: config.PluginsConfig{
 				Enabled:      false,
 				Dir:          t.TempDir(),
-				StoreSources: []string{"https://community.example/registry.json"},
+				StoreSources: []string{pluginStoreTestRegistryURL, "https://community.example/registry.json"},
 			},
 		},
 		configFilePath: writeTestConfigFile(t),
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
-			pluginstore.DefaultRegistryURL:            registryJSON(t),
+			pluginStoreTestRegistryURL:                registryJSON(t),
 			"https://community.example/registry.json": thirdPartySampleRegistryJSON(t),
 		},
 	}
@@ -1114,7 +1116,7 @@ func TestInstallPluginFromStoreOverwritesFilePreservesConfigAndReloads(t *testin
 		pluginStoreRegistryURL: "https://registry.example/registry.json",
 		pluginStoreHTTPClient: fakePluginStoreHTTPClient{
 			"https://registry.example/registry.json": registryJSON(t),
-			"https://api.github.com/repos/author-name/cliproxy-sample-provider-plugin/releases/latest": []byte(`{
+			"https://api.github.com/repos/author-name/aps-sample-provider-plugin/releases/latest": []byte(`{
 				"tag_name": "v0.1.0",
 				"assets": [
 					{"name": "` + archiveName + `", "browser_download_url": "https://downloads.example/` + archiveName + `"},
@@ -1275,7 +1277,7 @@ func registryJSON(t *testing.T) []byte {
 			"description": "Adds sample provider support.",
 			"author": "author-name",
 			"version": "0.1.0",
-			"repository": "https://github.com/author-name/cliproxy-sample-provider-plugin",
+			"repository": "https://github.com/author-name/aps-sample-provider-plugin",
 			"tags": ["provider"]
 		}]
 	}`)
@@ -1292,7 +1294,7 @@ func thirdPartySampleRegistryJSON(t *testing.T) []byte {
 			"description": "Adds sample provider support from a third-party source.",
 			"author": "community",
 			"version": "0.3.0",
-			"repository": "https://github.com/community/cliproxy-sample-provider-plugin"
+			"repository": "https://github.com/community/aps-sample-provider-plugin"
 		}]
 	}`)
 }
@@ -1368,7 +1370,7 @@ func testStoreManifest() pluginstore.Manifest {
 		Author:      "author-name",
 		Version:     "0.1.0",
 		ReleaseTag:  "v0.1.0",
-		Repository:  "https://github.com/author-name/cliproxy-sample-provider-plugin",
+		Repository:  "https://github.com/author-name/aps-sample-provider-plugin",
 		Install:     pluginstore.InstallPlan{Type: pluginstore.InstallTypeGitHubRelease},
 	}
 }
@@ -1382,7 +1384,7 @@ func pluginConfigWithStoreSource(t *testing.T, sourceID string, sourceURL string
 	if sourceURL != "" {
 		sourceFields += "  source-url: " + sourceURL + "\n"
 	}
-	return pluginConfigFromYAML(t, "enabled: true\nstore:\n  schema-version: 1\n  id: sample-provider\n  version: 0.0.1\n  release-tag: v0.0.1\n  repository: https://github.com/author-name/cliproxy-sample-provider-plugin\n"+sourceFields+"  install:\n    type: github-release\n")
+	return pluginConfigFromYAML(t, "enabled: true\nstore:\n  schema-version: 1\n  id: sample-provider\n  version: 0.0.1\n  release-tag: v0.0.1\n  repository: https://github.com/author-name/aps-sample-provider-plugin\n"+sourceFields+"  install:\n    type: github-release\n")
 }
 
 func pluginStoreManifestFromConfig(t *testing.T, item config.PluginInstanceConfig) pluginstore.Manifest {

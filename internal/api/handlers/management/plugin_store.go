@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/htmlsanitize"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginstore"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/htmlsanitize"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginstore"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -518,9 +518,7 @@ func (h *Handler) pluginStoreSnapshot() (bool, string, string, []string, []plugi
 
 func (h *Handler) pluginStoreSources(sourceConfigs []string) ([]pluginstore.Source, error) {
 	if h != nil && strings.TrimSpace(h.pluginStoreRegistryURL) != "" {
-		source := pluginstore.DefaultSource()
-		source.URL = strings.TrimSpace(h.pluginStoreRegistryURL)
-		return []pluginstore.Source{source}, nil
+		return pluginstore.NormalizeSources([]string{h.pluginStoreRegistryURL})
 	}
 	return pluginstore.NormalizeSources(sourceConfigs)
 }
@@ -530,9 +528,6 @@ func (h *Handler) newPluginStoreClient(proxyURL string, registryURL string, stor
 	var httpClient pluginstore.HTTPDoer
 	if h != nil {
 		httpClient = h.pluginStoreHTTPClient
-	}
-	if registryURL == "" {
-		registryURL = pluginstore.DefaultRegistryURL
 	}
 	if httpClient != nil {
 		return pluginstore.Client{HTTPClient: httpClient, RegistryURL: registryURL, Auth: storeAuth}

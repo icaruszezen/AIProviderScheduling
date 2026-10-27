@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 // TestAntigravityBuildRequestKeepsConnectionAlive guards the regression where the
@@ -23,7 +23,7 @@ import (
 // client omits the Connection header entirely.
 func TestAntigravityBuildRequestKeepsConnectionAlive(t *testing.T) {
 	e := &AntigravityExecutor{}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{"project_id": "project-1"}}
+	auth := &apsauth.Auth{Metadata: map[string]any{"project_id": "project-1"}}
 	payload := []byte(`{"request":{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}}`)
 
 	for _, stream := range []bool{false, true} {
@@ -64,7 +64,7 @@ func TestAntigravityExecuteStreamReusesUpstreamConnection(t *testing.T) {
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "antigravity-keepalive-auth",
 		Provider: "antigravity",
 		Attributes: map[string]string{
@@ -79,10 +79,10 @@ func TestAntigravityExecuteStreamReusesUpstreamConnection(t *testing.T) {
 	const requests = 6
 	payload := []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)
 	for i := 0; i < requests; i++ {
-		result, errExecute := exec.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+		result, errExecute := exec.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 			Model:   "gemini-3.6-flash-high",
 			Payload: payload,
-		}, cliproxyexecutor.Options{
+		}, apsexecutor.Options{
 			SourceFormat:    sdktranslator.FormatGemini,
 			ResponseFormat:  sdktranslator.FormatGemini,
 			Stream:          true,
@@ -137,7 +137,7 @@ func TestAntigravityCountTokensReusesUpstreamConnection(t *testing.T) {
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "antigravity-counttokens-auth",
 		Provider: "antigravity",
 		Attributes: map[string]string{
@@ -152,18 +152,18 @@ func TestAntigravityCountTokensReusesUpstreamConnection(t *testing.T) {
 	const requests = 4
 	payload := []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}`)
 	for i := 0; i < requests; i++ {
-		ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
-		if _, errCount := exec.CountTokens(ctx, auth, cliproxyexecutor.Request{
+		ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
+		if _, errCount := exec.CountTokens(ctx, auth, apsexecutor.Request{
 			Model:   "gemini-3.6-flash-high",
 			Payload: payload,
-		}, cliproxyexecutor.Options{
+		}, apsexecutor.Options{
 			SourceFormat:    sdktranslator.FormatGemini,
 			ResponseFormat:  sdktranslator.FormatGemini,
 			OriginalRequest: payload,
 		}); errCount != nil {
 			t.Fatalf("request %d: CountTokens() error = %v", i, errCount)
 		}
-		if !cliproxyexecutor.UpstreamAttempted(ctx) {
+		if !apsexecutor.UpstreamAttempted(ctx) {
 			t.Fatalf("request %d: CountTokens() did not mark the upstream attempt", i)
 		}
 	}
@@ -201,7 +201,7 @@ func TestAntigravityHTTPRequestReusesUpstreamConnection(t *testing.T) {
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token"},
 		ID:         "antigravity-http-request-auth",
 		Provider:   "antigravity",
@@ -281,7 +281,7 @@ func TestAntigravityHTTPRequestConcurrentSessionsStayIsolated(t *testing.T) {
 	defer server.Close()
 
 	exec := NewAntigravityExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{"api_key": "token"},
 		ID:         "antigravity-concurrent-sessions-auth",
 		Provider:   "antigravity",

@@ -1,14 +1,14 @@
 package helps
 
 import (
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 // IsClaudeTokenEvent reports whether an Anthropic Messages SSE chunk carries
 // substantive output token content (such as text delta, thinking delta, or tool input delta).
 // It filters out message_start, ping, content_block_stop, and empty containers.
 func IsClaudeTokenEvent(payload []byte) bool {
-	return cliproxyexecutor.IsClaudeTokenEvent(payload)
+	return apsexecutor.IsClaudeTokenEvent(payload)
 }
 
 // ObserveClaudeTokenEvent inspects an Anthropic Messages SSE chunk and records TTFT if the frame

@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/thinking/provider/antigravity"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking/provider/antigravity"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -27,7 +27,7 @@ func TestSummaryIntentTranslation(t *testing.T) {
 		// Anthropic rejects display next to a disabled thinking block, so a "none"
 		// effort must leave the field off rather than write "omitted".
 		{name: "Chat none leaves disabled Claude thinking without display", from: sdktranslator.FormatOpenAI, to: sdktranslator.FormatClaude, body: `{"model":"claude-opus-5","reasoning_effort":"none","messages":[{"role":"user","content":"hi"}]}`, path: "thinking.display"},
-		// Anthropic requires thinking.type. For an unregistered target CPA cannot
+		// Anthropic requires thinking.type. For an unregistered target APS cannot
 		// safely guess adaptive versus manual thinking, so it must not emit an
 		// invalid display-only object. Registered targets are covered below.
 		{name: "Unknown Claude target does not get display only thinking", from: sdktranslator.FormatOpenAI, to: sdktranslator.FormatClaude, body: `{"model":"unregistered-claude-model","reasoning":{"exclude":false},"messages":[{"role":"user","content":"hi"}]}`, path: "thinking"},
@@ -120,7 +120,7 @@ func TestSummaryIntentFinalPipeline(t *testing.T) {
 		{name: "Responses summary only activates visible Claude thinking", from: sdktranslator.FormatOpenAIResponse, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","reasoning":{"summary":"auto"},"input":"hi"}`, path: "thinking.display", want: "summarized", wantExists: true},
 		// Summary visibility must not override Claude's per-model thinking default.
 		// Sonnet 4.6 defaults off; newer default-on models remain default-on without
-		// CPA injecting an explicit thinking block.
+		// APS injecting an explicit thinking block.
 		{name: "Responses null summary alone preserves Claude thinking default", from: sdktranslator.FormatOpenAIResponse, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","reasoning":{"summary":null},"input":"hi"}`, path: "thinking"},
 		{name: "Responses default keeps Claude display default", from: sdktranslator.FormatOpenAIResponse, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","input":"hi"}`, path: "thinking.display"},
 		{name: "Chat summary alias only activates valid Claude thinking", from: sdktranslator.FormatOpenAI, to: sdktranslator.FormatClaude, model: "claude-sonnet-4-6-model", body: `{"model":"claude-sonnet-4-6-model","reasoning":{"exclude":false},"messages":[{"role":"user","content":"hi"}]}`, path: "thinking.display", want: "summarized", wantExists: true},

@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"strings"
 
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
@@ -26,7 +26,7 @@ func (s xaiReasoningReplayScope) valid() bool {
 	return strings.TrimSpace(s.modelName) != "" && strings.TrimSpace(s.sessionKey) != ""
 }
 
-func applyXAIReasoningReplayCacheRequired(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) ([]byte, xaiReasoningReplayScope, error) {
+func applyXAIReasoningReplayCacheRequired(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) ([]byte, xaiReasoningReplayScope, error) {
 	scope := xaiReasoningReplayScopeFromRequest(ctx, from, req, opts, body)
 	if !scope.valid() {
 		return body, scope, nil
@@ -50,13 +50,13 @@ func applyXAIReasoningReplayCacheRequired(ctx context.Context, from sdktranslato
 	return updated, scope, nil
 }
 
-func xaiReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.Format, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, body []byte) xaiReasoningReplayScope {
+func xaiReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.Format, req apsexecutor.Request, opts apsexecutor.Options, body []byte) xaiReasoningReplayScope {
 	if !xaiReasoningReplayEnabledForSource(from) {
 		return xaiReasoningReplayScope{}
 	}
 	// End-to-end WebSocket requests use upstream previous_response_id state.
 	// Replaying encrypted reasoning as input as well would duplicate the turn.
-	if cliproxyexecutor.DownstreamWebsocket(ctx) && strings.TrimSpace(gjson.GetBytes(req.Payload, "previous_response_id").String()) != "" {
+	if apsexecutor.DownstreamWebsocket(ctx) && strings.TrimSpace(gjson.GetBytes(req.Payload, "previous_response_id").String()) != "" {
 		return xaiReasoningReplayScope{}
 	}
 	sessionKey := codexReasoningReplaySessionKey(ctx, from, req, opts, body)
@@ -67,7 +67,7 @@ func xaiReasoningReplayScopeFromRequest(ctx context.Context, from sdktranslator.
 }
 
 // xaiReasoningReplayIsolateSessionKey namespaces client-controlled session keys
-// by the downstream CPA API key so two callers cannot share encrypted reasoning
+// by the downstream APS API key so two callers cannot share encrypted reasoning
 // or assistant text by reusing prompt_cache_key / window / session headers.
 // Trusted execution session keys keep their existing form. Client-controlled
 // sessions without a caller API key are disabled rather than shared globally.

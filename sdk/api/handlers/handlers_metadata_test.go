@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	coresession "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/session"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	coresession "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/session"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 	"golang.org/x/net/context"
 )
 

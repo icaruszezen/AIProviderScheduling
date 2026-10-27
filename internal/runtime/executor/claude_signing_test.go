@@ -150,7 +150,7 @@ func TestClaudeCCHSigningEnabled(t *testing.T) {
 		{name: "anthropic host over http opt-in", apiKey: "key-123", kind: claudeCCHUpstreamAnthropic, cliFingerprint: true, origin: "http://api.anthropic.com/v1/messages", want: false},
 		{name: "anthropic host explicit 443 opt-in", apiKey: "key-123", kind: claudeCCHUpstreamAnthropic, cliFingerprint: true, origin: "https://api.anthropic.com:443/v1/messages", want: true},
 		{name: "anthropic lookalike host opt-in", apiKey: "key-123", kind: claudeCCHUpstreamAnthropic, cliFingerprint: true, origin: "https://api.anthropic.com.evil.example/v1/messages", want: false},
-		// A real OAuth credential signs on every upstream: CPA is the hop that has to
+		// A real OAuth credential signs on every upstream: APS is the hop that has to
 		// regenerate the cch a downstream Claude Code could not produce.
 		{name: "Claude OAuth token never signs", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: anthropicOrigin, want: false},
 		{name: "Claude OAuth token never signs on custom gateway", apiKey: "sk-ant-oat-custom", kind: claudeCCHUpstreamAnthropic, origin: gatewayOrigin, want: false},

@@ -1,14 +1,14 @@
 package helps
 
 import (
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 // IsResponsesTokenEvent reports whether the given OpenAI/xAI Responses API WebSocket or SSE event
 // payload carries an actual output token, reasoning trace, tool call argument, or multimodal delta,
 // according to the official Responses API streaming / websocket specification plus Codex-compatible private events.
 func IsResponsesTokenEvent(payload []byte) bool {
-	return cliproxyexecutor.IsResponsesTokenEvent(payload)
+	return apsexecutor.IsResponsesTokenEvent(payload)
 }
 
 // ObserveResponsesTokenEvent inspects a Responses API frame payload and records TTFT if the frame

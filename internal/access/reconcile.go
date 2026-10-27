@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	log "github.com/sirupsen/logrus"
 )
 

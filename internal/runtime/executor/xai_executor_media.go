@@ -8,14 +8,14 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 )
 
-func (e *XAIExecutor) executeImages(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options, endpointPath string) (resp cliproxyexecutor.Response, err error) {
+func (e *XAIExecutor) executeImages(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options, endpointPath string) (resp apsexecutor.Response, err error) {
 	model := strings.TrimSpace(gjson.GetBytes(req.Payload, "model").String())
 	if model == "" {
 		model = strings.TrimSpace(req.Model)
@@ -67,10 +67,10 @@ func (e *XAIExecutor) executeImages(ctx context.Context, auth *cliproxyauth.Auth
 	}
 
 	reporter.EnsurePublished(ctx)
-	return cliproxyexecutor.Response{Payload: data, Headers: httpResp.Header.Clone()}, nil
+	return apsexecutor.Response{Payload: data, Headers: httpResp.Header.Clone()}, nil
 }
 
-func (e *XAIExecutor) executeVideos(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (resp cliproxyexecutor.Response, err error) {
+func (e *XAIExecutor) executeVideos(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (resp apsexecutor.Response, err error) {
 	model := strings.TrimSpace(gjson.GetBytes(req.Payload, "model").String())
 	if model == "" {
 		model = strings.TrimSpace(req.Model)
@@ -141,5 +141,5 @@ func (e *XAIExecutor) executeVideos(ctx context.Context, auth *cliproxyauth.Auth
 	}
 
 	reporter.EnsurePublished(ctx)
-	return cliproxyexecutor.Response{Payload: data, Headers: httpResp.Header.Clone()}, nil
+	return apsexecutor.Response{Payload: data, Headers: httpResp.Header.Clone()}, nil
 }

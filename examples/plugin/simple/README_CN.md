@@ -2,7 +2,7 @@
 
 这是混合全部能力的完整骨架示例。单能力示例请查看 `../README_CN.md`。
 
-本目录是当前标准动态库插件 ABI 的参考骨架。ABI 与语言无关：宿主加载原生动态库，调用 `cliproxy_plugin_init`，然后通过稳定的 C 函数表交换 JSON 信封。
+本目录是当前标准动态库插件 ABI 的参考骨架。ABI 与语言无关：宿主加载原生动态库，调用 `aps_plugin_init`，然后通过稳定的 C 函数表交换 JSON 信封。
 
 本目录包含同一个混合能力示例的 Go、C、Rust 三种完整实现。Go 示例使用 `-buildmode=c-shared`，C 示例使用 CMake，Rust 示例使用 `cdylib` crate。
 
@@ -11,21 +11,21 @@
 每个插件必须导出：
 
 ```c
-int cliproxy_plugin_init(const cliproxy_host_api* host, cliproxy_plugin_api* plugin);
+int aps_plugin_init(const aps_host_api* host, aps_plugin_api* plugin);
 ```
 
-插件填充 `cliproxy_plugin_api`：
+插件填充 `aps_plugin_api`：
 
 ```c
-int call(char* method, uint8_t* request, size_t request_len, cliproxy_buffer* response);
+int call(char* method, uint8_t* request, size_t request_len, aps_buffer* response);
 void free_buffer(void* ptr, size_t len);
 void shutdown(void);
 ```
 
-宿主提供 `cliproxy_host_api`：
+宿主提供 `aps_host_api`：
 
 ```c
-int call(void* host_ctx, char* method, uint8_t* request, size_t request_len, cliproxy_buffer* response);
+int call(void* host_ctx, char* method, uint8_t* request, size_t request_len, aps_buffer* response);
 void free_buffer(void* ptr, size_t len);
 ```
 
@@ -105,8 +105,8 @@ macOS 手动构建 C：
 
 ```bash
 mkdir -p plugins/darwin/$(go env GOARCH)
-cmake -S examples/plugin/simple/c -B /tmp/cliproxy-simple-c-build -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$PWD/plugins/darwin/$(go env GOARCH)
-cmake --build /tmp/cliproxy-simple-c-build
+cmake -S examples/plugin/simple/c -B /tmp/aps-simple-c-build -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$PWD/plugins/darwin/$(go env GOARCH)
+cmake --build /tmp/aps-simple-c-build
 ```
 
 macOS 手动构建 Rust：
@@ -114,8 +114,8 @@ macOS 手动构建 Rust：
 ```bash
 mkdir -p plugins/darwin/$(go env GOARCH)
 cd examples/plugin/simple/rust
-CARGO_TARGET_DIR=/tmp/cliproxy-simple-rust-target cargo build --release --locked
-cp /tmp/cliproxy-simple-rust-target/release/libcliproxy_simple_rust.dylib ../../../../plugins/darwin/$(go env GOARCH)/simple-rust.dylib
+CARGO_TARGET_DIR=/tmp/aps-simple-rust-target cargo build --release --locked
+cp /tmp/aps-simple-rust-target/release/libaps_simple_rust.dylib ../../../../plugins/darwin/$(go env GOARCH)/simple-rust.dylib
 ```
 
 Linux、FreeBSD 或 Windows 使用相同源码目录，平台扩展名以 `examples/plugin/Makefile` 的规则为准。
@@ -188,7 +188,7 @@ PATCH /v0/management/plugins/{pluginID}/config
 
 插件自有 Management API 路由通过 `management.register` 的 `routes` 字段注册，并通过 `management.handle` 处理。
 
-可由浏览器直接访问的菜单资源通过 `management.register` 的 `resources` 字段注册。CPA 会将这些资源暴露在 `/v0/resource/plugins/<pluginID>/...` 下；例如插件 ID 为 `example` 且资源路径为 `/status` 时，最终路径是 `/v0/resource/plugins/example/status`。
+可由浏览器直接访问的菜单资源通过 `management.register` 的 `resources` 字段注册。APS 会将这些资源暴露在 `/v0/resource/plugins/<pluginID>/...` 下；例如插件 ID 为 `example` 且资源路径为 `/status` 时，最终路径是 `/v0/resource/plugins/example/status`。
 
 ## 信任边界
 

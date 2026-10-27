@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "cliproxy-frontend-auth-rust"
+name = "aps-frontend-auth-rust"
 version = "0.1.0"

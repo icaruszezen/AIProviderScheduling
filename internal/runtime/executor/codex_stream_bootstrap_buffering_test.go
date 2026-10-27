@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 const (
@@ -33,15 +33,15 @@ func codexBufferingConfig(enabled bool) *config.Config {
 	return &config.Config{Codex: config.CodexConfig{StreamBootstrapBuffering: enabled}}
 }
 
-func codexTestAuth(baseURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{Attributes: map[string]string{"base_url": baseURL, "api_key": "test"}}
+func codexTestAuth(baseURL string) *apsauth.Auth {
+	return &apsauth.Auth{Attributes: map[string]string{"base_url": baseURL, "api_key": "test"}}
 }
 
-func codexTestRequest() (cliproxyexecutor.Request, cliproxyexecutor.Options) {
-	return cliproxyexecutor.Request{
+func codexTestRequest() (apsexecutor.Request, apsexecutor.Options) {
+	return apsexecutor.Request{
 			Model:   "gpt-5.6-terra",
 			Payload: []byte(`{"model":"gpt-5.6-terra","input":"hello"}`),
-		}, cliproxyexecutor.Options{
+		}, apsexecutor.Options{
 			SourceFormat: sdktranslator.FromString("openai-response"),
 			Stream:       true,
 		}
@@ -83,17 +83,17 @@ func codexWebsocketServer(t *testing.T, frames ...string) *httptest.Server {
 	}))
 }
 
-func codexWebsocketRequest() (cliproxyexecutor.Request, cliproxyexecutor.Options) {
-	return cliproxyexecutor.Request{
+func codexWebsocketRequest() (apsexecutor.Request, apsexecutor.Options) {
+	return apsexecutor.Request{
 			Model:   "gpt-5.6-terra",
 			Payload: []byte(`{"model":"gpt-5.6-terra","input":[{"type":"message","role":"user","content":"hello"}]}`),
-		}, cliproxyexecutor.Options{
+		}, apsexecutor.Options{
 			SourceFormat: sdktranslator.FromString("openai-response"),
 		}
 }
 
 // drainChunks collects every payload and the first error from a stream result.
-func drainChunks(result *cliproxyexecutor.StreamResult) (string, error) {
+func drainChunks(result *apsexecutor.StreamResult) (string, error) {
 	var payloads [][]byte
 	var streamErr error
 	for chunk := range result.Chunks {
@@ -442,7 +442,7 @@ func executeWebsocketStreamInSession(t *testing.T, frames ...string) (notified b
 	}
 
 	req, opts := codexWebsocketRequest()
-	opts.Metadata = map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: sessionID}
+	opts.Metadata = map[string]any{apsexecutor.ExecutionSessionMetadataKey: sessionID}
 	_, err = exec.ExecuteStream(context.Background(), codexTestAuth(server.URL), req, opts)
 
 	select {
@@ -493,7 +493,7 @@ func TestCodexWebsocketsExecutor_FirstTokenTimeoutCancelUnblocksSessionlessRead(
 		done <- err
 	}()
 	time.Sleep(200 * time.Millisecond)
-	cancel(cliproxyexecutor.ErrStreamFirstTokenTimeout)
+	cancel(apsexecutor.ErrStreamFirstTokenTimeout)
 	select {
 	case err := <-done:
 		if !errors.Is(err, context.Canceled) {
@@ -552,14 +552,14 @@ func TestCodexWebsocketsExecutor_FirstTokenTimeoutDoesNotNotifyDownstream(t *tes
 	ctx, cancel := context.WithCancelCause(context.Background())
 	defer cancel(context.Canceled)
 	req, opts := codexWebsocketRequest()
-	opts.Metadata = map[string]any{cliproxyexecutor.ExecutionSessionMetadataKey: sessionID}
+	opts.Metadata = map[string]any{apsexecutor.ExecutionSessionMetadataKey: sessionID}
 	done := make(chan error, 1)
 	go func() {
 		_, err := exec.ExecuteStream(ctx, codexTestAuth(server.URL), req, opts)
 		done <- err
 	}()
 	time.Sleep(200 * time.Millisecond)
-	cancel(cliproxyexecutor.ErrStreamFirstTokenTimeout)
+	cancel(apsexecutor.ErrStreamFirstTokenTimeout)
 	select {
 	case err := <-done:
 		if !errors.Is(err, context.Canceled) {

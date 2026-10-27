@@ -1,4 +1,4 @@
-// Package middleware provides Gin HTTP middleware for the CLI Proxy API server.
+// Package middleware provides Gin HTTP middleware for the AI Provider Scheduling server.
 // It includes a sophisticated response writer wrapper designed to capture and log request and response data,
 // including support for streaming responses, without impacting latency.
 package middleware
@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -33,15 +33,15 @@ func TestCodexExecutorExecuteStreamSanitizesOverlongInputItemIDs(t *testing.T) {
 	defer server.Close()
 
 	executor := NewCodexExecutor(&config.Config{SDKConfig: config.SDKConfig{DisableImageGeneration: config.DisableImageGenerationAll}})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{"base_url": server.URL, "api_key": "test"}}
-	result, err := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	auth := &apsauth.Auth{Attributes: map[string]string{"base_url": server.URL, "api_key": "test"}}
+	result, err := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model: "gpt-5.4",
 		Payload: []byte(`{"model":"gpt-5.4","stream":true,"input":[` +
 			`{"type":"reasoning","id":"` + longReasoningItemID + `","encrypted_content":"` + encryptedContent + `","summary":[]},` +
 			`{"type":"function_call","id":"` + longCallItemID + `","call_id":"call-1","name":"lookup","arguments":"{}"},` +
 			`{"type":"function_call_output","id":"` + longOutputItemID + `","call_id":"call-1","output":"ok"},` +
 			`{"type":"message","id":"item_74ec40c883248ebb4885ec84","role":"user","content":"continue"}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat: sdktranslator.FromString("openai-response"),
 		Stream:       true,
 	})

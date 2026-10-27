@@ -14,6 +14,6 @@ Build:
 
 ```bash
 cd examples/plugin/frontend-auth-exclusive/go
-go build -buildmode=c-shared -o /tmp/cliproxy-frontend-auth-exclusive.dylib .
+go build -buildmode=c-shared -o /tmp/aps-frontend-auth-exclusive.dylib .
 ```
 

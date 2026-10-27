@@ -9,39 +9,39 @@ import (
 	"sync"
 	"testing"
 
-	internalcache "github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalcache "github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
-const claudeReplayResolvedModelInfoKey = "cliproxy.resolved_api_key_model_info"
+const claudeReplayResolvedModelInfoKey = "aps.resolved_api_key_model_info"
 
-func claudeReplayTestAuth(baseURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func claudeReplayTestAuth(baseURL string) *apsauth.Auth {
+	return &apsauth.Auth{
 		ID:       "claude-replay-auth",
 		Provider: "claude",
 		Attributes: map[string]string{
-			cliproxyauth.AttributeAPIKey:   "key-claude-replay",
-			cliproxyauth.AttributeAuthKind: cliproxyauth.AuthKindAPIKey,
-			"base_url":                     baseURL,
+			apsauth.AttributeAPIKey:   "key-claude-replay",
+			apsauth.AttributeAuthKind: apsauth.AuthKindAPIKey,
+			"base_url":                baseURL,
 		},
 	}
 }
 
-func claudeReplayTestRequest(payload []byte, sessionID string, isCompat bool, source sdktranslator.Format) (cliproxyexecutor.Request, cliproxyexecutor.Options) {
-	return cliproxyexecutor.Request{
+func claudeReplayTestRequest(payload []byte, sessionID string, isCompat bool, source sdktranslator.Format) (apsexecutor.Request, apsexecutor.Options) {
+	return apsexecutor.Request{
 			Model:   "claude-synthetic-4772",
 			Payload: payload,
 			Metadata: map[string]any{
 				claudeReplayResolvedModelInfoKey: &registry.ModelInfo{IsCompat: isCompat},
 			},
-		}, cliproxyexecutor.Options{
+		}, apsexecutor.Options{
 			SourceFormat: source,
 			Metadata: map[string]any{
-				cliproxyexecutor.ExecutionSessionMetadataKey: sessionID,
+				apsexecutor.ExecutionSessionMetadataKey: sessionID,
 			},
 		}
 }
@@ -52,9 +52,9 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		auth       *cliproxyauth.Auth
-		request    cliproxyexecutor.Request
-		options    cliproxyexecutor.Options
+		auth       *apsauth.Auth
+		request    apsexecutor.Request
+		options    apsexecutor.Options
 		wantEnable bool
 	}{
 		{
@@ -67,7 +67,7 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 		{
 			name: "non compat model",
 			auth: baseAuth,
-			request: func() cliproxyexecutor.Request {
+			request: func() apsexecutor.Request {
 				request, _ := claudeReplayTestRequest([]byte(`{"messages":[]}`), "scope-non-compat", false, sdktranslator.FormatClaude)
 				return request
 			}(),
@@ -76,10 +76,10 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 		},
 		{
 			name: "OAuth credential",
-			auth: func() *cliproxyauth.Auth {
+			auth: func() *apsauth.Auth {
 				auth := baseAuth.Clone()
-				auth.Attributes[cliproxyauth.AttributeAuthKind] = cliproxyauth.AuthKindOAuth
-				auth.Attributes[cliproxyauth.AttributeAPIKey] = "sk-ant-api-replay"
+				auth.Attributes[apsauth.AttributeAuthKind] = apsauth.AuthKindOAuth
+				auth.Attributes[apsauth.AttributeAPIKey] = "sk-ant-api-replay"
 				return auth
 			}(),
 			request:    baseRequest,
@@ -88,7 +88,7 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 		},
 		{
 			name: "other provider",
-			auth: func() *cliproxyauth.Auth {
+			auth: func() *apsauth.Auth {
 				auth := baseAuth.Clone()
 				auth.Provider = "kimi"
 				return auth
@@ -101,7 +101,7 @@ func TestClaudeThinkingReplayEnabledRequiresCompatClaudeAPIKey(t *testing.T) {
 			name:    "OpenAI source format",
 			auth:    baseAuth,
 			request: baseRequest,
-			options: func() cliproxyexecutor.Options {
+			options: func() apsexecutor.Options {
 				options := baseOptions
 				options.SourceFormat = sdktranslator.FormatOpenAI
 				return options

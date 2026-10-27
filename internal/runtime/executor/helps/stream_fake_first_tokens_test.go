@@ -4,14 +4,14 @@ import (
 	"reflect"
 	"testing"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 func TestStreamFakeFirstTokensFromAuth(t *testing.T) {
 	if got := StreamFakeFirstTokensFromAuth(nil); got != nil {
 		t.Fatalf("nil auth = %#v, want nil", got)
 	}
-	auth := &cliproxyauth.Auth{Metadata: map[string]any{
+	auth := &apsauth.Auth{Metadata: map[string]any{
 		MetadataStreamFakeFirstTokens: []any{" ", "-", "", " "}}}
 	got := StreamFakeFirstTokensFromAuth(auth)
 	want := []string{" ", "-"}

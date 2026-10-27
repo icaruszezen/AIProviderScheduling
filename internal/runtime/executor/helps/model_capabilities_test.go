@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	internalconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	helps "github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/thinking/provider/claude"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	internalconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	helps "github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking/provider/claude"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -25,9 +25,9 @@ type configuredThinkingExecutor struct {
 
 func (*configuredThinkingExecutor) Identifier() string { return "claude" }
 
-func (e *configuredThinkingExecutor) Execute(_ context.Context, _ *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *configuredThinkingExecutor) Execute(_ context.Context, _ *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	e.seenModel = req.Model
-	modelInfo, resolved := cliproxyauth.ResolvedAPIKeyModelInfo(req)
+	modelInfo, resolved := apsauth.ResolvedAPIKeyModelInfo(req)
 	e.resolved = resolved && modelInfo != nil
 	body := []byte(`{"thinking":{"type":"adaptive"},"output_config":{"effort":"low"}}`)
 	if e.translateRequest {
@@ -35,34 +35,34 @@ func (e *configuredThinkingExecutor) Execute(_ context.Context, _ *cliproxyauth.
 		e.translatedBody = append(e.translatedBody[:0], body...)
 	}
 	out, err := helps.ApplyRequestThinking(body, req, opts, opts.SourceFormat.String(), "claude", "claude")
-	return cliproxyexecutor.Response{Payload: out}, err
+	return apsexecutor.Response{Payload: out}, err
 }
 
-func (e *configuredThinkingExecutor) ExecuteStream(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (*cliproxyexecutor.StreamResult, error) {
+func (e *configuredThinkingExecutor) ExecuteStream(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (*apsexecutor.StreamResult, error) {
 	response, err := e.Execute(ctx, auth, req, opts)
 	if err != nil {
 		return nil, err
 	}
-	chunks := make(chan cliproxyexecutor.StreamChunk, 1)
-	chunks <- cliproxyexecutor.StreamChunk{Payload: response.Payload}
+	chunks := make(chan apsexecutor.StreamChunk, 1)
+	chunks <- apsexecutor.StreamChunk{Payload: response.Payload}
 	close(chunks)
-	return &cliproxyexecutor.StreamResult{Chunks: chunks}, nil
+	return &apsexecutor.StreamResult{Chunks: chunks}, nil
 }
 
-func (*configuredThinkingExecutor) Refresh(_ context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+func (*configuredThinkingExecutor) Refresh(_ context.Context, auth *apsauth.Auth) (*apsauth.Auth, error) {
 	return auth, nil
 }
 
-func (e *configuredThinkingExecutor) CountTokens(ctx context.Context, auth *cliproxyauth.Auth, req cliproxyexecutor.Request, opts cliproxyexecutor.Options) (cliproxyexecutor.Response, error) {
+func (e *configuredThinkingExecutor) CountTokens(ctx context.Context, auth *apsauth.Auth, req apsexecutor.Request, opts apsexecutor.Options) (apsexecutor.Response, error) {
 	return e.Execute(ctx, auth, req, opts)
 }
 
-func (*configuredThinkingExecutor) HttpRequest(context.Context, *cliproxyauth.Auth, *http.Request) (*http.Response, error) {
+func (*configuredThinkingExecutor) HttpRequest(context.Context, *apsauth.Auth, *http.Request) (*http.Response, error) {
 	return nil, nil
 }
 
 func TestApplyRequestThinkingUsesExactClaudeModeForSummaryOnlyRequest(t *testing.T) {
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
 		SDKConfig: internalconfig.SDKConfig{ForceModelPrefix: true},
 		ClaudeKey: []internalconfig.ClaudeKey{{
@@ -80,14 +80,14 @@ func TestApplyRequestThinkingUsesExactClaudeModeForSummaryOnlyRequest(t *testing
 	})
 	executor := &configuredThinkingExecutor{translateRequest: true}
 	manager.RegisterExecutor(executor)
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "summary-selected-auth",
 		Provider: "claude",
 		Prefix:   "summary-tenant",
 		Attributes: map[string]string{
-			cliproxyauth.AttributeAuthKind: cliproxyauth.AuthKindAPIKey,
-			cliproxyauth.AttributeAPIKey:   "summary-selected-key",
-			cliproxyauth.AttributeSource:   "config:claude[0]",
+			apsauth.AttributeAuthKind: apsauth.AuthKindAPIKey,
+			apsauth.AttributeAPIKey:   "summary-selected-key",
+			apsauth.AttributeSource:   "config:claude[0]",
 		},
 	}
 
@@ -110,11 +110,11 @@ func TestApplyRequestThinkingUsesExactClaudeModeForSummaryOnlyRequest(t *testing
 	}
 
 	original := []byte(`{"model":"summary-tenant/summary-public-model","reasoning":{"summary":"auto"},"input":"hi"}`)
-	response, errExecute := manager.Execute(t.Context(), []string{"claude"}, cliproxyexecutor.Request{
+	response, errExecute := manager.Execute(t.Context(), []string{"claude"}, apsexecutor.Request{
 		Model:   "summary-tenant/summary-public-model",
 		Payload: original,
 		Format:  sdktranslator.FormatOpenAIResponse,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAIResponse,
 		OriginalRequest: original,
 	})
@@ -139,7 +139,7 @@ func TestApplyRequestThinkingUsesExactClaudeModeForSummaryOnlyRequest(t *testing
 }
 
 func TestApplyRequestThinkingUsesSelectedPrefixedAPIKeyModel(t *testing.T) {
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetConfig(&internalconfig.Config{
 		SDKConfig: internalconfig.SDKConfig{ForceModelPrefix: true},
 		ClaudeKey: []internalconfig.ClaudeKey{{
@@ -153,14 +153,14 @@ func TestApplyRequestThinkingUsesSelectedPrefixedAPIKeyModel(t *testing.T) {
 	})
 	executor := &configuredThinkingExecutor{}
 	manager.RegisterExecutor(executor)
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "selected-auth",
 		Provider: "claude",
 		Prefix:   "tenant",
 		Attributes: map[string]string{
-			cliproxyauth.AttributeAuthKind: cliproxyauth.AuthKindAPIKey,
-			cliproxyauth.AttributeAPIKey:   "selected-key",
-			cliproxyauth.AttributeSource:   "config:claude[0]",
+			apsauth.AttributeAuthKind: apsauth.AuthKindAPIKey,
+			apsauth.AttributeAPIKey:   "selected-key",
+			apsauth.AttributeSource:   "config:claude[0]",
 		},
 	}
 
@@ -184,12 +184,12 @@ func TestApplyRequestThinkingUsesSelectedPrefixedAPIKeyModel(t *testing.T) {
 	}
 
 	original := []byte(`{"model":"tenant/public-model","reasoning_effort":"max","messages":[{"role":"user","content":"hello"}]}`)
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "tenant/public-model",
 		Payload: original,
 		Format:  sdktranslator.FormatOpenAI,
 	}
-	opts := cliproxyexecutor.Options{
+	opts := apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: original,
 	}

@@ -48,8 +48,8 @@ var (
 )
 
 const (
-	shadowPluginPrefix           = "cliproxy-plugin-"
-	shadowPluginTempPrefix       = ".cliproxy-plugin-"
+	shadowPluginPrefix           = "aps-plugin-"
+	shadowPluginTempPrefix       = ".aps-plugin-"
 	shadowPluginProcessDirPrefix = "pid-"
 	shadowPluginDigestLength     = 32
 )
@@ -78,7 +78,7 @@ func (dynamicLibraryLoader) Open(file pluginFile, host *Host) (pluginClient, err
 		removeShadowPlugin(loadPath)
 		return nil, errLoad
 	}
-	proc, errProc := dll.FindProc("cliproxy_plugin_init")
+	proc, errProc := dll.FindProc("aps_plugin_init")
 	if errProc != nil {
 		_ = dll.Release()
 		removeShadowPlugin(loadPath)
@@ -100,7 +100,7 @@ func (dynamicLibraryLoader) Open(file pluginFile, host *Host) (pluginClient, err
 	rc, _, errCall := proc.Call(uintptr(unsafe.Pointer(client.hostAPI)), uintptr(unsafe.Pointer(&client.api)))
 	if rc != 0 {
 		client.closeAfterOpenFailure()
-		return nil, fmt.Errorf("cliproxy_plugin_init returned %d: %v", rc, errCall)
+		return nil, fmt.Errorf("aps_plugin_init returned %d: %v", rc, errCall)
 	}
 	if client.api.abiVersion != pluginHostABIVersion {
 		client.closeAfterOpenFailure()
@@ -178,7 +178,7 @@ func shadowCopyPluginToDir(file pluginFile, dir string) (string, error) {
 }
 
 func shadowPluginDir() (string, error) {
-	dir := filepath.Join(os.TempDir(), "cliproxy-pluginhost", shadowPluginProcessDirName(os.Getpid()))
+	dir := filepath.Join(os.TempDir(), "aps-pluginhost", shadowPluginProcessDirName(os.Getpid()))
 	if errMkdir := os.MkdirAll(dir, 0o700); errMkdir != nil {
 		return "", errMkdir
 	}

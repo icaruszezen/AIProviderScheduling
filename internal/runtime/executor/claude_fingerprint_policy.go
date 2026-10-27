@@ -5,10 +5,10 @@ import (
 	"strings"
 	"sync"
 
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -60,7 +60,7 @@ func normalizeClaudeFingerprintProfile(raw string) string {
 	return profile
 }
 
-func claudeFingerprintProfileFromAuth(auth *cliproxyauth.Auth) string {
+func claudeFingerprintProfileFromAuth(auth *apsauth.Auth) string {
 	if auth == nil {
 		return claudeFingerprintProfileDefault
 	}
@@ -78,7 +78,7 @@ func claudeFingerprintProfileFromAuth(auth *cliproxyauth.Auth) string {
 	return claudeFingerprintProfileDefault
 }
 
-func claudeFingerprintProfileFromConfig(cfg *config.Config, auth *cliproxyauth.Auth) string {
+func claudeFingerprintProfileFromConfig(cfg *config.Config, auth *apsauth.Auth) string {
 	if profile := claudeFingerprintProfileFromAuth(auth); profile != claudeFingerprintProfileDefault {
 		return profile
 	}
@@ -93,7 +93,7 @@ func claudeFingerprintProfileFromConfig(cfg *config.Config, auth *cliproxyauth.A
 // behavior. It is deliberately independent of the upstream origin: the wire
 // profile follows the credential, while the one origin-sensitive decision (CCH
 // signing) is resolved separately by claudeCCHSigningEnabled.
-func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *cliproxyauth.Auth, _ string) claudeFingerprintPolicy {
+func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *apsauth.Auth, _ string) claudeFingerprintPolicy {
 	// Account OAuth tokens are not credentials. Fingerprint policy follows
 	// the configured CLI profile only.
 	authIsOAuth := false
@@ -123,7 +123,7 @@ func resolveClaudeFingerprintPolicy(cfg *config.Config, auth *cliproxyauth.Auth,
 // API keys seed the synthesized identity from the key itself; delegated
 // providers such as Kimi seed from the stable auth identity, so an access-token
 // rotation does not rotate the device fingerprint.
-func applyClaudeCLIIdentity(body []byte, auth *cliproxyauth.Auth, apiKey, upstreamURL, sessionID string, synthesize bool) ([]byte, error) {
+func applyClaudeCLIIdentity(body []byte, auth *apsauth.Auth, apiKey, upstreamURL, sessionID string, synthesize bool) ([]byte, error) {
 	identitySeed := apiKey
 	if isKimiMessagesUpstream(auth, upstreamURL) {
 		identitySeed = helps.ClaudeCLIAuthIdentitySeed(auth)

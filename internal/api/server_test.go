@@ -16,19 +16,19 @@ import (
 	"time"
 
 	gin "github.com/gin-gonic/gin"
-	claudemodels "github.com/router-for-me/CLIProxyAPI/v7/internal/client/claude/models"
-	proxyconfig "github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	internallogging "github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/redisqueue"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executionregistry"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	coreusage "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	claudemodels "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/claude/models"
+	proxyconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	internallogging "github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executionregistry"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	coreusage "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 type codexSearchCaptureExecutor struct {
@@ -823,7 +823,7 @@ func TestCodexAlphaSearchForwardsRequest(t *testing.T) {
 	if got := rr.Header().Get("Content-Type"); got != "application/json" {
 		t.Fatalf("response Content-Type = %q", got)
 	}
-	traceID := rr.Header().Get(internallogging.CPATraceIDHeader)
+	traceID := rr.Header().Get(internallogging.APSTraceIDHeader)
 	parts := strings.Split(traceID, "-")
 	if len(parts) != 3 || parts[1] != credential.Index || len(parts[2]) != 8 {
 		t.Fatalf("trace ID = %q, want timestamp-%s-requestID", traceID, credential.Index)
@@ -1402,8 +1402,8 @@ func TestManagementResponseExposesPluginSupportHeaderForCORS(t *testing.T) {
 	if rr.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusUnauthorized, rr.Body.String())
 	}
-	if got := rr.Header().Get("X-CPA-SUPPORT-PLUGIN"); got != pluginhost.SupportPluginHeaderValue() {
-		t.Fatalf("X-CPA-SUPPORT-PLUGIN = %q, want %q", got, pluginhost.SupportPluginHeaderValue())
+	if got := rr.Header().Get("X-APS-SUPPORT-PLUGIN"); got != pluginhost.SupportPluginHeaderValue() {
+		t.Fatalf("X-APS-SUPPORT-PLUGIN = %q, want %q", got, pluginhost.SupportPluginHeaderValue())
 	}
 
 	exposedHeaders := make(map[string]struct{})
@@ -1713,8 +1713,8 @@ func TestExampleAPIKeySafeModeShowsWarningAndKeepsManagement(t *testing.T) {
 		if rr.Code != http.StatusForbidden {
 			t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusForbidden, rr.Body.String())
 		}
-		if got := rr.Header().Get("X-CPA-SAFE-MODE"); got != "example-api-key" {
-			t.Fatalf("X-CPA-SAFE-MODE = %q, want example-api-key", got)
+		if got := rr.Header().Get("X-APS-SAFE-MODE"); got != "example-api-key" {
+			t.Fatalf("X-APS-SAFE-MODE = %q, want example-api-key", got)
 		}
 		if !strings.Contains(rr.Body.String(), "unsafe_example_api_key") {
 			t.Fatalf("body missing safe-mode error: %s", rr.Body.String())
@@ -1725,7 +1725,7 @@ func TestExampleAPIKeySafeModeShowsWarningAndKeepsManagement(t *testing.T) {
 		if !strings.Contains(rr.Body.String(), "/management.html?safe-mode=configure") {
 			t.Fatalf("body missing management link in message: %s", rr.Body.String())
 		}
-		if got := rr.Header().Get(internallogging.CPATraceIDHeader); got != "" {
+		if got := rr.Header().Get(internallogging.APSTraceIDHeader); got != "" {
 			t.Fatalf("trace ID = %q, want empty before auth selection", got)
 		}
 	})
@@ -1738,7 +1738,7 @@ func TestExampleAPIKeySafeModeShowsWarningAndKeepsManagement(t *testing.T) {
 		if rr.Code != http.StatusOK {
 			t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusOK, rr.Body.String())
 		}
-		if got := rr.Header().Get(internallogging.CPATraceIDHeader); got != "" {
+		if got := rr.Header().Get(internallogging.APSTraceIDHeader); got != "" {
 			t.Fatalf("management trace ID = %q, want empty", got)
 		}
 	})

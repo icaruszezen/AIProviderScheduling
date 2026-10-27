@@ -3,7 +3,7 @@
 # protocol endpoints are disabled whenever Home mode is enabled.
 services:
   aiproviderscheduling:
-    image: ${CLI_PROXY_IMAGE:-ghcr.io/icaruszezen/aiproviderscheduling:latest}
+    image: ${APS_IMAGE:-ghcr.io/icaruszezen/aiproviderscheduling:latest}
     pull_policy: always
     build:
       context: .
@@ -18,9 +18,9 @@ services:
     ports:
       - "8317:8317"
     volumes:
-      - ${CLI_PROXY_HOME_PATH:-./home}:/root/.cli-proxy-api
-      - ${CLI_PROXY_LOG_PATH:-./logs}:/AIProviderScheduling/logs
-      - ${CLI_PROXY_PLUGIN_PATH:-./plugins}:/AIProviderScheduling/plugins
+      - ${APS_HOME_PATH:-./home}:/root/.ai-provider-scheduling
+      - ${APS_LOG_PATH:-./logs}:/AIProviderScheduling/logs
+      - ${APS_PLUGIN_PATH:-./plugins}:/AIProviderScheduling/plugins
     command: >
       sh -eu -c '
         if [ -z "$$HOME_JWT" ]; then

@@ -6,9 +6,9 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#define CLIPROXY_EXPORT __declspec(dllexport)
+#define APS_EXPORT __declspec(dllexport)
 #else
-#define CLIPROXY_EXPORT __attribute__((visibility("default")))
+#define APS_EXPORT __attribute__((visibility("default")))
 #endif
 
 #define ABI_VERSION 1
@@ -16,36 +16,36 @@
 typedef struct {
     void* ptr;
     size_t len;
-} cliproxy_buffer;
+} aps_buffer;
 
-typedef int (*cliproxy_host_call_fn)(void*, const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_host_free_fn)(void*, size_t);
+typedef int (*aps_host_call_fn)(void*, const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_host_free_fn)(void*, size_t);
 
 typedef struct {
     uint32_t abi_version;
     void* host_ctx;
-    cliproxy_host_call_fn call;
-    cliproxy_host_free_fn free_buffer;
-} cliproxy_host_api;
+    aps_host_call_fn call;
+    aps_host_free_fn free_buffer;
+} aps_host_api;
 
-typedef int (*cliproxy_plugin_call_fn)(const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_plugin_free_fn)(void*, size_t);
-typedef void (*cliproxy_plugin_shutdown_fn)(void);
+typedef int (*aps_plugin_call_fn)(const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_plugin_free_fn)(void*, size_t);
+typedef void (*aps_plugin_shutdown_fn)(void);
 
 typedef struct {
     uint32_t abi_version;
-    cliproxy_plugin_call_fn call;
-    cliproxy_plugin_free_fn free_buffer;
-    cliproxy_plugin_shutdown_fn shutdown;
-} cliproxy_plugin_api;
+    aps_plugin_call_fn call;
+    aps_plugin_free_fn free_buffer;
+    aps_plugin_shutdown_fn shutdown;
+} aps_plugin_api;
 
 static long usage_count = 0;
 
 static const char* REGISTRATION_RESPONSE =
     "{\"ok\":true,\"result\":{\"schema_version\":1,\"metadata\":{\"Name\":\"example-simple-c\","
     "\"Version\":\"0.1.0\",\"Author\":\"router-for-me\","
-    "\"GitHubRepository\":\"https://github.com/router-for-me/CLIProxyAPI\","
-    "\"Logo\":\"https://raw.githubusercontent.com/router-for-me/CLIProxyAPI/main/docs/logo.png\","
+    "\"GitHubRepository\":\"https://github.com/icaruszezen/AIProviderScheduling\","
+    "\"Logo\":\"https://raw.githubusercontent.com/icaruszezen/AIProviderScheduling/main/docs/logo.png\","
     "\"ConfigFields\":["
     "{\"Name\":\"config1\",\"Type\":\"boolean\",\"Description\":\"Enables the example boolean option.\"},"
     "{\"Name\":\"config2\",\"Type\":\"string\",\"Description\":\"Stores the example string option.\"},"
@@ -524,7 +524,7 @@ static char* make_usage_response(void) {
     return out;
 }
 
-static void write_response(cliproxy_buffer* response, const char* text) {
+static void write_response(aps_buffer* response, const char* text) {
     if (response == NULL || text == NULL) {
         return;
     }
@@ -540,7 +540,7 @@ static void write_response(cliproxy_buffer* response, const char* text) {
     response->len = len;
 }
 
-static int plugin_call(const char* method, const uint8_t* request, size_t request_len, cliproxy_buffer* response) {
+static int plugin_call(const char* method, const uint8_t* request, size_t request_len, aps_buffer* response) {
     if (response != NULL) {
         response->ptr = NULL;
         response->len = 0;
@@ -602,7 +602,7 @@ static void plugin_free(void* ptr, size_t len) {
 
 static void plugin_shutdown(void) {}
 
-CLIPROXY_EXPORT int cliproxy_plugin_init(const cliproxy_host_api* host, cliproxy_plugin_api* plugin) {
+APS_EXPORT int aps_plugin_init(const aps_host_api* host, aps_plugin_api* plugin) {
     if (plugin == NULL) {
         return 1;
     }

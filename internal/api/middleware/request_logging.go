@@ -1,4 +1,4 @@
-// Package middleware provides HTTP middleware components for the CLI Proxy API server.
+// Package middleware provides HTTP middleware components for the AI Provider Scheduling server.
 // This file contains the request logging middleware that captures comprehensive
 // request and response data when enabled through configuration.
 package middleware
@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/klauspost/compress/zstd"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 )
 

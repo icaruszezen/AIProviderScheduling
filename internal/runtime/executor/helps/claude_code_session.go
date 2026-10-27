@@ -105,6 +105,6 @@ func ClaudeCodePromptCache(ctx context.Context, modelName string, payload []byte
 	if modelName == "" || !ok {
 		return CodexCache{}, false, nil
 	}
-	identity := strings.Join([]string{"cli-proxy-api:codex:claude-code", modelName, executionScope}, "\x00")
+	identity := strings.Join([]string{"ai-provider-scheduling:codex:claude-code", modelName, executionScope}, "\x00")
 	return CodexCache{ID: uuid.NewSHA1(uuid.NameSpaceOID, []byte(identity)).String()}, true, nil
 }

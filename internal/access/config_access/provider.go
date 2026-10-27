@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	sdkaccess "github.com/router-for-me/CLIProxyAPI/v7/sdk/access"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 // GroupCredential binds one client API key to a provider-panel group.

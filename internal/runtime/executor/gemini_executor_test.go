@@ -8,11 +8,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -74,16 +74,16 @@ func TestGeminiExecutorExecuteCapsMaxOutputTokensBeforeUpstream(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":  "test-key",
 		"base_url": server.URL,
 	}}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-pro-preview",
 		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hi"}]}],"generationConfig":{"maxOutputTokens":500000}}`),
 	}
 
-	if _, err := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); err != nil {
+	if _, err := exec.Execute(context.Background(), auth, req, apsexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 	if upstreamMaxOutputTokens != 65536 {
@@ -105,11 +105,11 @@ func TestGeminiExecutorExecutePrependsLeadingUser(t *testing.T) {
 	defer server.Close()
 
 	executor := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":  "test-key",
 		"base_url": server.URL,
 	}}
-	request := cliproxyexecutor.Request{
+	request := apsexecutor.Request{
 		Model: "gemini-3.7-flash",
 		Payload: []byte(`{"contents":[` +
 			`{"role":"model","parts":[{"functionCall":{"name":"lookup","args":{"key":"value"}}}]},` +
@@ -117,7 +117,7 @@ func TestGeminiExecutorExecutePrependsLeadingUser(t *testing.T) {
 			`]}`),
 	}
 
-	if _, errExecute := executor.Execute(context.Background(), auth, request, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
+	if _, errExecute := executor.Execute(context.Background(), auth, request, apsexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
 	contents := gjson.GetBytes(upstreamBody, "contents").Array()
@@ -143,14 +143,14 @@ func TestGeminiExecutorExecutePrependsLeadingUserForIssue4959ResponsesHistory(t 
 	defer server.Close()
 
 	executor := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":  "test-key",
 		"base_url": server.URL,
 	}}
-	if _, errExecute := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	if _, errExecute := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: issue4959ResponsesModelFirstPayload(),
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatOpenAIResponse}); errExecute != nil {
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatOpenAIResponse}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
 	assertIssue4959LeadingUserContents(t, gjson.GetBytes(upstreamBody, "contents").Array())
@@ -170,20 +170,20 @@ func TestGeminiExecutorCountTokensPrependsLeadingUser(t *testing.T) {
 	defer server.Close()
 
 	executor := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":  "test-key",
 		"base_url": server.URL,
 	}}
-	request := cliproxyexecutor.Request{
+	request := apsexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(`{"contents":[{"role":"model","parts":[{"text":"prior output"}]}]}`),
 	}
 
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
-	if _, errCount := executor.CountTokens(ctx, auth, request, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errCount != nil {
+	ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
+	if _, errCount := executor.CountTokens(ctx, auth, request, apsexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errCount != nil {
 		t.Fatalf("CountTokens() error = %v", errCount)
 	}
-	if !cliproxyexecutor.UpstreamAttempted(ctx) {
+	if !apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("CountTokens() did not mark the HTTP request as an upstream attempt")
 	}
 	contents := gjson.GetBytes(upstreamBody, "contents").Array()
@@ -198,7 +198,7 @@ func TestGeminiExecutorCountTokensPrependsLeadingUser(t *testing.T) {
 	}
 
 	request.Metadata = map[string]any{"action": "countTokens"}
-	if _, errExecute := executor.Execute(context.Background(), auth, request, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
+	if _, errExecute := executor.Execute(context.Background(), auth, request, apsexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
 		t.Fatalf("Execute(countTokens) error = %v", errExecute)
 	}
 	contents = gjson.GetBytes(upstreamBody, "contents").Array()
@@ -224,11 +224,11 @@ func TestGeminiExecutorAppliesPayloadRulesBeforeLeadingUserNormalization(t *test
 		Models: []config.PayloadModelRule{{Name: "gemini-3.7-flash", Protocol: "gemini"}},
 		Params: map[string]any{"contents.0.parts.0.text": "payload override"},
 	}}}})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":  "test-key",
 		"base_url": server.URL,
 	}}
-	request := cliproxyexecutor.Request{
+	request := apsexecutor.Request{
 		Model: "gemini-3.7-flash",
 		Payload: []byte(`{"contents":[` +
 			`{"role":"model","parts":[{"text":"prior output"}]},` +
@@ -236,7 +236,7 @@ func TestGeminiExecutorAppliesPayloadRulesBeforeLeadingUserNormalization(t *test
 			`]}`),
 	}
 
-	if _, errExecute := executor.Execute(context.Background(), auth, request, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
+	if _, errExecute := executor.Execute(context.Background(), auth, request, apsexecutor.Options{SourceFormat: sdktranslator.FormatGemini}); errExecute != nil {
 		t.Fatalf("Execute() error = %v", errExecute)
 	}
 	contents := gjson.GetBytes(upstreamBody, "contents").Array()
@@ -269,19 +269,19 @@ func TestGeminiExecutorInteractionsWithGeminiAPIKeyUsesGeminiEndpoint(t *testing
 	defer server.Close()
 
 	exec := NewGeminiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.5-flash",
 		Payload: []byte(`{"model":"gemini-3.5-flash","input":"hi"}`),
 	}
 
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -320,19 +320,19 @@ func TestGeminiExecutorNativeInteractionsUsesInteractionsEndpoint(t *testing.T) 
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "agents/test-agent",
 		Payload: []byte(`{"agent":"agents/test-agent","input":"hi"}`),
 	}
 
-	resp, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	resp, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -369,14 +369,14 @@ func TestGeminiExecutorNativeInteractionsTranslatesOpenAIResponsesRequest(t *tes
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"model":"gemini-3.1-flash-lite",
@@ -386,7 +386,7 @@ func TestGeminiExecutorNativeInteractionsTranslatesOpenAIResponsesRequest(t *tes
 		}`),
 	}
 
-	resp, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	resp, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	})
@@ -442,14 +442,14 @@ func TestGeminiExecutorNativeInteractionsPayloadRulesUseResponsesFromProtocol(t 
 			},
 		},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"model":"gemini-3.1-flash-lite",
@@ -457,7 +457,7 @@ func TestGeminiExecutorNativeInteractionsPayloadRulesUseResponsesFromProtocol(t 
 		}`),
 	}
 
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	})
@@ -489,14 +489,14 @@ func TestGeminiExecutorNativeInteractionsTranslatesOpenAIChatRequest(t *testing.
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"model":"gemini-3.1-flash-lite",
@@ -507,7 +507,7 @@ func TestGeminiExecutorNativeInteractionsTranslatesOpenAIChatRequest(t *testing.
 		}`),
 	}
 
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, cliproxyexecutor.Options{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
 		ResponseFormat: sdktranslator.FormatOpenAI,
 	})
@@ -574,14 +574,14 @@ func TestGeminiExecutorNativeInteractionsPayloadDefaultsUseTranslatedOpenAIChatS
 			},
 		},
 	})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"model":"gemini-3.1-flash-lite",
@@ -590,7 +590,7 @@ func TestGeminiExecutorNativeInteractionsPayloadDefaultsUseTranslatedOpenAIChatS
 		}`),
 	}
 
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAI,
 		ResponseFormat: sdktranslator.FormatOpenAI,
 	})
@@ -626,14 +626,14 @@ func TestGeminiExecutorNativeInteractionsTranslatesGeminiStreamResponse(t *testi
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"contents":[{"role":"user","parts":[{"text":"今天北京的天气怎么样？"}]}],
@@ -641,7 +641,7 @@ func TestGeminiExecutorNativeInteractionsTranslatesGeminiStreamResponse(t *testi
 		}`),
 	}
 
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, cliproxyexecutor.Options{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatGemini,
 		ResponseFormat: sdktranslator.FormatGemini,
 	})
@@ -743,14 +743,14 @@ func TestGeminiExecutorNativeInteractionsTranslatesClaudeRequest(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model: "gemini-3.1-flash-lite",
 		Payload: []byte(`{
 			"model":"gemini-3.1-flash-lite",
@@ -760,7 +760,7 @@ func TestGeminiExecutorNativeInteractionsTranslatesClaudeRequest(t *testing.T) {
 		}`),
 	}
 
-	resp, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	resp, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatClaude,
 		ResponseFormat: sdktranslator.FormatClaude,
 	})
@@ -801,18 +801,18 @@ func TestGeminiExecutorNativeInteractionsAppliesThinkingSuffix(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-flash-lite(high)",
 		Payload: []byte(`{"model":"gemini-3.1-flash-lite(high)","generation_config":{"max_output_tokens":32},"input":"hi"}`),
 	}
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -850,18 +850,18 @@ func TestGeminiExecutorNativeInteractionsPreservesThinkingProtocolFields(t *test
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-flash-lite",
 		Payload: []byte(`{"model":"gemini-3.1-flash-lite","generation_config":{"tool_choice":"auto","thinking_level":"high","thinking_summaries":"auto"},"input":"hi"}`),
 	}
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -892,7 +892,7 @@ func TestGeminiExecutorNativeInteractionsPreservesApiRevision(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
@@ -900,11 +900,11 @@ func TestGeminiExecutorNativeInteractionsPreservesApiRevision(t *testing.T) {
 		},
 	}
 	auth.Attributes["header:Api-Revision"] = "2026-06-01"
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "agents/test-agent",
 		Payload: []byte(`{"agent":"agents/test-agent","input":"hi"}`),
 	}
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -926,18 +926,18 @@ func TestGeminiExecutorNativeInteractionsUsesRequestApiRevision(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "agents/test-agent",
 		Payload: []byte(`{"agent":"agents/test-agent","input":"hi"}`),
 	}
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 		Headers:        http.Header{"Api-Revision": []string{"2026-06-01"}},
@@ -960,16 +960,16 @@ func TestGeminiExecutorNativeInteractionsRequestApiRevisionDoesNotOverrideAuthHe
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"api_key":             "test-key",
 		"base_url":            server.URL,
 		"header:Api-Revision": "2026-06-01",
 	}, Provider: "gemini-interactions"}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "agents/test-agent",
 		Payload: []byte(`{"agent":"agents/test-agent","input":"hi"}`),
 	}
-	_, errExecute := exec.Execute(context.Background(), auth, req, cliproxyexecutor.Options{
+	_, errExecute := exec.Execute(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 		Headers:        http.Header{"Api-Revision": []string{"2026-07-01"}},
@@ -991,18 +991,18 @@ func TestGeminiExecutorNativeInteractionsStreamParsesUsage(t *testing.T) {
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.5-flash",
 		Payload: []byte(`{"model":"gemini-3.5-flash","input":"hi","stream":true}`),
 	}
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, cliproxyexecutor.Options{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatInteractions,
 		ResponseFormat: sdktranslator.FormatInteractions,
 	})
@@ -1054,19 +1054,19 @@ func TestGeminiExecutorNativeInteractionsClaudeStreamPreservesToolSignature(t *t
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-flash-lite",
 		Payload: []byte(`{"model":"gemini-3.1-flash-lite","stream":true,"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`),
 	}
 
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, cliproxyexecutor.Options{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatClaude,
 		ResponseFormat: sdktranslator.FormatClaude,
 	})
@@ -1119,19 +1119,19 @@ func TestGeminiExecutorNativeInteractionsResponsesStreamEmitsDone(t *testing.T) 
 	defer server.Close()
 
 	exec := NewGeminiInteractionsExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini-interactions",
 		Attributes: map[string]string{
 			"api_key":  "test-key",
 			"base_url": server.URL,
 		},
 	}
-	req := cliproxyexecutor.Request{
+	req := apsexecutor.Request{
 		Model:   "gemini-3.1-flash-lite",
 		Payload: []byte(`{"model":"gemini-3.1-flash-lite","stream":true,"input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"hi"}]}]}`),
 	}
 
-	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, cliproxyexecutor.Options{
+	result, errExecute := exec.ExecuteStream(context.Background(), auth, req, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 	})
@@ -1161,7 +1161,7 @@ func TestGeminiExecutor_PrepareRequest_EmptyAPIKey_OmitsAuthHeaders(t *testing.T
 	req.Header.Set("Authorization", "Bearer preexisting-bearer")
 	req.Header.Set("x-goog-api-key", "preexisting-key")
 
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "gemini",
 		Attributes: map[string]string{
 			"auth_kind":           "apikey",

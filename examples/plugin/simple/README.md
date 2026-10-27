@@ -2,7 +2,7 @@
 
 This is the full mixed-capability skeleton. For single-capability examples, see `../README.md`.
 
-This directory is the reference skeleton for the current standard dynamic library plugin ABI. The ABI is language-neutral: the host loads a native dynamic library, calls `cliproxy_plugin_init`, and then exchanges JSON envelopes through a stable C function table.
+This directory is the reference skeleton for the current standard dynamic library plugin ABI. The ABI is language-neutral: the host loads a native dynamic library, calls `aps_plugin_init`, and then exchanges JSON envelopes through a stable C function table.
 
 This directory contains complete Go, C, and Rust implementations of the same mixed-capability sample. The Go sample uses `-buildmode=c-shared`; the C sample uses CMake; the Rust sample uses a `cdylib` crate.
 
@@ -11,21 +11,21 @@ This directory contains complete Go, C, and Rust implementations of the same mix
 Every plugin must export:
 
 ```c
-int cliproxy_plugin_init(const cliproxy_host_api* host, cliproxy_plugin_api* plugin);
+int aps_plugin_init(const aps_host_api* host, aps_plugin_api* plugin);
 ```
 
-The plugin fills `cliproxy_plugin_api` with:
+The plugin fills `aps_plugin_api` with:
 
 ```c
-int call(char* method, uint8_t* request, size_t request_len, cliproxy_buffer* response);
+int call(char* method, uint8_t* request, size_t request_len, aps_buffer* response);
 void free_buffer(void* ptr, size_t len);
 void shutdown(void);
 ```
 
-The host provides `cliproxy_host_api` with:
+The host provides `aps_host_api` with:
 
 ```c
-int call(void* host_ctx, char* method, uint8_t* request, size_t request_len, cliproxy_buffer* response);
+int call(void* host_ctx, char* method, uint8_t* request, size_t request_len, aps_buffer* response);
 void free_buffer(void* ptr, size_t len);
 ```
 
@@ -107,8 +107,8 @@ Manual C build on macOS:
 
 ```bash
 mkdir -p plugins/darwin/$(go env GOARCH)
-cmake -S examples/plugin/simple/c -B /tmp/cliproxy-simple-c-build -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$PWD/plugins/darwin/$(go env GOARCH)
-cmake --build /tmp/cliproxy-simple-c-build
+cmake -S examples/plugin/simple/c -B /tmp/aps-simple-c-build -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$PWD/plugins/darwin/$(go env GOARCH)
+cmake --build /tmp/aps-simple-c-build
 ```
 
 Manual Rust build on macOS:
@@ -116,8 +116,8 @@ Manual Rust build on macOS:
 ```bash
 mkdir -p plugins/darwin/$(go env GOARCH)
 cd examples/plugin/simple/rust
-CARGO_TARGET_DIR=/tmp/cliproxy-simple-rust-target cargo build --release --locked
-cp /tmp/cliproxy-simple-rust-target/release/libcliproxy_simple_rust.dylib ../../../../plugins/darwin/$(go env GOARCH)/simple-rust.dylib
+CARGO_TARGET_DIR=/tmp/aps-simple-rust-target cargo build --release --locked
+cp /tmp/aps-simple-rust-target/release/libaps_simple_rust.dylib ../../../../plugins/darwin/$(go env GOARCH)/simple-rust.dylib
 ```
 
 For Linux, FreeBSD, or Windows, keep the same source directory and use the platform extension selected by `examples/plugin/Makefile`.
@@ -190,7 +190,7 @@ PATCH /v0/management/plugins/{pluginID}/config
 
 Plugin-owned Management API routes are registered through the `routes` field of `management.register` and handled through `management.handle`.
 
-Browser-navigable menu resources are registered through the `resources` field of `management.register`. CPA exposes those resources under `/v0/resource/plugins/<pluginID>/...`; for example, a plugin with ID `example` and resource path `/status` is served as `/v0/resource/plugins/example/status`.
+Browser-navigable menu resources are registered through the `resources` field of `management.register`. APS exposes those resources under `/v0/resource/plugins/<pluginID>/...`; for example, a plugin with ID `example` and resource path `/status` is served as `/v0/resource/plugins/example/status`.
 
 ## Trust Boundary
 

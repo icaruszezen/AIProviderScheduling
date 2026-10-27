@@ -8,10 +8,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	xxHash64 "github.com/pierrec/xxHash/xxHash64"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -58,7 +58,7 @@ func finalizeAnthropicMessagesBodyCCH(body []byte, fallbackBilling string) ([]by
 }
 
 // claudeBodyNeedsBillingFallback reports whether a confirmed native helper request
-// still needs CPA's billing-header fallback.
+// still needs APS's billing-header fallback.
 //
 // The measured minimal helper carries no system field at all, which is exactly the
 // native wire shape, so injecting a billing header there would be the deviation.
@@ -154,7 +154,7 @@ func isKimiAPIEndpoint(endpoint string) bool {
 	return strings.EqualFold(parsed.Hostname(), "api.kimi.com")
 }
 
-func isKimiMessagesUpstream(auth *cliproxyauth.Auth, endpoint string) bool {
+func isKimiMessagesUpstream(auth *apsauth.Auth, endpoint string) bool {
 	if auth != nil && strings.EqualFold(strings.TrimSpace(auth.Provider), "kimi") {
 		return true
 	}
@@ -164,16 +164,16 @@ func isKimiMessagesUpstream(auth *cliproxyauth.Auth, endpoint string) bool {
 // stripDefaultKimiClaudeCodeAttribution removes the Claude Code billing/CCH
 // attribution block from a Kimi Messages body when the caller did not opt into
 // the full CLI profile. Kimi treats the block as prompt text, so forwarding it
-// unchanged would leak CPA's attribution into the model's context. Other system
+// unchanged would leak APS's attribution into the model's context. Other system
 // content is preserved.
-func stripDefaultKimiClaudeCodeAttribution(auth *cliproxyauth.Auth, endpoint string, cliFingerprint bool, body []byte) []byte {
+func stripDefaultKimiClaudeCodeAttribution(auth *apsauth.Auth, endpoint string, cliFingerprint bool, body []byte) []byte {
 	if cliFingerprint || !isKimiMessagesUpstream(auth, endpoint) {
 		return body
 	}
 	return util.StripClaudeCodeAttributionSystem(body)
 }
 
-// claudeCCHSigningEnabled applies CPA's CCH policy.
+// claudeCCHSigningEnabled applies APS's CCH policy.
 //
 // Native gate, identical in Claude Code 2.1.220 through 2.1.234:
 //
@@ -185,18 +185,18 @@ func stripDefaultKimiClaudeCodeAttribution(auth *cliproxyauth.Auth, endpoint str
 // anthropicAws, anthropicGoogleCloud, gateway, any custom base URL) sends the
 // billing header without cch.
 //
-// CPA maps that onto two authorities:
+// APS maps that onto two authorities:
 //
-//   - A real Claude OAuth credential always signs, on every upstream. CPA is the
+//   - A real Claude OAuth credential always signs, on every upstream. APS is the
 //     hop that restores the first-party shape: a downstream Claude Code pointed at
-//     CPA sees a non-first-party base URL and therefore omits cch itself, so the
+//     APS sees a non-first-party base URL and therefore omits cch itself, so the
 //     value has to be regenerated here rather than inherited.
 //   - An API key or delegated provider signs only when it explicitly opted into
 //     the claude-code-cli profile AND the upstream is one the native gate accepts.
 //     On any other gateway the billing header still goes out, but without cch, so
 //     a per-request hash cannot bust that gateway's prompt cache.
 //
-// origin is the concrete upstream URL of the request being built. CPA additionally
+// origin is the concrete upstream URL of the request being built. APS additionally
 // requires https and the default port, which native does not check.
 func claudeCCHSigningEnabled(apiKey string, kind claudeCCHUpstreamKind, cliFingerprint bool, origin string) bool {
 	if isClaudeOAuthToken(apiKey) {
@@ -505,7 +505,7 @@ func isClaudeCCHExcludedKey(key []byte) bool {
 	}
 }
 
-func resolveClaudeKeyConfig(cfg *config.Config, auth *cliproxyauth.Auth) *config.ClaudeKey {
+func resolveClaudeKeyConfig(cfg *config.Config, auth *apsauth.Auth) *config.ClaudeKey {
 	if cfg == nil || auth == nil {
 		return nil
 	}
@@ -532,7 +532,7 @@ func resolveClaudeKeyConfig(cfg *config.Config, auth *cliproxyauth.Auth) *config
 }
 
 // resolveClaudeKeyCloakConfig finds the matching ClaudeKey config and returns its CloakConfig.
-func resolveClaudeKeyCloakConfig(cfg *config.Config, auth *cliproxyauth.Auth) *config.CloakConfig {
+func resolveClaudeKeyCloakConfig(cfg *config.Config, auth *apsauth.Auth) *config.CloakConfig {
 	entry := resolveClaudeKeyConfig(cfg, auth)
 	if entry == nil {
 		return nil
@@ -540,7 +540,7 @@ func resolveClaudeKeyCloakConfig(cfg *config.Config, auth *cliproxyauth.Auth) *c
 	return entry.Cloak
 }
 
-func rebuildMidSystemMessageEnabled(cfg *config.Config, auth *cliproxyauth.Auth) bool {
+func rebuildMidSystemMessageEnabled(cfg *config.Config, auth *apsauth.Auth) bool {
 	if auth != nil && auth.Attributes != nil && strings.EqualFold(strings.TrimSpace(auth.Attributes["rebuild_mid_system_message"]), "true") {
 		return true
 	}

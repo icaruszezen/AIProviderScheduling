@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"strings"
 
-	claudeauth "github.com/router-for-me/CLIProxyAPI/v7/internal/auth/claude"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	claudeauth "github.com/icaruszezen/AIProviderScheduling/v7/internal/auth/claude"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -16,7 +16,7 @@ type claudeDiagnosticsRequestState struct {
 	sequence uint64
 }
 
-func injectClaudeDiagnostics(body []byte, auth *cliproxyauth.Auth, sessionID string) ([]byte, claudeDiagnosticsRequestState) {
+func injectClaudeDiagnostics(body []byte, auth *apsauth.Auth, sessionID string) ([]byte, claudeDiagnosticsRequestState) {
 	key, sequence, previousMessageID := helps.BeginClaudeDiagnostics(claudeDiagnosticsCredentialIdentity(auth), sessionID)
 	if key == "" {
 		return body, claudeDiagnosticsRequestState{}
@@ -51,7 +51,7 @@ func injectClaudeDiagnostics(body []byte, auth *cliproxyauth.Auth, sessionID str
 	return updated, claudeDiagnosticsRequestState{key: key, sequence: sequence}
 }
 
-func claudeDiagnosticsCredentialIdentity(auth *cliproxyauth.Auth) string {
+func claudeDiagnosticsCredentialIdentity(auth *apsauth.Auth) string {
 	if auth == nil {
 		return ""
 	}

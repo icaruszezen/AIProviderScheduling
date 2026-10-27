@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	helps "github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/thinking/provider/gemini"
-	_ "github.com/router-for-me/CLIProxyAPI/v7/internal/translator"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	helps "github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking/provider/gemini"
+	_ "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )

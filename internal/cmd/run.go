@@ -1,4 +1,4 @@
-// Package cmd provides command-line interface functionality for the CLI Proxy API server.
+// Package cmd provides command-line interface functionality for the AI Provider Scheduling server.
 // It includes authentication flows for various AI service providers, service startup,
 // and other command-line operations.
 package cmd
@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/api"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/pluginhost"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/api"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,7 +31,7 @@ func StartService(cfg *config.Config, configPath string, localPassword string) {
 
 // StartServiceWithPluginHost builds and runs the proxy service with a shared plugin host.
 func StartServiceWithPluginHost(cfg *config.Config, configPath string, localPassword string, host *pluginhost.Host, serverOptions ...api.ServerOption) {
-	builder := cliproxy.NewBuilder().
+	builder := aps.NewBuilder().
 		WithConfig(cfg).
 		WithConfigPath(configPath).
 		WithLocalManagementPassword(localPassword)
@@ -75,7 +75,7 @@ func StartServiceBackground(cfg *config.Config, configPath string, localPassword
 
 // StartServiceBackgroundWithPluginHost starts the proxy service with a shared plugin host.
 func StartServiceBackgroundWithPluginHost(cfg *config.Config, configPath string, localPassword string, host *pluginhost.Host, serverOptions ...api.ServerOption) (cancel func(), done <-chan struct{}) {
-	builder := cliproxy.NewBuilder().
+	builder := aps.NewBuilder().
 		WithConfig(cfg).
 		WithConfigPath(configPath).
 		WithLocalManagementPassword(localPassword)

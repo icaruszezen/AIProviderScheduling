@@ -7,10 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -43,15 +43,15 @@ func TestCodexExecutorCompactAddsDefaultInstructionsWithoutInjectingImageTool(t 
 			defer server.Close()
 
 			executor := NewCodexExecutor(&config.Config{})
-			auth := &cliproxyauth.Auth{Attributes: map[string]string{
+			auth := &apsauth.Auth{Attributes: map[string]string{
 				"base_url": server.URL,
 				"api_key":  "test",
 			}}
 
-			resp, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+			resp, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 				Model:   "gpt-5.4",
 				Payload: []byte(tc.payload),
-			}, cliproxyexecutor.Options{
+			}, apsexecutor.Options{
 				SourceFormat: sdktranslator.FromString("openai-response"),
 				Alt:          "responses/compact",
 				Stream:       false,

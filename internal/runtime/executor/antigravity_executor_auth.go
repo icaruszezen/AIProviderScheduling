@@ -8,31 +8,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
 // Refresh replaces credentials via Home when enabled. Account OAuth token
 // refresh is not supported; provider API keys are returned unchanged.
-func (e *AntigravityExecutor) Refresh(ctx context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+func (e *AntigravityExecutor) Refresh(ctx context.Context, auth *apsauth.Auth) (*apsauth.Auth, error) {
 	if refreshed, handled, err := helps.RefreshAuthViaHome(ctx, e.cfg, auth); handled {
 		return refreshed, err
 	}
 	return auth, nil
 }
 
-func (e *AntigravityExecutor) ShouldPrepareRequestAuth(auth *cliproxyauth.Auth) bool {
+func (e *AntigravityExecutor) ShouldPrepareRequestAuth(auth *apsauth.Auth) bool {
 	return antigravityProjectIDFromAuth(auth) == ""
 }
 
-func (e *AntigravityExecutor) PrepareRequestAuth(_ context.Context, auth *cliproxyauth.Auth) (*cliproxyauth.Auth, error) {
+func (e *AntigravityExecutor) PrepareRequestAuth(_ context.Context, auth *apsauth.Auth) (*apsauth.Auth, error) {
 	if auth == nil || !e.ShouldPrepareRequestAuth(auth) {
 		return nil, nil
 	}
 	return nil, missingAntigravityProjectIDError(nil)
 }
 
-func (e *AntigravityExecutor) ensureAccessToken(ctx context.Context, auth *cliproxyauth.Auth) (string, *cliproxyauth.Auth, error) {
+func (e *AntigravityExecutor) ensureAccessToken(ctx context.Context, auth *apsauth.Auth) (string, *apsauth.Auth, error) {
 	if auth == nil {
 		return "", nil, statusErr{code: http.StatusUnauthorized, msg: "missing auth"}
 	}
@@ -55,21 +55,21 @@ func (e *AntigravityExecutor) ensureAccessToken(ctx context.Context, auth *clipr
 	return token, nil, nil
 }
 
-func antigravityAPIKey(auth *cliproxyauth.Auth) string {
+func antigravityAPIKey(auth *apsauth.Auth) string {
 	if auth == nil || auth.Attributes == nil {
 		return ""
 	}
 	return strings.TrimSpace(auth.Attributes["api_key"])
 }
 
-func (e *AntigravityExecutor) projectIDForRequest(_ context.Context, auth *cliproxyauth.Auth, _ string) (string, error) {
+func (e *AntigravityExecutor) projectIDForRequest(_ context.Context, auth *apsauth.Auth, _ string) (string, error) {
 	if projectID := antigravityProjectIDFromAuth(auth); projectID != "" {
 		return projectID, nil
 	}
 	return "", missingAntigravityProjectIDError(nil)
 }
 
-func antigravityProjectIDFromAuth(auth *cliproxyauth.Auth) string {
+func antigravityProjectIDFromAuth(auth *apsauth.Auth) string {
 	if auth == nil || auth.Metadata == nil {
 		return ""
 	}

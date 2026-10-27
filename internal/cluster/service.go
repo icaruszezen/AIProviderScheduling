@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/buildinfo"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/buildinfo"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )

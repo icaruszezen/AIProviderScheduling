@@ -45,4 +45,4 @@ $(BIN_DIR)/%-c.$(PLUGIN_EXT): %/c/CMakeLists.txt %/c/src/plugin.c | $(BIN_DIR) $
 
 $(BIN_DIR)/%-rust.$(PLUGIN_EXT): %/rust/Cargo.toml %/rust/Cargo.lock %/rust/src/lib.rs | $(BIN_DIR) $(BUILD_DIR)
 	cd $*/rust && CARGO_TARGET_DIR=$(abspath $(BUILD_DIR)/$*/rust) cargo build --release --locked
-	cp "$(BUILD_DIR)/$*/rust/release/$(RUST_DYLIB_PREFIX)cliproxy_$(subst -,_,$*)_rust.$(RUST_DYLIB_EXT)" "$@"
+	cp "$(BUILD_DIR)/$*/rust/release/$(RUST_DYLIB_PREFIX)aps_$(subst -,_,$*)_rust.$(RUST_DYLIB_EXT)" "$@"

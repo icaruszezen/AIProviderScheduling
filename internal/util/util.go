@@ -1,4 +1,4 @@
-// Package util provides utility functions for the CLI Proxy API server.
+// Package util provides utility functions for the AI Provider Scheduling server.
 // It includes helper functions for logging configuration, file system operations,
 // and other common utilities used throughout the application.
 package util
@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 

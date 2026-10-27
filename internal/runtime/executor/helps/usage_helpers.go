@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/clienterror"
-	internallogging "github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/clienterror"
+	internallogging "github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -53,7 +53,7 @@ type usageExecutor interface {
 	Identifier() string
 }
 
-func NewExecutorUsageReporter(ctx context.Context, executor usageExecutor, model string, auth *cliproxyauth.Auth) *UsageReporter {
+func NewExecutorUsageReporter(ctx context.Context, executor usageExecutor, model string, auth *apsauth.Auth) *UsageReporter {
 	provider := ""
 	if executor != nil {
 		provider = executor.Identifier()
@@ -63,7 +63,7 @@ func NewExecutorUsageReporter(ctx context.Context, executor usageExecutor, model
 	return reporter
 }
 
-func NewUsageReporter(ctx context.Context, provider, model string, auth *cliproxyauth.Auth) *UsageReporter {
+func NewUsageReporter(ctx context.Context, provider, model string, auth *apsauth.Auth) *UsageReporter {
 	apiKey := APIKeyFromContext(ctx)
 	alias := usage.RequestedModelAliasFromContext(ctx)
 	if alias == "" {
@@ -98,7 +98,7 @@ func (r *UsageReporter) SetStream(stream bool) {
 }
 
 // UpdateAccessTokenFingerprint records the token version actually used upstream.
-func (r *UsageReporter) UpdateAccessTokenFingerprint(auth *cliproxyauth.Auth) {
+func (r *UsageReporter) UpdateAccessTokenFingerprint(auth *apsauth.Auth) {
 	if r == nil {
 		return
 	}
@@ -479,7 +479,7 @@ type usageTTFTRoundTripper struct {
 }
 
 func (t usageTTFTRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	cliproxyexecutor.MarkUpstreamAttempt(req.Context())
+	apsexecutor.MarkUpstreamAttempt(req.Context())
 	t.reporter.StartResponseTTFT()
 	resp, errRoundTrip := t.base.RoundTrip(req)
 	if errRoundTrip != nil {
@@ -531,7 +531,7 @@ func APIKeyFromContext(ctx context.Context) string {
 	return ""
 }
 
-func resolveUsageSource(auth *cliproxyauth.Auth, ctxAPIKey string) string {
+func resolveUsageSource(auth *apsauth.Auth, ctxAPIKey string) string {
 	if auth != nil {
 		provider := strings.TrimSpace(auth.Provider)
 		if strings.EqualFold(provider, "vertex") {
@@ -570,7 +570,7 @@ func resolveUsageSource(auth *cliproxyauth.Auth, ctxAPIKey string) string {
 	return ""
 }
 
-func resolveUsageAuthType(auth *cliproxyauth.Auth) string {
+func resolveUsageAuthType(auth *apsauth.Auth) string {
 	if auth == nil {
 		return ""
 	}
@@ -1218,15 +1218,15 @@ func StripUsageMetadataFromJSON(rawJSON []byte) ([]byte, bool) {
 	var changed bool
 
 	if usageMetadata = gjson.GetBytes(cleaned, "usageMetadata"); usageMetadata.Exists() {
-		// Rename usageMetadata to cpaUsageMetadata
-		cleaned, _ = sjson.SetRawBytes(cleaned, "cpaUsageMetadata", []byte(usageMetadata.Raw))
+		// Rename usageMetadata to apsUsageMetadata
+		cleaned, _ = sjson.SetRawBytes(cleaned, "apsUsageMetadata", []byte(usageMetadata.Raw))
 		cleaned, _ = sjson.DeleteBytes(cleaned, "usageMetadata")
 		changed = true
 	}
 
 	if usageMetadata = gjson.GetBytes(cleaned, "response.usageMetadata"); usageMetadata.Exists() {
-		// Rename usageMetadata to cpaUsageMetadata
-		cleaned, _ = sjson.SetRawBytes(cleaned, "response.cpaUsageMetadata", []byte(usageMetadata.Raw))
+		// Rename usageMetadata to apsUsageMetadata
+		cleaned, _ = sjson.SetRawBytes(cleaned, "response.apsUsageMetadata", []byte(usageMetadata.Raw))
 		cleaned, _ = sjson.DeleteBytes(cleaned, "response.usageMetadata")
 		changed = true
 	}

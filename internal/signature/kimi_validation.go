@@ -33,9 +33,9 @@ import (
 //     absent thinking field, max_tokens truncation mid-thinking, non-English
 //     prompts, 135k-character inputs, multi-turn replay of signed history, tool
 //     calls, tool_result continuation, and the interleaved-thinking beta header.
-//   - Two independent collection paths agree: CPA request logs (57 unique samples)
+//   - Two independent collection paths agree: APS request logs (57 unique samples)
 //     and the mitmproxy harvest in
-//     .agents/skills/cpa-signature-catalog-and-collection/data/signatures/kimi/
+//     .agents/skills/aps-signature-catalog-and-collection/data/signatures/kimi/
 //     (61 unique samples) both yield exactly {4340, 12946}.
 //
 // Cross-family safety: across 1027 catalog signatures plus 215 native Grok

@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	translatorcommon "github.com/router-for-me/CLIProxyAPI/v7/internal/translator/common"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	translatorcommon "github.com/icaruszezen/AIProviderScheduling/v7/internal/translator/common"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -50,8 +50,8 @@ func (p *convertAntigravityGeminiParams) observe(rawJSON []byte) {
 		p.ResponseID = firstStringValue(rawJSON, "response.responseId", "responseId")
 	}
 	// Keep the latest usage snapshot. FilterSSEUsageMetadata renames non-terminal
-	// usage to cpaUsageMetadata, so both spellings must be tracked.
-	for _, path := range []string{"response.usageMetadata", "response.cpaUsageMetadata", "usageMetadata", "cpaUsageMetadata"} {
+	// usage to apsUsageMetadata, so both spellings must be tracked.
+	for _, path := range []string{"response.usageMetadata", "response.apsUsageMetadata", "usageMetadata", "apsUsageMetadata"} {
 		if usage := gjson.GetBytes(rawJSON, path); usage.Exists() {
 			p.UsageMetadata = append(p.UsageMetadata[:0], usage.Raw...)
 			break
@@ -88,11 +88,11 @@ func hasAntigravityResponsePayload(rawJSON []byte) bool {
 			return true
 		}
 	}
-	// FilterSSEUsageMetadata renames non-terminal usage to cpaUsageMetadata before
+	// FilterSSEUsageMetadata renames non-terminal usage to apsUsageMetadata before
 	// the translator sees it, so both spellings must be accepted.
 	for _, path := range []string{
-		"response.usageMetadata", "response.cpaUsageMetadata",
-		"usageMetadata", "cpaUsageMetadata",
+		"response.usageMetadata", "response.apsUsageMetadata",
+		"usageMetadata", "apsUsageMetadata",
 	} {
 		if usage := gjson.GetBytes(rawJSON, path); usage.IsObject() && len(usage.Map()) > 0 {
 			return true
@@ -253,14 +253,14 @@ func GeminiTokenCount(ctx context.Context, count int64) []byte {
 	return translatorcommon.GeminiTokenCountJSON(count)
 }
 
-// restoreUsageMetadata renames cpaUsageMetadata back to usageMetadata.
-// The executor renames usageMetadata to cpaUsageMetadata in non-terminal chunks
+// restoreUsageMetadata renames apsUsageMetadata back to usageMetadata.
+// The executor renames usageMetadata to apsUsageMetadata in non-terminal chunks
 // to preserve usage data while hiding it from clients that don't expect it.
 // When returning standard Gemini API format, we must restore the original name.
 func restoreUsageMetadata(chunk []byte) []byte {
-	if cpaUsage := gjson.GetBytes(chunk, "cpaUsageMetadata"); cpaUsage.Exists() {
-		chunk, _ = sjson.SetRawBytes(chunk, "usageMetadata", []byte(cpaUsage.Raw))
-		chunk, _ = sjson.DeleteBytes(chunk, "cpaUsageMetadata")
+	if apsUsage := gjson.GetBytes(chunk, "apsUsageMetadata"); apsUsage.Exists() {
+		chunk, _ = sjson.SetRawBytes(chunk, "usageMetadata", []byte(apsUsage.Raw))
+		chunk, _ = sjson.DeleteBytes(chunk, "apsUsageMetadata")
 	}
 	return chunk
 }

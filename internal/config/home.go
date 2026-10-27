@@ -21,7 +21,7 @@ type HomeTLSConfig struct {
 	UseTargetServerName bool   `yaml:"-" json:"-"`
 }
 
-// NormalizeHomePort ensures that the CPA server port received from Home is valid,
+// NormalizeHomePort ensures that the APS server port received from Home is valid,
 // defaulting to 8317 when omitted or non-positive.
 func NormalizeHomePort(port int) int {
 	if port <= 0 {

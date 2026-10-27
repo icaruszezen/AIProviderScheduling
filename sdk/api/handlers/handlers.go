@@ -1,4 +1,4 @@
-// Package handlers provides core API handler functionality for the CLI Proxy API server.
+// Package handlers provides core API handler functionality for the AI Provider Scheduling server.
 // It includes common types, client management, load balancing, and error handling
 // shared across all API endpoint handlers (OpenAI, Claude, Gemini).
 package handlers
@@ -16,14 +16,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/logging"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/thinking"
-	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	coreexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	coresession "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/session"
-	coreusage "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/usage"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/thinking"
+	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	coresession "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/session"
+	coreusage "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 	"github.com/tidwall/gjson"
 	"golang.org/x/net/context"
 )
@@ -181,7 +181,7 @@ func requestExecutionMetadata(ctx context.Context) map[string]any {
 		meta[coreexecutor.SelectedAuthCallbackMetadataKey] = selectedCallback
 	}
 	if ginCtx != nil && !websocket.IsWebSocketUpgrade(ginCtx.Request) {
-		if traceCallback := logging.GinCPATraceIDCallback(ginCtx); traceCallback != nil {
+		if traceCallback := logging.GinAPSTraceIDCallback(ginCtx); traceCallback != nil {
 			meta[coreexecutor.SelectedAuthIndexCallbackMetadataKey] = traceCallback
 		}
 	}

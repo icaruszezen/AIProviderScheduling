@@ -1,6 +1,6 @@
 # Standard Dynamic Library Plugin Examples
 
-This directory contains standard dynamic library plugin examples for the CLIProxyAPI C ABI.
+This directory contains standard dynamic library plugin examples for the AIProviderScheduling C ABI.
 
 ## Layout
 
@@ -61,7 +61,7 @@ See `request-lifecycle/README.md` for build instructions and lifecycle semantics
 
 `host-model-callback` declares the Management API capability and exposes a browser resource named `Host Model Callback`. The resource calls `host.model.execute` for non-streaming requests and `host.model.execute_stream` plus `host.model.stream_read` for streaming requests. It demonstrates explicit stream close with `host.model.stream_close` and an `implicit_close=true` option for RPC-scope host cleanup.
 
-When the resource forwards its `host_callback_id`, CPA identifies the plugin that initiated the host model callback and skips that same plugin's interceptors for the nested execution. This makes host model callbacks non-recursive for the caller while allowing other plugins to intercept the nested request.
+When the resource forwards its `host_callback_id`, APS identifies the plugin that initiated the host model callback and skips that same plugin's interceptors for the nested execution. This makes host model callbacks non-recursive for the caller while allowing other plugins to intercept the nested request.
 
 ```yaml
 plugins:
@@ -71,7 +71,7 @@ plugins:
       priority: 1
 ```
 
-The default example model is `gpt-5.5`, but the request succeeds only when the current CPA model and auth configuration can route that model.
+The default example model is `gpt-5.5`, but the request succeeds only when the current APS model and auth configuration can route that model.
 
 ## Scheduler
 
@@ -105,4 +105,4 @@ Artifacts are written to `examples/plugin/bin`.
 
 `host-callback` uses a minimal plugin resource because host callbacks are invoked from plugin methods and are not standalone capabilities.
 
-Menu resources returned by `management.register` through the `resources` field are exposed by CPA under `/v0/resource/plugins/<pluginID>/...`. Authenticated plugin Management API routes remain under `/v0/management/...`.
+Menu resources returned by `management.register` through the `resources` field are exposed by APS under `/v0/resource/plugins/<pluginID>/...`. Authenticated plugin Management API routes remain under `/v0/management/...`.

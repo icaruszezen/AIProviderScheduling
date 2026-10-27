@@ -1,4 +1,4 @@
-// Package util provides utility functions for the CLI Proxy API server.
+// Package util provides utility functions for the AI Provider Scheduling server.
 // It includes helper functions for proxy configuration, HTTP client setup,
 // log level management, and other common operations used across the application.
 package util
@@ -6,8 +6,8 @@ package util
 import (
 	"net/http"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/proxyutil"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/proxyutil"
 	log "github.com/sirupsen/logrus"
 )
 

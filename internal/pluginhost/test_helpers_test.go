@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginabi"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginapi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginabi"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 	"gopkg.in/yaml.v3"
 )
 
@@ -244,7 +244,7 @@ func validTestPlugin(name string) pluginapi.Plugin {
 			Name:             name,
 			Version:          "1.0.0",
 			Author:           "test",
-			GitHubRepository: "https://github.com/router-for-me/CLIProxyAPI"},
+			GitHubRepository: "https://github.com/icaruszezen/AIProviderScheduling"},
 		Capabilities: pluginapi.Capabilities{
 			UsagePlugin: testUsageCapability{}}}
 }

@@ -68,7 +68,7 @@ def registration_result(cap: Capability, lang: str) -> str:
         f'"Name":{json.dumps(pid)},'
         '"Version":"0.1.0",'
         '"Author":"router-for-me",'
-        '"GitHubRepository":"https://github.com/router-for-me/CLIProxyAPI",'
+        '"GitHubRepository":"https://github.com/icaruszezen/AIProviderScheduling",'
         f'"Logo":"https://example.invalid/{pid}.png",'
         '"ConfigFields":[]'
         "},"
@@ -191,7 +191,7 @@ def generate_go(cap: Capability) -> None:
 \t\tcallHost("host.http.do", []byte(`{{"method":"GET","url":"https://example.com","headers":{{"user-agent":["{pid}"]}}}}`))
 """
         method_cases.append(f'\tcase "{method}":\n{host_callback_call}\t\treturn okEnvelopeJSON({json.dumps(result_for_method(cap, "go", method))})')
-    go_mod = f"""module github.com/router-for-me/CLIProxyAPI/v7/examples/plugin/{slug}/go
+    go_mod = f"""module github.com/icaruszezen/AIProviderScheduling/v7/examples/plugin/{slug}/go
 
 go 1.26
 """
@@ -204,40 +204,40 @@ go 1.26
 typedef struct {{
 \tvoid* ptr;
 \tsize_t len;
-}} cliproxy_buffer;
+}} aps_buffer;
 
-typedef int (*cliproxy_host_call_fn)(void*, const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_host_free_fn)(void*, size_t);
+typedef int (*aps_host_call_fn)(void*, const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_host_free_fn)(void*, size_t);
 
 typedef struct {{
 \tuint32_t abi_version;
 \tvoid* host_ctx;
-\tcliproxy_host_call_fn call;
-\tcliproxy_host_free_fn free_buffer;
-}} cliproxy_host_api;
+\taps_host_call_fn call;
+\taps_host_free_fn free_buffer;
+}} aps_host_api;
 
-typedef int (*cliproxy_plugin_call_fn)(char*, uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_plugin_free_fn)(void*, size_t);
-typedef void (*cliproxy_plugin_shutdown_fn)(void);
+typedef int (*aps_plugin_call_fn)(char*, uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_plugin_free_fn)(void*, size_t);
+typedef void (*aps_plugin_shutdown_fn)(void);
 
 typedef struct {{
 \tuint32_t abi_version;
-\tcliproxy_plugin_call_fn call;
-\tcliproxy_plugin_free_fn free_buffer;
-\tcliproxy_plugin_shutdown_fn shutdown;
-}} cliproxy_plugin_api;
+\taps_plugin_call_fn call;
+\taps_plugin_free_fn free_buffer;
+\taps_plugin_shutdown_fn shutdown;
+}} aps_plugin_api;
 
-extern int cliproxyPluginCall(char*, uint8_t*, size_t, cliproxy_buffer*);
-extern void cliproxyPluginFree(void*, size_t);
-extern void cliproxyPluginShutdown(void);
+extern int apsPluginCall(char*, uint8_t*, size_t, aps_buffer*);
+extern void apsPluginFree(void*, size_t);
+extern void apsPluginShutdown(void);
 
-static const cliproxy_host_api* stored_host;
+static const aps_host_api* stored_host;
 
-static void store_host_api(const cliproxy_host_api* host) {{
+static void store_host_api(const aps_host_api* host) {{
 \tstored_host = host;
 }}
 
-static int call_host_api(const char* method, const uint8_t* request, size_t request_len, cliproxy_buffer* response) {{
+static int call_host_api(const char* method, const uint8_t* request, size_t request_len, aps_buffer* response) {{
 \tif (stored_host == NULL || stored_host->call == NULL) {{
 \t\treturn 1;
 \t}}
@@ -274,21 +274,21 @@ type envelopeError struct {{
 
 func main() {{}}
 
-//export cliproxy_plugin_init
-func cliproxy_plugin_init(host *C.cliproxy_host_api, plugin *C.cliproxy_plugin_api) C.int {{
+//export aps_plugin_init
+func aps_plugin_init(host *C.aps_host_api, plugin *C.aps_plugin_api) C.int {{
 \tif plugin == nil {{
 \t\treturn 1
 \t}}
 \tC.store_host_api(host)
 \tplugin.abi_version = C.uint32_t(abiVersion)
-\tplugin.call = C.cliproxy_plugin_call_fn(C.cliproxyPluginCall)
-\tplugin.free_buffer = C.cliproxy_plugin_free_fn(C.cliproxyPluginFree)
-\tplugin.shutdown = C.cliproxy_plugin_shutdown_fn(C.cliproxyPluginShutdown)
+\tplugin.call = C.aps_plugin_call_fn(C.apsPluginCall)
+\tplugin.free_buffer = C.aps_plugin_free_fn(C.apsPluginFree)
+\tplugin.shutdown = C.aps_plugin_shutdown_fn(C.apsPluginShutdown)
 \treturn 0
 }}
 
-//export cliproxyPluginCall
-func cliproxyPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.cliproxy_buffer) C.int {{
+//export apsPluginCall
+func apsPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t, response *C.aps_buffer) C.int {{
 \tif response != nil {{
 \t\tresponse.ptr = nil
 \t\tresponse.len = 0
@@ -308,16 +308,16 @@ func cliproxyPluginCall(method *C.char, request *C.uint8_t, requestLen C.size_t,
 \treturn 0
 }}
 
-//export cliproxyPluginFree
-func cliproxyPluginFree(ptr unsafe.Pointer, len C.size_t) {{
+//export apsPluginFree
+func apsPluginFree(ptr unsafe.Pointer, len C.size_t) {{
 \tif ptr != nil {{
 \t\tC.free(ptr)
 \t}}
 \t_ = len
 }}
 
-//export cliproxyPluginShutdown
-func cliproxyPluginShutdown() {{}}
+//export apsPluginShutdown
+func apsPluginShutdown() {{}}
 
 func handleMethod(method string) ([]byte, error) {{
 \t_ = http.StatusOK
@@ -338,7 +338,7 @@ func errorEnvelope(code, message string) []byte {{
 \treturn raw
 }}
 
-func writeResponse(response *C.cliproxy_buffer, raw []byte) {{
+func writeResponse(response *C.aps_buffer, raw []byte) {{
 \tif response == nil || len(raw) == 0 {{
 \t\treturn
 \t}}
@@ -353,7 +353,7 @@ func writeResponse(response *C.cliproxy_buffer, raw []byte) {{
 func callHost(method string, payload []byte) {{
 \tcMethod := C.CString(method)
 \tdefer C.free(unsafe.Pointer(cMethod))
-\tvar response C.cliproxy_buffer
+\tvar response C.aps_buffer
 \tvar req *C.uint8_t
 \tif len(payload) > 0 {{
 \t\treq = (*C.uint8_t)(C.CBytes(payload))
@@ -390,10 +390,10 @@ def generate_c(cap: Capability) -> None:
 \t\treturn 0;
 \t}}""")
     cmake = f"""cmake_minimum_required(VERSION 3.16)
-project(cliproxy_{ident}_c C)
+project(aps_{ident}_c C)
 
-add_library(cliproxy_{ident}_c SHARED src/plugin.c)
-set_target_properties(cliproxy_{ident}_c PROPERTIES
+add_library(aps_{ident}_c SHARED src/plugin.c)
+set_target_properties(aps_{ident}_c PROPERTIES
     OUTPUT_NAME "{slug}-c"
     PREFIX ""
 )
@@ -413,32 +413,32 @@ set_target_properties(cliproxy_{ident}_c PROPERTIES
 typedef struct {{
 \tvoid* ptr;
 \tsize_t len;
-}} cliproxy_buffer;
+}} aps_buffer;
 
-typedef int (*cliproxy_host_call_fn)(void*, const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_host_free_fn)(void*, size_t);
+typedef int (*aps_host_call_fn)(void*, const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_host_free_fn)(void*, size_t);
 
 typedef struct {{
 \tuint32_t abi_version;
 \tvoid* host_ctx;
-\tcliproxy_host_call_fn call;
-\tcliproxy_host_free_fn free_buffer;
-}} cliproxy_host_api;
+\taps_host_call_fn call;
+\taps_host_free_fn free_buffer;
+}} aps_host_api;
 
-typedef int (*cliproxy_plugin_call_fn)(const char*, const uint8_t*, size_t, cliproxy_buffer*);
-typedef void (*cliproxy_plugin_free_fn)(void*, size_t);
-typedef void (*cliproxy_plugin_shutdown_fn)(void);
+typedef int (*aps_plugin_call_fn)(const char*, const uint8_t*, size_t, aps_buffer*);
+typedef void (*aps_plugin_free_fn)(void*, size_t);
+typedef void (*aps_plugin_shutdown_fn)(void);
 
 typedef struct {{
 \tuint32_t abi_version;
-\tcliproxy_plugin_call_fn call;
-\tcliproxy_plugin_free_fn free_buffer;
-\tcliproxy_plugin_shutdown_fn shutdown;
-}} cliproxy_plugin_api;
+\taps_plugin_call_fn call;
+\taps_plugin_free_fn free_buffer;
+\taps_plugin_shutdown_fn shutdown;
+}} aps_plugin_api;
 
-static const cliproxy_host_api* stored_host = NULL;
+static const aps_host_api* stored_host = NULL;
 
-static void write_response(cliproxy_buffer* response, const char* text) {{
+static void write_response(aps_buffer* response, const char* text) {{
 \tif (response == NULL || text == NULL) {{
 \t\treturn;
 \t}}
@@ -458,7 +458,7 @@ static void call_host(const char* method, const char* payload) {{
 \tif (stored_host == NULL || stored_host->call == NULL || method == NULL) {{
 \t\treturn;
 \t}}
-\tcliproxy_buffer response = {{0}};
+\taps_buffer response = {{0}};
 \tconst uint8_t* request = (const uint8_t*)payload;
 \tsize_t request_len = payload == NULL ? 0 : strlen(payload);
 \tif (stored_host->call(stored_host->host_ctx, method, request, request_len, &response) == 0 && response.ptr != NULL && stored_host->free_buffer != NULL) {{
@@ -466,7 +466,7 @@ static void call_host(const char* method, const char* payload) {{
 \t}}
 }}
 
-static int plugin_call(const char* method, const uint8_t* request, size_t request_len, cliproxy_buffer* response) {{
+static int plugin_call(const char* method, const uint8_t* request, size_t request_len, aps_buffer* response) {{
 \tif (response != NULL) {{
 \t\tresponse->ptr = NULL;
 \t\tresponse->len = 0;
@@ -489,7 +489,7 @@ static void plugin_free(void* ptr, size_t len) {{
 
 static void plugin_shutdown(void) {{}}
 
-CLIPROXY_EXPORT int cliproxy_plugin_init(const cliproxy_host_api* host, cliproxy_plugin_api* plugin) {{
+CLIPROXY_EXPORT int aps_plugin_init(const aps_host_api* host, aps_plugin_api* plugin) {{
 \tif (plugin == NULL) {{
 \t\treturn 1;
 \t}}
@@ -520,7 +520,7 @@ def generate_rust(cap: Capability) -> None:
 """
         cases.append(f'{json.dumps(method)} => {{{host_call}            write_response(response, {json.dumps(result)}); 0 }}')
     cargo = f"""[package]
-name = "cliproxy-{slug}-rust"
+name = "aps-{slug}-rust"
 version = "0.1.0"
 edition = "2021"
 
@@ -532,7 +532,7 @@ crate-type = ["cdylib"]
 version = 4
 
 [[package]]
-name = "cliproxy-{slug}-rust"
+name = "aps-{slug}-rust"
 version = "0.1.0"
 """
     source = f"""use std::ffi::CStr;
@@ -572,7 +572,7 @@ pub struct CliproxyPluginApi {{
 static mut STORED_HOST: *const CliproxyHostApi = ptr::null();
 
 #[no_mangle]
-pub extern "C" fn cliproxy_plugin_init(host: *const CliproxyHostApi, plugin: *mut CliproxyPluginApi) -> i32 {{
+pub extern "C" fn aps_plugin_init(host: *const CliproxyHostApi, plugin: *mut CliproxyPluginApi) -> i32 {{
     if plugin.is_null() {{
         return 1;
     }}

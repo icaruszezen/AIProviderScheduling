@@ -1,14 +1,14 @@
 package helps
 
 import (
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 // IsGeminiTokenEvent reports whether a Google Gemini / Antigravity streaming chunk carries
 // substantive output token content (such as text parts, thought traces, or function calls).
 // It filters out metadata-only chunks (e.g. standalone usageMetadata) and empty parts.
 func IsGeminiTokenEvent(payload []byte) bool {
-	return cliproxyexecutor.IsGeminiTokenEvent(payload)
+	return apsexecutor.IsGeminiTokenEvent(payload)
 }
 
 // ObserveGeminiTokenEvent inspects a Google Gemini / Antigravity streaming chunk and records TTFT

@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -56,8 +56,8 @@ func claudeNativeHelperHeaders(betas, compression string, structured bool) http.
 	return canonical
 }
 
-func claudeNativeHelperOAuthAuth(baseURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func claudeNativeHelperOAuthAuth(baseURL string) *apsauth.Auth {
+	return &apsauth.Auth{
 		ID: "native-helper-oauth",
 		Attributes: map[string]string{
 			"fingerprint_profile": "claude-code-cli",
@@ -85,7 +85,7 @@ func TestApplyClaudeHeadersPreservesCallerAsyncWithoutFingerprintOptIn(t *testin
 				t.Fatal(errRequest)
 			}
 			incoming := http.Header{"X-Stainless-Async": {"async"}}
-			auth := &cliproxyauth.Auth{Attributes: map[string]string{"api_key": "test-api-key"}}
+			auth := &apsauth.Auth{Attributes: map[string]string{"api_key": "test-api-key"}}
 			if test.profile {
 				auth.Attributes["fingerprint_profile"] = "claude-code-cli"
 			}
@@ -124,10 +124,10 @@ func TestClaudeExecutorMinimalNativeHelperPreservesMarkerlessWire(t *testing.T) 
 	payload := []byte(`{"model":"claude-haiku-4-5-20251001","max_tokens":1,"messages":[{"role":"user","content":"helper probe"}],"metadata":{"user_id":"` + strings.ReplaceAll(claudeNativeHelperUserID, `"`, `\"`) + `"}}`)
 	headers := claudeNativeHelperHeaders(claudeNativeHelperCoreBetas, "gzip", false)
 	executor := NewClaudeExecutor(&config.Config{})
-	_, errExecute := executor.Execute(context.Background(), claudeNativeHelperOAuthAuth(server.URL), cliproxyexecutor.Request{
+	_, errExecute := executor.Execute(context.Background(), claudeNativeHelperOAuthAuth(server.URL), apsexecutor.Request{
 		Model:   "claude-haiku-4-5-20251001",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 		Headers:         headers,
@@ -168,10 +168,10 @@ func TestClaudeExecutorStructuredNativeHelperPreservesStreamProfile(t *testing.T
 	payload := []byte(`{"model":"claude-haiku-4-5-20251001","messages":[{"role":"user","content":[{"type":"text","text":"helper probe"}]}],"system":[{"type":"text","text":"x-anthropic-billing-header: cc_version=2.1.220; cc_entrypoint=cli; cch=00000;"},{"type":"text","text":"You are Claude Code, Anthropic's official CLI for Claude."},{"type":"text","text":"Return a short title."}],"tools":[],"metadata":{"user_id":"` + strings.ReplaceAll(claudeNativeHelperUserID, `"`, `\"`) + `"},"max_tokens":32000,"thinking":{"type":"disabled"},"temperature":1,"output_config":{"format":{"type":"json_schema","schema":{"type":"object","properties":{"title":{"type":"string"}},"required":["title"],"additionalProperties":false}}},"stream":true}`)
 	headers := claudeNativeHelperHeaders(betas, "gzip, deflate, br, zstd", true)
 	executor := NewClaudeExecutor(&config.Config{})
-	result, errStream := executor.ExecuteStream(context.Background(), claudeNativeHelperOAuthAuth(server.URL), cliproxyexecutor.Request{
+	result, errStream := executor.ExecuteStream(context.Background(), claudeNativeHelperOAuthAuth(server.URL), apsexecutor.Request{
 		Model:   "claude-haiku-4-5-20251001",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 		Headers:         headers,

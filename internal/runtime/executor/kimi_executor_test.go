@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -30,7 +30,7 @@ func TestNewKimiExecutorInitializesDelegatedClaudeConfig(t *testing.T) {
 
 func TestKimiExecutorRequestToFormatMatchesWireProtocol(t *testing.T) {
 	type requestToFormatReporter interface {
-		RequestToFormat(cliproxyexecutor.Request, cliproxyexecutor.Options) sdktranslator.Format
+		RequestToFormat(apsexecutor.Request, apsexecutor.Options) sdktranslator.Format
 	}
 
 	executor := NewKimiExecutor(&config.Config{})
@@ -52,7 +52,7 @@ func TestKimiExecutorRequestToFormatMatchesWireProtocol(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := reporter.RequestToFormat(cliproxyexecutor.Request{}, cliproxyexecutor.Options{
+			got := reporter.RequestToFormat(apsexecutor.Request{}, apsexecutor.Options{
 				SourceFormat: tt.source,
 				Stream:       tt.stream,
 			})
@@ -65,7 +65,7 @@ func TestKimiExecutorRequestToFormatMatchesWireProtocol(t *testing.T) {
 
 func TestKimiExecutorClaudeRequestPreservesInternalModelSemantics(t *testing.T) {
 	var upstreamBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		var errRead error
 		upstreamBody, errRead = io.ReadAll(req.Body)
 		if errRead != nil {
@@ -81,16 +81,16 @@ func TestKimiExecutorClaudeRequestPreservesInternalModelSemantics(t *testing.T) 
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
 	const model = "kimi-k2.5(max)"
 	payload := []byte(`{"model":"kimi-k2.5(max)","max_tokens":32,"messages":[{"role":"user","content":"hello"}]}`)
-	response, err := executor.Execute(ctx, auth, cliproxyexecutor.Request{
+	response, err := executor.Execute(ctx, auth, apsexecutor.Request{
 		Model:   model,
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
 	})
@@ -110,7 +110,7 @@ func TestKimiExecutorClaudeRequestPreservesInternalModelSemantics(t *testing.T) 
 
 func TestKimiExecutorPreservesAssistantContentAndToolCallsFromResponsesHistory(t *testing.T) {
 	var upstreamBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		var errRead error
 		upstreamBody, errRead = io.ReadAll(req.Body)
 		if errRead != nil {
@@ -126,7 +126,7 @@ func TestKimiExecutorPreservesAssistantContentAndToolCallsFromResponsesHistory(t
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
@@ -140,10 +140,10 @@ func TestKimiExecutorPreservesAssistantContentAndToolCallsFromResponsesHistory(t
 		]
 	}`)
 
-	_, err := executor.Execute(ctx, auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAIResponse,
 		OriginalRequest: payload,
 	})
@@ -173,7 +173,7 @@ func TestKimiExecutorPreservesAssistantContentAndToolCallsFromResponsesHistory(t
 func TestKimiExecutorCountTokensUsesCanonicalUpstreamModel(t *testing.T) {
 	var upstreamRequest *http.Request
 	var upstreamBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		upstreamRequest = req.Clone(req.Context())
 		var errRead error
 		upstreamBody, errRead = io.ReadAll(req.Body)
@@ -188,15 +188,15 @@ func TestKimiExecutorCountTokensUsesCanonicalUpstreamModel(t *testing.T) {
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
 	payload := []byte(`{"model":"kimi-k3[1m](high)","messages":[{"role":"user","content":"hello"}]}`)
-	_, err := executor.CountTokens(ctx, auth, cliproxyexecutor.Request{
+	_, err := executor.CountTokens(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3[1m](high)",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err != nil {
 		t.Fatalf("CountTokens() error = %v", err)
 	}
@@ -212,7 +212,7 @@ func TestKimiExecutorCountTokensUsesCanonicalUpstreamModel(t *testing.T) {
 }
 
 func TestKimiExecutorCountTokensInvalidGzipErrorBodyReturnsDecodeMessage(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusBadRequest,
 			Header:     http.Header{"Content-Encoding": []string{"gzip"}},
@@ -221,15 +221,15 @@ func TestKimiExecutorCountTokensInvalidGzipErrorBodyReturnsDecodeMessage(t *test
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
 	payload := []byte(`{"model":"kimi-k3","messages":[{"role":"user","content":"hello"}]}`)
-	_, err := executor.CountTokens(ctx, auth, cliproxyexecutor.Request{
+	_, err := executor.CountTokens(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	assertStatusErr(t, err, http.StatusBadRequest)
 	if !strings.Contains(err.Error(), "failed to decode error response body") {
 		t.Fatalf("CountTokens() error = %q, want decode failure", err)
@@ -244,7 +244,7 @@ func TestKimiExecutorClaudeStreamForwardsAnthropicBetaAndLogsUpstream(t *testing
 
 	var upstreamRequest *http.Request
 	ctx := context.WithValue(context.Background(), "gin", ginCtx)
-	ctx = context.WithValue(ctx, "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx = context.WithValue(ctx, "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		upstreamRequest = req.Clone(req.Context())
 		upstreamRequest.Header = req.Header.Clone()
 		return &http.Response{
@@ -261,16 +261,16 @@ func TestKimiExecutorClaudeStreamForwardsAnthropicBetaAndLogsUpstream(t *testing
 
 	cfg := &config.Config{SDKConfig: config.SDKConfig{RequestLog: true}}
 	executor := NewKimiExecutor(cfg)
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:         "kimi-test-auth",
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
 	payload := []byte(`{"model":"kimi-k3","max_tokens":32,"messages":[{"role":"user","content":"hello"}]}`)
-	result, err := executor.ExecuteStream(ctx, auth, cliproxyexecutor.Request{
+	result, err := executor.ExecuteStream(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		Stream:          true,
 		SourceFormat:    sdktranslator.FormatClaude,
 		OriginalRequest: payload,
@@ -706,7 +706,7 @@ func TestNormalizeKimiUpstreamModel(t *testing.T) {
 
 func TestKimiExecutorNormalizesToolSchemasForMoonshot(t *testing.T) {
 	var upstreamBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		var errRead error
 		upstreamBody, errRead = io.ReadAll(req.Body)
 		if errRead != nil {
@@ -722,7 +722,7 @@ func TestKimiExecutorNormalizesToolSchemasForMoonshot(t *testing.T) {
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
@@ -757,10 +757,10 @@ func TestKimiExecutorNormalizesToolSchemasForMoonshot(t *testing.T) {
 		]
 	}`)
 
-	_, err := executor.Execute(ctx, auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAI,
 		OriginalRequest: payload,
 	})
@@ -795,7 +795,7 @@ func TestKimiExecutorNormalizesToolSchemasForMoonshot(t *testing.T) {
 
 func TestKimiExecutorStreamNormalizesToolSchemasFromResponses(t *testing.T) {
 	var upstreamBody []byte
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", kimiRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		var errRead error
 		upstreamBody, errRead = io.ReadAll(req.Body)
 		if errRead != nil {
@@ -812,7 +812,7 @@ func TestKimiExecutorStreamNormalizesToolSchemasFromResponses(t *testing.T) {
 	}))
 
 	executor := NewKimiExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Attributes: map[string]string{},
 		Metadata:   map[string]any{"access_token": "test-token"},
 	}
@@ -843,10 +843,10 @@ func TestKimiExecutorStreamNormalizesToolSchemasFromResponses(t *testing.T) {
 		]
 	}`)
 
-	streamResult, err := executor.ExecuteStream(ctx, auth, cliproxyexecutor.Request{
+	streamResult, err := executor.ExecuteStream(ctx, auth, apsexecutor.Request{
 		Model:   "kimi-k3",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatOpenAIResponse,
 		OriginalRequest: payload,
 		Stream:          true,

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 // BuildConfigChangeDetails computes a redacted, human-readable list of config changes.

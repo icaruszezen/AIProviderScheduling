@@ -30,8 +30,7 @@ remote-management:
   # disable-auto-update-panel: false
 
   # GitHub repository for the management control panel. Accepts a repository URL or releases API URL.
-  # Do not point this at router-for-me/Cli-Proxy-API-Management-Center: that official panel still
-  # ships Auth Files / OAuth pages that this server no longer implements.
+  # Only icaruszezen/AI-Provider-Scheduling-Management-Center is accepted.
   panel-github-repository: "https://github.com/icaruszezen/AI-Provider-Scheduling-Management-Center"
 
 # Optional master/slave config sync. Independent of Home mode (Home ignores this block).
@@ -79,8 +78,8 @@ pprof:
 # credential-concurrency:
 #   lifecycle-config-revision: 1
 #   observation-barrier-revision: 0
-#   cpa-heartbeat-timeout: "3s"
-#   cpa-cancel-bound: "5s"
+#   aps-heartbeat-timeout: "3s"
+#   aps-cancel-bound: "5s"
 #   reclaim-grace: "5s"
 #   cleanup-interval: "5s"
 #   release-flush-interval: 250ms
@@ -113,16 +112,16 @@ pprof:
 plugins:
   enabled: false
   dir: "plugins"
-  # Additional plugin store registries. The built-in official registry is always included.
+  # Plugin store registries. No registry is queried unless it is listed here.
   # store-sources:
-  #   - "https://example.com/cliproxy-plugins/registry.json"
+  #   - "https://example.com/aps-plugins/registry.json"
   # Optional plugin store auth rules. Values are read from environment variables;
   # tokens are not written into plugin manifests or node status.
   # store-auth:
-  #   - match: "https://example.com/cliproxy-plugins/"
+  #   - match: "https://example.com/aps-plugins/"
   #     apply-to: ["registry", "artifact"]
   #     type: bearer
-  #     token-env: "CLIPROXY_PLUGIN_STORE_TOKEN"
+  #     token-env: "APS_PLUGIN_STORE_TOKEN"
   configs:
     example:
       enabled: true
@@ -201,7 +200,7 @@ passthrough-headers: false
 # its eligible credentials. Round 0 is the initial round; round r only admits
 # credentials whose effective request-retry is at least r. Explicit non-negative
 # credential/provider overrides take precedence; omitted or negative overrides
-# inherit this global value, and explicit 0 only admits round 0. New CPA nodes
+# inherit this global value, and explicit 0 only admits round 0. New APS nodes
 # send retry_round=0 for the initial round and increment it for additional rounds;
 # legacy dispatch methods omit the field and keep old semantics.
 # Additional rounds apply to HTTP 403, 408, 429, 500, 502, 503, and 504 failures.
@@ -325,7 +324,7 @@ codex:
     # Reject downstream SDP candidates that target private, loopback, link-local, or unspecified IPs.
     # Keep false for local or trusted-network Codex Desktop connections.
     disable-private-remote-ips: false
-    # Public IPv4 or IPv6 address advertised when CPA is behind 1:1 NAT.
+    # Public IPv4 or IPv6 address advertised when APS is behind 1:1 NAT.
     public-ip: ""
     # Optional UDP allocation range. Both values must be set together and provide at least two ports per session.
     udp-port-min: 0
@@ -620,7 +619,7 @@ nonstream-keepalive-interval: 0
 #     # count_tokens keeps the native model/messages/tools shape for every origin, including
 #     # Kimi opt-in. It does not send billing/CCH, currentDate, metadata, or diagnostics.
 #     #
-#     # CCH: the billing block may carry a per-request cch hash. CPA emits it exactly where
+#     # CCH: the billing block may carry a per-request cch hash. APS emits it exactly where
 #     # Claude Code does, which is api.anthropic.com (first-party) and Vertex only. An opt-in
 #     # on any other gateway (including Kimi) still sends the billing block, but without cch,
 #     # so a per-request hash cannot bust that gateway's prompt cache. api.anthropic.com

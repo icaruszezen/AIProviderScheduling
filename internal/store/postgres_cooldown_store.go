@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
 
-var _ cliproxyauth.CooldownStateStoreProvider = (*PostgresStore)(nil)
-var _ cliproxyauth.CooldownStateStore = (*postgresCooldownStateStore)(nil)
+var _ apsauth.CooldownStateStoreProvider = (*PostgresStore)(nil)
+var _ apsauth.CooldownStateStore = (*postgresCooldownStateStore)(nil)
 
 type postgresCooldownStateKey struct {
 	authID string
@@ -38,14 +38,14 @@ type postgresCooldownStateStore struct {
 }
 
 // CooldownStateStore returns the PostgreSQL-backed runtime cooldown store.
-func (s *PostgresStore) CooldownStateStore() cliproxyauth.CooldownStateStore {
+func (s *PostgresStore) CooldownStateStore() apsauth.CooldownStateStore {
 	if s == nil {
 		return nil
 	}
 	return s.cooldownStore
 }
 
-func (s *postgresCooldownStateStore) Load(ctx context.Context) (records []cliproxyauth.CooldownStateRecord, err error) {
+func (s *postgresCooldownStateStore) Load(ctx context.Context) (records []apsauth.CooldownStateRecord, err error) {
 	if s == nil || s.store == nil || s.store.db == nil {
 		return nil, fmt.Errorf("postgres cooldown store: not initialized")
 	}
@@ -68,7 +68,7 @@ func (s *postgresCooldownStateStore) Load(ctx context.Context) (records []clipro
 		}
 	}()
 
-	records = make([]cliproxyauth.CooldownStateRecord, 0)
+	records = make([]apsauth.CooldownStateRecord, 0)
 	previous := make(map[postgresCooldownStateKey]postgresCooldownStateVersion)
 	for rows.Next() {
 		var content []byte
@@ -76,7 +76,7 @@ func (s *postgresCooldownStateStore) Load(ctx context.Context) (records []clipro
 		if errScan := rows.Scan(&content, &updatedAt); errScan != nil {
 			return nil, fmt.Errorf("postgres cooldown store: scan state: %w", errScan)
 		}
-		var record cliproxyauth.CooldownStateRecord
+		var record apsauth.CooldownStateRecord
 		if errUnmarshal := json.Unmarshal(content, &record); errUnmarshal != nil {
 			return nil, fmt.Errorf("postgres cooldown store: decode state: %w", errUnmarshal)
 		}
@@ -94,7 +94,7 @@ func (s *postgresCooldownStateStore) Load(ctx context.Context) (records []clipro
 	return records, nil
 }
 
-func (s *postgresCooldownStateStore) Save(ctx context.Context, records []cliproxyauth.CooldownStateRecord) error {
+func (s *postgresCooldownStateStore) Save(ctx context.Context, records []apsauth.CooldownStateRecord) error {
 	if s == nil || s.store == nil || s.store.db == nil {
 		return fmt.Errorf("postgres cooldown store: not initialized")
 	}
@@ -171,7 +171,7 @@ func (s *postgresCooldownStateStore) Save(ctx context.Context, records []cliprox
 	return nil
 }
 
-func cooldownStateKey(record cliproxyauth.CooldownStateRecord) postgresCooldownStateKey {
+func cooldownStateKey(record apsauth.CooldownStateRecord) postgresCooldownStateKey {
 	return postgresCooldownStateKey{
 		authID: strings.TrimSpace(record.AuthID),
 		model:  strings.TrimSpace(record.Model)}

@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 type retryAfterProvider interface {
@@ -45,7 +45,7 @@ func TestClaudeExecutor_HonorsAnthropicRateLimitHeaders_Execute(t *testing.T) {
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "claude-auth-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -55,10 +55,10 @@ func TestClaudeExecutor_HonorsAnthropicRateLimitHeaders_Execute(t *testing.T) {
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error from Execute, got nil")
 	}
@@ -103,7 +103,7 @@ func TestClaudeExecutor_HonorsAnthropicRateLimitHeaders_ExecuteStream(t *testing
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "claude-auth-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -113,10 +113,10 @@ func TestClaudeExecutor_HonorsAnthropicRateLimitHeaders_ExecuteStream(t *testing
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error from ExecuteStream, got nil")
 	}
@@ -155,7 +155,7 @@ func TestClaudeExecutor_RateLimit_BothRejectedUsesLongest(t *testing.T) {
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "claude-auth-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -165,10 +165,10 @@ func TestClaudeExecutor_RateLimit_BothRejectedUsesLongest(t *testing.T) {
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -206,7 +206,7 @@ func TestClaudeExecutor_RateLimit_CountTokensHonorsRateLimitReset(t *testing.T) 
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "claude-auth-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -216,15 +216,15 @@ func TestClaudeExecutor_RateLimit_CountTokensHonorsRateLimitReset(t *testing.T) 
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	ctx := cliproxyexecutor.WithUpstreamAttemptTracker(context.Background())
-	_, err := executor.countTokensUpstream(ctx, auth, cliproxyexecutor.Request{
+	ctx := apsexecutor.WithUpstreamAttemptTracker(context.Background())
+	_, err := executor.countTokensUpstream(ctx, auth, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error from CountTokens, got nil")
 	}
-	if !cliproxyexecutor.UpstreamAttempted(ctx) {
+	if !apsexecutor.UpstreamAttempted(ctx) {
 		t.Fatal("CountTokens() did not mark the HTTP request as an upstream attempt")
 	}
 
@@ -260,7 +260,7 @@ func TestClaudeExecutor_RateLimit_CaseInsensitiveRawHeaderMap(t *testing.T) {
 	defer server.Close()
 
 	executor := NewClaudeExecutor(&config.Config{})
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       "claude-auth-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -270,10 +270,10 @@ func TestClaudeExecutor_RateLimit_CaseInsensitiveRawHeaderMap(t *testing.T) {
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := executor.Execute(context.Background(), auth, cliproxyexecutor.Request{
+	_, err := executor.Execute(context.Background(), auth, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -316,15 +316,15 @@ func TestClaudeExecutor_RateLimit_FastModeAuthoritativeRejectionHeadersOverrideB
 	defer server2.Close()
 
 	cfg := &config.Config{DisableCooling: false}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 2)
 
 	executor := NewClaudeExecutor(cfg)
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth1 := &cliproxyauth.Auth{ID: baseID + "-fast-override-1", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server1.URL}}
-	auth2 := &cliproxyauth.Auth{ID: baseID + "-fast-override-2", Provider: "claude", Attributes: map[string]string{"api_key": "k2", "base_url": server2.URL}}
+	auth1 := &apsauth.Auth{ID: baseID + "-fast-override-1", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server1.URL}}
+	auth2 := &apsauth.Auth{ID: baseID + "-fast-override-2", Provider: "claude", Attributes: map[string]string{"api_key": "k2", "base_url": server2.URL}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{{ID: "claude-3-5-sonnet-20241022"}})
@@ -342,10 +342,10 @@ func TestClaudeExecutor_RateLimit_FastModeAuthoritativeRejectionHeadersOverrideB
 	}
 
 	payload := []byte(`{"speed":"fast","messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	resp, err := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	resp, err := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err != nil {
 		t.Fatalf("expected failover to cred2 when authoritative rate limit headers present, got: %v", err)
 	}
@@ -380,14 +380,14 @@ func TestClaudeExecutor_RateLimit_FastEntitlementWithRetryAfterRemainsRequestSco
 	defer server.Close()
 
 	cfg := &config.Config{DisableCooling: false}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 2)
 
 	executor := NewClaudeExecutor(cfg)
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth := &cliproxyauth.Auth{ID: baseID + "-fast-entitlement", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server.URL}}
+	auth := &apsauth.Auth{ID: baseID + "-fast-entitlement", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server.URL}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth.ID, "claude", []*registry.ModelInfo{{ID: "claude-3-5-sonnet-20241022"}})
@@ -400,10 +400,10 @@ func TestClaudeExecutor_RateLimit_FastEntitlementWithRetryAfterRemainsRequestSco
 	}
 
 	payload := []byte(`{"speed":"fast","messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, err := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -437,14 +437,14 @@ func TestClaudeExecutor_AuthManager_CredentialScopeBlocksAllModelsAndAliases(t *
 	cfg := &config.Config{
 		DisableCooling: false,
 	}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 0)
 
 	executor := NewClaudeExecutor(cfg)
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       baseID + "-claude-cred",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -469,10 +469,10 @@ func TestClaudeExecutor_AuthManager_CredentialScopeBlocksAllModelsAndAliases(t *
 
 	// 1. Initial request on sonnet triggers 429 and records 7d cooldown
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, err := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, err := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err == nil {
 		t.Fatal("expected error on first execute, got nil")
 	}
@@ -482,10 +482,10 @@ func TestClaudeExecutor_AuthManager_CredentialScopeBlocksAllModelsAndAliases(t *
 	}
 
 	// 2. Try requesting a completely different model (opus) on the same credential -> must be blocked locally
-	_, errOpus := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errOpus := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-opus-20240229",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errOpus == nil {
 		t.Fatal("expected error for opus, got nil")
 	}
@@ -494,10 +494,10 @@ func TestClaudeExecutor_AuthManager_CredentialScopeBlocksAllModelsAndAliases(t *
 	}
 
 	// 3. Try requesting a thinking suffix alias on the same credential -> must also be blocked locally
-	_, errThinking := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errThinking := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-7-sonnet-20250219-thinking-16k",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errThinking == nil {
 		t.Fatal("expected error for thinking suffix, got nil")
 	}
@@ -506,10 +506,10 @@ func TestClaudeExecutor_AuthManager_CredentialScopeBlocksAllModelsAndAliases(t *
 	}
 
 	// 4. Try streaming execution for opus on the same cooling credential -> must also be blocked locally
-	_, errStream := manager.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errStream := manager.ExecuteStream(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-opus-20240229",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errStream == nil {
 		t.Fatal("expected error for streaming opus, got nil")
 	}
@@ -541,14 +541,14 @@ func TestClaudeExecutor_AuthManager_OrdinaryModel429DoesNotBlockSiblingModels(t 
 	defer server.Close()
 
 	cfg := &config.Config{DisableCooling: false}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 0)
 
 	executor := NewClaudeExecutor(cfg)
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		ID:       baseID + "-ordinary-429",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -572,10 +572,10 @@ func TestClaudeExecutor_AuthManager_OrdinaryModel429DoesNotBlockSiblingModels(t 
 
 	// 1. Initial request on sonnet triggers ordinary model 429
 	payloadSonnet := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	_, errSonnet := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	_, errSonnet := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payloadSonnet,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errSonnet == nil {
 		t.Fatal("expected error on sonnet execute, got nil")
 	}
@@ -585,10 +585,10 @@ func TestClaudeExecutor_AuthManager_OrdinaryModel429DoesNotBlockSiblingModels(t 
 
 	// 2. Request on opus MUST succeed on the same credential (not blocked by ordinary model-level 429)
 	payloadOpus := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi opus"}]}]}`)
-	respOpus, errOpus := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	respOpus, errOpus := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-opus-20240229",
 		Payload: payloadOpus,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if errOpus != nil {
 		t.Fatalf("expected opus to succeed on same credential, got error: %v", errOpus)
 	}
@@ -628,14 +628,14 @@ func TestClaudeExecutor_AuthManager_AlternativeCredentialCanBeSelected(t *testin
 	cfg := &config.Config{
 		DisableCooling: false,
 	}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 2)
 
 	executor := NewClaudeExecutor(cfg)
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth1 := &cliproxyauth.Auth{
+	auth1 := &apsauth.Auth{
 		ID:       baseID + "-claude-cred-1",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -643,7 +643,7 @@ func TestClaudeExecutor_AuthManager_AlternativeCredentialCanBeSelected(t *testin
 			"base_url": server1.URL,
 		},
 	}
-	auth2 := &cliproxyauth.Auth{
+	auth2 := &apsauth.Auth{
 		ID:       baseID + "-claude-cred-2",
 		Provider: "claude",
 		Attributes: map[string]string{
@@ -668,10 +668,10 @@ func TestClaudeExecutor_AuthManager_AlternativeCredentialCanBeSelected(t *testin
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	resp, err := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	resp, err := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err != nil {
 		t.Fatalf("expected successful failover to cred2, got error: %v", err)
 	}
@@ -687,10 +687,10 @@ func TestClaudeExecutor_AuthManager_AlternativeCredentialCanBeSelected(t *testin
 	}
 
 	// Next request should directly use cred2 without attempting cred1 (which is cooling down)
-	resp2, err2 := manager.Execute(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	resp2, err2 := manager.Execute(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-3-5-sonnet-20241022",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err2 != nil {
 		t.Fatalf("expected successful request on cred2, got error: %v", err2)
 	}
@@ -730,7 +730,7 @@ func TestClaudeExecutor_AuthManager_MultiModelPoolStreamStopsProbingOn429(t *tes
 	defer server2.Close()
 
 	cfg := &config.Config{DisableCooling: false}
-	manager := cliproxyauth.NewManager(nil, nil, nil)
+	manager := apsauth.NewManager(nil, nil, nil)
 	manager.SetRetryConfig(0, 0, 2)
 
 	manager.SetOAuthModelAlias(map[string][]config.OAuthModelAlias{
@@ -744,8 +744,8 @@ func TestClaudeExecutor_AuthManager_MultiModelPoolStreamStopsProbingOn429(t *tes
 	manager.RegisterExecutor(executor)
 
 	baseID := uuid.NewString()
-	auth1 := &cliproxyauth.Auth{ID: baseID + "-pool-1", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server1.URL}}
-	auth2 := &cliproxyauth.Auth{ID: baseID + "-pool-2", Provider: "claude", Attributes: map[string]string{"api_key": "k2", "base_url": server2.URL}}
+	auth1 := &apsauth.Auth{ID: baseID + "-pool-1", Provider: "claude", Attributes: map[string]string{"api_key": "k1", "base_url": server1.URL}}
+	auth2 := &apsauth.Auth{ID: baseID + "-pool-2", Provider: "claude", Attributes: map[string]string{"api_key": "k2", "base_url": server2.URL}}
 
 	reg := registry.GetGlobalRegistry()
 	reg.RegisterClient(auth1.ID, "claude", []*registry.ModelInfo{
@@ -771,10 +771,10 @@ func TestClaudeExecutor_AuthManager_MultiModelPoolStreamStopsProbingOn429(t *tes
 	}
 
 	payload := []byte(`{"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`)
-	res, err := manager.ExecuteStream(context.Background(), []string{"claude"}, cliproxyexecutor.Request{
+	res, err := manager.ExecuteStream(context.Background(), []string{"claude"}, apsexecutor.Request{
 		Model:   "claude-pool-alias",
 		Payload: payload,
-	}, cliproxyexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
+	}, apsexecutor.Options{SourceFormat: sdktranslator.FormatClaude})
 	if err != nil {
 		t.Fatalf("ExecuteStream failed: %v", err)
 	}

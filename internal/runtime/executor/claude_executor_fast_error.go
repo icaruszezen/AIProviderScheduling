@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/runtime/executor/helps"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor/helps"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 )
 
 // claudeFastRequestError marks a Fast request failure as request-scoped. Fast
@@ -79,7 +79,7 @@ func (e *claudeFastRequestError) RetryAfter() *time.Duration {
 // the auth manager and protocol handlers without retrying or rebuilding its
 // status and JSON body.
 type claudeFastDirectResponseError struct {
-	response         *cliproxyexecutor.RequestTerminatedError
+	response         *apsexecutor.RequestTerminatedError
 	retryAfter       *time.Duration
 	credentialScoped bool
 }
@@ -153,7 +153,7 @@ func newClaudeFastDirectResponseError(resp *http.Response, body []byte) error {
 	}
 
 	return &claudeFastDirectResponseError{
-		response: &cliproxyexecutor.RequestTerminatedError{
+		response: &apsexecutor.RequestTerminatedError{
 			HTTPStatus: resp.StatusCode,
 			Header:     headers,
 			Body:       bytes.Clone(body)},
@@ -169,7 +169,7 @@ func claudeRequestIsFast(req *http.Request, body []byte) bool {
 	return claudeRequestUsesFastMode(body, claudeRequestedBetas(betas, nil))
 }
 
-func claudeAuthLogIdentity(auth *cliproxyauth.Auth) (id, label, authType, authValue string) {
+func claudeAuthLogIdentity(auth *apsauth.Auth) (id, label, authType, authValue string) {
 	if auth == nil {
 		return "", "", "", ""
 	}

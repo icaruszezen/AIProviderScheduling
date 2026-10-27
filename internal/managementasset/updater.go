@@ -17,10 +17,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/httpfetch"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	sdkconfig "github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/httpfetch"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 )
@@ -241,7 +241,11 @@ func EnsureLatestManagementHTML(ctx context.Context, staticDir string, proxyURL 
 		}
 
 		if strings.TrimSpace(releaseURL) == "" {
-			log.Warn("management asset sync skipped: panel GitHub repository is not configured")
+			if strings.TrimSpace(panelRepository) != "" {
+				log.Warn("management asset sync skipped: panel repository must be the AI Provider Scheduling management center")
+			} else {
+				log.Warn("management asset sync skipped: panel GitHub repository is not configured")
+			}
 			return nil, nil
 		}
 
@@ -293,50 +297,34 @@ func resolveReleaseURL(repo string) string {
 	if repo == "" {
 		return defaultManagementReleaseURL
 	}
-
-	parsed, err := url.Parse(repo)
-	if err != nil || parsed.Host == "" {
+	if !isAllowedManagementPanelReleaseURL(repo) {
 		return ""
 	}
-
-	host := strings.ToLower(parsed.Host)
-	parsed.Path = strings.TrimSuffix(parsed.Path, "/")
-
-	if host == "api.github.com" {
-		if !strings.HasSuffix(strings.ToLower(parsed.Path), "/releases/latest") {
-			parsed.Path = parsed.Path + "/releases/latest"
-		}
-		if isLegacyOAuthPanelReleaseURL(parsed.String()) {
-			return ""
-		}
-		return parsed.String()
-	}
-
-	if host == "github.com" {
-		parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
-		if len(parts) >= 2 && parts[0] != "" && parts[1] != "" {
-			repoName := strings.TrimSuffix(parts[1], ".git")
-			release := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", parts[0], repoName)
-			if isLegacyOAuthPanelReleaseURL(release) {
-				return ""
-			}
-			return release
-		}
-	}
-
-	return ""
+	return defaultManagementReleaseURL
 }
 
-func isLegacyOAuthPanelReleaseURL(releaseURL string) bool {
-	return strings.Contains(strings.ToLower(releaseURL), "router-for-me/cli-proxy-api-management-center")
+func isAllowedManagementPanelReleaseURL(releaseURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(releaseURL))
+	if err != nil || parsed.Host == "" {
+		return false
+	}
+	host := strings.ToLower(parsed.Host)
+	path := strings.ToLower(strings.Trim(strings.TrimSuffix(parsed.Path, "/"), "/"))
+	path = strings.TrimSuffix(path, "/releases/latest")
+	path = strings.TrimSuffix(path, ".git")
+	switch host {
+	case "api.github.com":
+		return path == "repos/icaruszezen/ai-provider-scheduling-management-center"
+	case "github.com":
+		return path == "icaruszezen/ai-provider-scheduling-management-center"
+	default:
+		return false
+	}
 }
 
 func fetchLatestAsset(ctx context.Context, client *http.Client, releaseURL string) (*releaseAsset, string, error) {
 	if strings.TrimSpace(releaseURL) == "" {
 		return nil, "", fmt.Errorf("management panel release URL is not configured")
-	}
-	if isLegacyOAuthPanelReleaseURL(releaseURL) {
-		return nil, "", fmt.Errorf("refusing upstream Cli-Proxy-API-Management-Center panel that still ships account OAuth")
 	}
 
 	headers := map[string]string{

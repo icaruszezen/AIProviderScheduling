@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	"github.com/tidwall/gjson"
 )
 
@@ -49,7 +49,7 @@ func TestCodexExecutorOptimizeMultiAgentV2(t *testing.T) {
 	defer server.Close()
 
 	payload := codexSpawnAgentTestPayload()
-	auth := &cliproxyauth.Auth{Attributes: map[string]string{
+	auth := &apsauth.Auth{Attributes: map[string]string{
 		"base_url": server.URL,
 		"api_key":  "test",
 	}}
@@ -72,8 +72,8 @@ func TestCodexExecutorOptimizeMultiAgentV2(t *testing.T) {
 			executor := NewCodexExecutor(&config.Config{Codex: config.CodexConfig{OptimizeMultiAgentV2: tt.enabled}})
 			ctx := codexSpawnAgentTestContext()
 			headers := http.Header{"User-Agent": []string{"overridden-client/1.0"}}
-			req := cliproxyexecutor.Request{Model: "gpt-5.4", Payload: payload}
-			opts := cliproxyexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response"), Headers: headers}
+			req := apsexecutor.Request{Model: "gpt-5.4", Payload: payload}
+			opts := apsexecutor.Options{SourceFormat: sdktranslator.FromString("openai-response"), Headers: headers}
 
 			var clientPayload []byte
 			switch tt.mode {
@@ -128,7 +128,7 @@ func TestCodexExecutorIsCompatConvertsAgentMessage(t *testing.T) {
 			},
 		}},
 	}
-	auth := &cliproxyauth.Auth{
+	auth := &apsauth.Auth{
 		Provider: "codex",
 		Attributes: map[string]string{
 			"base_url": server.URL,
@@ -174,8 +174,8 @@ func TestCodexExecutorIsCompatConvertsAgentMessage(t *testing.T) {
 			cfg.Codex.OptimizeMultiAgentV2 = tt.enabled
 			executor := NewCodexExecutor(&cfg)
 			ctx := codexSpawnAgentTestContext()
-			req := cliproxyexecutor.Request{Model: tt.model, Payload: payload}
-			opts := cliproxyexecutor.Options{
+			req := apsexecutor.Request{Model: tt.model, Payload: payload}
+			opts := apsexecutor.Options{
 				SourceFormat: sdktranslator.FromString("openai-response"),
 				Headers:      http.Header{"User-Agent": []string{"overridden-client/1.0"}},
 			}

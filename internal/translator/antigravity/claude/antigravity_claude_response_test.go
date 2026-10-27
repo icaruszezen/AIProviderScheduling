@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	sigcompat "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	sigcompat "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
@@ -171,7 +171,7 @@ func TestConvertAntigravityResponseToClaudeStream_WebSearchMessageStartOutputTok
 			"candidates": [{
 				"content": {"parts": [{"text": "Beijing weather"}]}
 			}],
-			"cpaUsageMetadata": {"promptTokenCount": 85, "candidatesTokenCount": 43}
+			"apsUsageMetadata": {"promptTokenCount": 85, "candidatesTokenCount": 43}
 		}
 	}`)
 

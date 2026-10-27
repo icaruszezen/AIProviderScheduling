@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/interfaces"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/interfaces"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -126,7 +126,7 @@ func normalizeResponseSubsequentRequest(rawJSON []byte, lastRequest []byte, last
 	// directly, the input already carries the canonical history. In that case,
 	// skip merging with stale lastRequest/lastResponseOutput to avoid breaking
 	// function_call / function_call_output pairings.
-	// See: https://github.com/router-for-me/CLIProxyAPI/issues/2207
+	// See: https://github.com/icaruszezen/AIProviderScheduling/issues/2207
 	var mergedInput []byte
 	if allowCompactionReplayBypass && inputContainsFullTranscript(nextInput) {
 		log.Infof("responses websocket: full transcript detected, skipping stale merge (input items=%d)", len(nextInput.Array()))

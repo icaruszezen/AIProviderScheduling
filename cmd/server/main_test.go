@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 func TestShouldEnableExampleAPIKeySafeMode(t *testing.T) {
@@ -84,7 +84,7 @@ func TestModelCatalogUpdaterPlan(t *testing.T) {
 		wantCodexClient bool
 	}{
 		{
-			name:            "normal CPA refreshes both catalogs",
+			name:            "normal APS refreshes both catalogs",
 			localModel:      false,
 			homeEnabled:     false,
 			wantModels:      true,

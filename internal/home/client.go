@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 	"github.com/redis/go-redis/v9"
 	"github.com/redis/go-redis/v9/maintnotifications"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	"github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -198,7 +198,7 @@ type Client struct {
 	// It is deliberately NOT carried across NewLifetime: CAS support is a
 	// property of the Home deployment, so re-probing once per client lifetime
 	// lets a Home upgrade take effect on the next reconnect instead of
-	// requiring a CPA restart. The probe costs one round trip that returns an
+	// requiring a APS restart. The probe costs one round trip that returns an
 	// error without performing any write.
 	casUnsupported       atomic.Bool
 	testOperationTimeout time.Duration
@@ -1285,7 +1285,7 @@ func newAuthDispatchRequest(requestedModel string, sessionID string, parentSessi
 	var excludedAuthIDsCopy *[]string
 	if excludedAuthIDs != nil {
 		// Keep count at one so older Home servers that ignore excluded_auth_ids do
-		// not apply their legacy count-based retry cap before CPA can rotate
+		// not apply their legacy count-based retry cap before APS can rotate
 		// credentials. New Home servers apply retry_round eligibility remotely.
 		count = 1
 		values := append([]string{}, (*excludedAuthIDs)...)
@@ -1818,7 +1818,7 @@ func (c *Client) LimiterConfig() config.CredentialConcurrencyConfig {
 
 func (c *Client) subscriptionParameters() ([]string, time.Duration) {
 	if c == nil {
-		return []string{redisChannelConfig}, config.CredentialConcurrencyConfig{}.WithDefaults().CPAHeartbeatTimeout
+		return []string{redisChannelConfig}, config.CredentialConcurrencyConfig{}.WithDefaults().APSHeartbeatTimeout
 	}
 	c.mu.Lock()
 	cfg := c.lifecycle.WithDefaults()
@@ -1827,7 +1827,7 @@ func (c *Client) subscriptionParameters() ([]string, time.Duration) {
 	testTimeout := c.testOperationTimeout
 	c.mu.Unlock()
 
-	timeout := cfg.CPAHeartbeatTimeout
+	timeout := cfg.APSHeartbeatTimeout
 	if testTimeout > 0 && cfg.LifecycleConfigRevision == 0 {
 		timeout = testTimeout
 	}

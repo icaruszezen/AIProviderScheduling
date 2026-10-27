@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 const validClaudeCodeMetadataUserID = `{"device_id":"0000000000000000000000000000000000000000000000000000000000000000","account_uuid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","session_id":"11111111-2222-4333-8444-555555555555"}`
@@ -484,7 +484,7 @@ func TestNormalizedClaudeBetaHeaderIsDeterministic(t *testing.T) {
 	}
 }
 
-// A confirmed helper is routed through misc.EnsureHeader, so CPA forwards the
+// A confirmed helper is routed through misc.EnsureHeader, so APS forwards the
 // helper's own X-Stainless-Timeout and never the operator default. Keying the
 // detector on claude-header-defaults.timeout instead of the measured constant
 // therefore rejected every genuine helper whenever that value was customized.

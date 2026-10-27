@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/cache"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
-	internalsignature "github.com/router-for-me/CLIProxyAPI/v7/internal/signature"
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/util"
-	cliproxyauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
-	cliproxyexecutor "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/executor"
-	sdktranslator "github.com/router-for-me/CLIProxyAPI/v7/sdk/translator"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cache"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
+	internalsignature "github.com/icaruszezen/AIProviderScheduling/v7/internal/signature"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
+	apsauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
+	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
+	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/tidwall/gjson"
@@ -48,7 +48,7 @@ func issue4959GeminiThoughtSignature() string {
 // next:function reasoning carrier, then function_call / function_call_output,
 // then trailing assistant turns. Trailing model turns are left for a follow-up.
 func issue4959ResponsesModelFirstPayload() []byte {
-	carrier := "cpa-gemini-responses-carrier-v1:next:function:" + base64.RawStdEncoding.EncodeToString([]byte(issue4959GeminiThoughtSignature()))
+	carrier := "aps-gemini-responses-carrier-v1:next:function:" + base64.RawStdEncoding.EncodeToString([]byte(issue4959GeminiThoughtSignature()))
 	return []byte(`{"model":"gemini-3.7-flash-high","input":[` +
 		`{"type":"reasoning","id":"rs_resp_test_detached_before_0","summary":[],"encrypted_content":"` + carrier + `"},` +
 		`{"type":"function_call","call_id":"call_bash_1","name":"Bash","arguments":"{\"command\":\"true\"}"},` +
@@ -84,8 +84,8 @@ func assertIssue4959LeadingUserContents(t *testing.T, contents []gjson.Result) {
 	}
 }
 
-func testAntigravityAuth(baseURL string) *cliproxyauth.Auth {
-	return &cliproxyauth.Auth{
+func testAntigravityAuth(baseURL string) *apsauth.Auth {
+	return &apsauth.Auth{
 		Attributes: map[string]string{
 			"api_key":  "token-123",
 			"base_url": baseURL,
@@ -224,7 +224,7 @@ func TestAntigravityStreamObfuscatesSensitiveSystemInstruction(t *testing.T) {
 		Antigravity:  config.AntigravityConfig{SensitiveWords: []string{"Hermes", "Nous Research"}},
 		RequestRetry: 1,
 	})
-	result, errExecute := executor.ExecuteStream(context.Background(), &cliproxyauth.Auth{
+	result, errExecute := executor.ExecuteStream(context.Background(), &apsauth.Auth{
 		Metadata: map[string]any{
 			"access_token": "token-123",
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
@@ -232,10 +232,10 @@ func TestAntigravityStreamObfuscatesSensitiveSystemInstruction(t *testing.T) {
 		},
 		Attributes: map[string]string{
 			"api_key": "token-123", "base_url": server.URL},
-	}, cliproxyexecutor.Request{
+	}, apsexecutor.Request{
 		Model:   "gemini-3.6-flash-high",
 		Payload: []byte(`{"model":"gemini-3.6-flash-high","instructions":"You are Hermes Agent, an intelligent AI assistant created by Nous Research.","input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"hello"}]}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
@@ -281,7 +281,7 @@ func TestAntigravityStreamDoesNotEmitSyntheticTerminalOnReadError(t *testing.T) 
 		Antigravity:  config.AntigravityConfig{},
 		RequestRetry: 1,
 	})
-	result, errExecute := executor.ExecuteStream(context.Background(), &cliproxyauth.Auth{
+	result, errExecute := executor.ExecuteStream(context.Background(), &apsauth.Auth{
 		Metadata: map[string]any{
 			"access_token": "token-123",
 			"expired":      time.Now().Add(24 * time.Hour).Format(time.RFC3339),
@@ -289,10 +289,10 @@ func TestAntigravityStreamDoesNotEmitSyntheticTerminalOnReadError(t *testing.T) 
 		},
 		Attributes: map[string]string{
 			"api_key": "token-123", "base_url": server.URL},
-	}, cliproxyexecutor.Request{
+	}, apsexecutor.Request{
 		Model:   "gemini-3.7-flash",
 		Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatGemini,
 		ResponseFormat: sdktranslator.FormatGemini,
 		Stream:         true,
@@ -394,10 +394,10 @@ func TestAntigravityStreamPrependsLeadingUserForGemini(t *testing.T) {
 			executor := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 			auth := testAntigravityAuth(server.URL)
 			auth.Metadata["project_id"] = "project-1"
-			result, errExecute := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+			result, errExecute := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 				Model:   "gemini-3.6-flash-high",
 				Payload: []byte(tt.payload),
-			}, cliproxyexecutor.Options{
+			}, apsexecutor.Options{
 				SourceFormat:   tt.format,
 				ResponseFormat: tt.format,
 				Stream:         true,
@@ -432,10 +432,10 @@ func TestAntigravityStreamPrependsLeadingUserForIssue4959ResponsesHistory(t *tes
 	executor := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 	auth := testAntigravityAuth(server.URL)
 	auth.Metadata["project_id"] = "project-1"
-	result, errExecute := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	result, errExecute := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "gemini-3.7-flash-high",
 		Payload: issue4959ResponsesModelFirstPayload(),
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:   sdktranslator.FormatOpenAIResponse,
 		ResponseFormat: sdktranslator.FormatOpenAIResponse,
 		Stream:         true,
@@ -481,10 +481,10 @@ func TestAntigravityStreamPrependsLeadingUserAfterReplayInsertsFunctionCall(t *t
 	executor := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 	auth := testAntigravityAuth(server.URL)
 	auth.Metadata["project_id"] = "project-1"
-	result, errExecute := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+	result, errExecute := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 		Model:   "gemini-3.6-flash-high",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		ResponseFormat:  sdktranslator.FormatClaude,
 		Stream:          true,
@@ -558,10 +558,10 @@ func TestAntigravityStreamDoesNotPrependLeadingUserForClaudeTarget(t *testing.T)
 			executor := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
 			auth := testAntigravityAuth(server.URL)
 			auth.Metadata["project_id"] = "project-1"
-			result, errExecute := executor.ExecuteStream(context.Background(), auth, cliproxyexecutor.Request{
+			result, errExecute := executor.ExecuteStream(context.Background(), auth, apsexecutor.Request{
 				Model:   "claude-sonnet-4-6",
 				Payload: []byte(tt.payload),
-			}, cliproxyexecutor.Options{
+			}, apsexecutor.Options{
 				SourceFormat:   tt.format,
 				ResponseFormat: tt.format,
 				Stream:         true,
@@ -616,7 +616,7 @@ func TestAntigravityRequestPathsDoNotFallbackEndpoints(t *testing.T) {
 			t.Run(route.name+"/"+failure.name, func(t *testing.T) {
 				calls := make([]upstreamCall, 0, 1)
 				transportErr := errors.New("daily endpoint unavailable")
-				ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+				ctx := context.WithValue(context.Background(), "aps.roundtripper", roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 					calls = append(calls, upstreamCall{host: req.URL.Host, path: req.URL.Path})
 					if failure.transport {
 						return nil, transportErr
@@ -627,17 +627,17 @@ func TestAntigravityRequestPathsDoNotFallbackEndpoints(t *testing.T) {
 						Body:       io.NopCloser(strings.NewReader(`{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}`)),
 					}, nil
 				}))
-				auth := &cliproxyauth.Auth{
+				auth := &apsauth.Auth{
 					Attributes: map[string]string{"api_key": "token"}, Metadata: map[string]any{
 						"access_token": "token",
 						"expired":      time.Now().Add(2 * time.Hour).Format(time.RFC3339),
 						"project_id":   "project-1",
 					}}
-				req := cliproxyexecutor.Request{
+				req := apsexecutor.Request{
 					Model:   route.model,
 					Payload: []byte(`{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}`),
 				}
-				opts := cliproxyexecutor.Options{
+				opts := apsexecutor.Options{
 					SourceFormat:   sdktranslator.FormatGemini,
 					ResponseFormat: sdktranslator.FormatGemini,
 				}
@@ -713,10 +713,10 @@ func TestAntigravityCountTokensMatchesTargetLeadingUserPolicy(t *testing.T) {
 				`{"role":"model","parts":[{"text":"prior output"}]},` +
 				`{"role":"user","parts":[{"text":"continue"}]}` +
 				`]}`)
-			_, errCount := executor.CountTokens(context.Background(), testAntigravityAuth(server.URL), cliproxyexecutor.Request{
+			_, errCount := executor.CountTokens(context.Background(), testAntigravityAuth(server.URL), apsexecutor.Request{
 				Model:   tt.model,
 				Payload: payload,
-			}, cliproxyexecutor.Options{
+			}, apsexecutor.Options{
 				SourceFormat:   sdktranslator.FormatGemini,
 				ResponseFormat: sdktranslator.FormatGemini,
 			})
@@ -766,10 +766,10 @@ func TestAntigravityExecutorCountTokensSanitizesGeminiToolHistory(t *testing.T) 
 
 	payload := []byte(`{"model":"gemini-3.6-flash-high","messages":[{"role":"assistant","content":[{"type":"tool_use","id":"call-1","name":"read","input":{"file":"one"},"signature":"` + nativeSignature + `"},{"type":"tool_use","id":"call-2","name":"read","input":{"file":"two"},"signature":"skip_thought_signature_validator"}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"call-2","content":"two"},{"type":"tool_result","tool_use_id":"call-1","content":"one"}]}]}`)
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	_, errCount := exec.CountTokens(context.Background(), testAntigravityAuth(server.URL), cliproxyexecutor.Request{
+	_, errCount := exec.CountTokens(context.Background(), testAntigravityAuth(server.URL), apsexecutor.Request{
 		Model:   "gemini-3.6-flash-high",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		ResponseFormat:  sdktranslator.FormatClaude,
 		OriginalRequest: payload,
@@ -828,10 +828,10 @@ func TestAntigravityExecutorCountTokensReconstructsCompactedClaudeToolCall(t *te
 
 	payload := []byte(`{"model":"gemini-3.6-flash-high","session_id":"count-token-replay","messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"` + clientID + `","content":"ok"}]}],"tools":[{"name":"Bash","input_schema":{"type":"object","properties":{"command":{"type":"string"}}}}]}`)
 	exec := NewAntigravityExecutor(&config.Config{RequestRetry: 1})
-	_, errCount := exec.CountTokens(context.Background(), testAntigravityAuth(server.URL), cliproxyexecutor.Request{
+	_, errCount := exec.CountTokens(context.Background(), testAntigravityAuth(server.URL), apsexecutor.Request{
 		Model:   "gemini-3.6-flash-high",
 		Payload: payload,
-	}, cliproxyexecutor.Options{
+	}, apsexecutor.Options{
 		SourceFormat:    sdktranslator.FormatClaude,
 		ResponseFormat:  sdktranslator.FormatClaude,
 		OriginalRequest: payload,

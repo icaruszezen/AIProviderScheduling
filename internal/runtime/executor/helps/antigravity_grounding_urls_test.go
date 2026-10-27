@@ -23,7 +23,7 @@ func TestResolveAntigravityGroundingURLsResolvesVertexRedirects(t *testing.T) {
 	const resolvedURL = "https://example.com/weather"
 
 	var sawRedirectRequest bool
-	ctx := context.WithValue(context.Background(), "cliproxy.roundtripper", groundingURLRoundTripper(func(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(context.Background(), "aps.roundtripper", groundingURLRoundTripper(func(req *http.Request) (*http.Response, error) {
 		if req.Method != http.MethodHead {
 			t.Fatalf("method = %s, want HEAD", req.Method)
 		}

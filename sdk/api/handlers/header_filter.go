@@ -30,22 +30,22 @@ var hopByHopHeaders = map[string]struct{}{
 	"Upgrade":             {},
 	// Security-sensitive
 	"Set-Cookie": {},
-	// CPA-managed (set by handlers, not upstream)
+	// APS-managed (set by handlers, not upstream)
 	"Content-Length":   {},
 	"Content-Encoding": {}}
 
-var cpaReservedResponseHeaders = map[string]struct{}{
+var apsReservedResponseHeaders = map[string]struct{}{
 	"Access-Control-Allow-Credentials": {},
 	"Access-Control-Allow-Headers":     {},
 	"Access-Control-Allow-Methods":     {},
 	"Access-Control-Allow-Origin":      {},
 	"Access-Control-Expose-Headers":    {},
 	"Access-Control-Max-Age":           {},
-	"X-Cpa-Trace-Id":                   {}}
+	"X-Aps-Trace-Id":                   {}}
 
-// IsCPAReservedResponseHeader reports whether a downstream response header is managed by CPA.
-func IsCPAReservedResponseHeader(name string) bool {
-	_, reserved := cpaReservedResponseHeaders[http.CanonicalHeaderKey(name)]
+// IsAPSReservedResponseHeader reports whether a downstream response header is managed by AI Provider Scheduling.
+func IsAPSReservedResponseHeader(name string) bool {
+	_, reserved := apsReservedResponseHeaders[http.CanonicalHeaderKey(name)]
 	return reserved
 }
 
@@ -62,7 +62,7 @@ func FilterUpstreamHeaders(src http.Header) http.Header {
 		if _, blocked := hopByHopHeaders[canonicalKey]; blocked {
 			continue
 		}
-		if _, reserved := cpaReservedResponseHeaders[canonicalKey]; reserved {
+		if _, reserved := apsReservedResponseHeaders[canonicalKey]; reserved {
 			continue
 		}
 		if _, scoped := connectionScoped[canonicalKey]; scoped {
@@ -104,13 +104,13 @@ func connectionScopedHeaders(src http.Header) map[string]struct{} {
 }
 
 // WriteUpstreamHeaders writes filtered upstream headers to the gin response writer.
-// Headers already set by CPA (e.g., Content-Type) are NOT overwritten.
+// Headers already set by APS (e.g., Content-Type) are NOT overwritten.
 func WriteUpstreamHeaders(dst http.Header, src http.Header) {
 	if src == nil {
 		return
 	}
 	for key, values := range src {
-		// Don't overwrite headers already set by CPA handlers
+		// Don't overwrite headers already set by APS handlers
 		if dst.Get(key) != "" {
 			continue
 		}

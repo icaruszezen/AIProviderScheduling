@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/router-for-me/CLIProxyAPI/v7/internal/config"
+	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 )
 
 func TestFetchLatestAssetSetsGitHubAuthorization(t *testing.T) {
@@ -123,8 +123,8 @@ func TestResolveReleaseURLUsesProjectPanel(t *testing.T) {
 		t.Fatalf("resolveReleaseURL(project repo) = %q, want %q", got, want)
 	}
 
-	if got = resolveReleaseURL("https://github.com/router-for-me/Cli-Proxy-API-Management-Center"); got != "" {
-		t.Fatalf("resolveReleaseURL(legacy oauth panel) = %q, want empty", got)
+	if got = resolveReleaseURL("https://github.com/example/other-panel"); got != "" {
+		t.Fatalf("resolveReleaseURL(other panel) = %q, want empty", got)
 	}
 
 	if got = resolveReleaseURL("not a url"); got != "" {
