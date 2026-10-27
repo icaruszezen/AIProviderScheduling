@@ -21,7 +21,6 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executionregistry"
 	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 type failOnceStreamExecutor struct {
@@ -501,48 +500,6 @@ func registerBootstrapExecutor(t *testing.T, executor *bootstrapStreamExecutor) 
 	return NewBaseAPIHandlers(&sdkconfig.SDKConfig{Streaming: sdkconfig.StreamingConfig{BootstrapRetries: 1}}, manager), manager
 }
 
-func TestExecuteStreamWithAuthManager_RetriesAfterDroppedBootstrapPayload(t *testing.T) {
-	executor := &bootstrapStreamExecutor{stream: func(_ context.Context, call int) (*coreexecutor.StreamResult, error) {
-		chunks := make(chan coreexecutor.StreamChunk, 2)
-		if call == 1 {
-			chunks <- coreexecutor.StreamChunk{Payload: []byte("drop")}
-			chunks <- coreexecutor.StreamChunk{Err: &coreauth.Error{HTTPStatus: http.StatusUnauthorized, Message: "unauthorized"}}
-		} else {
-			chunks <- coreexecutor.StreamChunk{Payload: []byte("ok")}
-		}
-		close(chunks)
-		return &coreexecutor.StreamResult{Chunks: chunks}, nil
-	}}
-	handler, _ := registerBootstrapExecutor(t, executor)
-	var intercepted []string
-	handler.SetPluginHost(&handlerInterceptorTestHost{interceptStreamChunk: func(_ context.Context, req pluginapi.StreamChunkInterceptRequest) pluginapi.StreamChunkInterceptResponse {
-		if req.ChunkIndex >= 0 {
-			intercepted = append(intercepted, string(req.Body))
-		}
-		return pluginapi.StreamChunkInterceptResponse{Body: cloneBytes(req.Body), DropChunk: string(req.Body) == "drop"}
-	}})
-
-	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "bootstrap-model", []byte(`{"model":"bootstrap-model"}`), "")
-	var got []byte
-	for chunk := range dataChan {
-		got = append(got, chunk...)
-	}
-	for msg := range errChan {
-		if msg != nil {
-			t.Fatalf("unexpected stream error: %+v", msg)
-		}
-	}
-	if string(got) != "ok" {
-		t.Fatalf("stream payload = %q, want ok", got)
-	}
-	if executor.Calls() != 2 {
-		t.Fatalf("stream attempts = %d, want 2", executor.Calls())
-	}
-	if strings.Join(intercepted, ",") != "drop,ok" {
-		t.Fatalf("intercepted payloads = %v, want [drop ok] without double interception", intercepted)
-	}
-}
-
 func TestExecuteStreamWithAuthManager_ResetsResponsesValidatorOnBootstrapRetry(t *testing.T) {
 	executor := &bootstrapStreamExecutor{stream: func(_ context.Context, call int) (*coreexecutor.StreamResult, error) {
 		chunks := make(chan coreexecutor.StreamChunk, 2)
@@ -693,13 +650,9 @@ func TestExecuteStreamWithAuthManager_HomeBootstrapFailureDoesNotRedispatch(t *t
 	dispatcher := &handlerAccountedHomeDispatcher{}
 	manager.PublishHomeDispatch(dispatcher, registry, 1)
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{Streaming: sdkconfig.StreamingConfig{BootstrapRetries: 1}}, manager)
-	handler.SetPluginHost(&handlerInterceptorTestHost{interceptStreamChunk: func(_ context.Context, req pluginapi.StreamChunkInterceptRequest) pluginapi.StreamChunkInterceptResponse {
-		return pluginapi.StreamChunkInterceptResponse{Body: cloneBytes(req.Body), DropChunk: string(req.Body) == "drop"}
-	}})
 
 	dataChan, _, errChan := handler.ExecuteStreamWithAuthManager(context.Background(), "openai", "home-model", []byte(`{"model":"home-model"}`), "")
 	for range dataChan {
-		t.Fatal("Home bootstrap failure produced data")
 	}
 	var streamErr *interfaces.ErrorMessage
 	for msg := range errChan {

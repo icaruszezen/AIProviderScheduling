@@ -4,14 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	internalconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/homeplugins"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
@@ -21,6 +19,12 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
 	log "github.com/sirupsen/logrus"
 )
+
+type homeConfigWork struct {
+	config       *config.Config
+	configCommit configCommit
+	committed    bool
+}
 
 type homeSubscriberSupervisor struct {
 	cancel context.CancelFunc
@@ -137,14 +141,11 @@ func (s *Service) applyHomeOverlayWithClient(ctx context.Context, remoteCfg *con
 		}
 		work.committed = true
 	}
-	if errFinalize := s.finalizeHomePluginWork(ctx, client, work); errFinalize != nil {
-		return errFinalize
-	}
 	return nil
 }
 
-func (s *Service) stageHomeOverlayWithClient(ctx context.Context, remoteCfg *config.Config, client *home.Client) (*homePluginFinalization, error) {
-	work := &homePluginFinalization{}
+func (s *Service) stageHomeOverlayWithClient(ctx context.Context, remoteCfg *config.Config, client *home.Client) (*homeConfigWork, error) {
+	work := &homeConfigWork{}
 	if s == nil || remoteCfg == nil {
 		return work, nil
 	}
@@ -167,36 +168,19 @@ func (s *Service) stageHomeOverlayWithClient(ctx context.Context, remoteCfg *con
 	merged.Port = baseCfg.Port
 	merged.TLS = baseCfg.TLS
 	merged.Home = baseCfg.Home
-	storeAuth := merged.Plugins.StoreAuth
 	forceHomeRuntimeConfig(&merged)
-	syncCfg := merged
-	syncCfg.Plugins.StoreAuth = storeAuth
-
+	if merged.Home.Enabled {
+		activeClient := client
+		if activeClient == nil {
+			s.homeMu.Lock()
+			activeClient = s.homeClient
+			s.homeMu.Unlock()
+		}
+		if activeClient == nil {
+			return nil, fmt.Errorf("home client is unavailable")
+		}
+	}
 	logHomeConfigChanges(baseCfg, &merged)
-	report, syncKey, didSync, errSync := s.syncHomePluginsWithClient(ctx, &syncCfg, client)
-	if errSync != nil {
-		return nil, fmt.Errorf("sync home plugins: %w", errSync)
-	}
-	if errContext := ctx.Err(); errContext != nil {
-		return nil, errContext
-	}
-	if didSync {
-		if errLoad := homeplugins.MarkLoadResults(&report, s.pluginHost); errLoad != nil {
-			return nil, fmt.Errorf("load home plugins: %w", errLoad)
-		}
-	}
-	if strings.TrimSpace(report.Task) != "" {
-		work.syncKey = syncKey
-		work.markSynced = true
-		if strings.TrimSpace(merged.Home.NodeID) != "" {
-			work.statusWork = append(work.statusWork, homePluginStatusWork{cfg: &merged, report: report})
-		}
-	}
-	taskWork, errTasks := s.stageHomePluginTasksWithClient(ctx, &merged, client)
-	if errTasks != nil {
-		return nil, fmt.Errorf("stage home plugin tasks: %w", errTasks)
-	}
-	work.taskWork = append(work.taskWork, taskWork...)
 	if errContext := ctx.Err(); errContext != nil {
 		return nil, errContext
 	}
@@ -204,7 +188,7 @@ func (s *Service) stageHomeOverlayWithClient(ctx context.Context, remoteCfg *con
 	return work, nil
 }
 
-func (s *Service) commitHomeConfig(lifetimeCtx, homeCtx context.Context, generation uint64, work *homePluginFinalization) bool {
+func (s *Service) commitHomeConfig(lifetimeCtx, homeCtx context.Context, generation uint64, work *homeConfigWork) bool {
 	if s == nil || work == nil || work.config == nil {
 		return false
 	}
@@ -238,55 +222,6 @@ func (s *Service) homeLifetimeActive(homeCtx, lifetimeCtx context.Context, gener
 	active := s.homeGeneration == generation
 	s.homeMu.Unlock()
 	return active
-}
-
-func (s *Service) finalizeHomePluginWorkUntilDone(ctx, homeCtx context.Context, generation uint64, client *home.Client, work *homePluginFinalization, publish func() bool) error {
-	stopClose := closeHomeClientOnCancellation(ctx, client)
-	defer stopClose()
-	for {
-		if errContext := ctx.Err(); errContext != nil {
-			return errContext
-		}
-
-		s.homeOwnershipMu.Lock()
-		if !s.homeLifetimeActive(homeCtx, ctx, generation) {
-			s.homeOwnershipMu.Unlock()
-			return context.Canceled
-		}
-		errFinalize := s.finalizeHomePluginWork(ctx, client, work)
-		if errFinalize == nil && (publish == nil || publish()) {
-			s.homeOwnershipMu.Unlock()
-			return nil
-		}
-		s.homeOwnershipMu.Unlock()
-		if errFinalize == nil {
-			return context.Canceled
-		}
-
-		log.WithError(errFinalize).Warn("failed to finalize home plugins; retrying")
-		timer := time.NewTimer(homeSubscriberPreAckRetryBackoff)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return ctx.Err()
-		case <-timer.C:
-		}
-	}
-}
-
-func closeHomeClientOnCancellation(ctx context.Context, client *home.Client) func() {
-	if ctx == nil || client == nil {
-		return func() {}
-	}
-	stop := make(chan struct{})
-	go func() {
-		select {
-		case <-ctx.Done():
-			client.Close()
-		case <-stop:
-		}
-	}()
-	return func() { close(stop) }
 }
 
 func logHomeConfigChanges(oldCfg, newCfg *config.Config) {
@@ -662,7 +597,7 @@ func (s *Service) runHomeConfigWorkerWithSupervisor(lifetimeCtx, homeCtx context
 			return
 		}
 
-		var work *homePluginFinalization
+		var work *homeConfigWork
 		for {
 			if lifetimeCtx.Err() != nil {
 				return
@@ -719,10 +654,7 @@ func (s *Service) runHomeConfigWorkerWithSupervisor(lifetimeCtx, homeCtx context
 		if !s.homeLifetimeActive(homeCtx, lifetimeCtx, generation) || !s.applyConfigRuntime(lifetimeCtx, work.configCommit, true) {
 			return
 		}
-		if errFinalize := s.finalizeHomePluginWorkUntilDone(lifetimeCtx, homeCtx, generation, client, work, publish); errFinalize != nil {
-			if !errors.Is(errFinalize, context.Canceled) {
-				log.WithError(errFinalize).Warn("home plugin finalization ended")
-			}
+		if publish != nil && !publish() {
 			return
 		}
 		if publish != nil {

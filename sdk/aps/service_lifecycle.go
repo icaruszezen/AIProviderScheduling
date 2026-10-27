@@ -9,12 +9,9 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/api"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
-	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -65,7 +62,6 @@ func (s *Service) Run(ctx context.Context) error {
 	s.applyRetryConfig(s.cfg)
 	s.configureCooldownStateStore(s.cfg)
 
-	s.registerPluginAuthParser()
 	if s.coreManager != nil && !homeEnabled {
 		if errLoad := s.coreManager.Load(ctx); errLoad != nil {
 			log.Warnf("failed to load auth store: %v", errLoad)
@@ -112,10 +108,6 @@ func (s *Service) Run(ctx context.Context) error {
 		s.server.SetClusterController(s.clusterService)
 	}
 	s.ensureChannelMonitor()
-	s.syncPluginRuntimeConfig(ctx)
-	if homeEnabled {
-		s.syncPluginModelRuntime(ctx)
-	}
 
 	if homeEnabled {
 		s.startHomeSubscriber(ctx)
@@ -181,7 +173,6 @@ func (s *Service) Run(ctx context.Context) error {
 			watcherWrapper.SetAuthUpdateQueue(s.authUpdates)
 		}
 		watcherWrapper.SetConfig(s.cfg)
-		s.registerPluginAuthParser()
 
 		watcherCtx, watcherCancel := context.WithCancel(context.Background())
 		s.watcherCancel = watcherCancel
@@ -189,7 +180,6 @@ func (s *Service) Run(ctx context.Context) error {
 			return fmt.Errorf("aps: failed to start watcher: %w", errStart)
 		}
 		log.Info("file watcher started for config changes")
-		s.syncPluginModelRuntime(ctx)
 	}
 
 	s.registerModelRefreshCallback()
@@ -316,22 +306,6 @@ func (s *Service) Shutdown(ctx context.Context) error {
 				if shutdownErr == nil {
 					shutdownErr = err
 				}
-			}
-		}
-
-		if s.pluginHost != nil {
-			sdktranslator.SetPluginHooks(nil)
-			if s.watcher != nil {
-				s.watcher.SetPluginAuthParser(nil)
-			}
-			s.pluginHost.ApplyConfig(ctx, &config.Config{})
-			s.pluginHost.RegisterModels(ctx, registry.GetGlobalRegistry())
-			s.registerAvailableExecutors(ctx, executorRegistrationOptions{
-				includePlugins: true})
-			s.pluginHost.RegisterFrontendAuthProviders()
-			s.pluginHost.ShutdownAllContext(ctx)
-			if s.accessManager != nil {
-				s.accessManager.SetProviders(sdkaccess.RegisteredProviders())
 			}
 		}
 

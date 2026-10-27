@@ -22,11 +22,9 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cmd"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/homeplugins"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/managementasset"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/misc"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/safemode"
@@ -35,7 +33,6 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/tui"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/util"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
-	sdkpluginstore "github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
@@ -114,12 +111,6 @@ func main() {
 		})
 	}
 
-	pluginHost := pluginhost.New()
-	if bootstrapCfg := loadPluginBootstrapConfig(pluginBootstrapConfigPath(os.Args[1:], DefaultConfigPath)); bootstrapCfg != nil {
-		pluginHost.ApplyConfig(context.Background(), bootstrapCfg)
-		pluginHost.RegisterCommandLineFlags(context.Background(), flag.CommandLine)
-	}
-
 	// Parse the command-line flags.
 	flag.Parse()
 
@@ -129,8 +120,6 @@ func main() {
 	var isCloudDeploy bool
 	var configLoadedFromHome bool
 	var homeClient *home.Client
-	var homePluginSyncReport homeplugins.SyncReport
-	var homePluginStatusReady bool
 	var (
 		usePostgresStore     bool
 		pgStoreDSN           string
@@ -286,56 +275,6 @@ func main() {
 		parsed.Home = homeCfg
 		parsed.Port = config.NormalizeHomePort(parsed.Port)
 		parsed.UsageStatisticsEnabled = true
-		pluginSyncCfg := *parsed
-		parsed.Plugins.StoreAuth = nil
-		var errHomePlugins error
-		platform := homeplugins.CurrentPlatform()
-		if pluginSyncCfg.Plugins.Enabled {
-			ctxHomePlugins, cancelHomePlugins := context.WithTimeout(context.Background(), 30*time.Second)
-			installedVersions, errInstalledPlugins := homeplugins.InstalledVersions(&pluginSyncCfg)
-			if errInstalledPlugins != nil {
-				homePluginStatusReady = true
-				errHomePlugins = errInstalledPlugins
-				homePluginSyncReport = homeplugins.CompletedSyncReport(platform, errInstalledPlugins)
-			} else {
-				pluginSyncRequest := sdkpluginstore.PluginSyncRequest{
-					SchemaVersion:     sdkpluginstore.PluginSyncSchemaVersion,
-					GOOS:              platform.GOOS,
-					GOARCH:            platform.GOARCH,
-					InstalledVersions: installedVersions}
-				pluginSyncResponse, errFetchPlugins := homeClient.GetPluginSync(ctxHomePlugins, pluginSyncRequest)
-				errHomePlugins = errFetchPlugins
-				switch {
-				case errHomePlugins == nil:
-					homePluginStatusReady = true
-					homePluginSyncReport, errHomePlugins = homeplugins.SyncResolvedWithReport(ctxHomePlugins, &pluginSyncCfg, pluginSyncResponse.Items, pluginSyncResponse.ExpiresAt, pluginSyncRequest.InstalledVersions, pluginHost)
-				case errors.Is(errHomePlugins, home.ErrPluginSyncUnsupported):
-					homePluginStatusReady = true
-					homePluginSyncReport, errHomePlugins = homeplugins.SyncWithReport(ctxHomePlugins, &pluginSyncCfg, pluginHost)
-				default:
-					homePluginStatusReady = true
-					homePluginSyncReport = homeplugins.CompletedSyncReport(platform, errHomePlugins)
-				}
-				pluginSyncRequest.Clear()
-				pluginSyncResponse.Clear()
-			}
-			cancelHomePlugins()
-		} else {
-			homePluginStatusReady = true
-			homePluginSyncReport = homeplugins.CompletedSyncReport(platform, nil)
-		}
-		if errHomePlugins != nil {
-			log.Errorf("failed to sync plugins from home: %v", errHomePlugins)
-		}
-		if homePluginStatusReady {
-			errReportPlugins := home.ReportPluginStatus(context.Background(), homeClient, homeCfg.NodeID, homePluginSyncReport)
-			if errReportPlugins != nil {
-				log.Warnf("failed to report home plugin sync status: %v", errReportPlugins)
-			}
-		}
-		if errHomePlugins != nil {
-			return
-		}
 		cfg = parsed
 
 		// Keep a non-empty config path for downstream components (log paths, management assets, etc),
@@ -563,33 +502,11 @@ func main() {
 
 	// Register built-in access providers before constructing services.
 	access.RegisterConfigAccess(cfg)
-	pluginHost.ApplyConfig(context.Background(), cfg)
-	if configLoadedFromHome && homePluginStatusReady {
-		errHomePluginLoad := homeplugins.MarkLoadResults(&homePluginSyncReport, pluginHost)
-		errReportPlugins := home.ReportPluginStatus(context.Background(), homeClient, cfg.Home.NodeID, homePluginSyncReport)
-		if errHomePluginLoad != nil {
-			log.Errorf("failed to load home plugins: %v", errHomePluginLoad)
-		}
-		if errReportPlugins != nil {
-			log.Warnf("failed to report home plugin load status: %v", errReportPlugins)
-		}
-		if errHomePluginLoad != nil {
-			return
-		}
-	}
 	if homeClient != nil {
 		// The bootstrap client is not owned by the runtime service. Close it after
 		// the final startup report so it cannot retain an idle RESP connection.
 		homeClient.Close()
 		homeClient = nil
-	}
-	if pluginHost.HasTriggeredCommandLineFlags() {
-		if exitCode, handled := pluginHost.ExecuteCommandLine(context.Background(), os.Args[0], os.Args[1:], configFilePath, flag.CommandLine); handled {
-			if exitCode != 0 {
-				os.Exit(exitCode)
-			}
-			return
-		}
 	}
 
 	{
@@ -637,7 +554,7 @@ func main() {
 					password = localMgmtPassword
 				}
 
-				cancel, done := cmd.StartServiceBackgroundWithPluginHost(cfg, configFilePath, password, pluginHost, serverOptions...)
+				cancel, done := cmd.StartServiceBackground(cfg, configFilePath, password, serverOptions...)
 
 				client := tui.NewClient(cfg.Port, password)
 				ready := false
@@ -682,7 +599,7 @@ func main() {
 			managementasset.StartAutoUpdater(context.Background(), configFilePath)
 			misc.StartAntigravityVersionUpdater(context.Background())
 			startModelCatalogUpdaters(localModel, cfg.Home.Enabled)
-			cmd.StartServiceWithPluginHost(cfg, configFilePath, password, pluginHost, serverOptions...)
+			cmd.StartService(cfg, configFilePath, password, serverOptions...)
 		}
 	}
 }
@@ -707,60 +624,4 @@ func startModelCatalogUpdaters(localModel, homeEnabled bool) {
 	} else if homeEnabled {
 		log.Info("Home mode: remote models.json updates disabled; Codex client model list follows Home model IDs")
 	}
-}
-
-func pluginBootstrapConfigPath(args []string, defaultPath string) string {
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		switch {
-		case arg == "--":
-			return defaultPluginBootstrapConfigPath(defaultPath)
-		case arg == "-config" || arg == "--config":
-			if i+1 < len(args) {
-				return args[i+1]
-			}
-			return defaultPluginBootstrapConfigPath(defaultPath)
-		case strings.HasPrefix(arg, "-config="):
-			return strings.TrimPrefix(arg, "-config=")
-		case strings.HasPrefix(arg, "--config="):
-			return strings.TrimPrefix(arg, "--config=")
-		}
-	}
-	return defaultPluginBootstrapConfigPath(defaultPath)
-}
-
-func defaultPluginBootstrapConfigPath(defaultPath string) string {
-	if strings.TrimSpace(defaultPath) != "" {
-		return defaultPath
-	}
-	wd, errGetwd := os.Getwd()
-	if errGetwd != nil {
-		return "config.yaml"
-	}
-	return filepath.Join(wd, "config.yaml")
-}
-
-func loadPluginBootstrapConfig(path string) *config.Config {
-	raw, errReadFile := os.ReadFile(path)
-	if errReadFile != nil {
-		if !errors.Is(errReadFile, os.ErrNotExist) {
-			log.Warnf("failed to read plugin bootstrap config: %v", errReadFile)
-		}
-		cfg := &config.Config{}
-		cfg.NormalizePluginsConfig()
-		return cfg
-	}
-	if len(strings.TrimSpace(string(raw))) == 0 {
-		cfg := &config.Config{}
-		cfg.NormalizePluginsConfig()
-		return cfg
-	}
-	cfg, errParseConfig := config.ParseConfigBytes(raw)
-	if errParseConfig != nil {
-		log.Warnf("failed to parse plugin bootstrap config: %v", errParseConfig)
-		cfg = &config.Config{}
-		cfg.NormalizePluginsConfig()
-		return cfg
-	}
-	return cfg
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,7 +15,6 @@ import (
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
@@ -36,55 +34,26 @@ type modelExecutionStatusHeaderError struct {
 	headers    http.Header
 }
 
-type modelExecutionSkipHost struct {
-	beforeSkip string
-	afterSkip  string
-	respSkip   string
-	streamSkip []string
-}
-
-func (h *modelExecutionSkipHost) InterceptRequestBeforeAuth(context.Context, pluginapi.RequestInterceptRequest) pluginapi.RequestInterceptResponse {
-	panic("InterceptRequestBeforeAuth called without skip")
-}
-
-func (h *modelExecutionSkipHost) InterceptRequestAfterAuth(context.Context, pluginapi.RequestInterceptRequest) pluginapi.RequestInterceptResponse {
-	panic("InterceptRequestAfterAuth called without skip")
-}
-
-func (h *modelExecutionSkipHost) InterceptResponse(context.Context, pluginapi.ResponseInterceptRequest) pluginapi.ResponseInterceptResponse {
-	panic("InterceptResponse called without skip")
-}
-
-func (h *modelExecutionSkipHost) InterceptStreamChunk(context.Context, pluginapi.StreamChunkInterceptRequest) pluginapi.StreamChunkInterceptResponse {
-	panic("InterceptStreamChunk called without skip")
-}
-
-func (h *modelExecutionSkipHost) InterceptRequestBeforeAuthExcept(ctx context.Context, req pluginapi.RequestInterceptRequest, skipPluginID string) pluginapi.RequestInterceptResponse {
-	h.beforeSkip = skipPluginID
-	return pluginapi.RequestInterceptResponse{
-		Headers: cloneHeader(req.Headers),
-		Body:    cloneBytes(req.Body)}
-}
-
-func (h *modelExecutionSkipHost) InterceptRequestAfterAuthExcept(ctx context.Context, req pluginapi.RequestInterceptRequest, skipPluginID string) pluginapi.RequestInterceptResponse {
-	h.afterSkip = skipPluginID
-	return pluginapi.RequestInterceptResponse{
-		Headers: cloneHeader(req.Headers),
-		Body:    cloneBytes(req.Body)}
-}
-
-func (h *modelExecutionSkipHost) InterceptResponseExcept(ctx context.Context, req pluginapi.ResponseInterceptRequest, skipPluginID string) pluginapi.ResponseInterceptResponse {
-	h.respSkip = skipPluginID
-	return pluginapi.ResponseInterceptResponse{
-		Headers: cloneHeader(req.ResponseHeaders),
-		Body:    cloneBytes(req.Body)}
-}
-
-func (h *modelExecutionSkipHost) InterceptStreamChunkExcept(ctx context.Context, req pluginapi.StreamChunkInterceptRequest, skipPluginID string) pluginapi.StreamChunkInterceptResponse {
-	h.streamSkip = append(h.streamSkip, skipPluginID)
-	return pluginapi.StreamChunkInterceptResponse{
-		Headers: cloneHeader(req.ResponseHeaders),
-		Body:    cloneBytes(req.Body)}
+func newModelExecutionHandler(t *testing.T, model string, executor *modelExecutionCaptureExecutor, cfg *sdkconfig.SDKConfig) *BaseAPIHandler {
+	t.Helper()
+	manager := coreauth.NewManager(nil, nil, nil)
+	manager.RegisterExecutor(executor)
+	auth := &coreauth.Auth{
+		ID:       "model-execution-" + model,
+		Provider: executor.Identifier(),
+		Status:   coreauth.StatusActive,
+		Attributes: map[string]string{
+			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
+			coreauth.AttributeAPIKey:   "test-key"},
+		Metadata: map[string]any{"email": model + "@example.com"}}
+	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
+		t.Fatalf("manager.Register(): %v", errRegister)
+	}
+	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
+	t.Cleanup(func() {
+		registry.GetGlobalRegistry().UnregisterClient(auth.ID)
+	})
+	return NewBaseAPIHandlers(cfg, manager)
 }
 
 func (e modelExecutionStatusHeaderError) Error() string {
@@ -161,28 +130,6 @@ func (e *modelExecutionCaptureExecutor) captured() (coreexecutor.Request, coreex
 	return e.lastRequest, e.lastOptions
 }
 
-func newModelExecutionHandler(t *testing.T, model string, executor *modelExecutionCaptureExecutor, cfg *sdkconfig.SDKConfig) *BaseAPIHandler {
-	t.Helper()
-	manager := coreauth.NewManager(nil, nil, nil)
-	manager.RegisterExecutor(executor)
-	auth := &coreauth.Auth{
-		ID:       "model-execution-" + model,
-		Provider: executor.Identifier(),
-		Status:   coreauth.StatusActive,
-		Attributes: map[string]string{
-			coreauth.AttributeAuthKind: coreauth.AuthKindAPIKey,
-			coreauth.AttributeAPIKey:   "test-key"},
-		Metadata: map[string]any{"email": model + "@example.com"}}
-	if _, errRegister := manager.Register(context.Background(), auth); errRegister != nil {
-		t.Fatalf("manager.Register(): %v", errRegister)
-	}
-	registry.GetGlobalRegistry().RegisterClient(auth.ID, auth.Provider, []*registry.ModelInfo{{ID: model}})
-	t.Cleanup(func() {
-		registry.GetGlobalRegistry().UnregisterClient(auth.ID)
-	})
-	return NewBaseAPIHandlers(cfg, manager)
-}
-
 func TestExecuteModelCarriesEntryAndExitProtocols(t *testing.T) {
 	model := "model-execution-nonstream-model"
 	requestBody := []byte(fmt.Sprintf(`{"model":%q}`, model))
@@ -242,31 +189,6 @@ func TestExecuteModelCarriesEntryAndExitProtocols(t *testing.T) {
 	}
 	if gotOpts.Query.Get("q") != "callback" {
 		t.Fatalf("executor query = %#v, want callback query", gotOpts.Query)
-	}
-}
-
-func TestExecuteModelSkipsOriginatingPluginInterceptors(t *testing.T) {
-	model := "model-execution-skip-origin-model"
-	requestBody := []byte(fmt.Sprintf(`{"model":%q}`, model))
-	executor := &modelExecutionCaptureExecutor{}
-	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
-	skipHost := &modelExecutionSkipHost{}
-	handler.SetPluginHost(skipHost)
-
-	resp, errMsg := handler.ExecuteModel(context.Background(), ModelExecutionRequest{
-		EntryProtocol:           "openai",
-		ExitProtocol:            "openai",
-		Model:                   model,
-		Body:                    requestBody,
-		SkipInterceptorPluginID: "origin-plugin"})
-	if errMsg != nil {
-		t.Fatalf("ExecuteModel() error = %+v", errMsg)
-	}
-	if string(resp.Body) != "model-execution-ok" {
-		t.Fatalf("body = %q, want executor response", resp.Body)
-	}
-	if skipHost.beforeSkip != "origin-plugin" || skipHost.afterSkip != "origin-plugin" || skipHost.respSkip != "origin-plugin" {
-		t.Fatalf("skip ids = before:%q after:%q response:%q, want origin-plugin", skipHost.beforeSkip, skipHost.afterSkip, skipHost.respSkip)
 	}
 }
 
@@ -338,50 +260,6 @@ func TestExecuteModelStream(t *testing.T) {
 	}
 	if gotOpts.Headers.Get("X-Callback") != "stream" {
 		t.Fatalf("executor headers = %#v, want callback header", gotOpts.Headers)
-	}
-}
-
-func TestExecuteModelStreamSkipsOriginatingPluginInterceptors(t *testing.T) {
-	model := "model-execution-stream-skip-origin-model"
-	requestBody := []byte(fmt.Sprintf(`{"model":%q,"stream":true}`, model))
-	executor := &modelExecutionCaptureExecutor{
-		stream: func(ctx context.Context, auth *coreauth.Auth, req coreexecutor.Request, opts coreexecutor.Options) (*coreexecutor.StreamResult, error) {
-			chunks := make(chan coreexecutor.StreamChunk, 1)
-			chunks <- coreexecutor.StreamChunk{Payload: []byte("stream-one")}
-			close(chunks)
-			return &coreexecutor.StreamResult{Chunks: chunks}, nil
-		}}
-	handler := newModelExecutionHandler(t, model, executor, &sdkconfig.SDKConfig{})
-	skipHost := &modelExecutionSkipHost{}
-	handler.SetPluginHost(skipHost)
-
-	stream, errMsg := handler.ExecuteModelStream(context.Background(), ModelExecutionRequest{
-		EntryProtocol:           "openai",
-		ExitProtocol:            "openai",
-		Model:                   model,
-		Stream:                  true,
-		Body:                    requestBody,
-		SkipInterceptorPluginID: "origin-plugin"})
-	if errMsg != nil {
-		t.Fatalf("ExecuteModelStream() error = %+v", errMsg)
-	}
-	chunk, ok := <-stream.Chunks
-	if !ok {
-		t.Fatal("stream chunks closed before payload")
-	}
-	if string(chunk.Payload) != "stream-one" {
-		t.Fatalf("stream chunk payload = %q, want stream-one", chunk.Payload)
-	}
-	if skipHost.beforeSkip != "origin-plugin" || skipHost.afterSkip != "origin-plugin" {
-		t.Fatalf("request skip ids = before:%q after:%q, want origin-plugin", skipHost.beforeSkip, skipHost.afterSkip)
-	}
-	if len(skipHost.streamSkip) == 0 {
-		t.Fatal("stream interceptor was not called with skip")
-	}
-	for _, skipID := range skipHost.streamSkip {
-		if skipID != "origin-plugin" {
-			t.Fatalf("stream skip id = %q, want origin-plugin", skipID)
-		}
 	}
 }
 
@@ -735,24 +613,9 @@ func TestExecuteProtocolStreamWithAuthManagerAgentUsesSelectionModelForAuth(t *t
 	}
 }
 
-func TestProvidersForExecutionForcedGeminiRejectsRouterProvider(t *testing.T) {
-	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{}, nil)
-	decision := modelRouteDecision{Provider: "claude", Model: "claude-sonnet-4"}
-	_, _, errMsg := handler.providersForExecution("agents/test-agent", "agents/test-agent", false, decision, modelExecutionOptions{ForcedProvider: "gemini"})
-	if errMsg == nil {
-		t.Fatal("providersForExecution() error = nil, want native interactions error")
-	}
-	if errMsg.StatusCode != http.StatusBadRequest {
-		t.Fatalf("status = %d, want %d", errMsg.StatusCode, http.StatusBadRequest)
-	}
-	if errMsg.Error == nil || !strings.Contains(errMsg.Error.Error(), "native interactions") {
-		t.Fatalf("error = %v, want native interactions message", errMsg.Error)
-	}
-}
-
 func TestProvidersForExecutionForcedGeminiUsesGeminiProvider(t *testing.T) {
 	handler := NewBaseAPIHandlers(&sdkconfig.SDKConfig{}, nil)
-	providers, model, errMsg := handler.providersForExecution("agents/test-agent", "agents/test-agent", false, modelRouteDecision{}, modelExecutionOptions{ForcedProvider: "gemini"})
+	providers, model, errMsg := handler.providersForExecution("agents/test-agent", "agents/test-agent", false, modelExecutionOptions{ForcedProvider: "gemini"})
 	if errMsg != nil {
 		t.Fatalf("providersForExecution() error = %+v", errMsg)
 	}

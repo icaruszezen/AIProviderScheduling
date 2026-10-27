@@ -12,15 +12,12 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/channelmonitor"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/cluster"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/home"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/homeplugins"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/wsrelay"
 	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executionregistry"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	sdkpluginstore "github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginstore"
 )
 
 // Service wraps the proxy server lifecycle so external programs can embed the CLI proxy.
@@ -90,9 +87,6 @@ type Service struct {
 	// cooldownStateStore persists runtime cooldown state when enabled.
 	cooldownStateStore coreauth.CooldownStateStore
 
-	// pluginHost owns dynamic plugin lifecycle and runtime capability adapters.
-	pluginHost *pluginhost.Host
-
 	// shutdownOnce ensures shutdown is called only once.
 	shutdownOnce sync.Once
 
@@ -118,10 +112,6 @@ type Service struct {
 	runCancel                    context.CancelFunc
 	homeLogForwarder             homeLogForwarder
 	homeLogForwarderClient       *home.Client
-	homePluginSyncMu             sync.Mutex
-	homePluginSyncKey            string
-	homePluginSyncFetch          func(context.Context, sdkpluginstore.PluginSyncRequest) (sdkpluginstore.PluginSyncResponse, error)
-	homePluginDeleteTask         func(context.Context, *config.Config, home.PluginTask) homeplugins.SyncReport
 
 	clusterService *cluster.Service
 

@@ -14,8 +14,6 @@ type pinnedAuthContextKey struct{}
 
 type selectedAuthCallbackContextKey struct{}
 
-type preparedModelRouteContextKey struct{}
-
 type executionSessionContextKey struct{}
 
 type disallowFreeAuthContextKey struct{}
@@ -86,29 +84,6 @@ func WithSelectedAuthIDCallback(ctx context.Context, callback func(string)) cont
 		ctx = context.Background()
 	}
 	return context.WithValue(ctx, selectedAuthCallbackContextKey{}, callback)
-}
-
-// PrepareStreamModelRoute resolves a stream route once and stores it on the returned context for execution.
-// The boolean reports whether the route overrides normal model-to-provider resolution.
-func (h *BaseAPIHandler) PrepareStreamModelRoute(ctx context.Context, handlerType string, modelName string, rawJSON []byte) (context.Context, bool) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	decision := h.applyModelRouter(ctx, handlerType, modelName, rawJSON, true, modelExecutionOptions{})
-	ctx = context.WithValue(ctx, preparedModelRouteContextKey{}, decision)
-	hasOverride := strings.TrimSpace(decision.ExecutorPluginID) != "" || strings.TrimSpace(decision.Provider) != ""
-	return ctx, hasOverride
-}
-
-func preparedModelRouteFromContext(ctx context.Context, skipRouterPluginID string) (modelRouteDecision, bool) {
-	// A host.model.execute_stream callback is a nested execution. Its caller is
-	// excluded from model routing, so an outer prepared route cannot be reused:
-	// it may point straight back at that caller.
-	if ctx == nil || strings.TrimSpace(skipRouterPluginID) != "" {
-		return modelRouteDecision{}, false
-	}
-	decision, ok := ctx.Value(preparedModelRouteContextKey{}).(modelRouteDecision)
-	return decision, ok
 }
 
 // WithExecutionSessionID returns a child context tagged with a long-lived execution session ID.

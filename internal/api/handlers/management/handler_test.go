@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 )
 
 func TestAuthenticateManagementKey_LocalhostIPBan_BlocksCorrectKeyDuringBan(t *testing.T) {
@@ -59,9 +58,6 @@ func TestMiddlewareSetsSupportPluginHeader(t *testing.T) {
 		if rec.Code != http.StatusUnauthorized {
 			t.Fatalf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
 		}
-		if got := rec.Header().Get("X-APS-SUPPORT-PLUGIN"); got != pluginhost.SupportPluginHeaderValue() {
-			t.Fatalf("X-APS-SUPPORT-PLUGIN = %q, want %q", got, pluginhost.SupportPluginHeaderValue())
-		}
 	})
 
 	t.Run("valid key", func(t *testing.T) {
@@ -78,9 +74,6 @@ func TestMiddlewareSetsSupportPluginHeader(t *testing.T) {
 
 		if rec.Code != http.StatusOK {
 			t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
-		}
-		if got := rec.Header().Get("X-APS-SUPPORT-PLUGIN"); got != pluginhost.SupportPluginHeaderValue() {
-			t.Fatalf("X-APS-SUPPORT-PLUGIN = %q, want %q", got, pluginhost.SupportPluginHeaderValue())
 		}
 	})
 }

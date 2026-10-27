@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
-	"gopkg.in/yaml.v3"
 )
 
 func TestCloneForRuntimeNil(t *testing.T) {
@@ -52,9 +51,6 @@ func TestCloneForRuntimeDeepCopiesConfig(t *testing.T) {
 	if clone.CodexKey[0].ExcludedModels[0] != "codex-hidden-key" {
 		t.Fatalf("clone.CodexKey[0].ExcludedModels[0] = %q, want codex-hidden-key", clone.CodexKey[0].ExcludedModels[0])
 	}
-	if got := pluginRawScalar(t, clone.Plugins.Configs["sample"].Raw, "mode"); got != "first" {
-		t.Fatalf("clone plugin raw mode = %q, want first", got)
-	}
 	if clone.OpenAICompatibility[0].Models[0].Thinking.Levels[0] != "low" {
 		t.Fatalf("clone thinking level = %q, want low", clone.OpenAICompatibility[0].Models[0].Thinking.Levels[0])
 	}
@@ -66,18 +62,12 @@ func TestCloneForRuntimeDeepCopiesConfig(t *testing.T) {
 	clone.CodexKey[0].ExcludedModels[0] = "clone-hidden-model"
 	clone.OpenAICompatibility[0].Models[0].Thinking.Levels[0] = "clone-low"
 	clone.Payload.Default[0].Params["object"].(map[string]any)["key"] = "clone-value"
-	plugin := clone.Plugins.Configs["sample"]
-	setPluginRawScalar(t, &plugin.Raw, "mode", "third")
-	clone.Plugins.Configs["sample"] = plugin
 
 	if cfg.APIKeys[0] != "mutated-client-key" {
 		t.Fatalf("cfg.APIKeys[0] = %q, want mutated-client-key", cfg.APIKeys[0])
 	}
 	if cfg.CodexKey[0].ExcludedModels[0] != "mutated-hidden-key" {
 		t.Fatalf("cfg.CodexKey[0].ExcludedModels[0] = %q, want mutated-hidden-key", cfg.CodexKey[0].ExcludedModels[0])
-	}
-	if got := pluginRawScalar(t, cfg.Plugins.Configs["sample"].Raw, "mode"); got != "second" {
-		t.Fatalf("cfg plugin raw mode = %q, want second", got)
 	}
 	if cfg.OpenAICompatibility[0].Models[0].Thinking.Levels[0] != "mutated-low" {
 		t.Fatalf("cfg thinking level = %q, want mutated-low", cfg.OpenAICompatibility[0].Models[0].Thinking.Levels[0])
@@ -97,7 +87,6 @@ func TestCloneForRuntimeDoesNotShareReferenceFields(t *testing.T) {
 func sampleCloneRuntimeConfig() *Config {
 	cacheStrict := true
 	bypassStrict := false
-	pluginEnabled := false
 	cacheUserID := true
 
 	return &Config{
@@ -117,15 +106,6 @@ func sampleCloneRuntimeConfig() *Config {
 				ClientCert:          "cert",
 				ClientKey:           "key",
 				UseTargetServerName: true}},
-		Plugins: PluginsConfig{
-			Enabled:      true,
-			Dir:          "plugins",
-			StoreSources: []string{"https://plugins.example/store.json"},
-			Configs: map[string]PluginInstanceConfig{
-				"sample": {
-					Enabled:  &pluginEnabled,
-					Priority: 10,
-					Raw:      samplePluginRawNode("first")}}},
 		AntigravitySignatureCacheEnabled: &cacheStrict,
 		AntigravitySignatureBypassStrict: &bypassStrict,
 		GeminiKey: []GeminiKey{{
@@ -180,49 +160,6 @@ func mutateOriginalConfig(cfg *Config) {
 	cfg.CodexKey[0].ExcludedModels[0] = "mutated-hidden-key"
 	cfg.OpenAICompatibility[0].Models[0].Thinking.Levels[0] = "mutated-low"
 	cfg.Payload.Default[0].Params["object"].(map[string]any)["key"] = "mutated-value"
-	plugin := cfg.Plugins.Configs["sample"]
-	setPluginRawScalar(nil, &plugin.Raw, "mode", "second")
-	cfg.Plugins.Configs["sample"] = plugin
-}
-
-func samplePluginRawNode(mode string) yaml.Node {
-	modeValue := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: mode, Anchor: "modeAnchor"}
-	return yaml.Node{
-		Kind: yaml.MappingNode,
-		Tag:  "!!map",
-		Content: []*yaml.Node{
-			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "enabled"},
-			{Kind: yaml.ScalarNode, Tag: "!!bool", Value: "false"},
-			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "mode"},
-			modeValue,
-			{Kind: yaml.ScalarNode, Tag: "!!str", Value: "mode-alias"},
-			{Kind: yaml.AliasNode, Alias: modeValue}}}
-}
-
-func pluginRawScalar(t *testing.T, node yaml.Node, key string) string {
-	t.Helper()
-	for i := 0; i+1 < len(node.Content); i += 2 {
-		if node.Content[i] != nil && node.Content[i].Value == key && node.Content[i+1] != nil {
-			return node.Content[i+1].Value
-		}
-	}
-	t.Fatalf("raw plugin node missing key %q", key)
-	return ""
-}
-
-func setPluginRawScalar(t *testing.T, node *yaml.Node, key, value string) {
-	if t != nil {
-		t.Helper()
-	}
-	for i := 0; i+1 < len(node.Content); i += 2 {
-		if node.Content[i] != nil && node.Content[i].Value == key && node.Content[i+1] != nil {
-			node.Content[i+1].Value = value
-			return
-		}
-	}
-	if t != nil {
-		t.Fatalf("raw plugin node missing key %q", key)
-	}
 }
 
 func assertNoSharedRuntimeReferences(t *testing.T, original, clone reflect.Value, path string) {

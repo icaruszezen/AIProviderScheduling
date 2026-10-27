@@ -185,26 +185,6 @@ func TestPostClusterSyncReportsSuccess(t *testing.T) {
 	}
 }
 
-func TestSlaveWriteAllowedPluginPaths(t *testing.T) {
-	tests := []struct {
-		method string
-		path   string
-		want   bool
-	}{
-		{http.MethodPost, "/v0/management/plugin-store/foo/install", true},
-		{http.MethodDelete, "/v0/management/plugins/foo", true},
-		{http.MethodDelete, "/v0/management/plugins/foo/config", false},
-		{http.MethodPatch, "/v0/management/plugins/foo/enabled", false},
-		{http.MethodPut, "/v0/management/plugins/foo/config", false},
-		{http.MethodDelete, "/v0/management/plugins/", false},
-		{http.MethodDelete, "/v0/management/gemini-api-key", false}}
-	for _, tc := range tests {
-		if got := slaveWriteAllowed(tc.method, tc.path); got != tc.want {
-			t.Errorf("slaveWriteAllowed(%s, %s) = %v, want %v", tc.method, tc.path, got, tc.want)
-		}
-	}
-}
-
 func TestPatchClusterRejectsUnusableSettings(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {

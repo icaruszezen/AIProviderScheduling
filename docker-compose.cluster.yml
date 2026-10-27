@@ -20,7 +20,6 @@ services:
     volumes:
       - ${APS_HOME_PATH:-./home}:/root/.ai-provider-scheduling
       - ${APS_LOG_PATH:-./logs}:/AIProviderScheduling/logs
-      - ${APS_PLUGIN_PATH:-./plugins}:/AIProviderScheduling/plugins
     command: >
       sh -eu -c '
         if [ -z "$$HOME_JWT" ]; then

@@ -52,8 +52,7 @@ func SaveConfigPreserveComments(configFile string, cfg *Config) error {
 	removeRemovedIntegrationKeys(original.Content[0])
 	removeLegacyGenerativeLanguageKeys(original.Content[0])
 	removeRemovedOAuthAndAuthDirKeys(original.Content[0])
-
-	pruneMappingToGeneratedKeys(original.Content[0], generated.Content[0], "plugins", "configs")
+	removeRemovedPluginKeys(original.Content[0])
 
 	// Merge generated into original in-place, preserving comments/order of existing nodes.
 	mergeMappingPreserve(original.Content[0], generated.Content[0])
@@ -334,8 +333,6 @@ func isKnownDefaultValue(path []string, node *yaml.Node) bool {
 			return node.Value == DefaultPprofAddr
 		case "remote-management.panel-github-repository":
 			return node.Value == DefaultPanelGitHubRepository
-		case "plugins.dir":
-			return node.Value == "plugins"
 		case "routing.strategy":
 			return node.Value == "round-robin"
 		}
@@ -628,87 +625,6 @@ func nodesStructurallyEqual(a, b *yaml.Node) bool {
 	}
 }
 
-func removeMapKey(mapNode *yaml.Node, key string) {
-	if mapNode == nil || mapNode.Kind != yaml.MappingNode || key == "" {
-		return
-	}
-	for i := 0; i+1 < len(mapNode.Content); i += 2 {
-		if mapNode.Content[i] != nil && mapNode.Content[i].Value == key {
-			mapNode.Content = append(mapNode.Content[:i], mapNode.Content[i+2:]...)
-			return
-		}
-	}
-}
-
-func pruneMappingToGeneratedKeys(dstRoot, srcRoot *yaml.Node, keyPath ...string) {
-	if len(keyPath) == 0 || dstRoot == nil || srcRoot == nil {
-		return
-	}
-	if len(keyPath) > 1 {
-		dstParent := dstRoot
-		srcParent := srcRoot
-		for _, key := range keyPath[:len(keyPath)-1] {
-			if key == "" || dstParent == nil || dstParent.Kind != yaml.MappingNode {
-				return
-			}
-			dstIdx := findMapKeyIndex(dstParent, key)
-			if dstIdx < 0 || dstIdx+1 >= len(dstParent.Content) {
-				return
-			}
-			dstParent = dstParent.Content[dstIdx+1]
-
-			if srcParent != nil && srcParent.Kind == yaml.MappingNode {
-				srcIdx := findMapKeyIndex(srcParent, key)
-				if srcIdx >= 0 && srcIdx+1 < len(srcParent.Content) {
-					srcParent = srcParent.Content[srcIdx+1]
-				} else {
-					srcParent = nil
-				}
-			}
-		}
-		if srcParent == nil || srcParent.Kind != yaml.MappingNode {
-			removeMapKey(dstParent, keyPath[len(keyPath)-1])
-			return
-		}
-		pruneMappingToGeneratedKeys(dstParent, srcParent, keyPath[len(keyPath)-1])
-		return
-	}
-	key := keyPath[0]
-	if key == "" {
-		return
-	}
-	if dstRoot.Kind != yaml.MappingNode || srcRoot.Kind != yaml.MappingNode {
-		return
-	}
-	dstIdx := findMapKeyIndex(dstRoot, key)
-	if dstIdx < 0 || dstIdx+1 >= len(dstRoot.Content) {
-		return
-	}
-	srcIdx := findMapKeyIndex(srcRoot, key)
-	if srcIdx < 0 {
-		removeMapKey(dstRoot, key)
-		return
-	}
-	if srcIdx+1 >= len(srcRoot.Content) {
-		return
-	}
-	srcVal := srcRoot.Content[srcIdx+1]
-	dstVal := dstRoot.Content[dstIdx+1]
-	if srcVal == nil {
-		dstRoot.Content[dstIdx+1] = nil
-		return
-	}
-	if srcVal.Kind != yaml.MappingNode {
-		dstRoot.Content[dstIdx+1] = deepCopyNode(srcVal)
-		return
-	}
-	if dstVal == nil || dstVal.Kind != yaml.MappingNode {
-		dstRoot.Content[dstIdx+1] = deepCopyNode(srcVal)
-		return
-	}
-	pruneMissingMapKeys(dstVal, srcVal)
-}
-
 func pruneMissingMapKeys(dstMap, srcMap *yaml.Node) {
 	if dstMap == nil || srcMap == nil || dstMap.Kind != yaml.MappingNode || srcMap.Kind != yaml.MappingNode {
 		return
@@ -737,6 +653,18 @@ func pruneMissingMapKeys(dstMap, srcMap *yaml.Node) {
 			continue
 		}
 		i += 2
+	}
+}
+
+func removeMapKey(mapNode *yaml.Node, key string) {
+	if mapNode == nil || mapNode.Kind != yaml.MappingNode || key == "" {
+		return
+	}
+	for i := 0; i+1 < len(mapNode.Content); i += 2 {
+		if mapNode.Content[i] != nil && mapNode.Content[i].Value == key {
+			mapNode.Content = append(mapNode.Content[:i], mapNode.Content[i+2:]...)
+			return
+		}
 	}
 }
 
@@ -784,6 +712,13 @@ func removeLegacyOpenAICompatAPIKeys(root *yaml.Node) {
 			removeMapKey(seq.Content[i], "api-keys")
 		}
 	}
+}
+
+func removeRemovedPluginKeys(root *yaml.Node) {
+	if root == nil || root.Kind != yaml.MappingNode {
+		return
+	}
+	removeMapKey(root, "plugins")
 }
 
 func removeRemovedIntegrationKeys(root *yaml.Node) {

@@ -57,7 +57,6 @@ cluster:
 - `cluster`
 - `home`
 - `pprof`
-- `plugins.dir`（`plugins.enabled` 与插件列表会同步）
 
 磁盘上的凭据**不同步**。`auth-dir` 是本地路径，其中的文件不会被传输，因此 OAuth 凭据需要在每个节点各自准备。写在配置文件里的 API key（`gemini-api-key`、`openai-compatibility` 等）属于配置，会同步。
 
@@ -104,9 +103,6 @@ payload 携带 `updated_at`，slave 会拒绝比已应用版本更旧的 payload
 - `/v0/management/cluster` 下的全部端点（以便提升 slave 或改指向）
 - 认证文件管理、OAuth 流程、`get-auth-status`
 - 日志端点、`reset-quota`、`vertex/import`、`api-call`
-- 插件安装（`plugin-store`）与插件卸载（`DELETE /plugins/:id`），因为二进制位于不同步的 `plugins.dir`
-
-插件**配置**（`/plugins/:id/enabled`、`/plugins/:id/config`）属于同步的配置，仍然被拦截。
 
 要为集群修改配置，请在 master 上操作。
 

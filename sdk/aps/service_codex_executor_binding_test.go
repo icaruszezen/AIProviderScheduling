@@ -4,12 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 )
 
 func TestEnsureExecutorsForAuth_CodexDoesNotReplaceInNormalMode(t *testing.T) {
@@ -82,8 +80,7 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 			cfg.Home.Enabled = tt.homeEnabled
 			service := &Service{
 				cfg:         cfg,
-				coreManager: coreauth.NewManager(nil, nil, nil),
-				pluginHost:  pluginhost.New()}
+				coreManager: coreauth.NewManager(nil, nil, nil)}
 			providerAuth := &coreauth.Auth{
 				ID:       tt.provider + "-auth",
 				Provider: tt.provider,
@@ -95,7 +92,6 @@ func TestSyncPluginModelRuntime_UnrelatedAuthDoesNotReplaceWebsocketExecutor(t *
 			t.Cleanup(func() {
 				GlobalModelRegistry().UnregisterClient(providerAuth.ID)
 				GlobalModelRegistry().UnregisterClient(unrelatedAuth.ID)
-				sdktranslator.SetPluginHooks(nil)
 			})
 
 			if _, errRegister := service.coreManager.Register(ctx, providerAuth); errRegister != nil {
@@ -187,11 +183,7 @@ func TestEnsureExecutorsForAuthWithMode_XAIForceReplace(t *testing.T) {
 func TestEnsureExecutorsForAuth_XAIReplacesExecutorAfterConfigUpdate(t *testing.T) {
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New()}
-	t.Cleanup(func() {
-		sdktranslator.SetPluginHooks(nil)
-	})
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	auth := &coreauth.Auth{
 		ID:       "xai-auth-config-update",
 		Provider: "xai",

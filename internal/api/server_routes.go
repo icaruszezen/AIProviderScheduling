@@ -28,7 +28,6 @@ import (
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers/openai"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
-	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -137,56 +136,7 @@ func (s *Server) setupRoutes() {
 	// Management routes are registered lazily by registerManagementRoutes when a secret is configured.
 }
 
-func (s *Server) codexAlphaSearchModelRouterHost() handlers.PluginModelRouterHost {
-	if s == nil {
-		return nil
-	}
-	if s.pluginHost != nil {
-		return s.pluginHost
-	}
-	if s.handlers != nil && s.handlers.ModelRouterHost != nil {
-		return s.handlers.ModelRouterHost
-	}
-	return nil
-}
-
 func (s *Server) codexAlphaSearchSelectionModel(ctx context.Context, c *gin.Context, body []byte, model string) (string, error) {
-	host := s.codexAlphaSearchModelRouterHost()
-	if host == nil {
-		return model, nil
-	}
-
-	var headers http.Header
-	queryValues := make(map[string][]string)
-	requestPath := ""
-	if c != nil && c.Request != nil {
-		headers = c.Request.Header.Clone()
-		if c.Request.URL != nil {
-			queryValues = c.Request.URL.Query()
-			requestPath = c.Request.URL.Path
-		}
-	}
-	metadata := map[string]any{
-		coreexecutor.RequestedModelMetadataKey: model}
-	if requestPath != "" {
-		metadata[coreexecutor.RequestPathMetadataKey] = requestPath
-	}
-	resp, handled := host.RouteModel(ctx, pluginapi.ModelRouteRequest{
-		SourceFormat:   codexAlphaSearchSourceFormat,
-		RequestedModel: model,
-		Headers:        headers,
-		Query:          queryValues,
-		Body:           body,
-		Metadata:       metadata})
-	if !handled || !resp.Handled {
-		return model, nil
-	}
-	if resp.TargetKind != pluginapi.ModelRouteTargetProvider || !strings.EqualFold(strings.TrimSpace(resp.Target), "codex") {
-		return "", fmt.Errorf("unsupported Codex Alpha Search model route target %q (%q)", resp.TargetKind, resp.Target)
-	}
-	if targetModel := strings.TrimSpace(resp.TargetModel); targetModel != "" {
-		return targetModel, nil
-	}
 	return model, nil
 }
 

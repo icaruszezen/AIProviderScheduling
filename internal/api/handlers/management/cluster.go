@@ -91,34 +91,15 @@ func (h *Handler) SlaveConfigWriteGuard() gin.HandlerFunc {
 func slaveWriteAllowed(method, path string) bool {
 	path = strings.TrimSpace(path)
 	switch {
-	// Installing a plugin is already allowed because the binary lives in the
-	// node-local plugins.dir, which is never synced. Uninstalling it is the same
-	// kind of local operation, so allow it too instead of letting the UI offer a
-	// delete button that always fails.
-	case method == http.MethodDelete && isPluginInstancePath(path):
-		return true
 	case path == "/v0/management/cluster", strings.HasPrefix(path, "/v0/management/cluster/"):
 		return true
 	case path == "/v0/management/logs" || strings.HasPrefix(path, "/v0/management/request-error-logs"):
 		return true
 	case path == "/v0/management/api-call":
 		return true
-	case strings.HasPrefix(path, "/v0/management/plugin-store"):
-		return true
 	default:
 		return false
 	}
-}
-
-// isPluginInstancePath matches /v0/management/plugins/<id> and nothing deeper,
-// so the enabled and config sub-resources stay under the readonly guard.
-func isPluginInstancePath(path string) bool {
-	const prefix = "/v0/management/plugins/"
-	if !strings.HasPrefix(path, prefix) {
-		return false
-	}
-	id := strings.TrimPrefix(path, prefix)
-	return id != "" && !strings.Contains(id, "/")
 }
 
 // ClusterTokenMiddleware authenticates cluster protocol requests.

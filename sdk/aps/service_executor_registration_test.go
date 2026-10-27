@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	runtimeexecutor "github.com/icaruszezen/AIProviderScheduling/v7/internal/runtime/executor"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	apsexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
@@ -42,39 +41,13 @@ func (serviceTestPluginExecutor) HttpRequest(context.Context, *coreauth.Auth, *h
 }
 
 func TestRegisterAvailableExecutors(t *testing.T) {
-	oldRegisterPluginExecutors := registerPluginExecutors
-	pluginRegisterCalls := 0
-	var expectedPluginHost *pluginhost.Host
-	var expectedManager *coreauth.Manager
-	registerPluginExecutors = func(host *pluginhost.Host, manager *coreauth.Manager) {
-		pluginRegisterCalls++
-		if host != expectedPluginHost {
-			t.Fatalf("plugin executor registration host = %p, want %p", host, expectedPluginHost)
-		}
-		if manager != expectedManager {
-			t.Fatalf("plugin executor registration manager = %p, want %p", manager, expectedManager)
-		}
-		manager.RegisterExecutor(serviceTestPluginExecutor{})
-	}
-	t.Cleanup(func() {
-		registerPluginExecutors = oldRegisterPluginExecutors
-	})
-
 	service := &Service{
 		cfg:         &config.Config{},
-		coreManager: coreauth.NewManager(nil, nil, nil),
-		pluginHost:  pluginhost.New()}
-	expectedPluginHost = service.pluginHost
-	expectedManager = service.coreManager
+		coreManager: coreauth.NewManager(nil, nil, nil)}
 	service.ensureWebsocketGateway()
 
 	service.registerAvailableExecutors(nil, executorRegistrationOptions{
-		includeBaseline: true,
-		includePlugins:  true})
-
-	if pluginRegisterCalls != 1 {
-		t.Fatalf("plugin executor registration calls = %d, want 1", pluginRegisterCalls)
-	}
+		includeBaseline: true})
 
 	providers := []string{
 		"codex",
@@ -86,18 +59,12 @@ func TestRegisterAvailableExecutors(t *testing.T) {
 		"antigravity",
 		"kimi",
 		"xai",
-		"openai-compatibility",
-		"plugin-provider"}
+		"openai-compatibility"}
 	for _, provider := range providers {
 		resolved, ok := service.coreManager.Executor(provider)
 		if !ok || resolved == nil {
 			t.Fatalf("expected executor for provider %s after registration", provider)
 		}
-	}
-
-	resolved, _ := service.coreManager.Executor("plugin-provider")
-	if _, isPlugin := resolved.(serviceTestPluginExecutor); !isPlugin {
-		t.Fatalf("executor type = %T, want serviceTestPluginExecutor", resolved)
 	}
 }
 
@@ -109,16 +76,10 @@ func TestSyncPluginModelRuntimePreservesSDKExecutorUnlessForced(t *testing.T) {
 	if _, err := manager.Register(context.Background(), auth); err != nil {
 		t.Fatal(err)
 	}
-	service := &Service{cfg: &config.Config{}, coreManager: manager, pluginHost: pluginhost.New()}
-
-	service.syncPluginModelRuntime(context.Background())
-	got, ok := manager.Executor(custom.Identifier())
-	if !ok || got != custom {
-		t.Fatalf("plugin model sync replaced SDK executor with %T", got)
-	}
+	service := &Service{cfg: &config.Config{}, coreManager: manager}
 
 	service.registerExecutorForAuth(auth, true)
-	got, ok = manager.Executor(custom.Identifier())
+	got, ok := manager.Executor(custom.Identifier())
 	if !ok {
 		t.Fatal("forced registration removed executor")
 	}

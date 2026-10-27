@@ -57,7 +57,6 @@ Everything in the config is replicated **except** the per-node identity fields, 
 - `cluster`
 - `home`
 - `pprof`
-- `plugins.dir` (`plugins.enabled` and the plugin list do sync)
 
 Credentials on disk are **not** synced. `auth-dir` is a local path and its files are never transferred, so OAuth credentials must be provisioned on each node. API keys that live in the config file (`gemini-api-key`, `openai-compatibility`, and so on) are part of the config and therefore do sync.
 
@@ -104,9 +103,6 @@ Operations that are genuinely node-local remain allowed, because they either do 
 - everything under `/v0/management/cluster` (so a slave can be promoted or repointed)
 - auth file management, OAuth flows, and `get-auth-status`
 - log endpoints, `reset-quota`, `vertex/import`, `api-call`
-- plugin install (`plugin-store`) and plugin uninstall (`DELETE /plugins/:id`), since the binaries live in the unsynced `plugins.dir`
-
-Plugin *configuration* (`/plugins/:id/enabled`, `/plugins/:id/config`) is part of the synced config and stays blocked.
 
 To edit config for the cluster, change it on the master.
 

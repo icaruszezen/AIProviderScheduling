@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/api/handlers"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 )
@@ -24,7 +23,6 @@ type serverOptionConfig struct {
 	keepAliveOnTimeout    func()
 	postAuthHook          auth.PostAuthHook
 	postAuthPersistHook   auth.PostAuthHook
-	pluginHost            *pluginhost.Host
 	configReloadHook      func(context.Context, *config.Config)
 	exampleAPIKeySafeMode bool
 }
@@ -110,13 +108,6 @@ func WithPostAuthHook(hook auth.PostAuthHook) ServerOption {
 func WithPostAuthPersistHook(hook auth.PostAuthHook) ServerOption {
 	return func(cfg *serverOptionConfig) {
 		cfg.postAuthPersistHook = hook
-	}
-}
-
-// WithPluginHost registers dynamic plugin HTTP adapters with the server.
-func WithPluginHost(host *pluginhost.Host) ServerOption {
-	return func(cfg *serverOptionConfig) {
-		cfg.pluginHost = host
 	}
 }
 

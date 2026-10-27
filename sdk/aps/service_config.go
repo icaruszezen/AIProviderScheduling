@@ -159,7 +159,6 @@ func (s *Service) applyConfigRuntime(ctx context.Context, commit configCommit, s
 	}
 
 	registrationCtx := coreauth.WithSkipPersist(ctx)
-	s.syncPluginRuntimeConfigForConfig(registrationCtx, cfg)
 	if errContext := ctx.Err(); errContext != nil {
 		return false
 	}
@@ -188,7 +187,7 @@ func (s *Service) applyConfigRuntime(ctx context.Context, commit configCommit, s
 	if errContext := ctx.Err(); errContext != nil {
 		return false
 	}
-	s.syncPluginModelRuntime(registrationCtx)
+	s.refreshAuthModelRegistrations(registrationCtx)
 	if ctx.Err() != nil {
 		return false
 	}
@@ -299,5 +298,4 @@ func forceHomeRuntimeConfig(cfg *config.Config) {
 	cfg.WebsocketAuth = false
 	cfg.RemoteManagement.AllowRemote = false
 	cfg.RemoteManagement.DisableControlPanel = true
-	cfg.Plugins.StoreAuth = nil
 }

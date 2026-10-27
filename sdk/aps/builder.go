@@ -9,7 +9,6 @@ import (
 
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/access"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/api"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher"
 	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
@@ -46,9 +45,6 @@ type Builder struct {
 
 	// cooldownStateStore overrides runtime cooldown persistence.
 	cooldownStateStore coreauth.CooldownStateStore
-
-	// pluginHost owns dynamic plugin lifecycle and adapters.
-	pluginHost *pluginhost.Host
 
 	// postAuthHook is called after auth record creation and before persistence.
 	postAuthHook coreauth.PostAuthHook
@@ -145,12 +141,6 @@ func (b *Builder) WithCooldownStateStore(store coreauth.CooldownStateStore) *Bui
 	return b
 }
 
-// WithPluginHost overrides the dynamic plugin host used by the service.
-func (b *Builder) WithPluginHost(host *pluginhost.Host) *Builder {
-	b.pluginHost = host
-	return b
-}
-
 // WithServerOptions appends server configuration options used during construction.
 func (b *Builder) WithServerOptions(opts ...api.ServerOption) *Builder {
 	b.serverOptions = append(b.serverOptions, opts...)
@@ -187,10 +177,6 @@ func (b *Builder) Build() (*Service, error) {
 	if errValidate := b.cfg.ValidateCredentialWeights(); errValidate != nil {
 		return nil, fmt.Errorf("aps: validate credential weights: %w", errValidate)
 	}
-	b.cfg.NormalizePluginsConfig()
-	if errResolvePluginsDir := b.cfg.ResolvePluginsDir(); errResolvePluginsDir != nil && b.cfg.Plugins.Enabled {
-		return nil, fmt.Errorf("aps: %w", errResolvePluginsDir)
-	}
 
 	tokenProvider := b.tokenProvider
 	if tokenProvider == nil {
@@ -213,14 +199,6 @@ func (b *Builder) Build() (*Service, error) {
 	}
 
 	access.RegisterConfigAccess(b.cfg)
-	pluginHost := b.pluginHost
-	if pluginHost == nil {
-		pluginHost = pluginhost.New()
-	}
-	if b.cfg != nil {
-		pluginHost.ApplyConfig(context.Background(), b.cfg)
-		pluginHost.RegisterFrontendAuthProviders()
-	}
 	accessManager.SetProviders(sdkaccess.RegisteredProviders())
 
 	coreManager := b.coreManager
@@ -235,9 +213,6 @@ func (b *Builder) Build() (*Service, error) {
 	// Attach a default RoundTripper provider so providers can opt-in per-auth transports.
 	coreManager.SetRoundTripperProvider(newDefaultRoundTripperProvider())
 	coreManager.SetConfig(b.cfg)
-	if pluginHost != nil {
-		coreManager.SetPluginScheduler(pluginHost)
-	}
 
 	service := &Service{
 		cfg:                 b.cfg,
@@ -249,7 +224,6 @@ func (b *Builder) Build() (*Service, error) {
 		accessManager:       accessManager,
 		coreManager:         coreManager,
 		cooldownStateStore:  cooldownStateStore,
-		pluginHost:          pluginHost,
 		appliedRoutingState: appliedRoutingState,
 		serverOptions:       append([]api.ServerOption(nil), b.serverOptions...)}
 	if b.postAuthHook != nil {
@@ -257,7 +231,6 @@ func (b *Builder) Build() (*Service, error) {
 	}
 	service.serverOptions = append(service.serverOptions,
 		api.WithPostAuthPersistHook(service.runtimeAuthSyncHook()),
-		api.WithPluginHost(pluginHost),
 		api.WithConfigReloadHook(func(_ context.Context, _ *config.Config) {
 			service.reloadConfigFromWatcher()
 		}),

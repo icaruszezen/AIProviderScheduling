@@ -31,9 +31,6 @@ type Config struct {
 	// Cluster configures optional master/slave config sync. Local to each node.
 	Cluster ClusterConfig `yaml:"cluster" json:"cluster"`
 
-	// Plugins configures dynamic plugin discovery and per-plugin settings.
-	Plugins PluginsConfig `yaml:"plugins" json:"plugins"`
-
 	// Debug enables or disables debug-level logging and other debug features.
 	Debug bool `yaml:"debug" json:"debug"`
 

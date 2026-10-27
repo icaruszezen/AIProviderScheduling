@@ -37,12 +37,11 @@ jobs:
           <!-- aiproviderscheduling-linux-release-assets:start -->
           ## Linux release assets
 
-          - `AIProviderScheduling_<version>_linux_<arch>.tar.gz` is the default Linux build. It supports dynamic library plugins and is built against a GLIBC 2.17 baseline.
-          - `AIProviderScheduling_<version>_linux_<arch>_no-plugin.tar.gz` is the portable Linux build for musl-based or older systems such as OpenWrt. It does not support dynamic library plugins.
+          - `AIProviderScheduling_<version>_linux_<arch>.tar.gz` is the Linux build. It is built with CGO disabled and does not require a specific GLIBC version.
 
           ## FreeBSD release assets
 
-          - `AIProviderScheduling_<version>_freebsd_aarch64_no-plugin.tar.gz` is the FreeBSD arm64 build. It is built without CGO and does not support dynamic library plugins.
+          - `AIProviderScheduling_<version>_freebsd_aarch64.tar.gz` is the FreeBSD arm64 build. It is built with CGO disabled.
 
           <!-- aiproviderscheduling-linux-release-assets:end -->
           EOF
@@ -173,7 +172,7 @@ jobs:
           rm -rf "dist/${TARGET}"
           mkdir -p "$archive_dir"
 
-          CGO_ENABLED=1 GOOS="$GOOS" GOARCH="$GOARCH" go build \
+          CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build \
             -ldflags="-s -w -X main.Version=${RELEASE_VERSION} -X main.Commit=${COMMIT} -X main.BuildDate=${BUILD_DATE}" \
             -o "$archive_dir/$binary_name" ./cmd/server/
 
@@ -233,7 +232,7 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" "$tmp_dir/checksums.txt" --clobber
 
   build-linux-glibc:
-    name: build linux-${{ matrix.goarch }} glibc
+    name: build linux-${{ matrix.goarch }}
     needs: prepare-release
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -286,155 +285,9 @@ jobs:
           rm -rf "dist/${TARGET}"
           mkdir -p "$archive_dir"
 
-          docker run --rm \
-            -v "$PWD:/src" \
-            -w /src \
-            -e GO_VERSION \
-            -e GOARCH \
-            -e RELEASE_VERSION \
-            -e COMMIT \
-            -e BUILD_DATE \
-            "$MANYLINUX_IMAGE" \
-            bash -euo pipefail -c '
-              go_archive="go${GO_VERSION}.linux-${GOARCH}.tar.gz"
-              curl -fsSL "https://go.dev/dl/${go_archive}" -o "/tmp/${go_archive}"
-              rm -rf /usr/local/go
-              tar -C /usr/local -xzf "/tmp/${go_archive}"
-              export PATH="/usr/local/go/bin:${PATH}"
-
-              CGO_ENABLED=1 GOOS=linux GOARCH="${GOARCH}" go build -buildvcs=false \
-                -ldflags="-s -w -X main.Version=${RELEASE_VERSION} -X main.Commit=${COMMIT} -X main.BuildDate=${BUILD_DATE}" \
-                -o "'"$archive_dir"'/AIProviderScheduling" ./cmd/server/
-
-              glibc_versions="$(readelf --version-info "'"$archive_dir"'/AIProviderScheduling" | sed -n "s/.*Name: GLIBC_\([0-9.]*\).*/\1/p" | sort -Vu)"
-              if [[ -n "${glibc_versions}" ]]; then
-                printf "GLIBC versions:\n%s\n" "${glibc_versions}"
-                max_glibc="$(printf "%s\n" "${glibc_versions}" | sort -V | tail -n 1)"
-                if [[ "$(printf "2.17\n%s\n" "${max_glibc}" | sort -V | tail -n 1)" != "2.17" ]]; then
-                  printf "linux ${GOARCH} binary requires GLIBC_%s, expected GLIBC_2.17 or older\n" "${max_glibc}" >&2
-                  exit 1
-                fi
-              fi
-            '
-
-          cp LICENSE README.md README_CN.md config.example.yaml "$archive_dir/"
-          tar -C "$archive_dir" -czf "dist/$archive_name" AIProviderScheduling LICENSE README.md README_CN.md config.example.yaml
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.target }}
-          path: dist/AIProviderScheduling_*
-          if-no-files-found: error
-      - name: Upload release assets
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          assets=(dist/AIProviderScheduling_*.tar.gz)
-          if [[ ${#assets[@]} -eq 0 ]]; then
-            printf 'expected archive assets, found %s\n' "${#assets[@]}" >&2
-            printf '%s\n' "${assets[@]}" >&2
-            exit 1
-          fi
-          gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
-      - name: Refresh release checksums
-        continue-on-error: true
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          tmp_dir="$(mktemp -d)"
-          trap 'rm -rf "$tmp_dir"' EXIT
-          gh release download "$GITHUB_REF_NAME" \
-            --pattern 'AIProviderScheduling_*.tar.gz' \
-            --pattern 'AIProviderScheduling_*.zip' \
-            --dir "$tmp_dir" \
-            --clobber
-          (
-            cd "$tmp_dir"
-            shopt -s nullglob
-            archives=(AIProviderScheduling_*.tar.gz AIProviderScheduling_*.zip)
-            if [[ ${#archives[@]} -eq 0 ]]; then
-              echo "No release archives found"
-              exit 0
-            fi
-            if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum "${archives[@]}" | sort -k2 > checksums.txt
-            else
-              shasum -a 256 "${archives[@]}" | sort -k2 > checksums.txt
-            fi
-          )
-          gh release upload "$GITHUB_REF_NAME" "$tmp_dir/checksums.txt" --clobber
-
-  build-linux-no-plugin:
-    name: build linux-${{ matrix.goarch }} no-plugin
-    needs: prepare-release
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: linux-amd64-no-plugin
-            goarch: amd64
-            asset_arch: amd64
-          - target: linux-arm64-no-plugin
-            goarch: arm64
-            asset_arch: aarch64
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-      - name: Refresh models catalog
-        shell: bash
-        run: bash .github/scripts/refresh-model-catalogs.sh
-      - name: Fetch tags
-        shell: bash
-        run: git fetch --force --tags
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: go-linux-no-plugin-${{ matrix.goarch }}-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            go-linux-no-plugin-${{ matrix.goarch }}-
-            go-linux-no-plugin-
-      - name: Generate Build Metadata
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-          echo "COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
-          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
-      - name: Build archive
-        shell: bash
-        env:
-          TARGET: ${{ matrix.target }}
-          GOARCH: ${{ matrix.goarch }}
-          ASSET_ARCH: ${{ matrix.asset_arch }}
-        run: |
-          set -euo pipefail
-
-          archive_dir="dist/${TARGET}/archive"
-          archive_name="AIProviderScheduling_${RELEASE_VERSION}_linux_${ASSET_ARCH}_no-plugin.tar.gz"
-          rm -rf "dist/${TARGET}"
-          mkdir -p "$archive_dir"
-
           CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build -buildvcs=false \
             -ldflags="-s -w -X main.Version=${RELEASE_VERSION} -X main.Commit=${COMMIT} -X main.BuildDate=${BUILD_DATE}" \
             -o "$archive_dir/AIProviderScheduling" ./cmd/server/
-
-          if readelf -l "$archive_dir/AIProviderScheduling" | grep -q 'Requesting program interpreter'; then
-            readelf -l "$archive_dir/AIProviderScheduling" >&2
-            echo "no-plugin linux binary must not require a dynamic interpreter" >&2
-            exit 1
-          fi
 
           cp LICENSE README.md README_CN.md config.example.yaml "$archive_dir/"
           tar -C "$archive_dir" -czf "dist/$archive_name" AIProviderScheduling LICENSE README.md README_CN.md config.example.yaml
@@ -504,11 +357,11 @@ jobs:
             goarch: amd64
             asset_arch: amd64
             asset_suffix: ''
-            cgo_enabled: true
-          - target: freebsd-arm64-no-plugin
+            cgo_enabled: false
+          - target: freebsd-arm64
             goarch: arm64
             asset_arch: aarch64
-            asset_suffix: _no-plugin
+            asset_suffix: ''
             cgo_enabled: false
     steps:
       - uses: actions/checkout@v6
@@ -570,7 +423,7 @@ jobs:
             -X main.Version=${{ steps.metadata.outputs.release_version }}
             -X main.Commit=${{ steps.metadata.outputs.commit }}
             -X main.BuildDate=${{ steps.metadata.outputs.build_date }}
-      - name: Build FreeBSD no-plugin binary
+      - name: Build FreeBSD binary
         if: ${{ !matrix.cgo_enabled }}
         shell: bash
         run: |
@@ -647,7 +500,6 @@ jobs:
     needs:
       - build-hosted
       - build-linux-glibc
-      - build-linux-no-plugin
       - build-freebsd
     steps:
       - uses: actions/download-artifact@v4

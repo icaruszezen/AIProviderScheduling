@@ -19,7 +19,6 @@ import (
 	claudemodels "github.com/icaruszezen/AIProviderScheduling/v7/internal/client/claude/models"
 	proxyconfig "github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
 	internallogging "github.com/icaruszezen/AIProviderScheduling/v7/internal/logging"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/redisqueue"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
 	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
@@ -28,7 +27,6 @@ import (
 	coreexecutor "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/executor"
 	coreusage "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
 	sdkconfig "github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/pluginapi"
 )
 
 type codexSearchCaptureExecutor struct {
@@ -98,17 +96,6 @@ func (s *codexSearchGinContextSelector) Pick(ctx context.Context, _ string, _ st
 }
 
 type codexSearchAPIKeyFirstSelector struct{}
-
-type codexSearchModelRouter struct {
-	response pluginapi.ModelRouteResponse
-	handled  bool
-	requests []pluginapi.ModelRouteRequest
-}
-
-func (r *codexSearchModelRouter) RouteModel(_ context.Context, req pluginapi.ModelRouteRequest) (pluginapi.ModelRouteResponse, bool) {
-	r.requests = append(r.requests, req)
-	return r.response, r.handled
-}
 
 func (s *codexSearchAPIKeyFirstSelector) Pick(_ context.Context, _ string, _ string, _ coreexecutor.Options, auths []*auth.Auth) (*auth.Auth, error) {
 	for _, candidate := range auths {
@@ -833,150 +820,6 @@ func TestCodexAlphaSearchForwardsRequest(t *testing.T) {
 	}
 }
 
-func TestCodexAlphaSearchUsesPluginProviderTargetModel(t *testing.T) {
-	server := newTestServer(t)
-	executor := &codexSearchCaptureExecutor{}
-	server.handlers.AuthManager.RegisterExecutor(executor)
-	router := &codexSearchModelRouter{
-		response: pluginapi.ModelRouteResponse{
-			Handled:     true,
-			TargetKind:  pluginapi.ModelRouteTargetProvider,
-			Target:      "codex",
-			TargetModel: "team-b/gpt-5.6-sol"},
-		handled: true}
-	server.handlers.SetModelRouterHost(router)
-
-	for _, credential := range []*auth.Auth{
-		func() *auth.Auth {
-			credential := codexAlphaSearchAPIKeyAuth("codex-team-a", "token-a")
-			credential.Prefix = "team-a"
-			return credential
-		}(),
-		func() *auth.Auth {
-			credential := codexAlphaSearchAPIKeyAuth("codex-team-b", "token-b")
-			credential.Prefix = "team-b"
-			return credential
-		}()} {
-		if _, errRegister := server.handlers.AuthManager.Register(context.Background(), credential); errRegister != nil {
-			t.Fatalf("register Codex auth %s: %v", credential.ID, errRegister)
-		}
-		registry.GetGlobalRegistry().RegisterClient(credential.ID, credential.Provider, []*registry.ModelInfo{{ID: credential.Prefix + "/gpt-5.6-sol"}})
-		t.Cleanup(func() {
-			registry.GetGlobalRegistry().UnregisterClient(credential.ID)
-		})
-	}
-
-	payload := `{"id":"session-123","model":"gpt-5.6-sol","commands":{"search_query":[{"q":"golang"}]}}`
-	paths := []string{"/v1/alpha/search?key=test-key", "/backend-api/codex/alpha/search?key=test-key"}
-	for _, path := range paths {
-		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(payload))
-		req.Header.Set("Authorization", "Bearer test-key")
-		rr := httptest.NewRecorder()
-		server.engine.ServeHTTP(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Fatalf("%s status = %d, want %d; body=%s", path, rr.Code, http.StatusOK, rr.Body.String())
-		}
-	}
-
-	if got, want := executor.authIDs, []string{"codex-team-b", "codex-team-b"}; len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
-		t.Fatalf("selected auth IDs = %v, want %v", got, want)
-	}
-	if got := string(executor.body); got != payload {
-		t.Fatalf("upstream body = %q, want original unprefixed body %q", got, payload)
-	}
-	if got, want := len(router.requests), 2; got != want {
-		t.Fatalf("model router requests = %d, want %d", got, want)
-	}
-	for index, routeReq := range router.requests {
-		if routeReq.SourceFormat != "codex-alpha-search" {
-			t.Fatalf("model router source format = %q", routeReq.SourceFormat)
-		}
-		if routeReq.RequestedModel != "gpt-5.6-sol" {
-			t.Fatalf("model router requested model = %q", routeReq.RequestedModel)
-		}
-		if got := routeReq.Headers.Get("Authorization"); got != "Bearer test-key" {
-			t.Fatalf("model router Authorization = %q", got)
-		}
-		if got := routeReq.Query.Get("key"); got != "test-key" {
-			t.Fatalf("model router query key = %q", got)
-		}
-		if got, want := routeReq.Metadata[coreexecutor.RequestPathMetadataKey], strings.SplitN(paths[index], "?", 2)[0]; got != want {
-			t.Fatalf("model router request path = %#v, want %q", got, want)
-		}
-		if got := string(routeReq.Body); got != payload {
-			t.Fatalf("model router body = %q, want %q", got, payload)
-		}
-	}
-}
-
-func TestCodexAlphaSearchFallsBackWhenPluginDoesNotHandleRoute(t *testing.T) {
-	server := newTestServer(t)
-	executor := &codexSearchCaptureExecutor{}
-	server.handlers.AuthManager.RegisterExecutor(executor)
-	credential := codexAlphaSearchAPIKeyAuth("codex-auth", "codex-token")
-	if _, errRegister := server.handlers.AuthManager.Register(context.Background(), credential); errRegister != nil {
-		t.Fatalf("register Codex auth: %v", errRegister)
-	}
-	registry.GetGlobalRegistry().RegisterClient(credential.ID, credential.Provider, []*registry.ModelInfo{{ID: "gpt-5.6-sol"}})
-	t.Cleanup(func() {
-		registry.GetGlobalRegistry().UnregisterClient(credential.ID)
-	})
-	router := &codexSearchModelRouter{}
-	server.handlers.SetModelRouterHost(router)
-
-	payload := `{"model":"gpt-5.6-sol"}`
-	req := httptest.NewRequest(http.MethodPost, "/v1/alpha/search", strings.NewReader(payload))
-	req.Header.Set("Authorization", "Bearer test-key")
-	rr := httptest.NewRecorder()
-	server.engine.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Fatalf("status = %d, want %d; body=%s", rr.Code, http.StatusOK, rr.Body.String())
-	}
-	if got := executor.authIDs; len(got) != 1 || got[0] != credential.ID {
-		t.Fatalf("selected auth IDs = %v, want [%s]", got, credential.ID)
-	}
-	if got := string(executor.body); got != payload {
-		t.Fatalf("upstream body = %q, want %q", got, payload)
-	}
-	if got := len(router.requests); got != 1 {
-		t.Fatalf("model router requests = %d, want 1", got)
-	}
-}
-
-func TestCodexAlphaSearchRejectsUnsupportedPluginRouteTarget(t *testing.T) {
-	server := newTestServer(t)
-	executor := &codexSearchCaptureExecutor{}
-	server.handlers.AuthManager.RegisterExecutor(executor)
-	credential := codexAlphaSearchAPIKeyAuth("codex-auth", "codex-token")
-	if _, errRegister := server.handlers.AuthManager.Register(context.Background(), credential); errRegister != nil {
-		t.Fatalf("register Codex auth: %v", errRegister)
-	}
-	registry.GetGlobalRegistry().RegisterClient(credential.ID, credential.Provider, []*registry.ModelInfo{{ID: "gpt-5.6-sol"}})
-	t.Cleanup(func() {
-		registry.GetGlobalRegistry().UnregisterClient(credential.ID)
-	})
-	server.handlers.SetModelRouterHost(&codexSearchModelRouter{
-		response: pluginapi.ModelRouteResponse{
-			Handled:    true,
-			TargetKind: pluginapi.ModelRouteTargetSelf,
-			Target:     "user-routing"},
-		handled: true})
-
-	req := httptest.NewRequest(http.MethodPost, "/v1/alpha/search", strings.NewReader(`{"model":"gpt-5.6-sol"}`))
-	req.Header.Set("Authorization", "Bearer test-key")
-	rr := httptest.NewRecorder()
-	server.engine.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusServiceUnavailable {
-		t.Fatalf("status = %d, want %d; body=%s", rr.Code, http.StatusServiceUnavailable, rr.Body.String())
-	}
-	if executor.request != nil {
-		t.Fatal("unsupported plugin route sent an upstream request")
-	}
-}
-
 func TestCodexAlphaSearchSanitizesResponsesOnlyFields(t *testing.T) {
 	server := newTestServer(t)
 	executor := &codexSearchCaptureExecutor{}
@@ -1402,9 +1245,6 @@ func TestManagementResponseExposesPluginSupportHeaderForCORS(t *testing.T) {
 	if rr.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusUnauthorized, rr.Body.String())
 	}
-	if got := rr.Header().Get("X-APS-SUPPORT-PLUGIN"); got != pluginhost.SupportPluginHeaderValue() {
-		t.Fatalf("X-APS-SUPPORT-PLUGIN = %q, want %q", got, pluginhost.SupportPluginHeaderValue())
-	}
 
 	exposedHeaders := make(map[string]struct{})
 	for _, headerName := range strings.Split(rr.Header().Get("Access-Control-Expose-Headers"), ",") {
@@ -1417,30 +1257,6 @@ func TestManagementResponseExposesPluginSupportHeaderForCORS(t *testing.T) {
 		if _, ok := exposedHeaders[strings.ToLower(headerName)]; !ok {
 			t.Fatalf("Access-Control-Expose-Headers missing %s: %q", headerName, rr.Header().Get("Access-Control-Expose-Headers"))
 		}
-	}
-}
-
-func TestNewServerWithPluginHostInjectsHandlerInterceptors(t *testing.T) {
-	host := pluginhost.New()
-	server := newTestServerWithOptions(t, WithPluginHost(host))
-
-	if server.handlers == nil {
-		t.Fatal("server handlers = nil")
-	}
-	got, ok := server.handlers.PluginHost.(*pluginhost.Host)
-	if !ok || got != host {
-		t.Fatalf("handler plugin host = %#v, want configured host", server.handlers.PluginHost)
-	}
-}
-
-func TestNewServerWithoutPluginHostLeavesHandlerInterceptorsDisabled(t *testing.T) {
-	server := newTestServer(t)
-
-	if server.handlers == nil {
-		t.Fatal("server handlers = nil")
-	}
-	if server.handlers.PluginHost != nil {
-		t.Fatalf("handler plugin host = %#v, want nil", server.handlers.PluginHost)
 	}
 }
 
@@ -1503,64 +1319,6 @@ func TestManagementUsageRequiresManagementAuthAndPopsArray(t *testing.T) {
 
 	if remaining := redisqueue.PopOldest(1); len(remaining) != 0 {
 		t.Fatalf("remaining queue = %q, want empty", remaining)
-	}
-}
-
-func TestManagementPluginsRouteRegistered(t *testing.T) {
-	t.Setenv("MANAGEMENT_PASSWORD", "test-management-key")
-
-	server := newTestServer(t)
-	enabled := true
-	server.cfg.Plugins.Configs = map[string]proxyconfig.PluginInstanceConfig{
-		"sample": {Enabled: &enabled, Priority: 4}}
-	if errWrite := os.WriteFile(server.configFilePath, []byte("{}\n"), 0o600); errWrite != nil {
-		t.Fatalf("failed to write config file: %v", errWrite)
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "/v0/management/plugins", nil)
-	req.Header.Set("Authorization", "Bearer test-management-key")
-	rr := httptest.NewRecorder()
-	server.engine.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusOK, rr.Body.String())
-	}
-
-	var payload struct {
-		PluginsEnabled bool  `json:"plugins_enabled"`
-		Plugins        []any `json:"plugins"`
-	}
-	if errUnmarshal := json.Unmarshal(rr.Body.Bytes(), &payload); errUnmarshal != nil {
-		t.Fatalf("unmarshal response: %v body=%s", errUnmarshal, rr.Body.String())
-	}
-	if payload.Plugins == nil {
-		t.Fatalf("plugins field = nil, want array; body=%s", rr.Body.String())
-	}
-
-	req = httptest.NewRequest(http.MethodGet, "/v0/management/plugins/sample/config", nil)
-	req.Header.Set("Authorization", "Bearer test-management-key")
-	rr = httptest.NewRecorder()
-	server.engine.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("config status = %d, want %d body=%s", rr.Code, http.StatusOK, rr.Body.String())
-	}
-	var configPayload struct {
-		Enabled  bool `json:"enabled"`
-		Priority int  `json:"priority"`
-	}
-	if errUnmarshal := json.Unmarshal(rr.Body.Bytes(), &configPayload); errUnmarshal != nil {
-		t.Fatalf("unmarshal config response: %v body=%s", errUnmarshal, rr.Body.String())
-	}
-	if !configPayload.Enabled || configPayload.Priority != 4 {
-		t.Fatalf("plugin config = %#v, want enabled true priority 4", configPayload)
-	}
-
-	req = httptest.NewRequest(http.MethodDelete, "/v0/management/plugins/sample", nil)
-	req.Header.Set("Authorization", "Bearer test-management-key")
-	rr = httptest.NewRecorder()
-	server.engine.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("delete status = %d, want %d body=%s", rr.Code, http.StatusOK, rr.Body.String())
 	}
 }
 

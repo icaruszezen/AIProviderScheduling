@@ -37,7 +37,7 @@ remote-management:
 # Sync copies provider blocks (including upstream API keys), inbound api-keys, and
 # operational parameters.
 # Local identity is never overwritten: host, port, tls, remote-management,
-# cluster, pprof, and plugins.dir stay on each node.
+# cluster, and pprof stay on each node.
 # Protocol endpoints (/v0/management/cluster/register|heartbeat|export|apply) authenticate
 # with cluster.token (or CLUSTER_TOKEN) and do not require allow-remote.
 # The master must be able to reach advertise-url to push; leave it empty to rely on slave pull.
@@ -99,37 +99,6 @@ pprof:
 #   max-details: 10000
 #   max-string-bytes: 256
 #   staging-retention: 1m
-
-# Standard dynamic library plugins are trusted in-process code. They are disabled by default.
-# Build Go examples with go build -buildmode=c-shared for the target GOOS/GOARCH.
-# Other languages can implement the same C ABI and JSON method protocol.
-# Plugin executors require a matching auth record with the same provider key.
-# If the same provider is configured as OpenAI-compatible, the native executor wins.
-# Plugin command-line flags and Management API routes are optional capabilities.
-# Existing native flags/routes and higher-priority plugin flags/routes cannot be replaced.
-# Plugin list Management API reads Logo and ConfigFields from plugin metadata for management UI display.
-# Per-plugin enabled only controls plugins.configs.<pluginID>.enabled and does not implicitly change global plugins.enabled.
-plugins:
-  enabled: false
-  dir: "plugins"
-  # Plugin store registries. No registry is queried unless it is listed here.
-  # store-sources:
-  #   - "https://example.com/aps-plugins/registry.json"
-  # Optional plugin store auth rules. Values are read from environment variables;
-  # tokens are not written into plugin manifests or node status.
-  # store-auth:
-  #   - match: "https://example.com/aps-plugins/"
-  #     apply-to: ["registry", "artifact"]
-  #     type: bearer
-  #     token-env: "APS_PLUGIN_STORE_TOKEN"
-  configs:
-    example:
-      enabled: true
-      priority: 1
-      config1: true
-      config2: "string"
-      config3: 3
-      mode: "safe" # enum example: safe, fast
 
 # When true, disable high-overhead request logging and HTTP middleware features to reduce per-request memory usage under high concurrency.
 commercial-mode: false

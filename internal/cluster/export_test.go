@@ -22,8 +22,6 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 		NodeID:       "master-1",
 		MasterURL:    "http://should-not-export",
 		AdvertiseURL: "http://also-local"}
-	cfg.Plugins.Dir = "/opt/local-plugins"
-	cfg.Plugins.Enabled = true
 	cfg.ChannelMonitor.Enabled = true
 	cfg.ChannelMonitor.DatabasePath = "/var/lib/node-local-channel-monitor.db"
 
@@ -42,9 +40,6 @@ func TestExportStripsLocalIdentityAndToken(t *testing.T) {
 	}
 	if strings.Contains(payload.ConfigYAML, "127.0.0.1") {
 		t.Fatal("exported YAML leaked host")
-	}
-	if strings.Contains(payload.ConfigYAML, "/opt/local-plugins") {
-		t.Fatal("exported YAML leaked plugins.dir")
 	}
 	if strings.Contains(payload.ConfigYAML, "node-local-channel-monitor.db") {
 		t.Fatal("exported YAML leaked channel-monitor database-path")
@@ -159,7 +154,6 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 		Token:     "shared-token",
 		NodeID:    "slave-1",
 		MasterURL: "http://master:8317"}
-	local.Plugins.Dir = "/slave/plugins"
 	local.ChannelMonitor.DatabasePath = "/slave/channel-monitor.db"
 	local.ChannelMonitor.Enabled = false
 
@@ -170,8 +164,6 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	incoming.GeminiKey = []config.GeminiKey{{APIKey: "synced-gemini"}}
 	incoming.RequestRetry = 3
 	incoming.Cluster.Token = "must-not-win"
-	incoming.Plugins.Dir = "plugins"
-	incoming.Plugins.Enabled = true
 	incoming.ChannelMonitor.Enabled = true
 	incoming.ChannelMonitor.DatabasePath = "/master/channel-monitor.db"
 
@@ -184,9 +176,6 @@ func TestMergeLocalPreservesIdentityAndAppliesProviders(t *testing.T) {
 	}
 	if merged.Cluster.Role != config.ClusterRoleSlave || merged.Cluster.Token != "shared-token" || merged.Cluster.NodeID != "slave-1" {
 		t.Fatalf("cluster identity overwritten: %+v", merged.Cluster)
-	}
-	if merged.Plugins.Dir != "/slave/plugins" {
-		t.Fatalf("plugins.dir overwritten: %s", merged.Plugins.Dir)
 	}
 	if len(merged.APIKeys) != 1 || merged.APIKeys[0] != "synced-key" {
 		t.Fatalf("api-keys not synced: %#v", merged.APIKeys)

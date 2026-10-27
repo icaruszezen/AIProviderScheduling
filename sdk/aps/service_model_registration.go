@@ -6,13 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/pluginhost"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/registry"
-	sdkaccess "github.com/icaruszezen/AIProviderScheduling/v7/sdk/access"
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
 	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/usage"
-	"github.com/icaruszezen/AIProviderScheduling/v7/sdk/config"
-	sdktranslator "github.com/icaruszezen/AIProviderScheduling/v7/sdk/translator"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,126 +29,23 @@ type modelRegistrationTask struct {
 	run      func(*openAICompatibilityRegistrationCache)
 }
 
-type executorRegistrationOptions struct {
-	includeBaseline   bool
-	includePlugins    bool
-	forceReplaceAuths bool
-	auths             []*coreauth.Auth
-}
-
-var registerPluginExecutors = func(host *pluginhost.Host, manager *coreauth.Manager) {
-	if host == nil || manager == nil {
-		return
-	}
-	host.RegisterExecutors(manager, registry.GetGlobalRegistry())
-}
-
-// RegisterUsagePlugin registers a usage plugin on the global usage manager.
-// This allows external code to monitor API usage and token consumption.
-//
-// Parameters:
-//   - plugin: The usage plugin to register
+// RegisterUsagePlugin registers a usage callback on the global usage manager.
 func (s *Service) RegisterUsagePlugin(plugin usage.Plugin) {
 	usage.RegisterPlugin(plugin)
 }
 
-func (s *Service) registerPluginAuthParser() {
-	var parser PluginAuthParser
-	if s != nil && s.pluginHost != nil {
-		parser = s.pluginHost
-	}
-	if s != nil && s.watcher != nil {
-		s.watcher.SetPluginAuthParser(parser)
-	}
-}
-
-func (s *Service) syncPluginRuntime(ctx context.Context) {
-	if !s.syncPluginRuntimeConfig(ctx) {
-		return
-	}
-	s.syncPluginModelRuntime(ctx)
-}
-
-func (s *Service) syncPluginRuntimeConfig(ctx context.Context) bool {
-	if s == nil {
-		return false
-	}
-	s.cfgMu.RLock()
-	cfg := s.cfg
-	s.cfgMu.RUnlock()
-	return s.syncPluginRuntimeConfigForConfig(ctx, cfg)
-}
-
-func (s *Service) syncPluginRuntimeConfigForConfig(ctx context.Context, cfg *config.Config) bool {
-	if s == nil {
-		return false
-	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	if errContext := ctx.Err(); errContext != nil {
-		return false
-	}
-
-	if s.pluginHost != nil {
-		s.pluginHost.ApplyConfig(ctx, cfg)
-	}
-	if errContext := ctx.Err(); errContext != nil {
-		return false
-	}
-	if s.coreManager != nil {
-		s.coreManager.SetPluginScheduler(s.pluginHost)
-	}
-	s.registerPluginAuthParser()
-	if s.pluginHost == nil {
-		return false
-	}
-	s.pluginHost.RegisterFrontendAuthProviders()
-	if errContext := ctx.Err(); errContext != nil {
-		return false
-	}
-	if s.accessManager != nil {
-		s.accessManager.SetProviders(sdkaccess.RegisteredProviders())
-	}
-	s.pluginHost.RegisterUsagePlugins()
-	sdktranslator.SetPluginHooks(s.pluginHost)
-	if s.server != nil {
-		s.server.RefreshPluginManagementRoutes()
-	}
-	return ctx.Err() == nil
-}
-
-func (s *Service) syncPluginModelRuntime(ctx context.Context) {
-	if s == nil || s.pluginHost == nil || s.coreManager == nil {
+func (s *Service) refreshAuthModelRegistrations(ctx context.Context) {
+	if s == nil || s.coreManager == nil {
 		return
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	s.pluginHost.RegisterModels(ctx, registry.GetGlobalRegistry())
-	if ctx.Err() != nil {
-		return
-	}
-	s.cfgMu.RLock()
-	homeEnabled := s.cfg != nil && s.cfg.Home.Enabled
-	s.cfgMu.RUnlock()
-	s.registerAvailableExecutors(ctx, executorRegistrationOptions{
-		includeBaseline:   homeEnabled,
-		includePlugins:    true,
-		forceReplaceAuths: false,
-		auths:             s.coreManager.List()})
-	s.refreshPluginModelRegistrations(ctx)
+	s.registerModelsForAuthBatch(ctx, s.coreManager.List())
 	if ctx.Err() != nil {
 		return
 	}
 	s.coreManager.RefreshSchedulerAll()
-}
-
-func (s *Service) refreshPluginModelRegistrations(ctx context.Context) {
-	if s == nil || s.pluginHost == nil || s.coreManager == nil {
-		return
-	}
-	s.registerModelsForAuthBatch(ctx, s.coreManager.List())
 }
 
 func (s *Service) registerModelsForAuthBatch(ctx context.Context, auths []*coreauth.Auth) {
@@ -299,10 +192,6 @@ func modelRegistrationMaxWorkersForCategory(category string) int {
 }
 
 func (s *Service) registerModelRefreshCallback() {
-	// Register callback for startup and periodic model catalog refresh.
-	// When remote model definitions change, re-register models for affected providers.
-	// This intentionally rebuilds per-auth model availability from the latest catalog
-	// snapshot instead of preserving prior registry suppression state.
 	registry.SetModelRefreshCallback(func(changedProviders []string) {
 		if s == nil || s.coreManager == nil || len(changedProviders) == 0 {
 			return

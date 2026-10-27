@@ -19,7 +19,6 @@ var corsExposedResponseHeaders = []string{
 	"X-APS-VERSION",
 	"X-APS-COMMIT",
 	"X-APS-BUILD-DATE",
-	"X-APS-SUPPORT-PLUGIN",
 	"X-APS-HOME-VERSION",
 	"X-APS-HOME-BUILD-DATE",
 	"X-SERVER-VERSION",
@@ -44,7 +43,7 @@ func (s *Server) homeHeartbeatMiddleware() gin.HandlerFunc {
 		}
 		if c != nil && c.Request != nil {
 			path := c.Request.URL.Path
-			if strings.HasPrefix(path, "/v0/management/") || path == "/v0/management" || strings.HasPrefix(path, "/v0/resource/plugins/") || path == "/management.html" {
+			if strings.HasPrefix(path, "/v0/management/") || path == "/v0/management" || path == "/management.html" {
 				c.Next()
 				return
 			}

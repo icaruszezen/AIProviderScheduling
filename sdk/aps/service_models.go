@@ -54,9 +54,6 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 			excluded = strings.Split(val, ",")
 		}
 	}
-	if s.tryRegisterPluginModelsForAuth(ctx, a, provider, authKind, excluded) {
-		return
-	}
 	if ctx.Err() != nil {
 		return
 	}
@@ -204,15 +201,9 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 					providerKey = "openai-compatibility"
 				}
 				if len(ms) > 0 {
-					ms = s.appendPluginModels(providerKey, ms)
 					s.registerResolvedModelsForAuth(a, providerKey, applyModelPrefixes(ms, a.Prefix, s.cfg.ForceModelPrefix))
 				} else {
-					ms = s.appendPluginModels(providerKey, nil)
-					if len(ms) > 0 {
-						s.registerResolvedModelsForAuth(a, providerKey, applyModelPrefixes(ms, a.Prefix, s.cfg.ForceModelPrefix))
-					} else {
-						GlobalModelRegistry().UnregisterClient(a.ID)
-					}
+					GlobalModelRegistry().UnregisterClient(a.ID)
 				}
 				return true
 			}
@@ -226,15 +217,9 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 				}
 				ms := cached.models
 				if len(ms) > 0 {
-					ms = s.appendPluginModels(providerKey, ms)
 					s.registerResolvedModelsForAuth(a, providerKey, applyModelPrefixes(ms, a.Prefix, s.cfg.ForceModelPrefix))
 				} else {
-					ms = s.appendPluginModels(providerKey, nil)
-					if len(ms) > 0 {
-						s.registerResolvedModelsForAuth(a, providerKey, applyModelPrefixes(ms, a.Prefix, s.cfg.ForceModelPrefix))
-					} else {
-						GlobalModelRegistry().UnregisterClient(a.ID)
-					}
+					GlobalModelRegistry().UnregisterClient(a.ID)
 				}
 				return
 			}
@@ -248,7 +233,6 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 				}
 			}
 			if isCompatAuth {
-				models = s.appendPluginModels(providerKey, nil)
 				if len(models) > 0 {
 					s.registerResolvedModelsForAuth(a, providerKey, applyModelPrefixes(models, a.Prefix, s.cfg != nil && s.cfg.ForceModelPrefix))
 				} else {
@@ -270,7 +254,6 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 	if key == "" {
 		key = strings.ToLower(strings.TrimSpace(a.Provider))
 	}
-	models = s.appendPluginModels(key, models)
 	if len(models) > 0 {
 		s.registerResolvedModelsForAuth(a, key, applyModelPrefixes(models, a.Prefix, s.cfg != nil && s.cfg.ForceModelPrefix))
 		return

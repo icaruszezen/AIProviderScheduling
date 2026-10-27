@@ -10,7 +10,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/icaruszezen/AIProviderScheduling/v7/internal/config"
-	"github.com/icaruszezen/AIProviderScheduling/v7/internal/watcher/synthesizer"
 	"gopkg.in/yaml.v3"
 
 	coreauth "github.com/icaruszezen/AIProviderScheduling/v7/sdk/aps/auth"
@@ -51,7 +50,6 @@ type Watcher struct {
 	pendingOrder      []string
 	dispatchCancel    context.CancelFunc
 	storePersister    storePersister
-	pluginAuthParser  synthesizer.PluginAuthParser
 	oldConfigYaml     []byte
 }
 
@@ -116,13 +114,6 @@ func (w *Watcher) SetConfig(cfg *config.Config) {
 	defer w.clientsMutex.Unlock()
 	w.config = cfg
 	w.oldConfigYaml, _ = yaml.Marshal(cfg)
-}
-
-// SetPluginAuthParser keeps the plugin parser ABI. File-backed plugin auth is not synthesized.
-func (w *Watcher) SetPluginAuthParser(parser synthesizer.PluginAuthParser) {
-	w.clientsMutex.Lock()
-	defer w.clientsMutex.Unlock()
-	w.pluginAuthParser = parser
 }
 
 // SetAuthUpdateQueue sets the queue used to emit auth updates.
